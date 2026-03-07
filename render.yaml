@@ -11,19 +11,35 @@ services:
         value: production
       - key: DAY_CAPTAIN_DELIVERY_MODE
         value: graph_send
+      - key: DAY_CAPTAIN_GRAPH_SEND_ENABLED
+        value: "true"
       - key: DAY_CAPTAIN_GRAPH_BASE_URL
         value: https://graph.microsoft.com/v1.0
       - key: DAY_CAPTAIN_GRAPH_SCOPES
         value: User.Read,Mail.Read,Calendars.Read,Mail.Send
+      - key: DAY_CAPTAIN_GRAPH_TENANT_ID
+        sync: false
+      - key: DAY_CAPTAIN_GRAPH_CLIENT_ID
+        sync: false
+      - key: DAY_CAPTAIN_GRAPH_REFRESH_TOKEN
+        sync: false
+      - key: DAY_CAPTAIN_GRAPH_USER_ID
+        sync: false
+      - key: DAY_CAPTAIN_DISPLAY_TIMEZONE
+        sync: false
+      - key: DAY_CAPTAIN_DIGEST_LANGUAGE
+        sync: false
+      - key: DAY_CAPTAIN_LLM_LANGUAGE
+        sync: false
+      - key: DAY_CAPTAIN_LLM_PROVIDER
+        value: openai
+      - key: DAY_CAPTAIN_LLM_MODEL
+        value: gpt-5-mini
+      - key: DAY_CAPTAIN_LLM_API_KEY
+        sync: false
       - key: DAY_CAPTAIN_DATABASE_URL
-        fromDatabase:
-          name: day-captain-db
-          property: connectionString
+        sync: false
       - key: DAY_CAPTAIN_DATABASE_SSL_MODE
         value: require
       - key: DAY_CAPTAIN_JOB_SECRET
-        generateValue: true
-databases:
-  - name: day-captain-db
-    databaseName: day_captain
-    user: day_captain
+        sync: false
