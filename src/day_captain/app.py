@@ -252,10 +252,12 @@ def _default_digest_wording_engine(settings: DayCaptainSettings) -> DigestWordin
             timeout_seconds=settings.llm_timeout_seconds,
             max_output_tokens=settings.llm_max_output_tokens,
             temperature=settings.llm_temperature,
+            style_prompt=settings.llm_style_prompt,
         )
         return LlmDigestWordingEngine(
             provider=provider,
             shortlist_limit=settings.llm_shortlist_limit,
+            enabled_sections=settings.llm_enabled_sections,
         )
     return IdentityDigestWordingEngine()
 
@@ -455,7 +457,7 @@ def build_application(
         storage=resolved_storage,
         scoring_engine=scoring_engine or DeterministicScoringEngine(),
         digest_wording_engine=digest_wording_engine or _default_digest_wording_engine(resolved_settings),
-        digest_renderer=digest_renderer or StructuredDigestRenderer(),
+        digest_renderer=digest_renderer or StructuredDigestRenderer(display_timezone=resolved_settings.display_timezone),
         digest_delivery=digest_delivery or GraphDigestDelivery(graph_client),
         recall_provider=recall_provider or SnapshotRecallProvider(),
         feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),

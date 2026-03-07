@@ -45,6 +45,7 @@ class OpenAICompatibleDigestWordingProvider:
         timeout_seconds: int = 30,
         max_output_tokens: int = 300,
         temperature: float = 0.2,
+        style_prompt: str = "Write like a concise executive assistant.",
         opener: Optional[Callable[..., Any]] = None,
     ) -> None:
         self.api_key = api_key
@@ -53,6 +54,7 @@ class OpenAICompatibleDigestWordingProvider:
         self.timeout_seconds = timeout_seconds
         self.max_output_tokens = max_output_tokens
         self.temperature = temperature
+        self.style_prompt = style_prompt.strip() or "Write like a concise executive assistant."
         self._opener = opener or request.urlopen
 
     def rewrite_summaries(
@@ -69,10 +71,11 @@ class OpenAICompatibleDigestWordingProvider:
                     "role": "system",
                     "content": (
                         "Rewrite each digest item summary in one sentence. "
+                        "{0} "
                         "Preserve facts, urgency, and requested actions. "
                         "Do not invent details. Return JSON with an `items` array "
                         "containing `{ref, summary}` objects only."
-                    ),
+                    ).replace("{ref, summary}", "{{ref, summary}}").format(self.style_prompt),
                 },
                 {
                     "role": "user",

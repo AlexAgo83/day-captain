@@ -1,9 +1,9 @@
 ## task_009_day_captain_digest_signal_quality_tuning - Refine digest prioritization and filtering to reduce weak items
 > From version: 0.4.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 95%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,11 +25,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Review the weak delivered items and the scoring/filter reasons that allowed them through.
-- [ ] 2. Tighten scoring/filtering/section thresholds to reduce low-value watch items without hiding real signal.
-- [ ] 3. Add tests covering the tuned rules and expected digest output.
-- [ ] 4. Validate the tuned digest against a real delivered run.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Review the weak delivered items and the scoring/filter reasons that allowed them through.
+- [x] 2. Tighten scoring/filtering/section thresholds to reduce low-value watch items without hiding real signal.
+- [x] 3. Add tests covering the tuned rules and expected digest output.
+- [x] 4. Validate the tuned digest against a real delivered run.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC3 -> Plan steps 1 and 2 improve signal quality. Proof: task explicitly targets weak watch items and low-value digest noise.
@@ -50,10 +50,17 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Scoring/filtering was tightened to better classify shared deliverables as `actions_to_take`, reduce weak watch items, and reject self-generated Day Captain digests from re-entering the digest.
+- Added regression coverage for print/download deliverables and self-digest filtering.
+- Validation executed:
+  - `python3 -m unittest tests.test_scoring tests.test_app tests.test_delivery_contract`
+  - `python3 -m unittest discover -s tests`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
+- Real delivered output now surfaces only the two meaningful action items seen in the mailbox sample, with the prior self-digest leakage removed.
+- Status remains `In Progress` only because the parent backlog item stays open until the LLM wording slice is also validated end to end.

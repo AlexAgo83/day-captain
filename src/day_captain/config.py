@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import os
+from typing import Sequence
 from urllib.parse import parse_qsl
 from urllib.parse import urlencode
 from urllib.parse import urlparse
@@ -23,6 +24,12 @@ def _parse_scopes(value: str) -> Tuple[str, ...]:
     if "User.Read" not in scopes:
         scopes.insert(0, "User.Read")
     return tuple(scopes)
+
+
+def _parse_csv(value: str) -> Tuple[str, ...]:
+    if not value:
+        return ()
+    return tuple(part.strip() for part in value.split(",") if part.strip())
 
 
 @dataclass(frozen=True)
@@ -47,6 +54,7 @@ class DayCaptainSettings:
     graph_send_enabled: bool = False
     graph_timeout_seconds: int = 30
     graph_scopes: Tuple[str, ...] = ("User.Read", "Mail.Read", "Calendars.Read")
+    display_timezone: str = "UTC"
     llm_provider: str = "disabled"
     llm_api_key: str = ""
     llm_model: str = ""
@@ -55,6 +63,8 @@ class DayCaptainSettings:
     llm_shortlist_limit: int = 5
     llm_max_output_tokens: int = 300
     llm_temperature: float = 0.2
+    llm_enabled_sections: Tuple[str, ...] = ("critical_topics", "actions_to_take", "watch_items")
+    llm_style_prompt: str = "Write like a concise executive assistant."
 
     @classmethod
     def from_env(cls) -> "DayCaptainSettings":
@@ -79,6 +89,7 @@ class DayCaptainSettings:
             graph_send_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_GRAPH_SEND_ENABLED"), default=False),
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
             graph_scopes=_parse_scopes(os.getenv("DAY_CAPTAIN_GRAPH_SCOPES", "")),
+            display_timezone=os.getenv("DAY_CAPTAIN_DISPLAY_TIMEZONE", "UTC"),
             llm_provider=os.getenv("DAY_CAPTAIN_LLM_PROVIDER", "disabled"),
             llm_api_key=os.getenv("DAY_CAPTAIN_LLM_API_KEY", ""),
             llm_model=os.getenv("DAY_CAPTAIN_LLM_MODEL", ""),
@@ -87,6 +98,16 @@ class DayCaptainSettings:
             llm_shortlist_limit=int(os.getenv("DAY_CAPTAIN_LLM_SHORTLIST_LIMIT", "5")),
             llm_max_output_tokens=int(os.getenv("DAY_CAPTAIN_LLM_MAX_OUTPUT_TOKENS", "300")),
             llm_temperature=float(os.getenv("DAY_CAPTAIN_LLM_TEMPERATURE", "0.2")),
+            llm_enabled_sections=_parse_csv(
+                os.getenv(
+                    "DAY_CAPTAIN_LLM_ENABLED_SECTIONS",
+                    "critical_topics,actions_to_take,watch_items",
+                )
+            ),
+            llm_style_prompt=os.getenv(
+                "DAY_CAPTAIN_LLM_STYLE_PROMPT",
+                "Write like a concise executive assistant.",
+            ),
         )
 
     def graph_login_scopes(self) -> Tuple[str, ...]:

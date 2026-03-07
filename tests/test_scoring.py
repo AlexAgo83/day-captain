@@ -207,6 +207,56 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].section_name, "actions_to_take")
         self.assertIn("action_keyword", prioritized[0].reason_codes)
 
+    def test_marks_print_and_download_deliverables_as_actions(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-print",
+                thread_id="thread-print",
+                subject="A imprimer",
+                from_address="agency@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 50, tzinfo=timezone.utc),
+                body_preview="Bonjour, voici notre logo en piece jointe.",
+                has_attachments=True,
+            ),
+            MessageRecord(
+                graph_message_id="msg-download",
+                thread_id="thread-download",
+                subject="Re: Rendu Salon Flotauto",
+                from_address="agency@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 55, tzinfo=timezone.utc),
+                body_preview="Voici la version modifiee. Lien de telechargement https://we.tl/example",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].section_name, "actions_to_take")
+        self.assertIn("deliverable_shared", prioritized[0].reason_codes)
+        self.assertEqual(prioritized[1].section_name, "actions_to_take")
+
+    def test_filters_self_sent_day_captain_digest_messages(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-digest",
+                thread_id="thread-digest",
+                subject="Day Captain digest for 2026-03-07",
+                from_address="alex@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 59, tzinfo=timezone.utc),
+                body_preview="Urgent: Day Captain digest Generated Sat 07 Mar 2026 at 17:39 CET",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized, ())
+
 
 if __name__ == "__main__":
     unittest.main()
