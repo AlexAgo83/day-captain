@@ -14,6 +14,8 @@ from urllib import error
 from urllib import parse
 from urllib import request
 
+from day_captain.adapters.auth import DeviceCodeAuthenticator
+from day_captain.adapters.auth import FileTokenCache
 from day_captain.models import AuthContext
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -161,23 +163,52 @@ class GraphApiClient:
 class GraphDelegatedAuthProvider:
     def __init__(
         self,
-        access_token: str,
         api_client: GraphApiClient,
+        access_token: str = "",
+        token_cache: Optional[FileTokenCache] = None,
+        authenticator: Optional[DeviceCodeAuthenticator] = None,
         user_id: str = "",
     ) -> None:
-        self.access_token = access_token
         self.api_client = api_client
+        self.access_token = access_token
+        self.token_cache = token_cache
+        self.authenticator = authenticator
         self.user_id = user_id
 
     def authenticate(self, scopes: Sequence[str]) -> AuthContext:
-        if not self.access_token:
-            raise ValueError("DAY_CAPTAIN_GRAPH_ACCESS_TOKEN is required for delegated Graph access.")
-        resolved_user_id = self.user_id
+        access_token = self.access_token
+        cached_bundle = self.token_cache.load() if self.token_cache is not None else None
+        if not access_token and cached_bundle is not None:
+            if cached_bundle.expires_at > datetime.now(timezone.utc):
+                access_token = cached_bundle.access_token
+            elif self.authenticator is not None and cached_bundle.refresh_token:
+                refreshed = self.authenticator.refresh_tokens(cached_bundle.refresh_token, scopes)
+                if self.token_cache is not None:
+                    self.token_cache.save(refreshed)
+                cached_bundle = refreshed
+                access_token = refreshed.access_token
+        if not access_token:
+            raise ValueError(
+                "No delegated Graph access token available. Run `day-captain auth login` or set DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."
+            )
+
+        resolved_user_id = self.user_id or (cached_bundle.user_id if cached_bundle is not None else "")
         if not resolved_user_id:
-            profile = self.api_client.get_object("/me", access_token=self.access_token)
+            profile = self.api_client.get_object("/me", access_token=access_token)
             resolved_user_id = str(profile.get("id") or profile.get("userPrincipalName") or "graph-user")
+            if cached_bundle is not None and self.token_cache is not None:
+                self.token_cache.save(
+                    type(cached_bundle)(
+                        access_token=access_token,
+                        refresh_token=cached_bundle.refresh_token,
+                        expires_at=cached_bundle.expires_at,
+                        scopes=cached_bundle.scopes,
+                        token_type=cached_bundle.token_type,
+                        user_id=resolved_user_id,
+                    )
+                )
         return AuthContext(
-            access_token=self.access_token,
+            access_token=access_token,
             granted_scopes=tuple(scopes),
             user_id=resolved_user_id,
         )

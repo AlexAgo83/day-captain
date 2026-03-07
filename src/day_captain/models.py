@@ -18,6 +18,26 @@ class AuthContext:
 
 
 @dataclass(frozen=True)
+class AuthTokenBundle:
+    access_token: str
+    refresh_token: str
+    expires_at: datetime
+    scopes: Sequence[str]
+    token_type: str = "Bearer"
+    user_id: str = ""
+
+
+@dataclass(frozen=True)
+class DeviceCodeSession:
+    device_code: str
+    user_code: str
+    verification_uri: str
+    expires_in: int
+    interval: int
+    message: str
+
+
+@dataclass(frozen=True)
 class UserPreference:
     preference_key: str
     preference_type: str
