@@ -9,6 +9,7 @@ from typing import Sequence
 
 from day_captain.models import AuthContext
 from day_captain.models import DigestEntry
+from day_captain.models import DigestOverview
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
 from day_captain.models import FeedbackRecord
@@ -97,6 +98,8 @@ class DigestRenderer(Protocol):
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        top_summary: str = "",
+        top_summary_source: str = "none",
         meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         ...
@@ -107,6 +110,14 @@ class DigestWordingEngine(Protocol):
         self,
         prioritized_items: Sequence[DigestEntry],
     ) -> Sequence[DigestEntry]:
+        ...
+
+
+class DigestOverviewEngine(Protocol):
+    def summarize(
+        self,
+        payload: DigestPayload,
+    ) -> DigestOverview:
         ...
 
 

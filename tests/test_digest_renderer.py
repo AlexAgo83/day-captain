@@ -32,18 +32,25 @@ class StructuredDigestRendererTest(unittest.TestCase):
                     guardrail_applied=True,
                 ),
             ),
+            top_summary="Budget review is the main priority this morning.",
+            top_summary_source="llm",
             meeting_horizon={"mode": "same_day", "source_date": "2026-03-07", "target_date": "2026-03-07"},
         )
 
+        self.assertIn("In brief", payload.delivery_body)
+        self.assertIn("Budget review is the main priority this morning.", payload.delivery_body)
         self.assertIn("Critical topics", payload.delivery_body)
         self.assertIn("Prepared for you", payload.delivery_body)
         self.assertIn("Covering updates from", payload.delivery_body)
         self.assertIn("Sat 07 Mar 2026 at 09:00 CET", payload.delivery_body)
         self.assertEqual(payload.delivery_subject, "Your Day Captain brief for Sat 07 Mar")
+        self.assertEqual(payload.top_summary, "Budget review is the main priority this morning.")
+        self.assertEqual(payload.delivery_payload["top_summary_source"], "llm")
         self.assertIn("graph_message", payload.delivery_payload)
         self.assertEqual(payload.delivery_payload["graph_message"]["subject"], payload.delivery_subject)
         self.assertEqual(payload.delivery_payload["graph_message"]["body"]["contentType"], "HTML")
         self.assertIn("<html>", payload.delivery_payload["html_body"])
+        self.assertIn("In brief", payload.delivery_payload["html_body"])
         self.assertIn("No meetings are on deck for today.", payload.delivery_body)
 
     def test_localizes_french_copy_and_meeting_fallback_note(self) -> None:

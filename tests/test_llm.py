@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 import sys
 import unittest
@@ -8,7 +10,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from day_captain.adapters.llm import LlmProviderError
 from day_captain.adapters.llm import OpenAICompatibleDigestWordingProvider
 from day_captain.models import DigestEntry
+from day_captain.models import DigestPayload
+from day_captain.services import DeterministicDigestOverviewEngine
 from day_captain.services import LlmDigestWordingEngine
+from day_captain.services import LlmDigestOverviewEngine
 
 
 class _FakeResponse:
@@ -110,6 +115,71 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
                     ),
                 )
             )
+
+    def test_summarize_digest_posts_bounded_summary_request(self) -> None:
+        captured = {}
+
+        def opener(req, timeout=0):
+            captured["url"] = req.full_url
+            captured["timeout"] = timeout
+            captured["body"] = json.loads(req.data.decode("utf-8"))
+            return _FakeResponse(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps(
+                                    {
+                                        "summary": "Budget review is the main priority, with roadmap follow-up next."
+                                    }
+                                )
+                            }
+                        }
+                    ]
+                }
+            )
+
+        provider = OpenAICompatibleDigestWordingProvider(
+            api_key="sk-test",
+            model="gpt-5-mini",
+            language="en",
+            opener=opener,
+        )
+
+        summary = provider.summarize_digest(
+            sections={
+                "critical_topics": (
+                    DigestEntry(
+                        title="Urgent budget review",
+                        summary="Critical: Please review before noon.",
+                        section_name="critical_topics",
+                        source_kind="message",
+                        source_id="msg-1",
+                        score=3.0,
+                    ),
+                ),
+                "actions_to_take": (
+                    DigestEntry(
+                        title="Roadmap update",
+                        summary="Need your input for planning.",
+                        section_name="actions_to_take",
+                        source_kind="message",
+                        source_id="msg-2",
+                        score=2.0,
+                    ),
+                ),
+            },
+            labels={"critical_topics": "Critical topics", "actions_to_take": "Actions to take"},
+        )
+
+        self.assertEqual(captured["url"], "https://api.openai.com/v1/chat/completions")
+        self.assertEqual(captured["timeout"], 30)
+        self.assertEqual(captured["body"]["max_tokens"], 120)
+        self.assertIn("2 to 4 short factual sentences", captured["body"]["messages"][0]["content"])
+        self.assertEqual(
+            summary,
+            "Budget review is the main priority, with roadmap follow-up next.",
+        )
 
 
 class LlmDigestWordingEngineTest(unittest.TestCase):
@@ -220,3 +290,101 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
         rewritten = engine.rewrite(items)
 
         self.assertEqual(rewritten, items)
+
+
+class DigestOverviewEngineTest(unittest.TestCase):
+    def test_llm_summary_uses_provider_output_when_available(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "en"},
+            actions_to_take=(
+                DigestEntry(
+                    title="Roadmap update",
+                    summary="Need your input for planning.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-2",
+                    score=2.0,
+                ),
+            ),
+        )
+        provider = type(
+            "Provider",
+            (),
+            {"summarize_digest": lambda self, sections, labels: "Roadmap follow-up is the main action for today."},
+        )()
+
+        overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
+
+        self.assertEqual(overview.source, "llm")
+        self.assertEqual(overview.summary, "Roadmap follow-up is the main action for today.")
+
+    def test_deterministic_summary_uses_final_sections(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "en"},
+            critical_topics=(
+                DigestEntry(
+                    title="Urgent budget review",
+                    summary="Critical: Please review before noon.",
+                    section_name="critical_topics",
+                    source_kind="message",
+                    source_id="msg-1",
+                    score=3.0,
+                ),
+            ),
+            upcoming_meetings=(
+                DigestEntry(
+                    title="Leadership sync",
+                    summary="Today at 10:00 with ceo@example.com",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-1",
+                    score=2.0,
+                ),
+            ),
+        )
+
+        overview = DeterministicDigestOverviewEngine().summarize(payload)
+
+        self.assertEqual(overview.source, "deterministic")
+        self.assertIn("Top priority: Urgent budget review.", overview.summary)
+        self.assertIn("Upcoming meeting: Today at 10:00 with ceo@example.com.", overview.summary)
+
+    def test_llm_summary_falls_back_to_deterministic_summary(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            actions_to_take=(
+                DigestEntry(
+                    title="A imprimer",
+                    summary="Bonjour, Voici notre logo en pj.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-2",
+                    score=2.0,
+                ),
+            ),
+        )
+        provider = type(
+            "Provider",
+            (),
+            {"summarize_digest": lambda self, sections, labels: (_ for _ in ()).throw(RuntimeError("boom"))},
+        )()
+
+        overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
+
+        self.assertEqual(overview.source, "deterministic")
+        self.assertIn("Suivi principal", overview.summary)

@@ -2,8 +2,8 @@
 > From version: 0.4.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 93%
-> Progress: 70%
+> Confidence: 96%
+> Progress: 80%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -28,7 +28,7 @@ flowchart LR
 - [x] 1. Configure the bounded LLM wording path for real delivered digest runs.
 - [x] 2. Tune the wording behavior so summaries sound more assistant-like while staying factual and concise.
 - [x] 3. Validate that fallback behavior remains safe when the LLM path is disabled or fails.
-- [ ] 4. Validate the wording quality on a real delivered digest.
+- [ ] 4. Validate the wording quality on a real delivered digest with funded provider quota.
 - [x] FINAL: Update related Logics docs
 
 # AC Traceability
@@ -60,4 +60,8 @@ flowchart LR
 - Validation executed:
   - `python3 -m unittest tests.test_llm tests.test_app tests.test_settings`
   - `python3 -m unittest discover -s tests`
-- Remaining blocker: no `DAY_CAPTAIN_LLM_API_KEY` is configured locally, so a real delivered digest with the LLM path enabled could not be exercised. Final mailbox validation of wording quality remains open until a provider key is supplied.
+- A provider key is now configured locally and the bounded wording path is active in configuration.
+- Validation executed in live mode:
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
+- Current blocker: the OpenAI request returns `429 insufficient_quota`, so the live run falls back safely to deterministic wording instead of producing verifiable LLM rewrites. Final mailbox validation of wording quality remains open until provider quota or billing is enabled.

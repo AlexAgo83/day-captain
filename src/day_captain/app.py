@@ -35,6 +35,7 @@ from day_captain.models import UserPreference
 from day_captain.ports import AuthProvider
 from day_captain.ports import CalendarCollector
 from day_captain.ports import DigestDelivery
+from day_captain.ports import DigestOverviewEngine
 from day_captain.ports import DigestRenderer
 from day_captain.ports import DigestWordingEngine
 from day_captain.ports import FeedbackProcessor
@@ -43,7 +44,9 @@ from day_captain.ports import RecallProvider
 from day_captain.ports import ScoringEngine
 from day_captain.ports import Storage
 from day_captain.services import DeterministicScoringEngine
+from day_captain.services import DeterministicDigestOverviewEngine
 from day_captain.services import IdentityDigestWordingEngine
+from day_captain.services import LlmDigestOverviewEngine
 from day_captain.services import LlmDigestWordingEngine
 from day_captain.services import PreferenceFeedbackProcessor
 from day_captain.services import SECTION_NAMES
@@ -252,6 +255,8 @@ class StubDigestRenderer:
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        top_summary: str = "",
+        top_summary_source: str = "none",
         meeting_horizon: Optional[Dict[str, str]] = None,
     ) -> DigestPayload:
         return StructuredDigestRenderer(
@@ -264,6 +269,8 @@ class StubDigestRenderer:
             window_end=window_end,
             delivery_mode=delivery_mode,
             prioritized_items=prioritized_items,
+            top_summary=top_summary,
+            top_summary_source=top_summary_source,
             meeting_horizon=meeting_horizon,
         )
 
@@ -283,27 +290,48 @@ class NoopDigestDelivery:
         return None
 
 
-def _default_digest_wording_engine(settings: DayCaptainSettings) -> DigestWordingEngine:
+def _build_llm_provider(settings: DayCaptainSettings):
     if not settings.llm_is_enabled():
-        return IdentityDigestWordingEngine()
+        return None
     provider_name = settings.llm_provider.strip().lower()
-    if provider_name in {"openai", "openai_compatible"} and settings.llm_api_key and settings.llm_model:
-        provider = OpenAICompatibleDigestWordingProvider(
-            api_key=settings.llm_api_key,
-            model=settings.llm_model,
-            base_url=settings.llm_base_url,
-            timeout_seconds=settings.llm_timeout_seconds,
-            max_output_tokens=settings.llm_max_output_tokens,
-            temperature=settings.llm_temperature,
-            language=settings.resolved_llm_language(),
-            style_prompt=settings.llm_style_prompt,
-        )
-        return LlmDigestWordingEngine(
-            provider=provider,
-            shortlist_limit=settings.llm_shortlist_limit,
-            enabled_sections=settings.llm_enabled_sections,
-        )
-    return IdentityDigestWordingEngine()
+    if provider_name not in {"openai", "openai_compatible"}:
+        return None
+    if not settings.llm_api_key or not settings.llm_model:
+        return None
+    return OpenAICompatibleDigestWordingProvider(
+        api_key=settings.llm_api_key,
+        model=settings.llm_model,
+        base_url=settings.llm_base_url,
+        timeout_seconds=settings.llm_timeout_seconds,
+        max_output_tokens=settings.llm_max_output_tokens,
+        temperature=settings.llm_temperature,
+        language=settings.resolved_llm_language(),
+        style_prompt=settings.llm_style_prompt,
+    )
+
+
+def _default_digest_wording_engine(
+    settings: DayCaptainSettings,
+    provider=None,
+) -> DigestWordingEngine:
+    provider = provider if provider is not None else _build_llm_provider(settings)
+    if provider is None:
+        return IdentityDigestWordingEngine()
+    return LlmDigestWordingEngine(
+        provider=provider,
+        shortlist_limit=settings.llm_shortlist_limit,
+        enabled_sections=settings.llm_enabled_sections,
+    )
+
+
+def _default_digest_overview_engine(
+    settings: DayCaptainSettings,
+    provider=None,
+) -> DigestOverviewEngine:
+    provider = provider if provider is not None else _build_llm_provider(settings)
+    if provider is None:
+        return DeterministicDigestOverviewEngine()
+    return LlmDigestOverviewEngine(provider=provider)
 
 
 def _validate_graph_send_prerequisites(settings: DayCaptainSettings, auth_context: AuthContext) -> None:
@@ -323,6 +351,7 @@ class DayCaptainApplication:
         storage: Storage,
         scoring_engine: ScoringEngine,
         digest_wording_engine: DigestWordingEngine,
+        digest_overview_engine: DigestOverviewEngine,
         digest_renderer: DigestRenderer,
         digest_delivery: DigestDelivery,
         recall_provider: RecallProvider,
@@ -335,6 +364,7 @@ class DayCaptainApplication:
         self.storage = storage
         self.scoring_engine = scoring_engine
         self.digest_wording_engine = digest_wording_engine
+        self.digest_overview_engine = digest_overview_engine
         self.digest_renderer = digest_renderer
         self.digest_delivery = digest_delivery
         self.recall_provider = recall_provider
@@ -414,6 +444,19 @@ class DayCaptainApplication:
             prioritized_items=prioritized_items,
             meeting_horizon=meeting_horizon,
         )
+        overview = self.digest_overview_engine.summarize(payload)
+        if overview.summary or overview.source != "none":
+            payload = self.digest_renderer.render(
+                run_id=run_id,
+                generated_at=current_time,
+                window_start=window_start,
+                window_end=window_end,
+                delivery_mode=selected_delivery_mode,
+                prioritized_items=prioritized_items,
+                top_summary=overview.summary,
+                top_summary_source=overview.source,
+                meeting_horizon=meeting_horizon,
+            )
         if selected_delivery_mode == "graph_send":
             _validate_graph_send_prerequisites(self.settings, auth_context)
             self.digest_delivery.deliver_digest(auth_context, payload)
@@ -475,6 +518,7 @@ def build_application(
     calendar_collector: Optional[CalendarCollector] = None,
     scoring_engine: Optional[ScoringEngine] = None,
     digest_wording_engine: Optional[DigestWordingEngine] = None,
+    digest_overview_engine: Optional[DigestOverviewEngine] = None,
     digest_renderer: Optional[DigestRenderer] = None,
     digest_delivery: Optional[DigestDelivery] = None,
     recall_provider: Optional[RecallProvider] = None,
@@ -529,6 +573,8 @@ def build_application(
     else:
         resolved_calendar_collector = StaticCalendarCollector()
 
+    llm_provider = _build_llm_provider(resolved_settings)
+
     return DayCaptainApplication(
         settings=resolved_settings,
         auth_provider=resolved_auth_provider,
@@ -540,7 +586,8 @@ def build_application(
             digest_language=resolved_settings.resolved_digest_language(),
             display_timezone=resolved_settings.display_timezone,
         ),
-        digest_wording_engine=digest_wording_engine or _default_digest_wording_engine(resolved_settings),
+        digest_wording_engine=digest_wording_engine or _default_digest_wording_engine(resolved_settings, provider=llm_provider),
+        digest_overview_engine=digest_overview_engine or _default_digest_overview_engine(resolved_settings, provider=llm_provider),
         digest_renderer=digest_renderer
         or StructuredDigestRenderer(
             display_timezone=resolved_settings.display_timezone,

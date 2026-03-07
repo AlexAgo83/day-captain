@@ -1,8 +1,8 @@
 ## task_008_day_captain_email_rendering_and_formatting_upgrade - Upgrade delivered digest rendering for Outlook readability
 > From version: 0.4.0
 > Status: In Progress
-> Understanding: 100%
-> Confidence: 98%
+> Understanding: 99%
+> Confidence: 99%
 > Progress: 95%
 > Complexity: Medium
 > Theme: Quality
@@ -63,4 +63,4 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
 - Real mailbox validation confirmed the delivered digest uses the upgraded HTML structure and human-friendly local timestamps.
-- Status remains `In Progress` only because the parent backlog item stays open until the LLM wording slice is also validated end to end.
+- Rendering and delivered mailbox validation are complete. Status remains `In Progress` only because the parent backlog item stays open until the live LLM wording slice is also validated end to end.
