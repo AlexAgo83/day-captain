@@ -138,6 +138,86 @@ class OpenAICompatibleDigestWordingProvider:
             raise LlmProviderError("LLM response did not include any rewritten items.")
         return result
 
+    def summarize_digest(
+        self,
+        sections: Mapping[str, Sequence[DigestEntry]],
+        labels: Mapping[str, str],
+        meeting_note: str = "",
+    ) -> str:
+        payload = {
+            "model": self.model,
+            "temperature": self.temperature,
+            "max_tokens": min(self.max_output_tokens, 120),
+            "response_format": {"type": "json_object"},
+            "messages": (
+                {
+                    "role": "system",
+                    "content": (
+                        "Write a short opening digest summary in {0}. "
+                        "{1} "
+                        "Use 2 to 4 short factual sentences. "
+                        "Only use the provided digest sections. "
+                        "Do not invent details. "
+                        "Avoid greetings, sign-offs, bullet points, and markdown. "
+                        "Return JSON with a single `summary` string."
+                    ).format(
+                        "French" if self.language == "fr" else "English",
+                        self.style_prompt,
+                    ),
+                },
+                {
+                    "role": "user",
+                    "content": json.dumps(
+                        {
+                            "meeting_note": meeting_note,
+                            "sections": [
+                                {
+                                    "name": section_name,
+                                    "label": labels.get(section_name, section_name),
+                                    "items": [
+                                        {
+                                            "title": item.title,
+                                            "summary": item.summary,
+                                        }
+                                        for item in items
+                                    ],
+                                }
+                                for section_name, items in sections.items()
+                                if items
+                            ],
+                        },
+                        sort_keys=True,
+                    ),
+                },
+            ),
+        }
+        raw = self._post_json("{0}/chat/completions".format(self.base_url), payload)
+        response_payload = json.loads(raw or "{}")
+        if not isinstance(response_payload, dict):
+            raise LlmProviderError("Expected JSON object from LLM provider.")
+        choices = response_payload.get("choices")
+        if not isinstance(choices, list) or not choices:
+            raise LlmProviderError("LLM response did not include any choices.")
+        first_choice = choices[0]
+        if not isinstance(first_choice, dict):
+            raise LlmProviderError("LLM choice payload was invalid.")
+        message = first_choice.get("message")
+        if not isinstance(message, dict):
+            raise LlmProviderError("LLM response did not include a message payload.")
+        content = _response_text(message.get("content"))
+        if not content:
+            raise LlmProviderError("LLM response message was empty.")
+        try:
+            summary_payload = json.loads(content)
+        except json.JSONDecodeError as exc:
+            raise LlmProviderError("LLM content was not valid JSON.") from exc
+        if not isinstance(summary_payload, dict):
+            raise LlmProviderError("LLM content was not a JSON object.")
+        summary = str(summary_payload.get("summary") or "").strip()
+        if not summary:
+            raise LlmProviderError("LLM response did not include a summary.")
+        return summary
+
     def _post_json(self, url: str, payload: Mapping[str, Any]) -> str:
         body = json.dumps(payload).encode("utf-8")
         req = request.Request(

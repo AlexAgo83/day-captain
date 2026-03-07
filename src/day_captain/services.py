@@ -12,6 +12,7 @@ from typing import Sequence
 from zoneinfo import ZoneInfo
 
 from day_captain.models import DigestEntry
+from day_captain.models import DigestOverview
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
 from day_captain.models import FeedbackRecord
@@ -200,6 +201,17 @@ LANGUAGE_COPY = {
             "weekend_monday": "Looking ahead to {day}.",
             "next_day": "Nothing else is scheduled for today, so here is {day}.",
         },
+        "overview": {
+            "label": "In brief",
+            "clear": "Nothing urgent stands out right now.",
+            "critical_one": "Top priority: {first}.",
+            "critical_many": "Top priorities: {first}; {second}.",
+            "action_one": "Main follow-up: {first}.",
+            "action_many": "Main follow-ups: {first}; {second}.",
+            "watch_one": "Worth keeping in view: {first}.",
+            "watch_many": "Worth keeping in view: {first}; {second}.",
+            "meeting": "Upcoming meeting: {text}.",
+        },
         "summary": {
             "critical": "Needs attention: {text}",
             "action": "Likely needs your follow-up: {text}",
@@ -233,6 +245,17 @@ LANGUAGE_COPY = {
         "meeting_notes": {
             "weekend_monday": "Aperçu des réunions de {day}.",
             "next_day": "Rien d'autre n'est prévu aujourd'hui, voici {day}.",
+        },
+        "overview": {
+            "label": "En bref",
+            "clear": "Rien d'urgent ne remonte pour l'instant.",
+            "critical_one": "Priorité du moment : {first}.",
+            "critical_many": "Priorités du moment : {first} ; {second}.",
+            "action_one": "Suivi principal : {first}.",
+            "action_many": "Suivis principaux : {first} ; {second}.",
+            "watch_one": "À garder en tête : {first}.",
+            "watch_many": "À garder en tête : {first} ; {second}.",
+            "meeting": "Réunion à venir : {text}.",
         },
         "summary": {
             "critical": "À surveiller de près : {text}",
@@ -348,6 +371,11 @@ def _normalize_language(value: str) -> str:
 
 def _language_copy(language: str) -> Mapping[str, object]:
     return LANGUAGE_COPY[_normalize_language(language)]
+
+
+def _clean_overview_fragment(value: str) -> str:
+    cleaned = " ".join((value or "").strip().split())
+    return cleaned.rstrip(" .!?:;,\n\t") or cleaned
 
 
 def _display_zone(name: str):
@@ -660,6 +688,8 @@ class StructuredDigestRenderer:
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        top_summary: str = "",
+        top_summary_source: str = "none",
         meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         sections = {name: [] for name in SECTION_NAMES}
@@ -678,14 +708,30 @@ class StructuredDigestRenderer:
                 include_year=False,
             )
         )
-        delivery_body = self._build_delivery_body(generated_at, window_start, window_end, sections, meeting_horizon or {})
-        delivery_html = self._build_delivery_html(generated_at, window_start, window_end, sections, meeting_horizon or {})
+        delivery_body = self._build_delivery_body(
+            generated_at,
+            window_start,
+            window_end,
+            sections,
+            top_summary,
+            meeting_horizon or {},
+        )
+        delivery_html = self._build_delivery_html(
+            generated_at,
+            window_start,
+            window_end,
+            sections,
+            top_summary,
+            meeting_horizon or {},
+        )
         delivery_payload = {
             "mode": delivery_mode,
             "run_id": run_id,
             "subject": delivery_subject,
             "body": delivery_body,
             "html_body": delivery_html,
+            "top_summary": top_summary,
+            "top_summary_source": top_summary_source,
             "meeting_horizon": dict(meeting_horizon or {}),
             "digest_language": self.digest_language,
             "sections": {
@@ -710,6 +756,7 @@ class StructuredDigestRenderer:
             delivery_mode=delivery_mode,
             delivery_subject=delivery_subject,
             delivery_body=delivery_body,
+            top_summary=top_summary,
             delivery_payload=delivery_payload,
             critical_topics=tuple(sections["critical_topics"]),
             actions_to_take=tuple(sections["actions_to_take"]),
@@ -734,25 +781,21 @@ class StructuredDigestRenderer:
         window_start: datetime,
         window_end: datetime,
         sections: Mapping[str, Sequence[DigestEntry]],
+        top_summary: str,
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
         generated_label = _format_localized_timestamp(generated_at, self.display_timezone, self.digest_language)
-        window_label = "{0} to {1}".format(
-            _format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
-            _format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
-        )
-        if self.digest_language == "fr":
-            window_label = "{0} au {1}".format(
-                _format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
-                _format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
-            )
         lines = [
             localized["digest_title"],
             localized["prepared"].format(date=generated_label),
             localized["coverage"].format(start=_format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False), end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language)),
             "",
         ]
+        if top_summary.strip():
+            lines.append(localized["overview"]["label"])
+            lines.append(top_summary.strip())
+            lines.append("")
         labels = localized["sections"]
         for name in SECTION_NAMES:
             lines.append(labels[name])
@@ -775,6 +818,7 @@ class StructuredDigestRenderer:
         window_start: datetime,
         window_end: datetime,
         sections: Mapping[str, Sequence[DigestEntry]],
+        top_summary: str,
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
@@ -790,6 +834,20 @@ class StructuredDigestRenderer:
             "<p style=\"margin:0 0 4px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
             "<p style=\"margin:0 0 24px;color:#475569;\">{0}</p>".format(self._html_escape(coverage)),
         ]
+        if top_summary.strip():
+            parts.append(
+                "<section style=\"margin:0 0 24px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;\">"
+            )
+            parts.append(
+                "<h2 style=\"margin:0 0 8px;font-size:18px;color:#0f172a;\">{0}</h2>".format(
+                    self._html_escape(localized["overview"]["label"])
+                )
+            )
+            parts.append(
+                "<p style=\"margin:0;color:#334155;\">{0}</p></section>".format(
+                    self._html_escape(top_summary.strip())
+                )
+            )
         labels = localized["sections"]
         for name in SECTION_NAMES:
             parts.append(
@@ -878,6 +936,83 @@ class IdentityDigestWordingEngine:
         return tuple(prioritized_items)
 
 
+class DeterministicDigestOverviewEngine:
+    def summarize(
+        self,
+        payload: DigestPayload,
+    ) -> DigestOverview:
+        language = _normalize_language(str(payload.delivery_payload.get("digest_language") or "en"))
+        localized = _language_copy(language)["overview"]
+        sections = {
+            "critical_topics": tuple(payload.critical_topics),
+            "actions_to_take": tuple(payload.actions_to_take),
+            "watch_items": tuple(payload.watch_items),
+            "upcoming_meetings": tuple(payload.upcoming_meetings),
+        }
+        sentences = []
+        for section_name in ("critical_topics", "actions_to_take", "watch_items"):
+            items = sections[section_name]
+            if not items:
+                continue
+            sentences.append(self._section_sentence(section_name, items, localized))
+            if len(sentences) >= 2:
+                break
+        meetings = sections["upcoming_meetings"]
+        if meetings and len(sentences) < 3:
+            sentences.append(localized["meeting"].format(text=_clean_overview_fragment(meetings[0].summary)))
+        if not sentences:
+            sentences.append(localized["clear"])
+        return DigestOverview(
+            summary=" ".join(sentence.strip() for sentence in sentences if sentence.strip()),
+            source="deterministic",
+        )
+
+    def _section_sentence(
+        self,
+        section_name: str,
+        items: Sequence[DigestEntry],
+        localized: Mapping[str, str],
+    ) -> str:
+        first = _clean_overview_fragment(items[0].title)
+        second = _clean_overview_fragment(items[1].title) if len(items) > 1 else ""
+        if section_name == "critical_topics":
+            key = "critical_many" if second else "critical_one"
+        elif section_name == "actions_to_take":
+            key = "action_many" if second else "action_one"
+        else:
+            key = "watch_many" if second else "watch_one"
+        return localized[key].format(first=first, second=second)
+
+
+class LlmDigestOverviewEngine:
+    def __init__(self, provider, fallback_engine: Optional[DeterministicDigestOverviewEngine] = None) -> None:
+        self.provider = provider
+        self.fallback_engine = fallback_engine or DeterministicDigestOverviewEngine()
+
+    def summarize(
+        self,
+        payload: DigestPayload,
+    ) -> DigestOverview:
+        language = _normalize_language(str(payload.delivery_payload.get("digest_language") or "en"))
+        labels = _language_copy(language)["sections"]
+        sections = {
+            "critical_topics": tuple(payload.critical_topics),
+            "actions_to_take": tuple(payload.actions_to_take),
+            "watch_items": tuple(payload.watch_items),
+            "upcoming_meetings": tuple(payload.upcoming_meetings),
+        }
+        if not any(sections[name] for name in SECTION_NAMES):
+            return self.fallback_engine.summarize(payload)
+        try:
+            summary = self.provider.summarize_digest(sections=sections, labels=labels)
+        except Exception:
+            return self.fallback_engine.summarize(payload)
+        summary = str(summary or "").strip()
+        if not summary:
+            return self.fallback_engine.summarize(payload)
+        return DigestOverview(summary=summary, source="llm")
+
+
 class LlmDigestWordingEngine:
     def __init__(
         self,
@@ -946,6 +1081,8 @@ class SnapshotRecallProvider:
             window_end=payload.window_end,
             delivery_mode=payload.delivery_mode,
             prioritized_items=tuple(items),
+            top_summary=payload.top_summary,
+            top_summary_source=str(payload.delivery_payload.get("top_summary_source") or "none"),
         )
 
 

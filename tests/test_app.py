@@ -71,6 +71,8 @@ class DayCaptainApplicationTest(unittest.TestCase):
         payload = app.run_morning_digest(now=now)
 
         self.assertEqual(payload.delivery_mode, "json")
+        self.assertTrue(payload.top_summary)
+        self.assertEqual(payload.delivery_payload["top_summary_source"], "deterministic")
         self.assertEqual(len(payload.critical_topics), 1)
         self.assertEqual(payload.critical_topics[0].source_id, "msg-1")
         self.assertEqual(len(payload.actions_to_take), 1)
@@ -117,6 +119,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
         payload = app.run_morning_digest(now=now)
 
         self.assertEqual(payload.critical_topics[0].summary, "Rewritten summary")
+        self.assertTrue(payload.top_summary)
 
     def test_recall_returns_latest_run_for_day(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
@@ -208,9 +211,39 @@ class DayCaptainApplicationTest(unittest.TestCase):
         )
         self.assertEqual(app.digest_wording_engine.shortlist_limit, 3)
         self.assertEqual(app.digest_wording_engine.enabled_sections, ("critical_topics",))
+        self.assertEqual(type(app.digest_overview_engine).__name__, "LlmDigestOverviewEngine")
         self.assertEqual(app.digest_renderer.display_timezone, "Europe/Paris")
         self.assertEqual(app.digest_renderer.digest_language, "en")
         self.assertEqual(app.scoring_engine.display_timezone, "Europe/Paris")
+
+    def test_morning_digest_applies_digest_overview_engine(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            digest_overview_engine=mock.Mock(
+                summarize=lambda payload: type("Overview", (), {"summary": "Short top summary.", "source": "llm"})()
+            ),
+            mail_collector=StaticMailCollector(
+                [
+                    MessageRecord(
+                        graph_message_id="msg-1",
+                        thread_id="thread-1",
+                        subject="Urgent budget review",
+                        from_address="boss@example.com",
+                        received_at=datetime(2026, 3, 7, 7, 30, tzinfo=timezone.utc),
+                        body_preview="Please review before noon.",
+                    ),
+                ]
+            ),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now)
+
+        self.assertEqual(payload.top_summary, "Short top summary.")
+        self.assertEqual(payload.delivery_payload["top_summary_source"], "llm")
 
     def test_weekend_run_falls_back_to_monday_meetings(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)

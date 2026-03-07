@@ -1,8 +1,8 @@
 ## task_009_day_captain_digest_signal_quality_tuning - Refine digest prioritization and filtering to reduce weak items
 > From version: 0.4.0
 > Status: In Progress
-> Understanding: 100%
-> Confidence: 97%
+> Understanding: 99%
+> Confidence: 98%
 > Progress: 95%
 > Complexity: High
 > Theme: Quality
@@ -63,4 +63,4 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
 - Real delivered output now surfaces only the two meaningful action items seen in the mailbox sample, with the prior self-digest leakage removed.
-- Status remains `In Progress` only because the parent backlog item stays open until the LLM wording slice is also validated end to end.
+- Signal tuning and delivered validation are complete. Status remains `In Progress` only because the parent backlog item stays open until the live LLM wording slice is also validated end to end.

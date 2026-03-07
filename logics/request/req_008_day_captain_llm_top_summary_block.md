@@ -1,7 +1,7 @@
 ## req_008_day_captain_llm_top_summary_block - Day Captain top-of-digest LLM summary block
 > From version: 0.6.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
 > Complexity: Medium
 > Theme: Quality
@@ -77,5 +77,5 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_008_day_captain_llm_top_summary_block` - Add a short LLM-generated overview block above the detailed digest sections. Status: `Ready`.
-- `task_015_day_captain_llm_top_summary_block` - Implement bounded top-of-digest LLM synthesis with safe fallback and rendered placement. Status: `Ready`.
+- `item_008_day_captain_llm_top_summary_block` - Add a short LLM-generated overview block above the detailed digest sections. Status: `Done`.
+- `task_015_day_captain_llm_top_summary_block` - Implement bounded top-of-digest LLM synthesis with safe fallback and rendered placement. Status: `Done`.

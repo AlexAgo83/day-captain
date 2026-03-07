@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 97%
-> Progress: 85%
+> Progress: 92%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -57,7 +57,7 @@ flowchart LR
 
 # Links
 - Request: `req_004_day_captain_digest_quality_and_email_polish`
-- Primary task(s): `task_008_day_captain_email_rendering_and_formatting_upgrade` (`In Progress`, implementation and validation completed), `task_009_day_captain_digest_signal_quality_tuning` (`In Progress`, implementation and validation completed), `task_010_day_captain_llm_digest_wording_activation_and_tuning` (`In Progress`)
+- Primary task(s): `task_008_day_captain_email_rendering_and_formatting_upgrade` (`Done`), `task_009_day_captain_digest_signal_quality_tuning` (`Done`), `task_010_day_captain_llm_digest_wording_activation_and_tuning` (`In Progress`)
 
 # Priority
 - Impact: High - this is now the main blocker between a working pipeline and a genuinely useful assistant experience.
@@ -67,5 +67,5 @@ flowchart LR
 - Derived from request `req_004_day_captain_digest_quality_and_email_polish`.
 - This slice starts from a real received email, not a speculative design exercise.
 - Likely implementation areas include `src/day_captain/services.py`, `src/day_captain/app.py`, `.env`, `.env.example`, `README.md`, and the digest-related tests.
-- Rendering and signal quality have been implemented and validated against real `graph_send` delivery.
-- Remaining work is limited to end-to-end mailbox validation of the LLM wording path once a provider API key is configured locally.
+- Rendering and signal quality are implemented and validated against real `graph_send` delivery.
+- Remaining work is limited to end-to-end mailbox validation of the LLM wording path once provider quota or billing is enabled; the configured key currently falls back on `429 insufficient_quota`.

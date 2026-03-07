@@ -51,6 +51,7 @@ class DeliveryContractTest(unittest.TestCase):
             payload = app.run_morning_digest(now=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc), force=True)
 
             self.assertEqual(payload.delivery_mode, "graph_send")
+            self.assertTrue(payload.top_summary)
             self.assertIn("graph_message", payload.delivery_payload)
             self.assertEqual(payload.delivery_payload["graph_message"]["subject"], payload.delivery_subject)
             delivery.deliver_digest.assert_called_once()

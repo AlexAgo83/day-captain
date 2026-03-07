@@ -99,11 +99,18 @@ class DigestPayload:
     delivery_mode: str
     delivery_subject: str = ""
     delivery_body: str = ""
+    top_summary: str = ""
     delivery_payload: Mapping[str, Any] = field(default_factory=dict)
     critical_topics: Sequence[DigestEntry] = field(default_factory=tuple)
     actions_to_take: Sequence[DigestEntry] = field(default_factory=tuple)
     watch_items: Sequence[DigestEntry] = field(default_factory=tuple)
     upcoming_meetings: Sequence[DigestEntry] = field(default_factory=tuple)
+
+
+@dataclass(frozen=True)
+class DigestOverview:
+    summary: str = ""
+    source: str = "none"
 
 
 @dataclass(frozen=True)
@@ -178,6 +185,7 @@ def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
         delivery_mode=str(payload.get("delivery_mode") or "json"),
         delivery_subject=str(payload.get("delivery_subject") or ""),
         delivery_body=str(payload.get("delivery_body") or ""),
+        top_summary=str(payload.get("top_summary") or ""),
         delivery_payload=dict(payload.get("delivery_payload") or {}),
         critical_topics=tuple(
             digest_entry_from_dict(item) for item in payload.get("critical_topics") or ()

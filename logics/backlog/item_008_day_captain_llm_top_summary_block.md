@@ -1,9 +1,9 @@
 ## item_008_day_captain_llm_top_summary_block - Add a short LLM-generated overview block above the detailed digest
 > From version: 0.6.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -55,7 +55,7 @@ flowchart LR
 
 # Links
 - Request: `req_008_day_captain_llm_top_summary_block`
-- Primary task(s): `task_015_day_captain_llm_top_summary_block`
+- Primary task(s): `task_015_day_captain_llm_top_summary_block` (`Done`)
 
 # Priority
 - Impact: Medium - this adds visible assistant value at the very top of the digest.
@@ -64,3 +64,4 @@ flowchart LR
 # Notes
 - Derived from request `req_008_day_captain_llm_top_summary_block`.
 - This slice extends the bounded LLM strategy instead of replacing deterministic digest construction.
+- The top summary block is now rendered in both `json` and `graph_send`, with automated LLM-enabled coverage and deterministic fallback confirmed in a real delivered digest.

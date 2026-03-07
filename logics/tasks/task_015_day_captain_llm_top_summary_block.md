@@ -1,9 +1,9 @@
 ## task_015_day_captain_llm_top_summary_block - Implement bounded top-of-digest LLM synthesis with safe fallback
 > From version: 0.6.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,12 +25,12 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Build the LLM summary input only from the final digest sections and metadata.
-- [ ] 2. Add a bounded top summary generation path with strict output limits and safe fallback.
-- [ ] 3. Render the summary block above the detailed sections for both `json` and `graph_send`.
-- [ ] 4. Add focused tests for enabled behavior, fallback behavior, and rendered placement.
-- [ ] 5. Validate the result on local output and a real delivered digest.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Build the LLM summary input only from the final digest sections and metadata.
+- [x] 2. Add a bounded top summary generation path with strict output limits and safe fallback.
+- [x] 3. Render the summary block above the detailed sections for both `json` and `graph_send`.
+- [x] 4. Add focused tests for enabled behavior, fallback behavior, and rendered placement.
+- [x] 5. Validate the result on local output and a real delivered digest.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> Plan step 3 adds the rendered top block. Proof: task explicitly renders the overview above the detailed sections.
@@ -55,10 +55,17 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Implemented a top-of-digest summary block that is generated from the final structured digest content only, rendered in both plain text and HTML, and stored in the payload for recall and persistence.
+- Added bounded LLM summary generation on top of the existing provider, plus deterministic fallback when the provider is disabled or fails.
+- Validation executed:
+  - `python3 -m unittest tests.test_llm tests.test_digest_renderer tests.test_app tests.test_delivery_contract`
+  - `python3 -m unittest discover -s tests`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
+- Real delivered validation confirmed the summary block renders at the top of the mail. The live provider currently falls back to the deterministic overview because the configured OpenAI account returns `429 insufficient_quota`, but enabled-path behavior is covered by automated tests.
