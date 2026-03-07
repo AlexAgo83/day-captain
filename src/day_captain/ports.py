@@ -108,6 +108,15 @@ class DigestWordingEngine(Protocol):
         ...
 
 
+class DigestDelivery(Protocol):
+    def deliver_digest(
+        self,
+        auth_context: AuthContext,
+        payload: DigestPayload,
+    ) -> None:
+        ...
+
+
 class RecallProvider(Protocol):
     def build_recall(self, run: DigestRunRecord) -> DigestPayload:
         ...

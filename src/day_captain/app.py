@@ -16,6 +16,7 @@ from day_captain.adapters.auth import FileTokenCache
 from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import GraphCalendarCollector
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
+from day_captain.adapters.graph import GraphDigestDelivery
 from day_captain.adapters.graph import GraphMailCollector
 from day_captain.adapters.llm import OpenAICompatibleDigestWordingProvider
 from day_captain.adapters.storage import PostgresStorage
@@ -32,6 +33,7 @@ from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
 from day_captain.ports import AuthProvider
 from day_captain.ports import CalendarCollector
+from day_captain.ports import DigestDelivery
 from day_captain.ports import DigestRenderer
 from day_captain.ports import DigestWordingEngine
 from day_captain.ports import FeedbackProcessor
@@ -233,6 +235,11 @@ class DefaultFeedbackProcessor:
         PreferenceFeedbackProcessor().process_feedback(storage, feedback)
 
 
+class NoopDigestDelivery:
+    def deliver_digest(self, auth_context: AuthContext, payload: DigestPayload) -> None:
+        return None
+
+
 def _default_digest_wording_engine(settings: DayCaptainSettings) -> DigestWordingEngine:
     if not settings.llm_is_enabled():
         return IdentityDigestWordingEngine()
@@ -253,6 +260,13 @@ def _default_digest_wording_engine(settings: DayCaptainSettings) -> DigestWordin
     return IdentityDigestWordingEngine()
 
 
+def _validate_graph_send_prerequisites(settings: DayCaptainSettings, auth_context: AuthContext) -> None:
+    if not settings.graph_send_enabled:
+        raise ValueError("graph_send delivery requires DAY_CAPTAIN_GRAPH_SEND_ENABLED=true.")
+    if "Mail.Send" not in auth_context.granted_scopes:
+        raise ValueError("graph_send delivery requires Mail.Send in DAY_CAPTAIN_GRAPH_SCOPES and delegated auth.")
+
+
 class DayCaptainApplication:
     def __init__(
         self,
@@ -264,6 +278,7 @@ class DayCaptainApplication:
         scoring_engine: ScoringEngine,
         digest_wording_engine: DigestWordingEngine,
         digest_renderer: DigestRenderer,
+        digest_delivery: DigestDelivery,
         recall_provider: RecallProvider,
         feedback_processor: FeedbackProcessor,
     ) -> None:
@@ -275,6 +290,7 @@ class DayCaptainApplication:
         self.scoring_engine = scoring_engine
         self.digest_wording_engine = digest_wording_engine
         self.digest_renderer = digest_renderer
+        self.digest_delivery = digest_delivery
         self.recall_provider = recall_provider
         self.feedback_processor = feedback_processor
 
@@ -316,6 +332,9 @@ class DayCaptainApplication:
             delivery_mode=selected_delivery_mode,
             prioritized_items=prioritized_items,
         )
+        if selected_delivery_mode == "graph_send":
+            _validate_graph_send_prerequisites(self.settings, auth_context)
+            self.digest_delivery.deliver_digest(auth_context, payload)
         self.storage.save_run(
             DigestRunRecord(
                 run_id=run_id,
@@ -375,6 +394,7 @@ def build_application(
     scoring_engine: Optional[ScoringEngine] = None,
     digest_wording_engine: Optional[DigestWordingEngine] = None,
     digest_renderer: Optional[DigestRenderer] = None,
+    digest_delivery: Optional[DigestDelivery] = None,
     recall_provider: Optional[RecallProvider] = None,
     feedback_processor: Optional[FeedbackProcessor] = None,
 ) -> DayCaptainApplication:
@@ -436,6 +456,7 @@ def build_application(
         scoring_engine=scoring_engine or DeterministicScoringEngine(),
         digest_wording_engine=digest_wording_engine or _default_digest_wording_engine(resolved_settings),
         digest_renderer=digest_renderer or StructuredDigestRenderer(),
+        digest_delivery=digest_delivery or GraphDigestDelivery(graph_client),
         recall_provider=recall_provider or SnapshotRecallProvider(),
         feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),
     )

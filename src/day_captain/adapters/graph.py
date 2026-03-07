@@ -134,6 +134,43 @@ class GraphApiClient:
             raise GraphApiError("Expected Graph JSON object response.")
         return payload
 
+    def post_object(
+        self,
+        path: str,
+        access_token: str,
+        payload: Mapping[str, Any],
+        headers: Optional[Mapping[str, str]] = None,
+        expected_statuses: Sequence[int] = (200, 201, 202, 204),
+    ) -> Mapping[str, Any]:
+        url = self._build_url(path)
+        request_headers = {
+            "Authorization": "Bearer {0}".format(access_token),
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+        }
+        if headers:
+            request_headers.update(headers)
+        body = json.dumps(payload).encode("utf-8")
+        req = request.Request(url, data=body, headers=request_headers, method="POST")
+        try:
+            with self._opener(req, timeout=self.timeout_seconds) as response:
+                if response.status not in expected_statuses:
+                    raise GraphApiError(
+                        "Graph request failed with unexpected status {0}.".format(response.status)
+                    )
+                raw = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise GraphApiError("Graph request failed with {0}: {1}".format(exc.code, detail)) from exc
+        except error.URLError as exc:
+            raise GraphApiError("Unable to reach Microsoft Graph: {0}".format(exc.reason)) from exc
+        if not raw.strip():
+            return {}
+        parsed = json.loads(raw)
+        if not isinstance(parsed, dict):
+            raise GraphApiError("Expected Graph JSON object response.")
+        return parsed
+
     def list_collection(
         self,
         path: str,
@@ -282,3 +319,22 @@ class GraphCalendarCollector:
             headers={"Prefer": 'outlook.timezone="UTC"'},
         )
         return tuple(normalize_meeting(item) for item in payloads)
+
+
+class GraphDigestDelivery:
+    def __init__(self, api_client: GraphApiClient) -> None:
+        self.api_client = api_client
+
+    def deliver_digest(self, auth_context: AuthContext, payload) -> None:
+        graph_message = payload.delivery_payload.get("graph_message")
+        if not isinstance(graph_message, dict):
+            raise ValueError("graph_send delivery requires a `graph_message` payload.")
+        self.api_client.post_object(
+            "/me/sendMail",
+            access_token=auth_context.access_token,
+            payload={
+                "message": graph_message,
+                "saveToSentItems": True,
+            },
+            expected_statuses=(202,),
+        )

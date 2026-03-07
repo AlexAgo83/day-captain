@@ -68,7 +68,7 @@ DAY_CAPTAIN_DELIVERY_MODE=json
 DAY_CAPTAIN_GRAPH_TENANT_ID=common
 DAY_CAPTAIN_GRAPH_CLIENT_ID=your-app-client-id
 DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH=.day_captain_auth.json
-DAY_CAPTAIN_GRAPH_SCOPES=User.Read,Mail.Read,Calendars.Read
+DAY_CAPTAIN_GRAPH_SCOPES=User.Read,Mail.Read,Calendars.Read,Mail.Send
 DAY_CAPTAIN_LLM_PROVIDER=disabled
 DAY_CAPTAIN_LLM_MODEL=
 DAY_CAPTAIN_LLM_API_KEY=
@@ -83,6 +83,7 @@ DAY_CAPTAIN_JOB_SECRET=...
 DAY_CAPTAIN_DELIVERY_MODE=graph_send
 DAY_CAPTAIN_GRAPH_CLIENT_ID=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
+DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
 DAY_CAPTAIN_LLM_PROVIDER=openai
 DAY_CAPTAIN_LLM_MODEL=gpt-5-mini
 DAY_CAPTAIN_LLM_API_KEY=...
@@ -122,6 +123,8 @@ PYTHONPATH=src python3 -m day_captain auth status
 PYTHONPATH=src python3 -m day_captain auth login
 PYTHONPATH=src python3 -m day_captain auth logout
 ```
+
+If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
 
 ## Local usage
 

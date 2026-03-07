@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from day_captain.app import InMemoryStorage
 from day_captain.app import StaticCalendarCollector
 from day_captain.app import StaticMailCollector
+from day_captain.app import StubAuthProvider
 from day_captain.app import build_application
 from day_captain.config import DayCaptainSettings
 from day_captain.models import MeetingRecord
@@ -201,6 +202,40 @@ class DayCaptainApplicationTest(unittest.TestCase):
             temperature=0.2,
         )
         self.assertEqual(app.digest_wording_engine.shortlist_limit, 3)
+
+    def test_graph_send_requires_graph_send_enabled(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=False,
+                graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaises(ValueError):
+            app.run_morning_digest(now=now, force=True)
+
+    def test_graph_send_requires_mail_send_scope(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_scopes=("User.Read", "Mail.Read"),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaises(ValueError):
+            app.run_morning_digest(now=now, force=True)
 
 
 if __name__ == "__main__":
