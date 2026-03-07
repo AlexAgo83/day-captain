@@ -1,9 +1,9 @@
 ## task_003_day_captain_render_deployment_and_scheduler - Deploy Day Captain on Render with GitHub Actions scheduling
 > From version: 0.1.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 99%
+> Confidence: 96%
+> Progress: 75%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -26,10 +26,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Add hosted configuration boundaries for Render deployment, including env-var contracts, secret expectations, and a Postgres-backed persistence path that preserves current run/digest/feedback behavior.
-- [ ] 2. Add deployment assets and a hosted trigger surface for Render, such as a `render.yaml`, web-service entrypoint, and authenticated webhook/job endpoint for morning digest execution.
-- [ ] 3. Add a GitHub Actions scheduled workflow that securely triggers the hosted service and records success/failure without exposing mailbox payloads.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Add hosted configuration boundaries for Render deployment, including env-var contracts, secret expectations, and a Postgres-backed persistence path that preserves current run/digest/feedback behavior.
+- [x] 2. Add deployment assets and a hosted trigger surface for Render, such as a `render.yaml`, web-service entrypoint, and authenticated webhook/job endpoint for morning digest execution.
+- [x] 3. Add a GitHub Actions scheduled workflow that securely triggers the hosted service and records success/failure without exposing mailbox payloads.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC2 -> This task makes the hosted morning run executable. Proof: Plan steps 1 and 2 wire the existing collection window and storage behavior into a hosted service.
@@ -57,4 +57,14 @@ flowchart LR
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Added hosted configuration seams in `src/day_captain/config.py` and `.env.example` for `DAY_CAPTAIN_DATABASE_URL`, HTTP bind settings, and a protected job secret.
+- Added `PostgresStorage` in `src/day_captain/adapters/storage.py` and automatic `SQLite` vs Postgres storage selection in `src/day_captain/app.py`.
+- Added a minimal hosted HTTP surface in `src/day_captain/web.py` with `/healthz`, a protected `/jobs/morning-digest` endpoint, and a protected `/jobs/recall-digest` endpoint, then exposed it through `day-captain serve`.
+- Added `render.yaml` for a Render web service plus managed Postgres and `.github/workflows/morning-digest-scheduler.yml` for a scheduled GitHub Actions trigger.
+- Added coverage in `tests/test_app.py`, `tests/test_settings.py`, and `tests/test_web.py`.
+- Validation results:
+  - `python3 -m unittest tests.test_settings tests.test_app tests.test_web` -> `OK` (`8` tests)
+  - `python3 -m unittest discover -s tests` -> `OK` (`34` tests)
+- Remaining work before closure:
+  - validate the Render blueprint and hosted service against a real Render environment
+  - validate the GitHub Actions scheduler against the hosted endpoint and secrets in a non-local run

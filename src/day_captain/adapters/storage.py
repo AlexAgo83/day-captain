@@ -1,4 +1,4 @@
-"""SQLite storage adapter for Day Captain."""
+"""Relational storage adapters for Day Captain."""
 
 from datetime import date
 import json
@@ -7,6 +7,13 @@ from typing import Any
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
+
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except ImportError:  # pragma: no cover - exercised only when psycopg isn't installed
+    psycopg = None
+    dict_row = None
 
 from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
@@ -510,6 +517,513 @@ class SQLiteStorage:
         query += " ORDER BY recorded_at"
         with self._connect() as connection:
             rows = connection.execute(query, params).fetchall()
+        return tuple(
+            FeedbackRecord(
+                feedback_id=row["feedback_id"],
+                run_id=row["run_id"],
+                source_kind=row["source_kind"],
+                source_id=row["source_id"],
+                signal_type=row["signal_type"],
+                signal_value=row["signal_value"],
+                recorded_at=parse_datetime(row["recorded_at"]),
+            )
+            for row in rows
+        )
+
+
+class PostgresStorage:
+    def __init__(self, database_url: str) -> None:
+        if psycopg is None or dict_row is None:
+            raise RuntimeError(
+                "Postgres storage requires the `psycopg` package to be installed."
+            )
+        self.database_url = database_url
+        self._ensure_schema()
+
+    def _connect(self):
+        return psycopg.connect(self.database_url, row_factory=dict_row)
+
+    def _ensure_schema(self) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS messages (
+                    graph_message_id TEXT PRIMARY KEY,
+                    thread_id TEXT NOT NULL,
+                    internet_message_id TEXT NOT NULL,
+                    subject TEXT NOT NULL,
+                    from_address TEXT NOT NULL,
+                    to_addresses_json TEXT NOT NULL,
+                    cc_addresses_json TEXT NOT NULL,
+                    received_at TEXT NOT NULL,
+                    body_preview TEXT NOT NULL,
+                    categories_json TEXT NOT NULL,
+                    is_unread BOOLEAN NOT NULL,
+                    has_attachments BOOLEAN NOT NULL,
+                    raw_payload_json TEXT NOT NULL,
+                    first_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS meetings (
+                    graph_event_id TEXT PRIMARY KEY,
+                    subject TEXT NOT NULL,
+                    start_at TEXT NOT NULL,
+                    end_at TEXT NOT NULL,
+                    organizer_address TEXT NOT NULL,
+                    attendees_json TEXT NOT NULL,
+                    location TEXT NOT NULL,
+                    join_url TEXT NOT NULL,
+                    body_preview TEXT NOT NULL,
+                    is_online_meeting BOOLEAN NOT NULL,
+                    raw_payload_json TEXT NOT NULL,
+                    first_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS digest_runs (
+                    run_id TEXT PRIMARY KEY,
+                    run_type TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    generated_at TEXT NOT NULL,
+                    window_start TEXT NOT NULL,
+                    window_end TEXT NOT NULL,
+                    delivery_mode TEXT NOT NULL,
+                    summary_json TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS digest_items (
+                    run_id TEXT NOT NULL,
+                    item_type TEXT NOT NULL,
+                    source_kind TEXT NOT NULL,
+                    source_id TEXT NOT NULL,
+                    score DOUBLE PRECISION NOT NULL,
+                    reason_codes_json TEXT NOT NULL,
+                    guardrail_applied BOOLEAN NOT NULL,
+                    section_name TEXT NOT NULL,
+                    rendered_text TEXT NOT NULL,
+                    PRIMARY KEY (run_id, section_name, source_kind, source_id),
+                    FOREIGN KEY (run_id) REFERENCES digest_runs(run_id) ON DELETE CASCADE
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS feedback (
+                    feedback_id TEXT PRIMARY KEY,
+                    run_id TEXT NOT NULL,
+                    source_kind TEXT NOT NULL,
+                    source_id TEXT NOT NULL,
+                    signal_type TEXT NOT NULL,
+                    signal_value TEXT NOT NULL,
+                    recorded_at TEXT NOT NULL
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS preferences (
+                    preference_key TEXT NOT NULL,
+                    preference_type TEXT NOT NULL,
+                    weight DOUBLE PRECISION NOT NULL,
+                    source TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY (preference_key, preference_type)
+                )
+                """
+            )
+            connection.commit()
+
+    def load_preferences(self) -> Sequence[UserPreference]:
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT preference_key, preference_type, weight, source, updated_at
+                FROM preferences
+                ORDER BY preference_type, preference_key
+                """
+            ).fetchall()
+        return tuple(
+            UserPreference(
+                preference_key=row["preference_key"],
+                preference_type=row["preference_type"],
+                weight=float(row["weight"]),
+                source=row["source"],
+                updated_at=parse_datetime(row["updated_at"]),
+            )
+            for row in rows
+        )
+
+    def upsert_preferences(self, preferences: Sequence[UserPreference]) -> None:
+        with self._connect() as connection:
+            for preference in preferences:
+                connection.execute(
+                    """
+                    INSERT INTO preferences (
+                        preference_key,
+                        preference_type,
+                        weight,
+                        source,
+                        updated_at
+                    ) VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT(preference_key, preference_type) DO UPDATE SET
+                        weight = EXCLUDED.weight,
+                        source = EXCLUDED.source,
+                        updated_at = EXCLUDED.updated_at
+                    """,
+                    (
+                        preference.preference_key,
+                        preference.preference_type,
+                        preference.weight,
+                        preference.source,
+                        preference.updated_at.isoformat(),
+                    ),
+                )
+            connection.commit()
+
+    def upsert_messages(self, messages: Sequence[MessageRecord]) -> None:
+        with self._connect() as connection:
+            for message in messages:
+                connection.execute(
+                    """
+                    INSERT INTO messages (
+                        graph_message_id,
+                        thread_id,
+                        internet_message_id,
+                        subject,
+                        from_address,
+                        to_addresses_json,
+                        cc_addresses_json,
+                        received_at,
+                        body_preview,
+                        categories_json,
+                        is_unread,
+                        has_attachments,
+                        raw_payload_json,
+                        first_seen_at,
+                        last_seen_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT(graph_message_id) DO UPDATE SET
+                        thread_id = EXCLUDED.thread_id,
+                        internet_message_id = EXCLUDED.internet_message_id,
+                        subject = EXCLUDED.subject,
+                        from_address = EXCLUDED.from_address,
+                        to_addresses_json = EXCLUDED.to_addresses_json,
+                        cc_addresses_json = EXCLUDED.cc_addresses_json,
+                        received_at = EXCLUDED.received_at,
+                        body_preview = EXCLUDED.body_preview,
+                        categories_json = EXCLUDED.categories_json,
+                        is_unread = EXCLUDED.is_unread,
+                        has_attachments = EXCLUDED.has_attachments,
+                        raw_payload_json = EXCLUDED.raw_payload_json,
+                        last_seen_at = CURRENT_TIMESTAMP
+                    """,
+                    (
+                        message.graph_message_id,
+                        message.thread_id,
+                        message.internet_message_id,
+                        message.subject,
+                        message.from_address,
+                        _json_dumps(message.to_addresses),
+                        _json_dumps(message.cc_addresses),
+                        message.received_at.isoformat(),
+                        message.body_preview,
+                        _json_dumps(message.categories),
+                        message.is_unread,
+                        message.has_attachments,
+                        _json_dumps(message.raw_payload),
+                    ),
+                )
+            connection.commit()
+
+    def upsert_meetings(self, meetings: Sequence[MeetingRecord]) -> None:
+        with self._connect() as connection:
+            for meeting in meetings:
+                connection.execute(
+                    """
+                    INSERT INTO meetings (
+                        graph_event_id,
+                        subject,
+                        start_at,
+                        end_at,
+                        organizer_address,
+                        attendees_json,
+                        location,
+                        join_url,
+                        body_preview,
+                        is_online_meeting,
+                        raw_payload_json,
+                        first_seen_at,
+                        last_seen_at
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT(graph_event_id) DO UPDATE SET
+                        subject = EXCLUDED.subject,
+                        start_at = EXCLUDED.start_at,
+                        end_at = EXCLUDED.end_at,
+                        organizer_address = EXCLUDED.organizer_address,
+                        attendees_json = EXCLUDED.attendees_json,
+                        location = EXCLUDED.location,
+                        join_url = EXCLUDED.join_url,
+                        body_preview = EXCLUDED.body_preview,
+                        is_online_meeting = EXCLUDED.is_online_meeting,
+                        raw_payload_json = EXCLUDED.raw_payload_json,
+                        last_seen_at = CURRENT_TIMESTAMP
+                    """,
+                    (
+                        meeting.graph_event_id,
+                        meeting.subject,
+                        meeting.start_at.isoformat(),
+                        meeting.end_at.isoformat(),
+                        meeting.organizer_address,
+                        _json_dumps(meeting.attendees),
+                        meeting.location,
+                        meeting.join_url,
+                        meeting.body_preview,
+                        meeting.is_online_meeting,
+                        _json_dumps(meeting.raw_payload),
+                    ),
+                )
+            connection.commit()
+
+    def get_message(self, graph_message_id: str) -> Optional[MessageRecord]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT graph_message_id, thread_id, internet_message_id, subject, from_address,
+                       to_addresses_json, cc_addresses_json, received_at, body_preview, categories_json,
+                       is_unread, has_attachments, raw_payload_json
+                FROM messages
+                WHERE graph_message_id = %s
+                """,
+                (graph_message_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return MessageRecord(
+            graph_message_id=row["graph_message_id"],
+            thread_id=row["thread_id"],
+            internet_message_id=row["internet_message_id"],
+            subject=row["subject"],
+            from_address=row["from_address"],
+            to_addresses=tuple(_json_loads(row["to_addresses_json"]) or ()),
+            cc_addresses=tuple(_json_loads(row["cc_addresses_json"]) or ()),
+            received_at=parse_datetime(row["received_at"]),
+            body_preview=row["body_preview"],
+            categories=tuple(_json_loads(row["categories_json"]) or ()),
+            is_unread=bool(row["is_unread"]),
+            has_attachments=bool(row["has_attachments"]),
+            raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+        )
+
+    def get_meeting(self, graph_event_id: str) -> Optional[MeetingRecord]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT graph_event_id, subject, start_at, end_at, organizer_address, attendees_json,
+                       location, join_url, body_preview, is_online_meeting, raw_payload_json
+                FROM meetings
+                WHERE graph_event_id = %s
+                """,
+                (graph_event_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return MeetingRecord(
+            graph_event_id=row["graph_event_id"],
+            subject=row["subject"],
+            start_at=parse_datetime(row["start_at"]),
+            end_at=parse_datetime(row["end_at"]),
+            organizer_address=row["organizer_address"],
+            attendees=tuple(_json_loads(row["attendees_json"]) or ()),
+            location=row["location"],
+            join_url=row["join_url"],
+            body_preview=row["body_preview"],
+            is_online_meeting=bool(row["is_online_meeting"]),
+            raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+        )
+
+    def _save_digest_items(self, connection, payload: DigestPayload) -> None:
+        connection.execute("DELETE FROM digest_items WHERE run_id = %s", (payload.run_id,))
+        for section_name in SECTION_NAMES:
+            entries = getattr(payload, section_name)
+            for entry in entries:
+                connection.execute(
+                    """
+                    INSERT INTO digest_items (
+                        run_id,
+                        item_type,
+                        source_kind,
+                        source_id,
+                        score,
+                        reason_codes_json,
+                        guardrail_applied,
+                        section_name,
+                        rendered_text
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """,
+                    (
+                        payload.run_id,
+                        "digest_entry",
+                        entry.source_kind,
+                        entry.source_id,
+                        entry.score,
+                        _json_dumps(entry.reason_codes),
+                        entry.guardrail_applied,
+                        section_name,
+                        entry.summary,
+                    ),
+                )
+
+    def save_run(self, run: DigestRunRecord) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO digest_runs (
+                    run_id,
+                    run_type,
+                    status,
+                    generated_at,
+                    window_start,
+                    window_end,
+                    delivery_mode,
+                    summary_json
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT(run_id) DO UPDATE SET
+                    run_type = EXCLUDED.run_type,
+                    status = EXCLUDED.status,
+                    generated_at = EXCLUDED.generated_at,
+                    window_start = EXCLUDED.window_start,
+                    window_end = EXCLUDED.window_end,
+                    delivery_mode = EXCLUDED.delivery_mode,
+                    summary_json = EXCLUDED.summary_json
+                """,
+                (
+                    run.run_id,
+                    run.run_type,
+                    run.status,
+                    run.generated_at.isoformat(),
+                    run.window_start.isoformat(),
+                    run.window_end.isoformat(),
+                    run.delivery_mode,
+                    _json_dumps(run.summary),
+                ),
+            )
+            self._save_digest_items(connection, run.summary)
+            connection.commit()
+
+    def _row_to_run(self, row: Mapping[str, Any]) -> DigestRunRecord:
+        summary = digest_payload_from_dict(_json_loads(row["summary_json"]) or {})
+        return DigestRunRecord(
+            run_id=row["run_id"],
+            run_type=row["run_type"],
+            status=row["status"],
+            generated_at=parse_datetime(row["generated_at"]),
+            window_start=parse_datetime(row["window_start"]),
+            window_end=parse_datetime(row["window_end"]),
+            delivery_mode=row["delivery_mode"],
+            summary=summary,
+        )
+
+    def get_run(self, run_id: str) -> Optional[DigestRunRecord]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
+                FROM digest_runs
+                WHERE run_id = %s
+                """,
+                (run_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_run(row)
+
+    def get_latest_completed_run(self) -> Optional[DigestRunRecord]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
+                FROM digest_runs
+                WHERE status = 'completed'
+                ORDER BY generated_at DESC
+                LIMIT 1
+                """
+            ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_run(row)
+
+    def get_latest_completed_run_for_day(self, target_day: date) -> Optional[DigestRunRecord]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
+                FROM digest_runs
+                WHERE status = 'completed'
+                  AND generated_at::date = %s::date
+                ORDER BY generated_at DESC
+                LIMIT 1
+                """,
+                (target_day.isoformat(),),
+            ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_run(row)
+
+    def save_feedback(self, feedback: FeedbackRecord) -> None:
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO feedback (
+                    feedback_id,
+                    run_id,
+                    source_kind,
+                    source_id,
+                    signal_type,
+                    signal_value,
+                    recorded_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT(feedback_id) DO UPDATE SET
+                    run_id = EXCLUDED.run_id,
+                    source_kind = EXCLUDED.source_kind,
+                    source_id = EXCLUDED.source_id,
+                    signal_type = EXCLUDED.signal_type,
+                    signal_value = EXCLUDED.signal_value,
+                    recorded_at = EXCLUDED.recorded_at
+                """,
+                (
+                    feedback.feedback_id,
+                    feedback.run_id,
+                    feedback.source_kind,
+                    feedback.source_id,
+                    feedback.signal_type,
+                    feedback.signal_value,
+                    feedback.recorded_at.isoformat(),
+                ),
+            )
+            connection.commit()
+
+    def list_feedback(self, run_id: Optional[str] = None) -> Sequence[FeedbackRecord]:
+        query = """
+            SELECT feedback_id, run_id, source_kind, source_id, signal_type, signal_value, recorded_at
+            FROM feedback
+        """
+        params = []
+        if run_id is not None:
+            query += " WHERE run_id = %s"
+            params.append(run_id)
+        query += " ORDER BY recorded_at"
+        with self._connect() as connection:
+            rows = connection.execute(query, tuple(params)).fetchall()
         return tuple(
             FeedbackRecord(
                 feedback_id=row["feedback_id"],
