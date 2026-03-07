@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 96%
+> Confidence: 97%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -28,11 +28,15 @@
   - morning brief snapshots
   - explicit feedback such as "useful" / "not useful"
 - LLM usage must stay low-cost by limiting context and number of calls to a few requests per day.
-- V1 delivery assumptions have been narrowed for implementation planning:
+- V1 delivery assumptions were initially narrowed for implementation planning:
   - single-user deployment first
   - delegated Microsoft Graph auth first
   - one scheduled morning digest run plus same-day recall on demand
   - deterministic scoring and filtering first, with the LLM used only on shortlisted items for digest wording
+- The roadmap is now expanding beyond that initial slice toward:
+  - hosted Graph app-only auth for unattended execution
+  - one company tenant with multiple target users/mailboxes
+  - tenant-scoped and user-scoped persistence and orchestration
 - V1 application modules are expected to include:
   - mail collector
   - calendar collector
@@ -117,3 +121,9 @@ flowchart LR
 - `task_014_day_captain_digest_empty_states_and_fallback_copy_polish` - Replace technical empty states and improve deterministic assistant copy. Status: `Done`.
 - `item_008_day_captain_llm_top_summary_block` - Add a short LLM-generated overview block above the detailed digest sections. Status: `Done`.
 - `task_015_day_captain_llm_top_summary_block` - Implement bounded top-of-digest LLM synthesis with safe fallback and rendered placement. Status: `Done`.
+- `item_009_day_captain_hosted_graph_app_only_authentication` - Replace the fragile hosted delegated token path with app-only Graph auth. Status: `Ready`.
+- `task_016_day_captain_hosted_graph_app_only_authentication_implementation` - Implement hosted Graph app-only auth and `/users/{id}` route support. Status: `Ready`.
+- `task_017_day_captain_hosted_graph_app_only_authentication_validation` - Validate the Render-hosted digest flow end to end with app-only auth. Status: `Ready`.
+- `item_010_day_captain_tenant_scoped_multi_user_digests` - Evolve the service from single-user to bounded tenant-scoped multi-user digest delivery. Status: `Ready`.
+- `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` - Implement tenant-scoped storage, configuration, and per-user digest execution. Status: `Ready`.
+- `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Ready`.
