@@ -1,9 +1,9 @@
 ## task_001_day_captain_graph_ingestion_and_storage - Implement Microsoft Graph ingestion and SQLite persistence
 > From version: 0.1.0
-> Status: Ready
-> Understanding: 95%
-> Confidence: 92%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 98%
+> Confidence: 95%
+> Progress: 95%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -26,10 +26,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Implement delegated Graph auth/config plus mail and calendar collectors for the frozen V1 time window.
-- [ ] 2. Normalize Graph payloads and persist messages, meetings, digest runs, digest items, and preference/feedback primitives in `SQLite` with idempotent writes.
-- [ ] 3. Add fixtures, pagination/error handling, and tests for normalization, deduplication, repeated runs, and stored run metadata.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Implement delegated Graph auth/config plus mail and calendar collectors for the frozen V1 time window.
+- [x] 2. Normalize Graph payloads and persist messages, meetings, digest runs, digest items, and preference/feedback primitives in `SQLite` with idempotent writes.
+- [x] 3. Add fixtures, pagination/error handling, and tests for normalization, deduplication, repeated runs, and stored run metadata.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> This task implements the selected Graph auth mode. Proof: Plan step 1 adds delegated auth/config handling.
@@ -43,14 +43,24 @@ flowchart LR
 - Spec: `spec_000_day_captain_v1_digest_contract`
 
 # Validation
-- python3 -m pytest tests/test_graph_client.py tests/test_storage.py tests/test_morning_run.py
+- python3 -m unittest tests.test_graph_client tests.test_storage tests.test_morning_run
+- python3 -m unittest discover -s tests
+- PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
+- Added `SQLiteStorage` in `src/day_captain/adapters/storage.py` with schema bootstrap, idempotent upserts for messages and meetings, persisted digest runs/items, and feedback persistence.
+- Added Microsoft Graph adapters in `src/day_captain/adapters/graph.py` for delegated bearer-token auth, `/me` profile resolution, `/me/messages` ingestion, `/me/calendar/calendarView` ingestion, pagination support, and HTTP error surfacing.
+- Updated `build_application()` so `SQLite` is the default storage backend and Graph adapters activate automatically when `DAY_CAPTAIN_GRAPH_ACCESS_TOKEN` is configured.
+- Added coverage in `tests/test_graph_client.py`, `tests/test_storage.py`, and `tests/test_morning_run.py`.
+- Workflow note: the implementation slice is complete, but the task remains `In Progress` until the parent backlog item can close under the repo's workflow audit rules.
+- Validation results:
+  - `python3 -m unittest discover -s tests` -> `OK` (`11` tests)
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force` -> returned a valid digest payload backed by default `SQLite` storage

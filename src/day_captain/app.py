@@ -10,6 +10,11 @@ from typing import Iterable
 from typing import Optional
 from typing import Sequence
 
+from day_captain.adapters.graph import GraphApiClient
+from day_captain.adapters.graph import GraphCalendarCollector
+from day_captain.adapters.graph import GraphDelegatedAuthProvider
+from day_captain.adapters.graph import GraphMailCollector
+from day_captain.adapters.storage import SQLiteStorage
 from day_captain.config import DayCaptainSettings
 from day_captain.models import AuthContext
 from day_captain.models import DigestEntry
@@ -374,12 +379,42 @@ def build_application(
     feedback_processor: Optional[FeedbackProcessor] = None,
 ) -> DayCaptainApplication:
     resolved_settings = settings or DayCaptainSettings.from_env()
+    graph_client = GraphApiClient(
+        base_url=resolved_settings.graph_base_url,
+        timeout_seconds=resolved_settings.graph_timeout_seconds,
+    )
+    resolved_storage = storage or SQLiteStorage(resolved_settings.sqlite_path)
+    if auth_provider is not None:
+        resolved_auth_provider = auth_provider
+    elif resolved_settings.graph_access_token:
+        resolved_auth_provider = GraphDelegatedAuthProvider(
+            access_token=resolved_settings.graph_access_token,
+            api_client=graph_client,
+            user_id=resolved_settings.graph_user_id,
+        )
+    else:
+        resolved_auth_provider = StubAuthProvider()
+
+    if mail_collector is not None:
+        resolved_mail_collector = mail_collector
+    elif resolved_settings.graph_access_token:
+        resolved_mail_collector = GraphMailCollector(graph_client)
+    else:
+        resolved_mail_collector = StaticMailCollector()
+
+    if calendar_collector is not None:
+        resolved_calendar_collector = calendar_collector
+    elif resolved_settings.graph_access_token:
+        resolved_calendar_collector = GraphCalendarCollector(graph_client)
+    else:
+        resolved_calendar_collector = StaticCalendarCollector()
+
     return DayCaptainApplication(
         settings=resolved_settings,
-        auth_provider=auth_provider or StubAuthProvider(),
-        mail_collector=mail_collector or StaticMailCollector(),
-        calendar_collector=calendar_collector or StaticCalendarCollector(),
-        storage=storage or InMemoryStorage(),
+        auth_provider=resolved_auth_provider,
+        mail_collector=resolved_mail_collector,
+        calendar_collector=resolved_calendar_collector,
+        storage=resolved_storage,
         scoring_engine=scoring_engine or StubScoringEngine(),
         digest_renderer=digest_renderer or StubDigestRenderer(),
         recall_provider=recall_provider or DefaultRecallProvider(),
