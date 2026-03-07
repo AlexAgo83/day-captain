@@ -2,7 +2,6 @@ services:
   - type: web
     name: day-captain
     env: python
-    plan: starter
     buildCommand: pip install -e .
     startCommand: gunicorn --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"
     healthCheckPath: /healthz
