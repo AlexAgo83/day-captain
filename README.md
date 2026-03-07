@@ -19,6 +19,12 @@ Current package version: `0.7.0`
 
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
+Current operating model:
+- local and delivered flows are implemented around one mailbox at a time
+- the roadmap now explicitly targets one company tenant with multiple users, each receiving a separate digest
+- that tenant-scoped multi-user model is planned in Logics and is not fully implemented yet
+- the future tenant-scoped model will target an explicit recipient list, not everyone in the tenant by default
+
 ## Repository layout
 
 - `src/day_captain/`: application code
@@ -30,6 +36,12 @@ This repository is in active development. The core digest flow works locally and
 Recommended repository split:
 - `day-captain`: application source code
 - `day-captain-ops`: private GitHub repository for production scheduling, deployment orchestration, and secrets
+
+Planned operating model:
+- one Microsoft 365 company tenant
+- several explicitly configured users/mailboxes inside that tenant
+- one digest run per target user
+- strict tenant-scoped and user-scoped data isolation
 
 ## Core components
 
@@ -100,6 +112,11 @@ DAY_CAPTAIN_LLM_MODEL=gpt-5-mini
 DAY_CAPTAIN_LLM_API_KEY=...
 ```
 
+Important hosted note:
+- the current shipped hosted path still assumes one active target mailbox at a time
+- the target architecture is evolving toward tenant-scoped multi-user operation with several configured users in one deployment
+- that future model will require a cleanup of `.env*` and hosted settings so stale single-user variables do not remain ambiguous
+
 Important:
 - never commit `.env`
 - never commit Graph access or refresh tokens
@@ -148,7 +165,9 @@ PYTHONPATH=src python3 -m day_captain auth logout
 
 If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
 
-When `delivery_mode=graph_send`, Day Captain sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.
+When `delivery_mode=graph_send`, the current local delegated flow sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.
+
+The hosted roadmap is moving toward app-only Graph auth and explicit target mailboxes inside one tenant rather than a permanent single `/me` identity.
 
 ## Local usage
 
@@ -238,6 +257,13 @@ Current persistence covers:
 - `digest_items`
 - `feedback`
 - `preferences`
+
+Current limitation:
+- the shipped schema is still effectively single-user in practice
+
+Planned evolution:
+- add stable `tenant_id` and `user_id` scoping across persisted product data
+- execute ingestion, digest generation, recall, and delivery per configured user inside one company tenant
 
 Local mode uses `SQLite`.
 
