@@ -1,9 +1,9 @@
 ## task_000_day_captain_daily_assistant_for_microsoft_365 - Freeze Day Captain V1 contract and bootstrap the service skeleton
 > From version: 0.1.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 94%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 98%
+> Confidence: 95%
+> Progress: 95%
 > Complexity: Medium
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,10 +25,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Freeze the V1 contract: delegated Graph auth, morning collection window, digest JSON/email schema, `SQLite` tables, recall contract, and `n8n`/Python responsibilities.
-- [ ] 2. Bootstrap the Python project skeleton with configuration loading, service interfaces, normalized DTOs, and placeholders for auth, collection, storage, scoring, digest, recall, and feedback modules.
-- [ ] 3. Add local run entrypoints, smoke-test scaffolding, and implementation notes that unblock `task_001_day_captain_graph_ingestion_and_storage` and `task_002_day_captain_digest_scoring_recall_and_delivery`.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Freeze the V1 contract: delegated Graph auth, morning collection window, digest JSON/email schema, `SQLite` tables, recall contract, and `n8n`/Python responsibilities.
+- [x] 2. Bootstrap the Python project skeleton with configuration loading, service interfaces, normalized DTOs, and placeholders for auth, collection, storage, scoring, digest, recall, and feedback modules.
+- [x] 3. Add local run entrypoints, smoke-test scaffolding, and implementation notes that unblock `task_001_day_captain_graph_ingestion_and_storage` and `task_002_day_captain_digest_scoring_recall_and_delivery`.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> This task freezes the auth model. Proof: Plan step 1 defines delegated Graph auth and required scopes.
@@ -44,14 +44,24 @@ flowchart LR
 - Spec: `spec_000_day_captain_v1_digest_contract`
 
 # Validation
-- python3 -m pytest
+- python3 -m unittest discover -s tests
+- PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
+- Added the initial Python project metadata in `pyproject.toml` and the `src/day_captain/` package skeleton.
+- Added typed settings/config loading, domain models, and service interfaces for auth, collectors, storage, scoring, digest rendering, recall, and feedback.
+- Added stub adapters plus application entrypoints for `run_morning_digest`, `recall_digest`, and `record_feedback`, with a CLI exposed through `python -m day_captain` / `day-captain`.
+- Added smoke coverage in `tests/test_settings.py` and `tests/test_app.py`.
+- Added GitHub Actions CI in `.github/workflows/ci.yml` to run install, unit tests, CLI smoke test, Logics lint, and workflow audit on push/PR across Python `3.9` and `3.11`.
+- Workflow note: the implementation slice is complete, but the task remains `In Progress` until the parent backlog item can close under the repo's workflow audit rules.
+- Validation results:
+  - `python3 -m unittest discover -s tests` -> `OK` (`4` tests)
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00` -> returned an empty but valid digest payload
