@@ -14,6 +14,7 @@ from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
 from day_captain.models import FeedbackRecord
 from day_captain.models import MessageRecord
+from day_captain.models import UserPreference
 
 
 class SQLiteStorageTest(unittest.TestCase):
@@ -53,6 +54,7 @@ class SQLiteStorageTest(unittest.TestCase):
                     DigestEntry(
                         title="Urgent budget review",
                         summary="Please review before noon.",
+                        section_name="critical_topics",
                         source_kind="message",
                         source_id="msg-1",
                         score=2.0,
@@ -101,6 +103,39 @@ class SQLiteStorageTest(unittest.TestCase):
             saved = storage.list_feedback("run-1")
             self.assertEqual(len(saved), 1)
             self.assertEqual(saved[0].feedback_id, "feedback-1")
+
+    def test_upsert_preferences_updates_existing_weight(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "day_captain.sqlite3")
+            storage = SQLiteStorage(path)
+            now = datetime(2026, 3, 7, 8, 15, tzinfo=timezone.utc)
+
+            storage.upsert_preferences(
+                (
+                    UserPreference(
+                        preference_key="sender:boss@example.com",
+                        preference_type="sender",
+                        weight=1.0,
+                        source="seed",
+                        updated_at=now,
+                    ),
+                )
+            )
+            storage.upsert_preferences(
+                (
+                    UserPreference(
+                        preference_key="sender:boss@example.com",
+                        preference_type="sender",
+                        weight=2.0,
+                        source="feedback",
+                        updated_at=now,
+                    ),
+                )
+            )
+
+            loaded = storage.load_preferences()
+            self.assertEqual(len(loaded), 1)
+            self.assertEqual(loaded[0].weight, 2.0)
 
 
 if __name__ == "__main__":

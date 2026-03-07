@@ -154,6 +154,32 @@ class SQLiteStorage:
             for row in rows
         )
 
+    def upsert_preferences(self, preferences: Sequence[UserPreference]) -> None:
+        with self._connect() as connection:
+            for preference in preferences:
+                connection.execute(
+                    """
+                    INSERT INTO preferences (
+                        preference_key,
+                        preference_type,
+                        weight,
+                        source,
+                        updated_at
+                    ) VALUES (?, ?, ?, ?, ?)
+                    ON CONFLICT(preference_key, preference_type) DO UPDATE SET
+                        weight = excluded.weight,
+                        source = excluded.source,
+                        updated_at = excluded.updated_at
+                    """,
+                    (
+                        preference.preference_key,
+                        preference.preference_type,
+                        preference.weight,
+                        preference.source,
+                        preference.updated_at.isoformat(),
+                    ),
+                )
+
     def upsert_messages(self, messages: Sequence[MessageRecord]) -> None:
         with self._connect() as connection:
             for message in messages:
@@ -255,6 +281,63 @@ class SQLiteStorage:
                         _json_dumps(meeting.raw_payload),
                     ),
                 )
+
+    def get_message(self, graph_message_id: str) -> Optional[MessageRecord]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT graph_message_id, thread_id, internet_message_id, subject, from_address,
+                       to_addresses_json, cc_addresses_json, received_at, body_preview, categories_json,
+                       is_unread, has_attachments, raw_payload_json
+                FROM messages
+                WHERE graph_message_id = ?
+                """,
+                (graph_message_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return MessageRecord(
+            graph_message_id=row["graph_message_id"],
+            thread_id=row["thread_id"],
+            internet_message_id=row["internet_message_id"],
+            subject=row["subject"],
+            from_address=row["from_address"],
+            to_addresses=tuple(_json_loads(row["to_addresses_json"]) or ()),
+            cc_addresses=tuple(_json_loads(row["cc_addresses_json"]) or ()),
+            received_at=parse_datetime(row["received_at"]),
+            body_preview=row["body_preview"],
+            categories=tuple(_json_loads(row["categories_json"]) or ()),
+            is_unread=bool(row["is_unread"]),
+            has_attachments=bool(row["has_attachments"]),
+            raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+        )
+
+    def get_meeting(self, graph_event_id: str) -> Optional[MeetingRecord]:
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT graph_event_id, subject, start_at, end_at, organizer_address, attendees_json,
+                       location, join_url, body_preview, is_online_meeting, raw_payload_json
+                FROM meetings
+                WHERE graph_event_id = ?
+                """,
+                (graph_event_id,),
+            ).fetchone()
+        if row is None:
+            return None
+        return MeetingRecord(
+            graph_event_id=row["graph_event_id"],
+            subject=row["subject"],
+            start_at=parse_datetime(row["start_at"]),
+            end_at=parse_datetime(row["end_at"]),
+            organizer_address=row["organizer_address"],
+            attendees=tuple(_json_loads(row["attendees_json"]) or ()),
+            location=row["location"],
+            join_url=row["join_url"],
+            body_preview=row["body_preview"],
+            is_online_meeting=bool(row["is_online_meeting"]),
+            raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+        )
 
     def _save_digest_items(self, connection: sqlite3.Connection, payload: DigestPayload) -> None:
         connection.execute("DELETE FROM digest_items WHERE run_id = ?", (payload.run_id,))
