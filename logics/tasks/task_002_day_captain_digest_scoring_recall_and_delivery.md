@@ -1,9 +1,9 @@
 ## task_002_day_captain_digest_scoring_recall_and_delivery - Implement scoring, digest rendering, recall, and n8n-compatible delivery
 > From version: 0.1.0
-> Status: Ready
-> Understanding: 95%
-> Confidence: 92%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 95%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -26,10 +26,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Implement deterministic scoring, anti-noise filters, explicit sender/topic preference weights, and critical-topic guardrails.
-- [ ] 2. Render the morning digest and same-day recall outputs from persisted snapshots, and record useful/not-useful feedback without replaying full message history.
-- [ ] 3. Expose `json` and optional Graph-send delivery modes through CLI/webhook-friendly entrypoints, then validate the end-to-end path for hosted `n8n`.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Implement deterministic scoring, anti-noise filters, explicit sender/topic preference weights, and critical-topic guardrails.
+- [x] 2. Render the morning digest and same-day recall outputs from persisted snapshots, and record useful/not-useful feedback without replaying full message history.
+- [x] 3. Expose `json` and optional Graph-send delivery modes through CLI/webhook-friendly entrypoints, then validate the end-to-end path for hosted `n8n`.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC3 -> This task implements the digest contract. Proof: Plan step 2 renders the four required digest sections.
@@ -44,14 +44,25 @@ flowchart LR
 - Spec: `spec_000_day_captain_v1_digest_contract`
 
 # Validation
-- python3 -m pytest tests/test_scoring.py tests/test_digest_renderer.py tests/test_recall.py tests/test_delivery_contract.py
+- python3 -m unittest tests.test_scoring tests.test_digest_renderer tests.test_recall tests.test_delivery_contract tests.test_feedback
+- python3 -m unittest discover -s tests
+- PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
+- Added deterministic prioritization with anti-noise rules, sender/domain/keyword preference weights, critical-topic guardrails, and meeting proximity scoring in `src/day_captain/services.py`.
+- Added structured digest rendering with stable section grouping, delivery subject/body generation, and `graph_send`-compatible payload shaping.
+- Added snapshot-based recall reconstruction and feedback-driven preference updates, including persisted sender/domain/keyword weights through the storage adapters.
+- Wired the application defaults to use the real scoring, rendering, recall, and feedback processors instead of placeholder stubs.
+- Added focused tests in `tests/test_scoring.py`, `tests/test_digest_renderer.py`, `tests/test_recall.py`, `tests/test_delivery_contract.py`, and `tests/test_feedback.py`.
+- Workflow note: the implementation slice is complete, but the task remains `In Progress` until the parent backlog/request chain is explicitly closed.
+- Validation results:
+  - `python3 -m unittest discover -s tests` -> `OK` (`19` tests)
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force` -> returned a valid digest payload with delivery subject/body and sectioned output

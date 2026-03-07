@@ -62,6 +62,7 @@ class MeetingRecord:
 class DigestEntry:
     title: str
     summary: str
+    section_name: str
     source_kind: str
     source_id: str
     score: float
@@ -76,6 +77,9 @@ class DigestPayload:
     window_start: datetime
     window_end: datetime
     delivery_mode: str
+    delivery_subject: str = ""
+    delivery_body: str = ""
+    delivery_payload: Mapping[str, Any] = field(default_factory=dict)
     critical_topics: Sequence[DigestEntry] = field(default_factory=tuple)
     actions_to_take: Sequence[DigestEntry] = field(default_factory=tuple)
     watch_items: Sequence[DigestEntry] = field(default_factory=tuple)
@@ -136,6 +140,7 @@ def digest_entry_from_dict(payload: Mapping[str, Any]) -> DigestEntry:
     return DigestEntry(
         title=str(payload.get("title") or ""),
         summary=str(payload.get("summary") or ""),
+        section_name=str(payload.get("section_name") or "watch_items"),
         source_kind=str(payload.get("source_kind") or ""),
         source_id=str(payload.get("source_id") or ""),
         score=float(payload.get("score") or 0.0),
@@ -151,6 +156,9 @@ def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
         window_start=parse_datetime(str(payload.get("window_start"))),
         window_end=parse_datetime(str(payload.get("window_end"))),
         delivery_mode=str(payload.get("delivery_mode") or "json"),
+        delivery_subject=str(payload.get("delivery_subject") or ""),
+        delivery_body=str(payload.get("delivery_body") or ""),
+        delivery_payload=dict(payload.get("delivery_payload") or {}),
         critical_topics=tuple(
             digest_entry_from_dict(item) for item in payload.get("critical_topics") or ()
         ),

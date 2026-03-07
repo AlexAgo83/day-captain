@@ -32,14 +32,11 @@ from day_captain.ports import MailCollector
 from day_captain.ports import RecallProvider
 from day_captain.ports import ScoringEngine
 from day_captain.ports import Storage
-
-
-SECTION_NAMES = (
-    "critical_topics",
-    "actions_to_take",
-    "watch_items",
-    "upcoming_meetings",
-)
+from day_captain.services import DeterministicScoringEngine
+from day_captain.services import PreferenceFeedbackProcessor
+from day_captain.services import SECTION_NAMES
+from day_captain.services import SnapshotRecallProvider
+from day_captain.services import StructuredDigestRenderer
 
 
 def _coerce_datetime(value: Optional[datetime]) -> datetime:
@@ -52,20 +49,6 @@ def _coerce_datetime(value: Optional[datetime]) -> datetime:
 
 def _end_of_day(value: datetime) -> datetime:
     return value.replace(hour=23, minute=59, second=59, microsecond=0)
-
-
-def _infer_message_reason_codes(message: MessageRecord, preference_weight: float) -> Sequence[str]:
-    reasons = ["mail_signal"]
-    subject = message.subject.lower()
-    if "urgent" in subject or "critical" in subject:
-        reasons.append("critical_keyword")
-    if "action" in subject or "todo" in subject:
-        reasons.append("action_keyword")
-    if preference_weight > 0:
-        reasons.append("preference_boost")
-    if message.has_attachments:
-        reasons.append("attachment_present")
-    return tuple(reasons)
 
 
 class StubAuthProvider:
@@ -125,6 +108,12 @@ class InMemoryStorage:
     def load_preferences(self) -> Sequence[UserPreference]:
         return tuple(self._preferences)
 
+    def upsert_preferences(self, preferences: Sequence[UserPreference]) -> None:
+        by_key = {(item.preference_key, item.preference_type): item for item in self._preferences}
+        for preference in preferences:
+            by_key[(preference.preference_key, preference.preference_type)] = preference
+        self._preferences = list(by_key.values())
+
     def upsert_messages(self, messages: Sequence[MessageRecord]) -> None:
         for message in messages:
             self._messages[message.graph_message_id] = message
@@ -132,6 +121,12 @@ class InMemoryStorage:
     def upsert_meetings(self, meetings: Sequence[MeetingRecord]) -> None:
         for meeting in meetings:
             self._meetings[meeting.graph_event_id] = meeting
+
+    def get_message(self, graph_message_id: str) -> Optional[MessageRecord]:
+        return self._messages.get(graph_message_id)
+
+    def get_meeting(self, graph_event_id: str) -> Optional[MeetingRecord]:
+        return self._meetings.get(graph_event_id)
 
     def save_run(self, run: DigestRunRecord) -> None:
         self._runs[run.run_id] = run
@@ -170,52 +165,13 @@ class StubScoringEngine:
         messages: Sequence[MessageRecord],
         meetings: Sequence[MeetingRecord],
         preferences: Sequence[UserPreference],
+        reference_time: Optional[datetime] = None,
     ) -> Sequence[DigestEntry]:
-        preference_weights = {
-            preference.preference_key: preference.weight for preference in preferences
-        }
-        prioritized = []
-        for message in messages:
-            sender_key = "sender:{0}".format(message.from_address.lower())
-            preference_weight = preference_weights.get(sender_key, 0.0)
-            subject = message.subject.lower()
-            if "urgent" in subject or "critical" in subject:
-                section = "critical_topics"
-            elif "action" in subject or "todo" in subject:
-                section = "actions_to_take"
-            else:
-                section = "watch_items"
-            score = 1.0 + preference_weight
-            if section == "critical_topics":
-                score += 1.0
-            prioritized.append(
-                DigestEntry(
-                    title=message.subject,
-                    summary=message.body_preview or "New message from {0}".format(message.from_address),
-                    source_kind="message",
-                    source_id=message.graph_message_id,
-                    score=score,
-                    reason_codes=_infer_message_reason_codes(message, preference_weight),
-                    guardrail_applied=section == "critical_topics",
-                )
-            )
-        for meeting in meetings:
-            prioritized.append(
-                DigestEntry(
-                    title=meeting.subject,
-                    summary="Meeting at {0}".format(meeting.start_at.isoformat()),
-                    source_kind="meeting",
-                    source_id=meeting.graph_event_id,
-                    score=1.0,
-                    reason_codes=("meeting_context",),
-                    guardrail_applied=False,
-                )
-            )
-        return tuple(
-            sorted(
-                prioritized,
-                key=lambda item: (-item.score, item.title.lower()),
-            )
+        return DeterministicScoringEngine().prioritize(
+            messages,
+            meetings,
+            preferences,
+            reference_time=reference_time,
         )
 
 
@@ -229,37 +185,24 @@ class StubDigestRenderer:
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
     ) -> DigestPayload:
-        sections = {name: [] for name in SECTION_NAMES}
-        for item in prioritized_items:
-            target_section = "watch_items"
-            if item.source_kind == "meeting":
-                target_section = "upcoming_meetings"
-            elif item.guardrail_applied:
-                target_section = "critical_topics"
-            elif "action_keyword" in item.reason_codes:
-                target_section = "actions_to_take"
-            sections[target_section].append(item)
-        return DigestPayload(
+        return StructuredDigestRenderer().render(
             run_id=run_id,
             generated_at=generated_at,
             window_start=window_start,
             window_end=window_end,
             delivery_mode=delivery_mode,
-            critical_topics=tuple(sections["critical_topics"]),
-            actions_to_take=tuple(sections["actions_to_take"]),
-            watch_items=tuple(sections["watch_items"]),
-            upcoming_meetings=tuple(sections["upcoming_meetings"]),
+            prioritized_items=prioritized_items,
         )
 
 
 class DefaultRecallProvider:
     def build_recall(self, run: DigestRunRecord) -> DigestPayload:
-        return run.summary
+        return SnapshotRecallProvider().build_recall(run)
 
 
 class DefaultFeedbackProcessor:
     def process_feedback(self, storage: Storage, feedback: FeedbackRecord) -> None:
-        storage.save_feedback(feedback)
+        PreferenceFeedbackProcessor().process_feedback(storage, feedback)
 
 
 class DayCaptainApplication:
@@ -306,7 +249,12 @@ class DayCaptainApplication:
         self.storage.upsert_messages(messages)
         self.storage.upsert_meetings(meetings)
         preferences = self.storage.load_preferences()
-        prioritized_items = self.scoring_engine.prioritize(messages, meetings, preferences)
+        prioritized_items = self.scoring_engine.prioritize(
+            messages,
+            meetings,
+            preferences,
+            reference_time=current_time,
+        )
         selected_delivery_mode = delivery_mode or self.settings.delivery_mode
         run_id = uuid.uuid4().hex
         payload = self.digest_renderer.render(
@@ -415,8 +363,8 @@ def build_application(
         mail_collector=resolved_mail_collector,
         calendar_collector=resolved_calendar_collector,
         storage=resolved_storage,
-        scoring_engine=scoring_engine or StubScoringEngine(),
-        digest_renderer=digest_renderer or StubDigestRenderer(),
-        recall_provider=recall_provider or DefaultRecallProvider(),
-        feedback_processor=feedback_processor or DefaultFeedbackProcessor(),
+        scoring_engine=scoring_engine or DeterministicScoringEngine(),
+        digest_renderer=digest_renderer or StructuredDigestRenderer(),
+        recall_provider=recall_provider or SnapshotRecallProvider(),
+        feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),
     )

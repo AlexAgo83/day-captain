@@ -45,10 +45,19 @@ class Storage(Protocol):
     def load_preferences(self) -> Sequence[UserPreference]:
         ...
 
+    def upsert_preferences(self, preferences: Sequence[UserPreference]) -> None:
+        ...
+
     def upsert_messages(self, messages: Sequence[MessageRecord]) -> None:
         ...
 
     def upsert_meetings(self, meetings: Sequence[MeetingRecord]) -> None:
+        ...
+
+    def get_message(self, graph_message_id: str) -> Optional[MessageRecord]:
+        ...
+
+    def get_meeting(self, graph_event_id: str) -> Optional[MeetingRecord]:
         ...
 
     def save_run(self, run: DigestRunRecord) -> None:
@@ -73,6 +82,7 @@ class ScoringEngine(Protocol):
         messages: Sequence[MessageRecord],
         meetings: Sequence[MeetingRecord],
         preferences: Sequence[UserPreference],
+        reference_time: Optional[datetime] = None,
     ) -> Sequence[DigestEntry]:
         ...
 
