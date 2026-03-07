@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 96%
+> Confidence: 95%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -115,3 +115,5 @@ flowchart LR
 - `item_007_day_captain_mailbox_tone_and_copy_polish` - Remove the remaining system-report feel from the delivered digest. Status: `Done`.
 - `task_013_day_captain_digest_header_and_subject_polish` - Improve digest header copy and inbox subject wording. Status: `Done`.
 - `task_014_day_captain_digest_empty_states_and_fallback_copy_polish` - Replace technical empty states and improve deterministic assistant copy. Status: `Done`.
+- `item_008_day_captain_llm_top_summary_block` - Add a short LLM-generated overview block above the detailed digest sections. Status: `Ready`.
+- `task_015_day_captain_llm_top_summary_block` - Implement bounded top-of-digest LLM synthesis with safe fallback and rendered placement. Status: `Ready`.
