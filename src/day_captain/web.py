@@ -49,7 +49,7 @@ class DayCaptainWebApp:
                     delivery_mode=payload.get("delivery_mode"),
                     force=bool(payload.get("force", False)),
                 )
-                return self._json_response(start_response, 200, result)
+                return self._json_response(start_response, 200, self._job_ack("morning_digest", result))
             if path == "/jobs/recall-digest" and method == "POST":
                 self._require_secret(environ)
                 payload = self._read_json(environ)
@@ -58,7 +58,7 @@ class DayCaptainWebApp:
                     run_id=payload.get("run_id"),
                     day=_parse_date(payload.get("day")),
                 )
-                return self._json_response(start_response, 200, result)
+                return self._json_response(start_response, 200, self._job_ack("recall_digest", result))
             return self._json_response(start_response, 404, {"error": "not_found"})
         except PermissionError as exc:
             return self._json_response(start_response, 401, {"error": str(exc)})
@@ -67,7 +67,7 @@ class DayCaptainWebApp:
         except ValueError as exc:
             return self._json_response(start_response, 400, {"error": str(exc)})
         except Exception as exc:  # pragma: no cover - defensive fallback
-            return self._json_response(start_response, 500, {"error": str(exc)})
+            return self._json_response(start_response, 500, {"error": "internal_error"})
 
     def _require_secret(self, environ) -> None:
         if not self.settings.job_secret:
@@ -99,6 +99,21 @@ class DayCaptainWebApp:
         start_response("{0} {1}".format(status_code, _status_text(status_code)), headers)
         return [body]
 
+    def _job_ack(self, job_name: str, payload) -> JsonDict:
+        return {
+            "status": "completed",
+            "job": job_name,
+            "run_id": payload.run_id,
+            "generated_at": payload.generated_at.isoformat(),
+            "delivery_mode": payload.delivery_mode,
+            "section_counts": {
+                "critical_topics": len(payload.critical_topics),
+                "actions_to_take": len(payload.actions_to_take),
+                "watch_items": len(payload.watch_items),
+                "upcoming_meetings": len(payload.upcoming_meetings),
+            },
+        }
+
 
 def _status_text(status_code: int) -> str:
     return {
@@ -111,7 +126,9 @@ def _status_text(status_code: int) -> str:
 
 
 def create_web_app(settings: Optional[DayCaptainSettings] = None) -> DayCaptainWebApp:
-    return DayCaptainWebApp(settings or DayCaptainSettings.from_env())
+    resolved = settings or DayCaptainSettings.from_env()
+    resolved.validate_hosted()
+    return DayCaptainWebApp(resolved)
 
 
 def serve(
@@ -120,6 +137,7 @@ def serve(
     port: Optional[int] = None,
 ) -> None:
     resolved = settings or DayCaptainSettings.from_env()
+    resolved.validate_hosted()
     bind_host = host or resolved.http_host
     bind_port = port or resolved.http_port
     app = create_web_app(resolved)

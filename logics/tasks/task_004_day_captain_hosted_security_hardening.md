@@ -1,9 +1,9 @@
 ## task_004_day_captain_hosted_security_hardening - Harden the hosted Render deployment and scheduled trigger path
 > From version: 0.1.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Security
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,10 +25,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Harden the hosted trigger path by removing digest-body leakage from the scheduler flow, making job protection fail closed in hosted mode, and returning minimal non-sensitive HTTP acknowledgements.
-- [ ] 2. Move the hosted runtime and token handling to safer defaults, including a production-serving process model and a hosted-safe delegated token persistence strategy distinct from the local file cache.
-- [ ] 3. Add automated coverage plus a concrete hosted deployment checklist for secrets, TLS/SSL database expectations, and Render/GitHub Actions configuration.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Harden the hosted trigger path by removing digest-body leakage from the scheduler flow, making job protection fail closed in hosted mode, and returning minimal non-sensitive HTTP acknowledgements.
+- [x] 2. Move the hosted runtime and token handling to safer defaults, including a production-serving process model and a hosted-safe delegated token persistence strategy distinct from the local file cache.
+- [x] 3. Add automated coverage plus a concrete hosted deployment checklist for secrets, TLS/SSL database expectations, and Render/GitHub Actions configuration.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> Plan step 1 removes digest leakage from scheduled runs. Proof: the task explicitly hardens scheduler logging and trigger-response behavior.
@@ -43,18 +43,24 @@ flowchart LR
 # Links
 - Backlog item: `item_001_day_captain_hosted_security_hardening`
 - Request(s): `req_001_day_captain_hosted_security_hardening`
+- Hosted deployment checklist: `docs/hosted_deployment_checklist.md`
 
 # Validation
 - python3 -m unittest discover -s tests
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
-- hosted deployment checklist review for Render + GitHub Actions + Postgres TLS
+- hosted deployment checklist review for Render + GitHub Actions + Postgres TLS (`docs/hosted_deployment_checklist.md`)
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Scheduler hardening implemented in `.github/workflows/morning-digest-scheduler.yml` by checking only the HTTP status code and suppressing hosted digest bodies from workflow logs.
+- Hosted job endpoints now fail closed in non-development environments through `DayCaptainSettings.validate_hosted()` and return only minimal acknowledgement metadata from `src/day_captain/web.py`.
+- Hosted runtime defaults now use `gunicorn` in `render.yaml`, while local development keeps the stdlib server path through `python -m day_captain serve`.
+- Hosted delegated token persistence now uses database-backed cache storage via `DatabaseTokenCache` in `src/day_captain/adapters/auth.py`, seeded from hosted settings when required.
+- Hosted Postgres configuration now resolves explicit TLS/SSL expectations through `DAY_CAPTAIN_DATABASE_SSL_MODE` and `resolved_database_url()` in `src/day_captain/config.py`.
+- Deployment hardening guidance is captured in `docs/hosted_deployment_checklist.md`.

@@ -15,10 +15,12 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_ENV"] = "test"
             os.environ["DAY_CAPTAIN_SQLITE_PATH"] = "/tmp/day-captain.sqlite3"
             os.environ["DAY_CAPTAIN_DATABASE_URL"] = "postgresql://user:pass@localhost:5432/day_captain"
+            os.environ["DAY_CAPTAIN_DATABASE_SSL_MODE"] = "require"
             os.environ["DAY_CAPTAIN_DELIVERY_MODE"] = "graph_send"
             os.environ["DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS"] = "12"
             os.environ["DAY_CAPTAIN_GRAPH_TENANT_ID"] = "common"
             os.environ["DAY_CAPTAIN_GRAPH_CLIENT_ID"] = "app-client-id"
+            os.environ["DAY_CAPTAIN_GRAPH_REFRESH_TOKEN"] = "refresh-token"
             os.environ["DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH"] = "/tmp/day-captain-auth.json"
             os.environ["DAY_CAPTAIN_GRAPH_BASE_URL"] = "https://graph.microsoft.com/v1.0"
             os.environ["DAY_CAPTAIN_GRAPH_ACCESS_TOKEN"] = "delegated-token"
@@ -37,10 +39,12 @@ class DayCaptainSettingsTest(unittest.TestCase):
             settings.database_url,
             "postgresql://user:pass@localhost:5432/day_captain",
         )
+        self.assertEqual(settings.database_ssl_mode, "require")
         self.assertEqual(settings.delivery_mode, "graph_send")
         self.assertEqual(settings.default_lookback_hours, 12)
         self.assertEqual(settings.graph_tenant_id, "common")
         self.assertEqual(settings.graph_client_id, "app-client-id")
+        self.assertEqual(settings.graph_refresh_token, "refresh-token")
         self.assertEqual(settings.graph_auth_cache_path, "/tmp/day-captain-auth.json")
         self.assertEqual(settings.graph_base_url, "https://graph.microsoft.com/v1.0")
         self.assertEqual(settings.graph_access_token, "delegated-token")
@@ -52,6 +56,16 @@ class DayCaptainSettingsTest(unittest.TestCase):
             settings.graph_login_scopes(),
             ("openid", "profile", "offline_access", "User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"),
         )
+        self.assertEqual(
+            settings.resolved_database_url(),
+            "postgresql://user:pass@localhost:5432/day_captain?sslmode=require",
+        )
+
+    def test_validate_hosted_requires_job_secret(self) -> None:
+        settings = DayCaptainSettings(environment="production", job_secret="")
+
+        with self.assertRaises(ValueError):
+            settings.validate_hosted()
 
 
 if __name__ == "__main__":

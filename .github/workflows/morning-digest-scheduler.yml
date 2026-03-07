@@ -16,9 +16,10 @@ jobs:
         run: |
           test -n "$DAY_CAPTAIN_SERVICE_URL"
           test -n "$DAY_CAPTAIN_JOB_SECRET"
-          curl --fail --show-error --silent \
+          status_code="$(curl --output /dev/null --write-out "%{http_code}" --show-error --silent \
             -X POST \
             -H "Content-Type: application/json" \
             -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
             -d '{"force":false}' \
-            "$DAY_CAPTAIN_SERVICE_URL/jobs/morning-digest"
+            "$DAY_CAPTAIN_SERVICE_URL/jobs/morning-digest")"
+          test "$status_code" = "200"

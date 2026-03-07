@@ -6,6 +6,7 @@ from datetime import timezone
 import json
 import os
 from pathlib import Path
+import sqlite3
 import stat
 import time
 from typing import Any
@@ -13,18 +14,38 @@ from typing import Callable
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
+from typing import Protocol
 from urllib import error
 from urllib import parse
 from urllib import request
+from urllib.parse import urlparse
 
 from day_captain.models import AuthTokenBundle
 from day_captain.models import DeviceCodeSession
 from day_captain.models import parse_datetime
 from day_captain.models import to_jsonable
 
+try:
+    import psycopg
+    from psycopg.rows import dict_row
+except ImportError:  # pragma: no cover - optional dependency in some environments
+    psycopg = None
+    dict_row = None
+
 
 class EntraAuthError(RuntimeError):
     """Raised when Microsoft Entra ID auth fails."""
+
+
+class TokenCache(Protocol):
+    def load(self) -> Optional[AuthTokenBundle]:
+        ...
+
+    def save(self, bundle: AuthTokenBundle) -> None:
+        ...
+
+    def clear(self) -> None:
+        ...
 
 
 class FileTokenCache:
@@ -56,6 +77,125 @@ class FileTokenCache:
     def clear(self) -> None:
         if self.path.exists():
             self.path.unlink()
+
+
+class DatabaseTokenCache:
+    def __init__(self, database_url: str, cache_key: str = "default") -> None:
+        self.database_url = database_url
+        self.cache_key = cache_key
+        self._ensure_schema()
+
+    def _is_sqlite(self) -> bool:
+        return self.database_url.startswith("sqlite:///")
+
+    def _sqlite_path(self) -> str:
+        parsed = urlparse(self.database_url)
+        if parsed.scheme != "sqlite":
+            raise EntraAuthError("Unsupported sqlite token cache URL.")
+        return parsed.path or ""
+
+    def _connect_sqlite(self) -> sqlite3.Connection:
+        connection = sqlite3.connect(self._sqlite_path())
+        connection.row_factory = sqlite3.Row
+        return connection
+
+    def _connect_postgres(self):
+        if psycopg is None or dict_row is None:
+            raise EntraAuthError("Postgres token cache requires the `psycopg` package.")
+        return psycopg.connect(self.database_url, row_factory=dict_row)
+
+    def _ensure_schema(self) -> None:
+        if self._is_sqlite():
+            with self._connect_sqlite() as connection:
+                connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS auth_token_cache (
+                        cache_key TEXT PRIMARY KEY,
+                        payload_json TEXT NOT NULL,
+                        updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+        else:
+            with self._connect_postgres() as connection:
+                connection.execute(
+                    """
+                    CREATE TABLE IF NOT EXISTS auth_token_cache (
+                        cache_key TEXT PRIMARY KEY,
+                        payload_json TEXT NOT NULL,
+                        updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    )
+                    """
+                )
+                connection.commit()
+
+    def load(self) -> Optional[AuthTokenBundle]:
+        if self._is_sqlite():
+            with self._connect_sqlite() as connection:
+                row = connection.execute(
+                    "SELECT payload_json FROM auth_token_cache WHERE cache_key = ?",
+                    (self.cache_key,),
+                ).fetchone()
+        else:
+            with self._connect_postgres() as connection:
+                row = connection.execute(
+                    "SELECT payload_json FROM auth_token_cache WHERE cache_key = %s",
+                    (self.cache_key,),
+                ).fetchone()
+        if row is None:
+            return None
+        payload = json.loads(row["payload_json"])
+        return AuthTokenBundle(
+            access_token=str(payload.get("access_token") or ""),
+            refresh_token=str(payload.get("refresh_token") or ""),
+            expires_at=parse_datetime(str(payload.get("expires_at"))),
+            scopes=tuple(str(item) for item in payload.get("scopes") or ()),
+            token_type=str(payload.get("token_type") or "Bearer"),
+            user_id=str(payload.get("user_id") or ""),
+        )
+
+    def save(self, bundle: AuthTokenBundle) -> None:
+        payload = json.dumps(to_jsonable(bundle), sort_keys=True)
+        if self._is_sqlite():
+            with self._connect_sqlite() as connection:
+                connection.execute(
+                    """
+                    INSERT INTO auth_token_cache (cache_key, payload_json, updated_at)
+                    VALUES (?, ?, CURRENT_TIMESTAMP)
+                    ON CONFLICT(cache_key) DO UPDATE SET
+                        payload_json = excluded.payload_json,
+                        updated_at = CURRENT_TIMESTAMP
+                    """,
+                    (self.cache_key, payload),
+                )
+        else:
+            with self._connect_postgres() as connection:
+                connection.execute(
+                    """
+                    INSERT INTO auth_token_cache (cache_key, payload_json, updated_at)
+                    VALUES (%s, %s, CURRENT_TIMESTAMP)
+                    ON CONFLICT(cache_key) DO UPDATE SET
+                        payload_json = EXCLUDED.payload_json,
+                        updated_at = CURRENT_TIMESTAMP
+                    """,
+                    (self.cache_key, payload),
+                )
+                connection.commit()
+
+    def clear(self) -> None:
+        if self._is_sqlite():
+            with self._connect_sqlite() as connection:
+                connection.execute(
+                    "DELETE FROM auth_token_cache WHERE cache_key = ?",
+                    (self.cache_key,),
+                )
+        else:
+            with self._connect_postgres() as connection:
+                connection.execute(
+                    "DELETE FROM auth_token_cache WHERE cache_key = %s",
+                    (self.cache_key,),
+                )
+                connection.commit()
 
 
 class DeviceCodeAuthenticator:

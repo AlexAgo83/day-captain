@@ -15,7 +15,7 @@ from urllib import parse
 from urllib import request
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
-from day_captain.adapters.auth import FileTokenCache
+from day_captain.adapters.auth import TokenCache
 from day_captain.models import AuthContext
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -169,7 +169,7 @@ class GraphDelegatedAuthProvider:
         self,
         api_client: GraphApiClient,
         access_token: str = "",
-        token_cache: Optional[FileTokenCache] = None,
+        token_cache: Optional[TokenCache] = None,
         authenticator: Optional[DeviceCodeAuthenticator] = None,
         user_id: str = "",
     ) -> None:

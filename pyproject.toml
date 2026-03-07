@@ -7,7 +7,7 @@ name = "day-captain"
 version = "0.2.0"
 description = "Day Captain daily assistant service skeleton"
 requires-python = ">=3.9"
-dependencies = ["psycopg[binary]>=3.1,<4"]
+dependencies = ["gunicorn>=21,<24", "psycopg[binary]>=3.1,<4"]
 
 [project.optional-dependencies]
 dev = ["pytest>=8,<9"]

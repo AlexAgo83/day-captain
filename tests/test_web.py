@@ -28,6 +28,16 @@ class FakeHostedApp:
             delivery_mode=delivery_mode or "json",
         )
 
+    def recall_digest(self, run_id=None, day=None):
+        self.calls.append(("recall", run_id, day))
+        return DigestPayload(
+            run_id=run_id or "run-1",
+            generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+        )
+
 
 class DayCaptainWebAppTest(unittest.TestCase):
     def _request(self, app, method, path, payload=None, secret="secret"):
@@ -89,3 +99,20 @@ class DayCaptainWebAppTest(unittest.TestCase):
         self.assertEqual(fake_app.calls[0][2], "graph_send")
         self.assertTrue(fake_app.calls[0][3])
         self.assertEqual(response["json"]["run_id"], "run-1")
+        self.assertEqual(response["json"]["status"], "completed")
+        self.assertEqual(response["json"]["section_counts"]["watch_items"], 0)
+        self.assertNotIn("delivery_body", response["json"])
+
+    def test_create_web_app_fails_closed_in_production_without_secret(self) -> None:
+        with self.assertRaises(ValueError):
+            create_web_app(DayCaptainSettings(environment="production"))
+
+    def test_internal_errors_are_not_returned_verbatim(self) -> None:
+        settings = DayCaptainSettings(job_secret="secret")
+        app = create_web_app(settings)
+
+        with mock.patch("day_captain.web.build_application", side_effect=RuntimeError("db password leaked")):
+            response = self._request(app, "POST", "/jobs/morning-digest", payload={})
+
+        self.assertEqual(response["status"], "500 Internal Server Error")
+        self.assertEqual(response["json"]["error"], "internal_error")
