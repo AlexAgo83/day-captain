@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 100%
+> Confidence: 99%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -108,3 +108,5 @@ flowchart LR
 - `task_008_day_captain_email_rendering_and_formatting_upgrade` - Upgrade email rendering, structure, and timestamp formatting. Status: `Ready`.
 - `task_009_day_captain_digest_signal_quality_tuning` - Refine prioritization and filtering to reduce weak digest items. Status: `Ready`.
 - `task_010_day_captain_llm_digest_wording_activation_and_tuning` - Configure and tune bounded LLM wording for delivered digests. Status: `Ready`.
+- `item_005_day_captain_meeting_horizon_fallbacks` - Make the meeting section smarter on weekends and empty meeting days. Status: `Ready`.
+- `task_011_day_captain_meeting_horizon_fallbacks` - Implement weekend and next-day fallback rules for `Upcoming meetings`. Status: `Ready`.
