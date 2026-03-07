@@ -56,7 +56,7 @@ pip install -e ".[dev]"
 
 ## Configuration
 
-Start from [`.env.example`](/Users/alexandreagostini/Documents/day-captain/.env.example).
+Start from [`.env.example`](./.env.example).
 
 Local development typically uses:
 
@@ -204,7 +204,7 @@ Hosted mode is wired for Postgres through `DAY_CAPTAIN_DATABASE_URL`.
 
 ## Render deployment
 
-The repository includes [render.yaml](/Users/alexandreagostini/Documents/day-captain/render.yaml) for a first hosted deployment path:
+The repository includes [`render.yaml`](./render.yaml) for a first hosted deployment path:
 - Render web service
 - Render Postgres
 - `python -m day_captain serve`
@@ -221,25 +221,25 @@ Two workflow categories exist:
 - CI checks
 - scheduled hosted trigger for the morning digest
 
-The scheduler workflow is in [morning-digest-scheduler.yml](/Users/alexandreagostini/Documents/day-captain/.github/workflows/morning-digest-scheduler.yml) and expects:
+The scheduler workflow is in [`morning-digest-scheduler.yml`](./.github/workflows/morning-digest-scheduler.yml) and expects:
 - `DAY_CAPTAIN_SERVICE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
 
 ## Security note
 
 The hosted path exists, but a separate hardening track is still open in Logics:
-- [req_001_day_captain_hosted_security_hardening.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_001_day_captain_hosted_security_hardening.md)
-- [item_001_day_captain_hosted_security_hardening.md](/Users/alexandreagostini/Documents/day-captain/logics/backlog/item_001_day_captain_hosted_security_hardening.md)
-- [task_004_day_captain_hosted_security_hardening.md](/Users/alexandreagostini/Documents/day-captain/logics/tasks/task_004_day_captain_hosted_security_hardening.md)
+- [`req_001_day_captain_hosted_security_hardening.md`](./logics/request/req_001_day_captain_hosted_security_hardening.md)
+- [`item_001_day_captain_hosted_security_hardening.md`](./logics/backlog/item_001_day_captain_hosted_security_hardening.md)
+- [`task_004_day_captain_hosted_security_hardening.md`](./logics/tasks/task_004_day_captain_hosted_security_hardening.md)
 
 Treat the current Render deployment path as staging-quality until that hardening task is implemented.
 
 ## Logics
 
 Main product chain:
-- [req_000_day_captain_daily_assistant_for_microsoft_365.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_000_day_captain_daily_assistant_for_microsoft_365.md)
-- [item_000_day_captain_daily_assistant_for_microsoft_365.md](/Users/alexandreagostini/Documents/day-captain/logics/backlog/item_000_day_captain_daily_assistant_for_microsoft_365.md)
-- [task_003_day_captain_render_deployment_and_scheduler.md](/Users/alexandreagostini/Documents/day-captain/logics/tasks/task_003_day_captain_render_deployment_and_scheduler.md)
+- [`req_000_day_captain_daily_assistant_for_microsoft_365.md`](./logics/request/req_000_day_captain_daily_assistant_for_microsoft_365.md)
+- [`item_000_day_captain_daily_assistant_for_microsoft_365.md`](./logics/backlog/item_000_day_captain_daily_assistant_for_microsoft_365.md)
+- [`task_003_day_captain_render_deployment_and_scheduler.md`](./logics/tasks/task_003_day_captain_render_deployment_and_scheduler.md)
 
 ## Next steps
 
