@@ -4,7 +4,7 @@
 > Confidence: 94%
 
 # Overview
-Day Captain V1 is a single-user Microsoft 365 daily briefing service. It reads Outlook mail and calendar data through Microsoft Graph, scores only the most relevant signals, renders a concise morning digest, persists the run snapshot in `SQLite`, and supports same-day recall without replaying the entire mailbox history.
+Day Captain V1 is a single-user Microsoft 365 daily briefing service. It reads Outlook mail and calendar data through Microsoft Graph, scores only the most relevant signals, renders a concise morning digest, persists the run snapshot in a lightweight relational store, and supports same-day recall without replaying the entire mailbox history.
 
 This spec operationalizes:
 - request `req_000_day_captain_daily_assistant_for_microsoft_365`
@@ -35,9 +35,9 @@ This spec operationalizes:
   - morning collection of emails and meetings for a fixed V1 window
   - deterministic noise filtering, scoring, personalization, and critical-topic guardrails
   - digest rendering to a normalized JSON contract and email-friendly output
-  - `SQLite` persistence for normalized entities, digest runs, digest items, and feedback
+  - local `SQLite` persistence and a hosted Postgres-compatible relational schema for normalized entities, digest runs, digest items, and feedback
   - same-day recall based on the latest completed digest snapshot
-  - hosted `n8n` compatibility for scheduling and trigger orchestration
+  - Render-hosted Python runtime with GitHub Actions scheduling for the first deployment path
 - Out:
   - Teams chat ingestion
   - mailbox mutation beyond optional sending of the digest
@@ -51,24 +51,24 @@ This spec operationalizes:
 - REQ4. Filtering: newsletters, automated notifications, and low-signal CC-only traffic are excluded when confidence is sufficient. Filter decisions must remain inspectable in stored item metadata.
 - REQ5. Scoring: item ranking combines deterministic global signals (sender importance, direct recipient vs CC, recency, reply/action cues, meeting proximity, thread activity) with explicit user-specific boosts/penalties for senders, domains, and keywords.
 - REQ6. Guardrails: potentially critical items must bypass suppression even if personalization would demote them. Guardrail examples include manager/executive senders, explicit action requests, deadlines, incident keywords, or meetings within 24 hours that require preparation.
-- REQ7. Persistence: `SQLite` is the system of record for normalized messages, normalized meetings, digest runs, digest items, and user feedback. Writes must be idempotent for repeated runs over the same window.
+- REQ7. Persistence: local development uses `SQLite`, while hosted deployment must target a Postgres-compatible relational schema for normalized messages, normalized meetings, digest runs, digest items, and user feedback. Writes must be idempotent for repeated runs over the same window.
 - REQ8. Recall and feedback: same-day recall reads the latest completed digest snapshot and may enrich it with stored item state, but it does not re-fetch full mailbox history. Feedback updates only explicit preference weights in V1.
-- REQ9. Orchestration boundary: hosted `n8n` owns schedule/trigger orchestration and secret wiring; Python owns Graph calls, scoring, rendering, persistence, and response payload generation.
+- REQ9. Orchestration boundary: Render owns the hosted runtime, GitHub Actions owns the scheduled trigger, and Python owns Graph calls, scoring, rendering, persistence, and response payload generation.
 
 # Architecture
 - Trigger boundary:
-  - `n8n` scheduled workflow invokes a Python entrypoint for the morning run.
-  - Optional `n8n` webhook or CLI command invokes same-day recall.
+  - GitHub Actions scheduled workflow invokes a protected Python HTTP entrypoint for the morning run on Render.
+  - Optional authenticated webhook or CLI command invokes same-day recall.
 - Python service modules:
   - `auth`: delegated Graph token acquisition/refresh
   - `collectors`: mail and calendar retrieval
-  - `storage`: `SQLite` schema and repositories
+  - `storage`: relational schema and repositories, implemented first in `SQLite` and then hosted on Postgres
   - `scoring`: deterministic filters, ranking, personalization, and guardrails
   - `digest`: normalized digest model and renderer
   - `recall`: read-only lookup over stored digest snapshots
   - `feedback`: explicit preference updates
 - Delivery modes:
-  - `json`: return a structured payload to `n8n`
+  - `json`: return a structured payload to the caller/webhook consumer
   - `graph_send`: optionally send the rendered digest through Microsoft Graph mail APIs
 
 # Data model
@@ -99,18 +99,18 @@ This spec operationalizes:
   - Graph tenant/client settings
   - delegated auth mode
   - optional Graph send-mail toggle
-  - `SQLITE` file path
+  - local `SQLITE` file path or hosted Postgres connection string
   - delivery mode (`json` or `graph_send`)
 
 # Acceptance criteria
 - AC1: V1 auth is explicitly defined as delegated Microsoft Graph auth with minimum required scopes and optional digest send capability.
-- AC2: The morning run fetches emails and meetings for the fixed V1 window, normalizes them, and persists run metadata in `SQLite`.
+- AC2: The morning run fetches emails and meetings for the fixed V1 window, normalizes them, and persists run metadata in a relational store compatible with local `SQLite` and hosted Postgres.
 - AC3: The digest output contract is fixed and contains `critical_topics`, `actions_to_take`, `watch_items`, and `upcoming_meetings`.
 - AC4: Noise filtering explicitly handles newsletters, automated notifications, and low-signal CC traffic, while keeping decision reasons inspectable.
 - AC5: Prioritization combines deterministic global signals with explicit user preference weights and a non-bypassable critical-signal guardrail path.
 - AC6: Same-day recall reuses stored digest snapshots without replaying the full mailbox history.
-- AC7: The Python service boundary vs hosted `n8n` boundary is explicit enough to implement without guessing responsibilities.
-- AC8: The first deployment path remains compatible with hosted `n8n`, `SQLite`, and Outlook/Graph-based delivery.
+- AC7: The Python service boundary vs Render runtime and GitHub Actions scheduler boundary is explicit enough to implement without guessing responsibilities.
+- AC8: The first deployment path remains compatible with Render, GitHub Actions, hosted Postgres, and Outlook/Graph-based delivery.
 
 # Validation / test plan
 - Unit tests:
@@ -118,9 +118,9 @@ This spec operationalizes:
   - noise filtering, scoring, and guardrail rules
   - digest renderer and recall reconstruction
 - Integration tests:
-  - idempotent `SQLite` writes across repeated runs
+  - idempotent relational writes across repeated runs
   - morning run over mocked Graph responses
-  - `n8n` payload contract for morning digest and recall
+  - webhook payload contract for morning digest and recall
 - Manual checks:
   - execute one morning run and inspect stored digest JSON
   - trigger one recall on the same day and confirm no full-history re-fetch
@@ -131,5 +131,5 @@ This spec operationalizes:
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
 
 # Open questions
-- Should V1 delivery send the digest directly through Graph mail APIs, or only return structured JSON to `n8n` for the final delivery step?
+- Should V1 delivery send the digest directly through Graph mail APIs, or return structured JSON to a caller/webhook consumer for the final delivery step?
 - Which initial sender/topic preference seeds should be configured before the first feedback loop exists?

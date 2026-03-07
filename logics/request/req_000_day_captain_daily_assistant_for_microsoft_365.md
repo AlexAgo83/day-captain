@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 98%
+> Confidence: 99%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -20,8 +20,9 @@
 - Microsoft Graph is the official integration layer for reading email/calendar data and optionally sending the digest back through Outlook.
 - Authentication and authorization should rely on a Microsoft Entra ID app registration with the minimum Graph permissions required for V1.
 - The preferred business logic runtime is Python.
-- The preferred orchestration layer is hosted `n8n`, with `Power Automate Free` or a scheduler/cron job acceptable for a simple first trigger.
-- The system should use a lightweight datastore at first, ideally `SQLite`, to persist:
+- The preferred V1 runtime is a hosted Python service on `Render`.
+- The preferred V1 scheduler is `GitHub Actions` cron invoking the hosted service, with Render-native cron as a later hardening option.
+- The system should use a lightweight local datastore during development (`SQLite`), but a hosted deployment should target a managed relational store compatible with the same schema, preferably `Postgres` on Render, to persist:
   - processed emails or threads
   - user preferences
   - morning brief snapshots
@@ -41,6 +42,11 @@
   - digest renderer
   - recall service
   - feedback engine
+- The preferred V1 deployment topology is:
+  - Render web service for the Python application
+  - GitHub Actions scheduled workflow for the morning trigger
+  - Microsoft Graph for mail/calendar ingestion and optional digest send
+  - Render Postgres for hosted persistence, with `SQLite` kept for local development and tests
 - In scope for V1:
   - daily morning digest
   - meeting-aware prioritization
@@ -78,9 +84,9 @@ flowchart LR
 - AC3: The digest excludes obvious low-value noise such as newsletters, generic notifications, and low-signal CC traffic when confidence is sufficient.
 - AC4: The prioritization logic combines generic importance signals with user-specific preferences, while preserving a guardrail path for potentially critical topics.
 - AC5: A user can trigger a later reminder during the day using the same stored context without recomputing the full history from scratch.
-- AC6: The system persists processed-message state, digest history, and user feedback in a lightweight datastore.
-- AC7: The proposed V1 architecture is explicitly based on Microsoft Graph + Python + scheduler/orchestrator + LLM + lightweight storage.
-- AC8: The implementation approach is compatible with a first deployment using hosted `n8n`, `SQLite`, and Outlook/Graph-based delivery.
+- AC6: The system persists processed-message state, digest history, and user feedback in a lightweight relational datastore, with `SQLite` for local runs and a Postgres-compatible schema for hosted deployment.
+- AC7: The proposed V1 architecture is explicitly based on Microsoft Graph + Python + Render hosting + GitHub Actions scheduling + LLM + relational storage.
+- AC8: The implementation approach is compatible with a first deployment using Render, GitHub Actions, Render Postgres, and Outlook/Graph-based delivery.
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.
@@ -93,4 +99,5 @@ flowchart LR
 - `task_000_day_captain_daily_assistant_for_microsoft_365` - Freeze the V1 contract and bootstrap the service skeleton. Status: `Delivered, pending chain closure`.
 - `task_001_day_captain_graph_ingestion_and_storage` - Implement Graph ingestion and SQLite persistence. Status: `Delivered, pending chain closure`.
 - The repository now includes Microsoft Entra ID device-code auth and token cache handling for delegated Microsoft Graph access in local/CLI flows.
-- `task_002_day_captain_digest_scoring_recall_and_delivery` - Implement scoring, digest rendering, recall, and n8n-compatible delivery. Status: `Delivered, pending chain closure`.
+- `task_002_day_captain_digest_scoring_recall_and_delivery` - Implement scoring, digest rendering, recall, and webhook/Graph-send delivery. Status: `Delivered, pending chain closure`.
+- `task_003_day_captain_render_deployment_and_scheduler` - Package the hosted deployment path on Render with GitHub Actions scheduling and Postgres-backed persistence. Status: `Ready`.

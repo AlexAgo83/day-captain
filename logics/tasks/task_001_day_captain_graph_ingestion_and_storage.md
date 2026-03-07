@@ -1,9 +1,9 @@
 ## task_001_day_captain_graph_ingestion_and_storage - Implement Microsoft Graph ingestion and SQLite persistence
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 98%
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 99%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -14,12 +14,12 @@
 - Related request(s): `req_000_day_captain_daily_assistant_for_microsoft_365`.
 - Supporting spec: `spec_000_day_captain_v1_digest_contract`.
 - Depends on: `task_000_day_captain_daily_assistant_for_microsoft_365`.
-- Delivery target: implement delegated Graph collection and idempotent `SQLite` persistence for normalized mail, meetings, digest runs, and feedback primitives.
+- Delivery target: implement delegated Graph collection and idempotent relational persistence for normalized mail, meetings, digest runs, and feedback primitives, with `SQLite` as the local reference backend and a migration path to hosted Postgres.
 
 ```mermaid
 flowchart LR
     Backlog[Backlog: `item_000_day_captain_daily_assistant_for_microsoft_365`] --> Step1[Implement delegated Graph auth and collectors]
-    Step1 --> Step2[Normalize and persist mail, meetings, and run state in SQLite]
+    Step1 --> Step2[Normalize and persist mail, meetings, and run state in a local relational backend]
     Step2 --> Step3[Add fixtures, retry/error handling, and ingestion tests]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]
@@ -27,14 +27,14 @@ flowchart LR
 
 # Plan
 - [x] 1. Implement delegated Graph auth/config plus mail and calendar collectors for the frozen V1 time window.
-- [x] 2. Normalize Graph payloads and persist messages, meetings, digest runs, digest items, and preference/feedback primitives in `SQLite` with idempotent writes.
+- [x] 2. Normalize Graph payloads and persist messages, meetings, digest runs, digest items, and preference/feedback primitives in a relational schema implemented first in `SQLite` with idempotent writes.
 - [x] 3. Add fixtures, pagination/error handling, and tests for normalization, deduplication, repeated runs, and stored run metadata.
 - [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> This task implements the selected Graph auth mode. Proof: Plan step 1 adds delegated auth/config handling.
-- AC2 -> This task implements morning collection and persisted run state. Proof: Plan steps 1 and 2 collect the fixed window and write normalized records to `SQLite`.
-- AC6 -> This task establishes the system of record. Proof: Plan step 2 persists source entities, run metadata, and feedback primitives.
+- AC2 -> This task implements morning collection and persisted run state. Proof: Plan steps 1 and 2 collect the fixed window and write normalized records to the local relational backend.
+- AC6 -> This task establishes the system of record. Proof: Plan step 2 persists source entities, run metadata, and feedback primitives in a schema reusable by hosted storage.
 - AC7 -> This task respects the agreed architecture boundary. Proof: Plan step 1 keeps Graph access in Python and leaves orchestration external.
 
 # Links
@@ -57,9 +57,9 @@ flowchart LR
 
 # Report
 - Added `SQLiteStorage` in `src/day_captain/adapters/storage.py` with schema bootstrap, idempotent upserts for messages and meetings, persisted digest runs/items, and feedback persistence.
-- Added Microsoft Graph adapters in `src/day_captain/adapters/graph.py` for delegated bearer-token auth, `/me` profile resolution, `/me/messages` ingestion, `/me/calendar/calendarView` ingestion, pagination support, and HTTP error surfacing.
+- Added Microsoft Graph adapters in `src/day_captain/adapters/graph.py` for delegated bearer-token auth, `/me` profile resolution, Inbox-focused mail ingestion, `/me/calendar/calendarView` ingestion, pagination support, and HTTP error surfacing.
 - Added Microsoft Entra ID device-code auth support in `src/day_captain/adapters/auth.py`, plus token-cache-backed delegated auth and refresh handling in the Graph provider and CLI.
-- Updated `build_application()` so `SQLite` is the default storage backend and Graph adapters activate automatically when `DAY_CAPTAIN_GRAPH_ACCESS_TOKEN` is configured.
+- Updated `build_application()` so `SQLite` is the default local storage backend and Graph adapters activate automatically when delegated auth is available, preserving a clean seam for a hosted Postgres-backed implementation.
 - Added coverage in `tests/test_graph_client.py`, `tests/test_storage.py`, `tests/test_morning_run.py`, and `tests/test_auth.py`.
 - Workflow note: the implementation slice is complete, but the task remains `In Progress` until the parent backlog item can close under the repo's workflow audit rules.
 - Validation results:
