@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 99%
+> Confidence: 100%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -104,3 +104,7 @@ flowchart LR
 - `item_003_day_captain_graph_send_and_mailbox_delivery_validation` - Add real delegated Outlook delivery and mailbox validation for the digest send path. Status: `Done`.
 - `task_006_day_captain_graph_send_delivery_execution` - Implement real Graph `sendMail` execution for digest delivery. Status: `Done`.
 - `task_007_day_captain_mailbox_delivery_end_to_end_validation` - Validate the delegated send flow end to end against the real mailbox. Status: `Done`.
+- `item_004_day_captain_digest_quality_and_email_polish` - Improve digest usefulness and presentation quality after real mailbox validation. Status: `Ready`.
+- `task_008_day_captain_email_rendering_and_formatting_upgrade` - Upgrade email rendering, structure, and timestamp formatting. Status: `Ready`.
+- `task_009_day_captain_digest_signal_quality_tuning` - Refine prioritization and filtering to reduce weak digest items. Status: `Ready`.
+- `task_010_day_captain_llm_digest_wording_activation_and_tuning` - Configure and tune bounded LLM wording for delivered digests. Status: `Ready`.
