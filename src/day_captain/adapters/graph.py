@@ -1,0 +1,249 @@
+"""Microsoft Graph adapters for Day Captain."""
+
+from datetime import datetime
+from datetime import timezone
+import json
+from typing import Any
+from typing import Callable
+from typing import Dict
+from typing import Iterable
+from typing import Mapping
+from typing import Optional
+from typing import Sequence
+from urllib import error
+from urllib import parse
+from urllib import request
+
+from day_captain.models import AuthContext
+from day_captain.models import MeetingRecord
+from day_captain.models import MessageRecord
+from day_captain.models import parse_datetime
+
+
+class GraphApiError(RuntimeError):
+    """Raised when Microsoft Graph returns an unexpected response."""
+
+
+def _normalize_address_list(items: Iterable[Mapping[str, Any]]) -> Sequence[str]:
+    addresses = []
+    for item in items:
+        email = ((item.get("emailAddress") or {}).get("address")) or ""
+        if email:
+            addresses.append(str(email))
+    return tuple(addresses)
+
+
+def _normalize_received_at(value: str) -> datetime:
+    return parse_datetime(value)
+
+
+def _normalize_graph_datetime(payload: Mapping[str, Any]) -> datetime:
+    raw_value = str(payload.get("dateTime") or "")
+    if not raw_value:
+        return datetime.now(timezone.utc)
+    parsed = parse_datetime(raw_value)
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def normalize_message(payload: Mapping[str, Any]) -> MessageRecord:
+    return MessageRecord(
+        graph_message_id=str(payload.get("id") or ""),
+        thread_id=str(payload.get("conversationId") or ""),
+        internet_message_id=str(payload.get("internetMessageId") or ""),
+        subject=str(payload.get("subject") or ""),
+        from_address=str((((payload.get("from") or {}).get("emailAddress") or {}).get("address")) or ""),
+        to_addresses=_normalize_address_list(payload.get("toRecipients") or ()),
+        cc_addresses=_normalize_address_list(payload.get("ccRecipients") or ()),
+        received_at=_normalize_received_at(str(payload.get("receivedDateTime") or datetime.now(timezone.utc).isoformat())),
+        body_preview=str(payload.get("bodyPreview") or ""),
+        categories=tuple(str(item) for item in payload.get("categories") or ()),
+        is_unread=bool(payload.get("isRead") is False),
+        has_attachments=bool(payload.get("hasAttachments")),
+        raw_payload=dict(payload),
+    )
+
+
+def normalize_meeting(payload: Mapping[str, Any]) -> MeetingRecord:
+    online_meeting = payload.get("onlineMeeting") or {}
+    return MeetingRecord(
+        graph_event_id=str(payload.get("id") or ""),
+        subject=str(payload.get("subject") or ""),
+        start_at=_normalize_graph_datetime(payload.get("start") or {}),
+        end_at=_normalize_graph_datetime(payload.get("end") or {}),
+        organizer_address=str((((payload.get("organizer") or {}).get("emailAddress") or {}).get("address")) or ""),
+        attendees=_normalize_address_list(payload.get("attendees") or ()),
+        location=str((((payload.get("location") or {}).get("displayName")) or "")),
+        join_url=str(online_meeting.get("joinUrl") or payload.get("webLink") or ""),
+        body_preview=str((((payload.get("bodyPreview")) or ""))),
+        is_online_meeting=bool(payload.get("isOnlineMeeting") or online_meeting),
+        raw_payload=dict(payload),
+    )
+
+
+class GraphApiClient:
+    def __init__(
+        self,
+        base_url: str,
+        timeout_seconds: int = 30,
+        opener: Optional[Callable[..., Any]] = None,
+    ) -> None:
+        self.base_url = base_url.rstrip("/")
+        self.timeout_seconds = timeout_seconds
+        self._opener = opener or request.urlopen
+
+    def _build_url(self, path: str, params: Optional[Mapping[str, Any]] = None) -> str:
+        if path.startswith("http://") or path.startswith("https://"):
+            base = path
+        else:
+            base = "{0}/{1}".format(self.base_url, path.lstrip("/"))
+        if not params:
+            return base
+        query = parse.urlencode(params, doseq=True)
+        separator = "&" if "?" in base else "?"
+        return "{0}{1}{2}".format(base, separator, query)
+
+    def get_object(
+        self,
+        path: str,
+        access_token: str,
+        params: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, str]] = None,
+    ) -> Mapping[str, Any]:
+        url = self._build_url(path, params=params)
+        request_headers = {
+            "Authorization": "Bearer {0}".format(access_token),
+            "Accept": "application/json",
+        }
+        if headers:
+            request_headers.update(headers)
+        req = request.Request(url, headers=request_headers, method="GET")
+        try:
+            with self._opener(req, timeout=self.timeout_seconds) as response:
+                raw = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise GraphApiError("Graph request failed with {0}: {1}".format(exc.code, detail)) from exc
+        except error.URLError as exc:
+            raise GraphApiError("Unable to reach Microsoft Graph: {0}".format(exc.reason)) from exc
+        payload = json.loads(raw or "{}")
+        if not isinstance(payload, dict):
+            raise GraphApiError("Expected Graph JSON object response.")
+        return payload
+
+    def list_collection(
+        self,
+        path: str,
+        access_token: str,
+        params: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, str]] = None,
+    ) -> Sequence[Mapping[str, Any]]:
+        items = []
+        next_path = path
+        next_params = params
+        while next_path:
+            payload = self.get_object(
+                next_path,
+                access_token=access_token,
+                params=next_params,
+                headers=headers,
+            )
+            batch = payload.get("value") or ()
+            if not isinstance(batch, list):
+                raise GraphApiError("Expected Graph collection response to contain a list in `value`.")
+            items.extend(item for item in batch if isinstance(item, dict))
+            next_path = payload.get("@odata.nextLink")
+            next_params = None
+        return tuple(items)
+
+
+class GraphDelegatedAuthProvider:
+    def __init__(
+        self,
+        access_token: str,
+        api_client: GraphApiClient,
+        user_id: str = "",
+    ) -> None:
+        self.access_token = access_token
+        self.api_client = api_client
+        self.user_id = user_id
+
+    def authenticate(self, scopes: Sequence[str]) -> AuthContext:
+        if not self.access_token:
+            raise ValueError("DAY_CAPTAIN_GRAPH_ACCESS_TOKEN is required for delegated Graph access.")
+        resolved_user_id = self.user_id
+        if not resolved_user_id:
+            profile = self.api_client.get_object("/me", access_token=self.access_token)
+            resolved_user_id = str(profile.get("id") or profile.get("userPrincipalName") or "graph-user")
+        return AuthContext(
+            access_token=self.access_token,
+            granted_scopes=tuple(scopes),
+            user_id=resolved_user_id,
+        )
+
+
+class GraphMailCollector:
+    def __init__(self, api_client: GraphApiClient) -> None:
+        self.api_client = api_client
+
+    def collect_messages(
+        self,
+        auth_context: AuthContext,
+        window_start: datetime,
+        window_end: datetime,
+    ) -> Sequence[MessageRecord]:
+        filter_value = (
+            "receivedDateTime ge {0} and receivedDateTime le {1}"
+        ).format(window_start.isoformat(), window_end.isoformat())
+        select_value = ",".join(
+            (
+                "id",
+                "conversationId",
+                "internetMessageId",
+                "subject",
+                "from",
+                "toRecipients",
+                "ccRecipients",
+                "receivedDateTime",
+                "bodyPreview",
+                "categories",
+                "isRead",
+                "hasAttachments",
+            )
+        )
+        payloads = self.api_client.list_collection(
+            "/me/messages",
+            access_token=auth_context.access_token,
+            params={
+                "$filter": filter_value,
+                "$select": select_value,
+                "$orderby": "receivedDateTime desc",
+                "$top": 100,
+            },
+        )
+        return tuple(normalize_message(item) for item in payloads)
+
+
+class GraphCalendarCollector:
+    def __init__(self, api_client: GraphApiClient) -> None:
+        self.api_client = api_client
+
+    def collect_meetings(
+        self,
+        auth_context: AuthContext,
+        window_start: datetime,
+        window_end: datetime,
+    ) -> Sequence[MeetingRecord]:
+        payloads = self.api_client.list_collection(
+            "/me/calendar/calendarView",
+            access_token=auth_context.access_token,
+            params={
+                "startDateTime": window_start.isoformat(),
+                "endDateTime": window_end.isoformat(),
+                "$top": 100,
+                "$orderby": "start/dateTime",
+            },
+            headers={"Prefer": 'outlook.timezone="UTC"'},
+        )
+        return tuple(normalize_meeting(item) for item in payloads)

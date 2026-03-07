@@ -16,7 +16,11 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_SQLITE_PATH"] = "/tmp/day-captain.sqlite3"
             os.environ["DAY_CAPTAIN_DELIVERY_MODE"] = "graph_send"
             os.environ["DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS"] = "12"
+            os.environ["DAY_CAPTAIN_GRAPH_BASE_URL"] = "https://graph.microsoft.com/v1.0"
+            os.environ["DAY_CAPTAIN_GRAPH_ACCESS_TOKEN"] = "delegated-token"
+            os.environ["DAY_CAPTAIN_GRAPH_USER_ID"] = "alex@example.com"
             os.environ["DAY_CAPTAIN_GRAPH_SEND_ENABLED"] = "true"
+            os.environ["DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS"] = "45"
             os.environ["DAY_CAPTAIN_GRAPH_SCOPES"] = "Mail.Read, Calendars.Read, Mail.Send"
             settings = DayCaptainSettings.from_env()
         finally:
@@ -27,7 +31,11 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.sqlite_path, "/tmp/day-captain.sqlite3")
         self.assertEqual(settings.delivery_mode, "graph_send")
         self.assertEqual(settings.default_lookback_hours, 12)
+        self.assertEqual(settings.graph_base_url, "https://graph.microsoft.com/v1.0")
+        self.assertEqual(settings.graph_access_token, "delegated-token")
+        self.assertEqual(settings.graph_user_id, "alex@example.com")
         self.assertTrue(settings.graph_send_enabled)
+        self.assertEqual(settings.graph_timeout_seconds, 45)
         self.assertEqual(settings.graph_scopes, ("Mail.Read", "Calendars.Read", "Mail.Send"))
 
 

@@ -1,9 +1,9 @@
 ## item_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 30%
+> Understanding: 98%
+> Confidence: 96%
+> Progress: 65%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -75,3 +75,4 @@ flowchart LR
 - Supporting spec: `logics/specs/spec_000_day_captain_v1_digest_contract.md`.
 - Execution is intentionally split into three tasks: contract/bootstrap, ingestion/storage, and scoring/rendering/recall.
 - `task_000_day_captain_daily_assistant_for_microsoft_365` is complete and delivered the initial Python package skeleton, typed contracts, stub adapters, CLI entrypoints, and smoke tests.
+- `task_001_day_captain_graph_ingestion_and_storage` is functionally implemented: `SQLite` is now the default persistence layer, and Microsoft Graph mail/calendar adapters are available when a delegated access token is provided.

@@ -1,8 +1,8 @@
 ## task_000_day_captain_daily_assistant_for_microsoft_365 - Freeze Day Captain V1 contract and bootstrap the service skeleton
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 98%
-> Confidence: 95%
+> Understanding: 99%
+> Confidence: 96%
 > Progress: 95%
 > Complexity: Medium
 > Theme: Productivity
@@ -45,7 +45,7 @@ flowchart LR
 
 # Validation
 - python3 -m unittest discover -s tests
-- PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00
+- PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
@@ -64,4 +64,4 @@ flowchart LR
 - Workflow note: the implementation slice is complete, but the task remains `In Progress` until the parent backlog item can close under the repo's workflow audit rules.
 - Validation results:
   - `python3 -m unittest discover -s tests` -> `OK` (`4` tests)
-  - `PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00` -> returned an empty but valid digest payload
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force` -> returned an empty but valid digest payload

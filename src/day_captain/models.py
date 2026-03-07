@@ -6,6 +6,7 @@ from dataclasses import field
 from datetime import date
 from datetime import datetime
 from typing import Any
+from typing import Mapping
 from typing import Sequence
 
 
@@ -31,6 +32,7 @@ class MessageRecord:
     thread_id: str
     subject: str
     from_address: str
+    internet_message_id: str = ""
     to_addresses: Sequence[str] = field(default_factory=tuple)
     cc_addresses: Sequence[str] = field(default_factory=tuple)
     received_at: datetime = field(default_factory=datetime.utcnow)
@@ -38,6 +40,7 @@ class MessageRecord:
     categories: Sequence[str] = field(default_factory=tuple)
     is_unread: bool = True
     has_attachments: bool = False
+    raw_payload: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -52,6 +55,7 @@ class MeetingRecord:
     join_url: str = ""
     body_preview: str = ""
     is_online_meeting: bool = True
+    raw_payload: Mapping[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -121,3 +125,42 @@ def to_jsonable(value: Any) -> Any:
     if isinstance(value, (list, tuple)):
         return [to_jsonable(item) for item in value]
     return _serialize(value)
+
+
+def parse_datetime(value: str) -> datetime:
+    normalized = value.replace("Z", "+00:00")
+    return datetime.fromisoformat(normalized)
+
+
+def digest_entry_from_dict(payload: Mapping[str, Any]) -> DigestEntry:
+    return DigestEntry(
+        title=str(payload.get("title") or ""),
+        summary=str(payload.get("summary") or ""),
+        source_kind=str(payload.get("source_kind") or ""),
+        source_id=str(payload.get("source_id") or ""),
+        score=float(payload.get("score") or 0.0),
+        reason_codes=tuple(str(item) for item in payload.get("reason_codes") or ()),
+        guardrail_applied=bool(payload.get("guardrail_applied")),
+    )
+
+
+def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
+    return DigestPayload(
+        run_id=str(payload.get("run_id") or ""),
+        generated_at=parse_datetime(str(payload.get("generated_at"))),
+        window_start=parse_datetime(str(payload.get("window_start"))),
+        window_end=parse_datetime(str(payload.get("window_end"))),
+        delivery_mode=str(payload.get("delivery_mode") or "json"),
+        critical_topics=tuple(
+            digest_entry_from_dict(item) for item in payload.get("critical_topics") or ()
+        ),
+        actions_to_take=tuple(
+            digest_entry_from_dict(item) for item in payload.get("actions_to_take") or ()
+        ),
+        watch_items=tuple(
+            digest_entry_from_dict(item) for item in payload.get("watch_items") or ()
+        ),
+        upcoming_meetings=tuple(
+            digest_entry_from_dict(item) for item in payload.get("upcoming_meetings") or ()
+        ),
+    )
