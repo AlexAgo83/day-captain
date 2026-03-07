@@ -16,6 +16,9 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_SQLITE_PATH"] = "/tmp/day-captain.sqlite3"
             os.environ["DAY_CAPTAIN_DELIVERY_MODE"] = "graph_send"
             os.environ["DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS"] = "12"
+            os.environ["DAY_CAPTAIN_GRAPH_TENANT_ID"] = "common"
+            os.environ["DAY_CAPTAIN_GRAPH_CLIENT_ID"] = "app-client-id"
+            os.environ["DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH"] = "/tmp/day-captain-auth.json"
             os.environ["DAY_CAPTAIN_GRAPH_BASE_URL"] = "https://graph.microsoft.com/v1.0"
             os.environ["DAY_CAPTAIN_GRAPH_ACCESS_TOKEN"] = "delegated-token"
             os.environ["DAY_CAPTAIN_GRAPH_USER_ID"] = "alex@example.com"
@@ -31,12 +34,19 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.sqlite_path, "/tmp/day-captain.sqlite3")
         self.assertEqual(settings.delivery_mode, "graph_send")
         self.assertEqual(settings.default_lookback_hours, 12)
+        self.assertEqual(settings.graph_tenant_id, "common")
+        self.assertEqual(settings.graph_client_id, "app-client-id")
+        self.assertEqual(settings.graph_auth_cache_path, "/tmp/day-captain-auth.json")
         self.assertEqual(settings.graph_base_url, "https://graph.microsoft.com/v1.0")
         self.assertEqual(settings.graph_access_token, "delegated-token")
         self.assertEqual(settings.graph_user_id, "alex@example.com")
         self.assertTrue(settings.graph_send_enabled)
         self.assertEqual(settings.graph_timeout_seconds, 45)
         self.assertEqual(settings.graph_scopes, ("Mail.Read", "Calendars.Read", "Mail.Send"))
+        self.assertEqual(
+            settings.graph_login_scopes(),
+            ("openid", "profile", "offline_access", "Mail.Read", "Calendars.Read", "Mail.Send"),
+        )
 
 
 if __name__ == "__main__":

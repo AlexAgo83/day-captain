@@ -1,9 +1,9 @@
 ## task_001_day_captain_graph_ingestion_and_storage - Implement Microsoft Graph ingestion and SQLite persistence
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 98%
-> Confidence: 95%
-> Progress: 95%
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 98%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -58,9 +58,11 @@ flowchart LR
 # Report
 - Added `SQLiteStorage` in `src/day_captain/adapters/storage.py` with schema bootstrap, idempotent upserts for messages and meetings, persisted digest runs/items, and feedback persistence.
 - Added Microsoft Graph adapters in `src/day_captain/adapters/graph.py` for delegated bearer-token auth, `/me` profile resolution, `/me/messages` ingestion, `/me/calendar/calendarView` ingestion, pagination support, and HTTP error surfacing.
+- Added Microsoft Entra ID device-code auth support in `src/day_captain/adapters/auth.py`, plus token-cache-backed delegated auth and refresh handling in the Graph provider and CLI.
 - Updated `build_application()` so `SQLite` is the default storage backend and Graph adapters activate automatically when `DAY_CAPTAIN_GRAPH_ACCESS_TOKEN` is configured.
-- Added coverage in `tests/test_graph_client.py`, `tests/test_storage.py`, and `tests/test_morning_run.py`.
+- Added coverage in `tests/test_graph_client.py`, `tests/test_storage.py`, `tests/test_morning_run.py`, and `tests/test_auth.py`.
 - Workflow note: the implementation slice is complete, but the task remains `In Progress` until the parent backlog item can close under the repo's workflow audit rules.
 - Validation results:
-  - `python3 -m unittest discover -s tests` -> `OK` (`11` tests)
+  - `python3 -m unittest discover -s tests` -> `OK` (`23` tests)
+  - `PYTHONPATH=src python3 -m day_captain auth status` -> returned a valid unauthenticated cache status payload
   - `PYTHONPATH=src python3 -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force` -> returned a valid digest payload backed by default `SQLite` storage

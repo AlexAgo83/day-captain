@@ -10,6 +10,8 @@ from typing import Iterable
 from typing import Optional
 from typing import Sequence
 
+from day_captain.adapters.auth import DeviceCodeAuthenticator
+from day_captain.adapters.auth import FileTokenCache
 from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import GraphCalendarCollector
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
@@ -331,13 +333,21 @@ def build_application(
         base_url=resolved_settings.graph_base_url,
         timeout_seconds=resolved_settings.graph_timeout_seconds,
     )
+    token_cache = FileTokenCache(resolved_settings.graph_auth_cache_path)
+    authenticator = DeviceCodeAuthenticator(
+        tenant_id=resolved_settings.graph_tenant_id,
+        client_id=resolved_settings.graph_client_id,
+        timeout_seconds=resolved_settings.graph_timeout_seconds,
+    )
     resolved_storage = storage or SQLiteStorage(resolved_settings.sqlite_path)
     if auth_provider is not None:
         resolved_auth_provider = auth_provider
-    elif resolved_settings.graph_access_token:
+    elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:
         resolved_auth_provider = GraphDelegatedAuthProvider(
-            access_token=resolved_settings.graph_access_token,
             api_client=graph_client,
+            access_token=resolved_settings.graph_access_token,
+            token_cache=token_cache,
+            authenticator=authenticator,
             user_id=resolved_settings.graph_user_id,
         )
     else:
@@ -345,14 +355,14 @@ def build_application(
 
     if mail_collector is not None:
         resolved_mail_collector = mail_collector
-    elif resolved_settings.graph_access_token:
+    elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:
         resolved_mail_collector = GraphMailCollector(graph_client)
     else:
         resolved_mail_collector = StaticMailCollector()
 
     if calendar_collector is not None:
         resolved_calendar_collector = calendar_collector
-    elif resolved_settings.graph_access_token:
+    elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:
         resolved_calendar_collector = GraphCalendarCollector(graph_client)
     else:
         resolved_calendar_collector = StaticCalendarCollector()

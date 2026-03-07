@@ -24,11 +24,12 @@ class DayCaptainSettings:
     sqlite_path: str = "day_captain.sqlite3"
     delivery_mode: str = "json"
     default_lookback_hours: int = 24
-    graph_base_url: str = "https://graph.microsoft.com/v1.0"
-    graph_access_token: str = ""
-    graph_tenant_id: str = ""
+    graph_tenant_id: str = "common"
     graph_client_id: str = ""
     graph_client_secret: str = ""
+    graph_auth_cache_path: str = ".day_captain_auth.json"
+    graph_base_url: str = "https://graph.microsoft.com/v1.0"
+    graph_access_token: str = ""
     graph_user_id: str = ""
     graph_send_enabled: bool = False
     graph_timeout_seconds: int = 30
@@ -41,13 +42,21 @@ class DayCaptainSettings:
             sqlite_path=os.getenv("DAY_CAPTAIN_SQLITE_PATH", "day_captain.sqlite3"),
             delivery_mode=os.getenv("DAY_CAPTAIN_DELIVERY_MODE", "json"),
             default_lookback_hours=int(os.getenv("DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS", "24")),
-            graph_base_url=os.getenv("DAY_CAPTAIN_GRAPH_BASE_URL", "https://graph.microsoft.com/v1.0"),
-            graph_access_token=os.getenv("DAY_CAPTAIN_GRAPH_ACCESS_TOKEN", ""),
-            graph_tenant_id=os.getenv("DAY_CAPTAIN_GRAPH_TENANT_ID", ""),
+            graph_tenant_id=os.getenv("DAY_CAPTAIN_GRAPH_TENANT_ID", "common"),
             graph_client_id=os.getenv("DAY_CAPTAIN_GRAPH_CLIENT_ID", ""),
             graph_client_secret=os.getenv("DAY_CAPTAIN_GRAPH_CLIENT_SECRET", ""),
+            graph_auth_cache_path=os.getenv("DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH", ".day_captain_auth.json"),
+            graph_base_url=os.getenv("DAY_CAPTAIN_GRAPH_BASE_URL", "https://graph.microsoft.com/v1.0"),
+            graph_access_token=os.getenv("DAY_CAPTAIN_GRAPH_ACCESS_TOKEN", ""),
             graph_user_id=os.getenv("DAY_CAPTAIN_GRAPH_USER_ID", ""),
             graph_send_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_GRAPH_SEND_ENABLED"), default=False),
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
             graph_scopes=_parse_scopes(os.getenv("DAY_CAPTAIN_GRAPH_SCOPES", "")),
         )
+
+    def graph_login_scopes(self) -> Tuple[str, ...]:
+        base = ["openid", "profile", "offline_access"]
+        for scope in self.graph_scopes:
+            if scope not in base:
+                base.append(scope)
+        return tuple(base)

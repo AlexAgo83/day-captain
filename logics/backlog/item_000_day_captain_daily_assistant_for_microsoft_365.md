@@ -1,8 +1,8 @@
 ## item_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 98%
-> Confidence: 97%
+> Understanding: 99%
+> Confidence: 98%
 > Progress: 95%
 > Complexity: High
 > Theme: Productivity
@@ -76,4 +76,5 @@ flowchart LR
 - Execution is intentionally split into three tasks: contract/bootstrap, ingestion/storage, and scoring/rendering/recall.
 - `task_000_day_captain_daily_assistant_for_microsoft_365` is complete and delivered the initial Python package skeleton, typed contracts, stub adapters, CLI entrypoints, and smoke tests.
 - `task_001_day_captain_graph_ingestion_and_storage` is functionally implemented: `SQLite` is now the default persistence layer, and Microsoft Graph mail/calendar adapters are available when a delegated access token is provided.
+- Delegated auth is now operable through Microsoft Entra ID device code flow, token cache storage, and refresh-token reuse for CLI-driven local runs.
 - `task_002_day_captain_digest_scoring_recall_and_delivery` is functionally implemented: deterministic ranking, anti-noise filters, digest rendering, persisted recall, feedback-driven preferences, and delivery payload generation are all covered by automated tests.
