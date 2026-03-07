@@ -1,6 +1,6 @@
 ## req_001_day_captain_hosted_security_hardening - Day Captain hosted deployment security hardening
 > From version: 0.1.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 98%
 > Complexity: High
@@ -70,4 +70,4 @@ flowchart LR
 
 # Backlog
 - `item_001_day_captain_hosted_security_hardening` - Hardening slice for the hosted Render + GitHub Actions deployment path.
-- `task_004_day_captain_hosted_security_hardening` - Implement hosted security hardening for trigger auth, runtime, token handling, and deployment controls. Status: `Ready`.
+- `task_004_day_captain_hosted_security_hardening` - Implement hosted security hardening for trigger auth, runtime, token handling, and deployment controls. Status: `Done`.

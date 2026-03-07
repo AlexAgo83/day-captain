@@ -12,6 +12,7 @@ from urllib import error
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
+from day_captain.adapters.auth import DatabaseTokenCache
 from day_captain.adapters.auth import DeviceCodeSession
 from day_captain.adapters.auth import FileTokenCache
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
@@ -81,6 +82,25 @@ class AuthFlowTest(unittest.TestCase):
 
             self.assertEqual(loaded.access_token, "access")
             self.assertFalse(Path(path).exists())
+
+    def test_database_token_cache_round_trip_and_clear(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "auth.sqlite3"
+            cache = DatabaseTokenCache("sqlite:///{0}".format(path))
+            bundle = AuthTokenBundle(
+                access_token="access",
+                refresh_token="refresh",
+                expires_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+                scopes=("Mail.Read",),
+                user_id="user-123",
+            )
+
+            cache.save(bundle)
+            loaded = cache.load()
+            cache.clear()
+
+            self.assertEqual(loaded.access_token, "access")
+            self.assertIsNone(cache.load())
 
     def test_device_code_authenticator_refreshes_tokens(self) -> None:
         opener = SequenceOpener(

@@ -11,6 +11,7 @@ from typing import Optional
 from typing import Sequence
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
+from day_captain.adapters.auth import DatabaseTokenCache
 from day_captain.adapters.auth import FileTokenCache
 from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import GraphCalendarCollector
@@ -20,6 +21,7 @@ from day_captain.adapters.storage import PostgresStorage
 from day_captain.adapters.storage import SQLiteStorage
 from day_captain.config import DayCaptainSettings
 from day_captain.models import AuthContext
+from day_captain.models import AuthTokenBundle
 from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
@@ -52,6 +54,25 @@ def _coerce_datetime(value: Optional[datetime]) -> datetime:
 
 def _end_of_day(value: datetime) -> datetime:
     return value.replace(hour=23, minute=59, second=59, microsecond=0)
+
+
+def _seed_token_cache_from_settings(cache, settings: DayCaptainSettings) -> None:
+    if not settings.graph_refresh_token:
+        return
+    cached = cache.load()
+    if cached is not None:
+        return
+    expires_at = datetime.now(timezone.utc)
+    if settings.graph_access_token:
+        expires_at = expires_at + timedelta(minutes=55)
+    seed_bundle = AuthTokenBundle(
+        access_token=settings.graph_access_token,
+        refresh_token=settings.graph_refresh_token,
+        expires_at=expires_at,
+        scopes=settings.graph_scopes,
+        user_id=settings.graph_user_id,
+    )
+    cache.save(seed_bundle)
 
 
 class StubAuthProvider:
@@ -330,11 +351,16 @@ def build_application(
     feedback_processor: Optional[FeedbackProcessor] = None,
 ) -> DayCaptainApplication:
     resolved_settings = settings or DayCaptainSettings.from_env()
+    resolved_database_url = resolved_settings.resolved_database_url()
     graph_client = GraphApiClient(
         base_url=resolved_settings.graph_base_url,
         timeout_seconds=resolved_settings.graph_timeout_seconds,
     )
-    token_cache = FileTokenCache(resolved_settings.graph_auth_cache_path)
+    if resolved_settings.is_hosted_environment() and resolved_database_url:
+        token_cache = DatabaseTokenCache(resolved_database_url)
+        _seed_token_cache_from_settings(token_cache, resolved_settings)
+    else:
+        token_cache = FileTokenCache(resolved_settings.graph_auth_cache_path)
     authenticator = DeviceCodeAuthenticator(
         tenant_id=resolved_settings.graph_tenant_id,
         client_id=resolved_settings.graph_client_id,
@@ -342,8 +368,8 @@ def build_application(
     )
     if storage is not None:
         resolved_storage = storage
-    elif resolved_settings.database_url:
-        resolved_storage = PostgresStorage(resolved_settings.database_url)
+    elif resolved_database_url:
+        resolved_storage = PostgresStorage(resolved_database_url)
     else:
         resolved_storage = SQLiteStorage(resolved_settings.sqlite_path)
     if auth_provider is not None:

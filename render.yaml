@@ -4,7 +4,7 @@ services:
     env: python
     plan: starter
     buildCommand: pip install -e .
-    startCommand: python -m day_captain serve
+    startCommand: gunicorn --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"
     healthCheckPath: /healthz
     envVars:
       - key: DAY_CAPTAIN_ENV
@@ -19,6 +19,8 @@ services:
         fromDatabase:
           name: day-captain-db
           property: connectionString
+      - key: DAY_CAPTAIN_DATABASE_SSL_MODE
+        value: require
       - key: DAY_CAPTAIN_JOB_SECRET
         generateValue: true
 databases:

@@ -1,9 +1,9 @@
 ## item_001_day_captain_hosted_security_hardening - Harden the hosted Day Captain deployment path
 > From version: 0.1.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Security
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.

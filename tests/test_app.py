@@ -113,8 +113,32 @@ class DayCaptainApplicationTest(unittest.TestCase):
         with mock.patch("day_captain.app.PostgresStorage", return_value=fake_storage) as postgres_storage:
             app = build_application(settings=settings)
 
-        postgres_storage.assert_called_once_with("postgresql://user:pass@localhost:5432/day_captain")
+        postgres_storage.assert_called_once_with(
+            "postgresql://user:pass@localhost:5432/day_captain?sslmode=prefer"
+        )
         self.assertIs(app.storage, fake_storage)
+
+    def test_build_application_uses_database_token_cache_in_hosted_mode(self) -> None:
+        settings = DayCaptainSettings(
+            environment="production",
+            database_url="postgresql://user:pass@localhost:5432/day_captain",
+            job_secret="secret",
+            graph_client_id="client-id",
+            graph_refresh_token="refresh-token",
+        )
+
+        fake_storage = InMemoryStorage()
+        fake_cache = mock.Mock()
+        fake_cache.load.return_value = None
+        with mock.patch("day_captain.app.PostgresStorage", return_value=fake_storage), mock.patch(
+            "day_captain.app.DatabaseTokenCache", return_value=fake_cache
+        ) as database_token_cache:
+            build_application(settings=settings)
+
+        database_token_cache.assert_called_once_with(
+            "postgresql://user:pass@localhost:5432/day_captain?sslmode=prefer"
+        )
+        fake_cache.save.assert_called_once()
 
 
 if __name__ == "__main__":
