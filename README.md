@@ -7,6 +7,7 @@ It currently supports:
 - message and meeting ingestion from Graph
 - deterministic scoring and anti-noise filtering
 - optional bounded LLM wording on shortlisted digest items with deterministic fallback
+- optional bounded top-of-digest summary block with deterministic fallback
 - digest generation with `critical_topics`, `actions_to_take`, `watch_items`, and `upcoming_meetings`
 - persisted runs, feedback, and preferences
 - local CLI usage
@@ -24,7 +25,11 @@ This repository is in active development. The core digest flow works locally and
 - `tests/`: unit and integration-style tests
 - `logics/`: request, backlog, specs, and task tracking
 - `render.yaml`: Render deployment blueprint
-- `.github/workflows/`: CI and scheduled trigger workflows
+- `.github/workflows/`: CI and example hosted trigger workflows
+
+Recommended repository split:
+- `day-captain`: application source code
+- `day-captain-ops`: private GitHub repository for production scheduling, deployment orchestration, and secrets
 
 ## Core components
 
@@ -108,6 +113,8 @@ The digest still uses deterministic scoring and guardrails to decide what matter
 If `DAY_CAPTAIN_LLM_PROVIDER` is enabled, Day Captain sends only a bounded shortlist of already-prioritized digest items to an OpenAI-compatible chat-completions endpoint to improve summary wording. If the provider is disabled, misconfigured, or fails at runtime, the app falls back to the deterministic summaries already present in the scored items.
 
 You can constrain that wording pass with `DAY_CAPTAIN_LLM_ENABLED_SECTIONS`, steer the tone with `DAY_CAPTAIN_LLM_STYLE_PROMPT`, and force the wording language with `DAY_CAPTAIN_LLM_LANGUAGE`. If `DAY_CAPTAIN_LLM_LANGUAGE` is unset, it falls back to `DAY_CAPTAIN_DIGEST_LANGUAGE`.
+
+The digest can also render a short top summary block above the detailed sections. That summary is built only from the final digest content, stays bounded, and falls back to a deterministic overview if the LLM path is disabled or fails.
 
 ## Digest presentation
 
@@ -251,13 +258,18 @@ Expected hosted secrets/config include:
 
 ## GitHub Actions
 
-Two workflow categories exist:
+This repository currently includes two workflow categories:
 - CI checks
-- scheduled hosted trigger for the morning digest
+- an example scheduled hosted trigger for the morning digest
 
 The scheduler workflow is in [`morning-digest-scheduler.yml`](./.github/workflows/morning-digest-scheduler.yml) and expects:
 - `DAY_CAPTAIN_SERVICE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
+
+Recommended production setup:
+- keep CI here if you want public validation
+- move real scheduling and production secrets into a private `day-captain-ops` repository
+- let the private repo trigger the hosted Day Captain service over HTTPS
 
 ## Security note
 
