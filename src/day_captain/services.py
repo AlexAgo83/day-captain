@@ -63,6 +63,11 @@ ACTION_PATTERNS = (
     "approval",
     "review before",
     "respond by",
+    "feedback",
+    "remarks",
+    "remarques",
+    "merci de",
+    "please update",
 )
 
 CRITICAL_PATTERNS = (
