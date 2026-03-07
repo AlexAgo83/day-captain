@@ -69,6 +69,7 @@ DAY_CAPTAIN_GRAPH_TENANT_ID=common
 DAY_CAPTAIN_GRAPH_CLIENT_ID=your-app-client-id
 DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH=.day_captain_auth.json
 DAY_CAPTAIN_GRAPH_SCOPES=User.Read,Mail.Read,Calendars.Read,Mail.Send
+DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_LLM_PROVIDER=disabled
 DAY_CAPTAIN_LLM_MODEL=
 DAY_CAPTAIN_LLM_API_KEY=
@@ -84,6 +85,7 @@ DAY_CAPTAIN_DELIVERY_MODE=graph_send
 DAY_CAPTAIN_GRAPH_CLIENT_ID=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
 DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
+DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_LLM_PROVIDER=openai
 DAY_CAPTAIN_LLM_MODEL=gpt-5-mini
 DAY_CAPTAIN_LLM_API_KEY=...
@@ -100,6 +102,8 @@ Important:
 The digest still uses deterministic scoring and guardrails to decide what matters.
 
 If `DAY_CAPTAIN_LLM_PROVIDER` is enabled, Day Captain sends only a bounded shortlist of already-prioritized digest items to an OpenAI-compatible chat-completions endpoint to improve summary wording. If the provider is disabled, misconfigured, or fails at runtime, the app falls back to the deterministic summaries already present in the scored items.
+
+You can constrain that wording pass with `DAY_CAPTAIN_LLM_ENABLED_SECTIONS` and steer the tone with `DAY_CAPTAIN_LLM_STYLE_PROMPT`.
 
 ## Microsoft auth setup
 

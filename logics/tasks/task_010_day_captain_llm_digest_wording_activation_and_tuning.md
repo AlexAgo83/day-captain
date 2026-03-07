@@ -1,9 +1,9 @@
 ## task_010_day_captain_llm_digest_wording_activation_and_tuning - Activate and tune bounded LLM wording for delivered digests
 > From version: 0.4.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 100%
+> Confidence: 93%
+> Progress: 70%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,11 +25,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Configure the bounded LLM wording path for real delivered digest runs.
-- [ ] 2. Tune the wording behavior so summaries sound more assistant-like while staying factual and concise.
-- [ ] 3. Validate that fallback behavior remains safe when the LLM path is disabled or fails.
+- [x] 1. Configure the bounded LLM wording path for real delivered digest runs.
+- [x] 2. Tune the wording behavior so summaries sound more assistant-like while staying factual and concise.
+- [x] 3. Validate that fallback behavior remains safe when the LLM path is disabled or fails.
 - [ ] 4. Validate the wording quality on a real delivered digest.
-- [ ] FINAL: Update related Logics docs
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC3 -> Plan step 1 activates the existing LLM path. Proof: task explicitly configures bounded LLM wording for delivered digests.
@@ -51,9 +51,13 @@ flowchart LR
 
 # Definition of Done (DoD)
 - [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- The bounded wording path is now configurable for real digest runs with provider-specific settings, enabled sections, and a style prompt. Fallback behavior remains covered by tests and still returns deterministic wording when disabled or unavailable.
+- Validation executed:
+  - `python3 -m unittest tests.test_llm tests.test_app tests.test_settings`
+  - `python3 -m unittest discover -s tests`
+- Remaining blocker: no `DAY_CAPTAIN_LLM_API_KEY` is configured locally, so a real delivered digest with the LLM path enabled could not be exercised. Final mailbox validation of wording quality remains open until a provider key is supplied.

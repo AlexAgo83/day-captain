@@ -188,6 +188,9 @@ class DayCaptainApplicationTest(unittest.TestCase):
             llm_api_key="sk-test",
             llm_model="gpt-5-mini",
             llm_shortlist_limit=3,
+            llm_enabled_sections=("critical_topics",),
+            llm_style_prompt="Write like my chief of staff.",
+            display_timezone="Europe/Paris",
         )
 
         with mock.patch("day_captain.app.OpenAICompatibleDigestWordingProvider") as provider_cls:
@@ -200,8 +203,11 @@ class DayCaptainApplicationTest(unittest.TestCase):
             timeout_seconds=30,
             max_output_tokens=300,
             temperature=0.2,
+            style_prompt="Write like my chief of staff.",
         )
         self.assertEqual(app.digest_wording_engine.shortlist_limit, 3)
+        self.assertEqual(app.digest_wording_engine.enabled_sections, ("critical_topics",))
+        self.assertEqual(app.digest_renderer.display_timezone, "Europe/Paris")
 
     def test_graph_send_requires_graph_send_enabled(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)

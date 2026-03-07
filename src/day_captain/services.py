@@ -8,6 +8,7 @@ from typing import Iterable
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
+from zoneinfo import ZoneInfo
 
 from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
@@ -68,6 +69,13 @@ ACTION_PATTERNS = (
     "remarques",
     "merci de",
     "please update",
+    "a imprimer",
+    "à imprimer",
+    "piece jointe",
+    "pièce jointe",
+    "lien de telechargement",
+    "lien de téléchargement",
+    "download link",
 )
 
 CRITICAL_PATTERNS = (
@@ -95,6 +103,11 @@ NEWSLETTER_PATTERNS = (
     "submitter:",
     "dmarc",
     "rua tag",
+)
+
+SELF_DIGEST_PATTERNS = (
+    "day captain digest for",
+    "day captain morning digest",
 )
 
 AUTOMATED_SENDERS = (
@@ -222,6 +235,14 @@ def _clean_preview(preview: str) -> str:
     return cleaned[:280]
 
 
+def _is_self_digest_message(subject: str, preview: str) -> bool:
+    normalized_subject = _normalize_text(subject)
+    normalized_preview = _normalize_text(preview)
+    if _contains_any(normalized_subject, SELF_DIGEST_PATTERNS):
+        return True
+    return _contains_any(normalized_preview, SELF_DIGEST_PATTERNS)
+
+
 class DeterministicScoringEngine:
     def prioritize(
         self,
@@ -301,6 +322,8 @@ class DeterministicScoringEngine:
 
         if not (message.subject or "").strip() and not cleaned_preview:
             return None
+        if _is_self_digest_message(subject, cleaned_preview):
+            return None
 
         sender_key = "sender:{0}".format(sender)
         domain = _domain_from_email(sender)
@@ -368,6 +391,12 @@ class DeterministicScoringEngine:
         if score <= 0.0 and not guardrail:
             return None
 
+        if "action_keyword" in reason_codes and (
+            message.has_attachments or "download" in combined_text or "telechargement" in combined_text or "téléchargement" in combined_text
+        ):
+            score += 0.5
+            reason_codes.append("deliverable_shared")
+
         if guardrail:
             section_name = "critical_topics"
         elif "action_keyword" in reason_codes:
@@ -426,13 +455,16 @@ class DeterministicScoringEngine:
         preview = cleaned_preview or (message.body_preview or "").strip()
         base = preview if preview else "From {0}".format(message.from_address)
         if "critical_keyword" in reason_codes:
-            return "Critical: {0}".format(base)
+            return "Urgent: {0}".format(base)
         if "action_keyword" in reason_codes:
-            return "Action requested: {0}".format(base)
+            return base
         return base
 
 
 class StructuredDigestRenderer:
+    def __init__(self, display_timezone: str = "UTC") -> None:
+        self.display_timezone = display_timezone
+
     def render(
         self,
         run_id: str,
@@ -451,11 +483,13 @@ class StructuredDigestRenderer:
 
         delivery_subject = "Day Captain digest for {0}".format(generated_at.date().isoformat())
         delivery_body = self._build_delivery_body(generated_at, window_start, window_end, sections)
+        delivery_html = self._build_delivery_html(generated_at, window_start, window_end, sections)
         delivery_payload = {
             "mode": delivery_mode,
             "run_id": run_id,
             "subject": delivery_subject,
             "body": delivery_body,
+            "html_body": delivery_html,
             "sections": {
                 name: [self._entry_payload(item) for item in sections[name]]
                 for name in SECTION_NAMES
@@ -465,8 +499,8 @@ class StructuredDigestRenderer:
             delivery_payload["graph_message"] = {
                 "subject": delivery_subject,
                 "body": {
-                    "contentType": "Text",
-                    "content": delivery_body,
+                    "contentType": "HTML",
+                    "content": delivery_html,
                 },
             }
 
@@ -503,10 +537,15 @@ class StructuredDigestRenderer:
         window_end: datetime,
         sections: Mapping[str, Sequence[DigestEntry]],
     ) -> str:
+        generated_label = self._format_timestamp(generated_at)
+        window_label = "{0} to {1}".format(
+            self._format_timestamp(window_start, include_zone=False),
+            self._format_timestamp(window_end),
+        )
         lines = [
-            "Day Captain morning digest",
-            "Generated: {0}".format(generated_at.isoformat()),
-            "Window: {0} -> {1}".format(window_start.isoformat(), window_end.isoformat()),
+            "Day Captain digest",
+            "Generated {0}".format(generated_label),
+            "Review window: {0}".format(window_label),
             "",
         ]
         labels = {
@@ -522,9 +561,79 @@ class StructuredDigestRenderer:
                 lines.append("- None")
             else:
                 for item in items:
-                    lines.append("- {0}: {1}".format(item.title, item.summary))
+                    lines.append("- {0}".format(item.title))
+                    lines.append("  {0}".format(item.summary))
             lines.append("")
         return "\n".join(lines).strip()
+
+    def _build_delivery_html(
+        self,
+        generated_at: datetime,
+        window_start: datetime,
+        window_end: datetime,
+        sections: Mapping[str, Sequence[DigestEntry]],
+    ) -> str:
+        generated_label = self._format_timestamp(generated_at)
+        window_label = "{0} to {1}".format(
+            self._format_timestamp(window_start, include_zone=False),
+            self._format_timestamp(window_end),
+        )
+        labels = {
+            "critical_topics": "Critical topics",
+            "actions_to_take": "Actions to take",
+            "watch_items": "Watch items",
+            "upcoming_meetings": "Upcoming meetings",
+        }
+        parts = [
+            "<html><body style=\"font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
+            "<div style=\"max-width:720px;margin:0 auto;padding:24px;\">",
+            "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">Day Captain digest</h1>",
+            "<p style=\"margin:0 0 4px;color:#475569;\"><strong>Generated</strong> {0}</p>".format(generated_label),
+            "<p style=\"margin:0 0 24px;color:#475569;\"><strong>Review window</strong> {0}</p>".format(window_label),
+        ]
+        for name in SECTION_NAMES:
+            parts.append(
+                "<section style=\"margin:0 0 24px;\"><h2 style=\"margin:0 0 10px;font-size:20px;color:#0f172a;\">{0}</h2>".format(
+                    labels[name]
+                )
+            )
+            items = sections[name]
+            if not items:
+                parts.append("<p style=\"margin:0;color:#64748b;\">None</p>")
+            else:
+                parts.append("<ul style=\"margin:0;padding-left:20px;\">")
+                for item in items:
+                    parts.append(
+                        "<li style=\"margin:0 0 12px;\"><strong>{0}</strong><br><span style=\"color:#334155;\">{1}</span></li>".format(
+                            self._html_escape(item.title),
+                            self._html_escape(item.summary),
+                        )
+                    )
+                parts.append("</ul>")
+            parts.append("</section>")
+        parts.append("</div></body></html>")
+        return "".join(parts)
+
+    def _format_timestamp(self, value: datetime, include_zone: bool = True) -> str:
+        target = value
+        try:
+            zone = ZoneInfo(self.display_timezone)
+            target = value.astimezone(zone)
+        except Exception:
+            zone = None
+        rendered = target.strftime("%a %d %b %Y at %H:%M")
+        if include_zone and zone is not None:
+            rendered += " {0}".format(target.tzname() or self.display_timezone)
+        elif include_zone:
+            rendered += " UTC"
+        return rendered
+
+    def _html_escape(self, value: str) -> str:
+        return (
+            value.replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+        )
 
 
 class IdentityDigestWordingEngine:
@@ -540,9 +649,11 @@ class LlmDigestWordingEngine:
         self,
         provider,
         shortlist_limit: int = 5,
+        enabled_sections: Optional[Sequence[str]] = None,
     ) -> None:
         self.provider = provider
         self.shortlist_limit = max(0, shortlist_limit)
+        self.enabled_sections = tuple(enabled_sections or ())
 
     def rewrite(
         self,
@@ -551,7 +662,13 @@ class LlmDigestWordingEngine:
         items = tuple(prioritized_items)
         if self.shortlist_limit <= 0 or not items:
             return items
-        shortlisted = items[: self.shortlist_limit]
+        shortlisted = tuple(
+            item
+            for item in items
+            if not self.enabled_sections or item.section_name in self.enabled_sections
+        )[: self.shortlist_limit]
+        if not shortlisted:
+            return items
         try:
             rewritten = self.provider.rewrite_summaries(shortlisted)
         except Exception:

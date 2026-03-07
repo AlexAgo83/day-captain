@@ -1,8 +1,8 @@
 ## req_004_day_captain_digest_quality_and_email_polish - Day Captain digest quality, email polish, and assistant usefulness
 > From version: 0.4.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
+> Status: In Progress
+> Understanding: 100%
+> Confidence: 97%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -68,7 +68,7 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_004_day_captain_digest_quality_and_email_polish` - Improve the usefulness and presentation quality of the delivered digest.
-- `task_008_day_captain_email_rendering_and_formatting_upgrade` - Upgrade email rendering, structure, and timestamp formatting. Status: `Ready`.
-- `task_009_day_captain_digest_signal_quality_tuning` - Refine prioritization and filtering to reduce weak digest items. Status: `Ready`.
-- `task_010_day_captain_llm_digest_wording_activation_and_tuning` - Configure and tune bounded LLM wording for delivered digests. Status: `Ready`.
+- `item_004_day_captain_digest_quality_and_email_polish` - Improve the usefulness and presentation quality of the delivered digest. Status: `In Progress`.
+- `task_008_day_captain_email_rendering_and_formatting_upgrade` - Upgrade email rendering, structure, and timestamp formatting. Status: `In Progress`.
+- `task_009_day_captain_digest_signal_quality_tuning` - Refine prioritization and filtering to reduce weak digest items. Status: `In Progress`.
+- `task_010_day_captain_llm_digest_wording_activation_and_tuning` - Configure and tune bounded LLM wording for delivered digests. Status: `In Progress`.
