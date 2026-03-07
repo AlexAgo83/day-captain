@@ -1,9 +1,9 @@
 ## task_006_day_captain_graph_send_delivery_execution - Implement real Graph sendMail execution for digest delivery
 > From version: 0.3.0
-> Status: In Progress
+> Status: Done
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 96%
+> Progress: 100%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -53,7 +53,7 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Added POST support in `src/day_captain/adapters/graph.py` plus `GraphDigestDelivery` to execute delegated `POST /me/sendMail` requests from the existing rendered `graph_message` payload.
@@ -61,7 +61,7 @@ flowchart LR
 - Preserved existing `json` behavior and added explicit failures for missing send-mode enablement or missing `Mail.Send` scope instead of silently pretending to send.
 - Updated `.env.example` and `README.md` so the send path documents `Mail.Send`, explicit send enablement, and the need to rerun delegated login when scopes change.
 - Added coverage in `tests/test_graph_client.py`, `tests/test_app.py`, and `tests/test_delivery_contract.py` for send request shaping and guardrail behavior.
-- Workflow note: the implementation slice is complete, but the task remains `In Progress` until the parent backlog item can close after `task_007` validates real mailbox receipt.
+- Updated the send path so missing `toRecipients` defaults to the authenticated mailbox address resolved from the Graph `/me` profile, which makes local self-send validation possible without adding separate recipient selection.
 - Validation results:
   - `python3 -m unittest tests.test_graph_client tests.test_app tests.test_delivery_contract` -> `OK` (`16` tests)
   - `python3 -m unittest discover -s tests` -> `OK` (`49` tests)

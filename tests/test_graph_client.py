@@ -46,9 +46,14 @@ class CollectionRecorderApiClient:
 class DeliveryRecorderApiClient:
     def __init__(self) -> None:
         self.calls = []
+        self.profile = {"userPrincipalName": "alex@example.com"}
+
+    def get_object(self, path, access_token, params=None, headers=None):
+        self.calls.append(("GET", path, access_token, params))
+        return self.profile
 
     def post_object(self, path, access_token, payload, headers=None, expected_statuses=(200, 201, 202, 204)):
-        self.calls.append((path, access_token, payload, headers, expected_statuses))
+        self.calls.append(("POST", path, access_token, payload, headers, expected_statuses))
         return {}
 
 
@@ -176,11 +181,17 @@ class GraphAdapterTest(unittest.TestCase):
 
         delivery.deliver_digest(auth_context, payload)
 
-        self.assertEqual(len(api_client.calls), 1)
-        path, access_token, posted_payload, _headers, expected_statuses = api_client.calls[0]
+        self.assertEqual(len(api_client.calls), 2)
+        self.assertEqual(api_client.calls[0][0], "GET")
+        self.assertEqual(api_client.calls[0][1], "/me")
+        _, path, access_token, posted_payload, _headers, expected_statuses = api_client.calls[1]
         self.assertEqual(path, "/me/sendMail")
         self.assertEqual(access_token, "delegated-token")
         self.assertEqual(posted_payload["message"]["subject"], "Day Captain digest")
+        self.assertEqual(
+            posted_payload["message"]["toRecipients"][0]["emailAddress"]["address"],
+            "alex@example.com",
+        )
         self.assertTrue(posted_payload["saveToSentItems"])
         self.assertEqual(expected_statuses, (202,))
 

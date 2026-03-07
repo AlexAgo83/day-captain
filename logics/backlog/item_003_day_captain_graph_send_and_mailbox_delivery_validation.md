@@ -1,9 +1,9 @@
 ## item_003_day_captain_graph_send_and_mailbox_delivery_validation - Deliver the digest into Outlook and validate real mailbox receipt
 > From version: 0.3.0
-> Status: In Progress
+> Status: Done
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 55%
+> Progress: 100%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -66,5 +66,5 @@ flowchart LR
 - Derived from request `req_003_day_captain_graph_send_and_mailbox_delivery_validation`.
 - This slice intentionally separates local code implementation from external mailbox validation because delegated auth scope and real delivery proof are not purely unit-test concerns.
 - `task_006_day_captain_graph_send_delivery_execution` is now implemented: delegated Graph send execution, guardrails, docs, and automated tests are in place.
-- `task_007_day_captain_mailbox_delivery_end_to_end_validation` remains pending for real mailbox proof after local config and delegated consent are refreshed.
+- `task_007_day_captain_mailbox_delivery_end_to_end_validation` is now complete: delegated auth was refreshed with `Mail.Send`, a real send was executed, and mailbox receipt was verified through Graph readback.
 - Implemented areas include `src/day_captain/adapters/graph.py`, `src/day_captain/app.py`, `.env.example`, `README.md`, and focused tests.

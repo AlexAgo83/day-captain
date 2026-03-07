@@ -126,6 +126,8 @@ PYTHONPATH=src python3 -m day_captain auth logout
 
 If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
 
+When `delivery_mode=graph_send`, Day Captain sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.
+
 ## Local usage
 
 Run a digest directly:

@@ -1,8 +1,8 @@
 ## req_003_day_captain_graph_send_and_mailbox_delivery_validation - Day Captain real Outlook delivery and mailbox validation
 > From version: 0.3.0
-> Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -63,6 +63,6 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_003_day_captain_graph_send_and_mailbox_delivery_validation` - Add real delegated Outlook delivery and validate mailbox receipt. Status: `In Progress`.
+- `item_003_day_captain_graph_send_and_mailbox_delivery_validation` - Add real delegated Outlook delivery and validate mailbox receipt. Status: `Done`.
 - `task_006_day_captain_graph_send_delivery_execution` - Implement real Graph `sendMail` execution and config/auth guardrails. Status: `Done`.
-- `task_007_day_captain_mailbox_delivery_end_to_end_validation` - Validate the delegated send flow end to end against the real mailbox. Status: `Ready`.
+- `task_007_day_captain_mailbox_delivery_end_to_end_validation` - Validate the delegated send flow end to end against the real mailbox. Status: `Done`.
