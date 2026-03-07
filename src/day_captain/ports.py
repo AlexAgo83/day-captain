@@ -2,6 +2,7 @@
 
 from datetime import date
 from datetime import datetime
+from typing import Mapping
 from typing import Optional
 from typing import Protocol
 from typing import Sequence
@@ -96,6 +97,7 @@ class DigestRenderer(Protocol):
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         ...
 

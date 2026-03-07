@@ -32,6 +32,13 @@ def _parse_csv(value: str) -> Tuple[str, ...]:
     return tuple(part.strip() for part in value.split(",") if part.strip())
 
 
+def _normalize_language(value: str, default: str = "en") -> str:
+    candidate = (value or "").strip().lower()
+    if candidate in {"en", "fr"}:
+        return candidate
+    return default
+
+
 @dataclass(frozen=True)
 class DayCaptainSettings:
     environment: str = "development"
@@ -55,6 +62,8 @@ class DayCaptainSettings:
     graph_timeout_seconds: int = 30
     graph_scopes: Tuple[str, ...] = ("User.Read", "Mail.Read", "Calendars.Read")
     display_timezone: str = "UTC"
+    digest_language: str = "en"
+    llm_language: str = ""
     llm_provider: str = "disabled"
     llm_api_key: str = ""
     llm_model: str = ""
@@ -90,6 +99,8 @@ class DayCaptainSettings:
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
             graph_scopes=_parse_scopes(os.getenv("DAY_CAPTAIN_GRAPH_SCOPES", "")),
             display_timezone=os.getenv("DAY_CAPTAIN_DISPLAY_TIMEZONE", "UTC"),
+            digest_language=_normalize_language(os.getenv("DAY_CAPTAIN_DIGEST_LANGUAGE", "en")),
+            llm_language=_normalize_language(os.getenv("DAY_CAPTAIN_LLM_LANGUAGE", ""), default=""),
             llm_provider=os.getenv("DAY_CAPTAIN_LLM_PROVIDER", "disabled"),
             llm_api_key=os.getenv("DAY_CAPTAIN_LLM_API_KEY", ""),
             llm_model=os.getenv("DAY_CAPTAIN_LLM_MODEL", ""),
@@ -126,6 +137,12 @@ class DayCaptainSettings:
 
     def llm_is_enabled(self) -> bool:
         return self.llm_provider.strip().lower() not in {"", "disabled", "none"}
+
+    def resolved_digest_language(self) -> str:
+        return _normalize_language(self.digest_language, default="en")
+
+    def resolved_llm_language(self) -> str:
+        return _normalize_language(self.llm_language, default=self.resolved_digest_language())
 
     def resolved_database_url(self) -> str:
         if not self.database_url:

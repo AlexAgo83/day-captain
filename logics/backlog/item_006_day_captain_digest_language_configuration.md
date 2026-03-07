@@ -1,9 +1,9 @@
 ## item_006_day_captain_digest_language_configuration - Add env-driven language selection for digest rendering and wording
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Localization
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -55,7 +55,7 @@ flowchart LR
 
 # Links
 - Request: `req_006_day_captain_digest_language_configuration`
-- Primary task(s): `task_012_day_captain_digest_language_configuration`
+- Primary task(s): `task_012_day_captain_digest_language_configuration` (`Done`)
 
 # Priority
 - Impact: Medium - this materially improves usability for non-English operation without changing the core pipeline.
@@ -64,3 +64,5 @@ flowchart LR
 # Notes
 - Derived from request `req_006_day_captain_digest_language_configuration`.
 - Likely implementation areas include `src/day_captain/config.py`, `src/day_captain/services.py`, `src/day_captain/adapters/llm.py`, `.env.example`, and digest-related tests.
+- Runtime settings now expose `DAY_CAPTAIN_DIGEST_LANGUAGE` and `DAY_CAPTAIN_LLM_LANGUAGE`, with English default and French support.
+- Validation included unit coverage, full test suite, an English `graph_send` run, and a French `json` run confirming localized digest labels and fallback wording.

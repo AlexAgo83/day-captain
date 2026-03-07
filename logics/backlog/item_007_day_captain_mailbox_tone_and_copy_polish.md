@@ -1,9 +1,9 @@
 ## item_007_day_captain_mailbox_tone_and_copy_polish - Remove the remaining system-report feel from the delivered digest
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -59,7 +59,7 @@ flowchart LR
 
 # Links
 - Request: `req_007_day_captain_mailbox_tone_and_copy_polish`
-- Primary task(s): `task_013_day_captain_digest_header_and_subject_polish`, `task_014_day_captain_digest_empty_states_and_fallback_copy_polish`
+- Primary task(s): `task_013_day_captain_digest_header_and_subject_polish` (`Done`), `task_014_day_captain_digest_empty_states_and_fallback_copy_polish` (`Done`)
 
 # Priority
 - Impact: Medium - this directly affects daily perceived quality even though the pipeline already works.
@@ -68,3 +68,5 @@ flowchart LR
 # Notes
 - Derived from request `req_007_day_captain_mailbox_tone_and_copy_polish`.
 - This slice complements `req_005` and `req_006` instead of replacing them.
+- The digest now uses assistant-style header copy, a more natural inbox subject, non-technical empty states, and stronger deterministic fallback summaries.
+- Real mailbox validation on Saturday, March 7, 2026 confirmed the delivered digest no longer reads like a raw internal report.

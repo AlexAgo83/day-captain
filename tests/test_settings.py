@@ -29,6 +29,8 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS"] = "45"
             os.environ["DAY_CAPTAIN_GRAPH_SCOPES"] = "Mail.Read, Calendars.Read, Mail.Send"
             os.environ["DAY_CAPTAIN_DISPLAY_TIMEZONE"] = "Europe/Paris"
+            os.environ["DAY_CAPTAIN_DIGEST_LANGUAGE"] = "fr"
+            os.environ["DAY_CAPTAIN_LLM_LANGUAGE"] = "fr"
             os.environ["DAY_CAPTAIN_LLM_PROVIDER"] = "openai"
             os.environ["DAY_CAPTAIN_LLM_API_KEY"] = "sk-test"
             os.environ["DAY_CAPTAIN_LLM_MODEL"] = "gpt-5-mini"
@@ -64,6 +66,8 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.graph_timeout_seconds, 45)
         self.assertEqual(settings.graph_scopes, ("User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"))
         self.assertEqual(settings.display_timezone, "Europe/Paris")
+        self.assertEqual(settings.digest_language, "fr")
+        self.assertEqual(settings.llm_language, "fr")
         self.assertEqual(settings.llm_provider, "openai")
         self.assertEqual(settings.llm_api_key, "sk-test")
         self.assertEqual(settings.llm_model, "gpt-5-mini")
@@ -75,6 +79,8 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.llm_enabled_sections, ("critical_topics", "actions_to_take"))
         self.assertEqual(settings.llm_style_prompt, "Write like my chief of staff.")
         self.assertTrue(settings.llm_is_enabled())
+        self.assertEqual(settings.resolved_digest_language(), "fr")
+        self.assertEqual(settings.resolved_llm_language(), "fr")
         self.assertEqual(
             settings.graph_login_scopes(),
             ("openid", "profile", "offline_access", "User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"),
@@ -92,6 +98,8 @@ class DayCaptainSettingsTest(unittest.TestCase):
 
     def test_llm_is_disabled_by_default(self) -> None:
         self.assertFalse(DayCaptainSettings().llm_is_enabled())
+        self.assertEqual(DayCaptainSettings().resolved_digest_language(), "en")
+        self.assertEqual(DayCaptainSettings().resolved_llm_language(), "en")
 
 
 if __name__ == "__main__":

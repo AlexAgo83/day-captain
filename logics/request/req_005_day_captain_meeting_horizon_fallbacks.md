@@ -1,8 +1,8 @@
 ## req_005_day_captain_meeting_horizon_fallbacks - Day Captain meeting horizon fallbacks for weekends and empty days
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
 > Complexity: Medium
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -63,5 +63,5 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_005_day_captain_meeting_horizon_fallbacks` - Make the meeting section smarter on weekends and empty meeting days. Status: `Ready`.
-- `task_011_day_captain_meeting_horizon_fallbacks` - Implement weekend and next-day fallback rules for `Upcoming meetings`. Status: `Ready`.
+- `item_005_day_captain_meeting_horizon_fallbacks` - Make the meeting section smarter on weekends and empty meeting days. Status: `Done`.
+- `task_011_day_captain_meeting_horizon_fallbacks` - Implement weekend and next-day fallback rules for `Upcoming meetings`. Status: `Done`.
