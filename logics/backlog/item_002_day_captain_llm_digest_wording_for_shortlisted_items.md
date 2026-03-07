@@ -1,9 +1,9 @@
 ## item_002_day_captain_llm_digest_wording_for_shortlisted_items - Add an LLM wording layer on top of deterministic digest scoring
 > From version: 0.2.0
-> Status: Ready
-> Understanding: 96%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 99%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: High
 > Theme: AI
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -67,5 +67,5 @@ flowchart LR
 # Notes
 - Derived from request `req_002_day_captain_llm_digest_wording_for_shortlisted_items`.
 - This slice intentionally keeps scoring deterministic and treats the LLM as a wording pass, not a decision maker.
-- Likely implementation areas are `src/day_captain/config.py`, `src/day_captain/app.py`, a new LLM adapter module, `src/day_captain/services.py`, `.env.example`, `README.md`, and focused tests.
-- The implementation should depend on `task_002_day_captain_digest_scoring_recall_and_delivery` and align with the hosted configuration conventions hardened in `task_004_day_captain_hosted_security_hardening`.
+- Implemented in `src/day_captain/config.py`, `src/day_captain/app.py`, `src/day_captain/adapters/llm.py`, `src/day_captain/services.py`, `.env.example`, `README.md`, and focused tests.
+- The implementation depends on `task_002_day_captain_digest_scoring_recall_and_delivery` and aligns with the hosted configuration conventions hardened in `task_004_day_captain_hosted_security_hardening`.

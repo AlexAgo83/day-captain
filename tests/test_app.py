@@ -76,6 +76,47 @@ class DayCaptainApplicationTest(unittest.TestCase):
         self.assertEqual(len(payload.upcoming_meetings), 1)
         self.assertIsNotNone(storage.get_latest_completed_run())
 
+    def test_morning_digest_applies_digest_wording_engine(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            digest_wording_engine=mock.Mock(
+                rewrite=lambda items: tuple(
+                    type(item)(
+                        title=item.title,
+                        summary="Rewritten summary",
+                        section_name=item.section_name,
+                        source_kind=item.source_kind,
+                        source_id=item.source_id,
+                        score=item.score,
+                        reason_codes=item.reason_codes,
+                        guardrail_applied=item.guardrail_applied,
+                    )
+                    for item in items
+                )
+            ),
+            mail_collector=StaticMailCollector(
+                [
+                    MessageRecord(
+                        graph_message_id="msg-1",
+                        thread_id="thread-1",
+                        subject="Urgent budget review",
+                        from_address="boss@example.com",
+                        received_at=datetime(2026, 3, 7, 7, 30, tzinfo=timezone.utc),
+                        body_preview="Please review before noon.",
+                    ),
+                ]
+            ),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now)
+
+        self.assertEqual(payload.critical_topics[0].summary, "Rewritten summary")
+
     def test_recall_returns_latest_run_for_day(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         storage = InMemoryStorage()
@@ -139,6 +180,27 @@ class DayCaptainApplicationTest(unittest.TestCase):
             "postgresql://user:pass@localhost:5432/day_captain?sslmode=prefer"
         )
         fake_cache.save.assert_called_once()
+
+    def test_build_application_uses_llm_provider_when_configured(self) -> None:
+        settings = DayCaptainSettings(
+            llm_provider="openai",
+            llm_api_key="sk-test",
+            llm_model="gpt-5-mini",
+            llm_shortlist_limit=3,
+        )
+
+        with mock.patch("day_captain.app.OpenAICompatibleDigestWordingProvider") as provider_cls:
+            app = build_application(settings=settings)
+
+        provider_cls.assert_called_once_with(
+            api_key="sk-test",
+            model="gpt-5-mini",
+            base_url="https://api.openai.com/v1",
+            timeout_seconds=30,
+            max_output_tokens=300,
+            temperature=0.2,
+        )
+        self.assertEqual(app.digest_wording_engine.shortlist_limit, 3)
 
 
 if __name__ == "__main__":

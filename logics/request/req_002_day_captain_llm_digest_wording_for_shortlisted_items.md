@@ -1,8 +1,8 @@
 ## req_002_day_captain_llm_digest_wording_for_shortlisted_items - Day Captain LLM wording layer for shortlisted digest items
 > From version: 0.2.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
+> Status: Done
+> Understanding: 99%
+> Confidence: 98%
 > Complexity: High
 > Theme: AI
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -64,5 +64,5 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_002_day_captain_llm_digest_wording_for_shortlisted_items` - Implement the bounded LLM wording slice on top of deterministic scoring.
-- `task_005_day_captain_llm_digest_wording_for_shortlisted_items` - Add provider-configurable LLM summarization with deterministic fallback and tests. Status: `Ready`.
+- `item_002_day_captain_llm_digest_wording_for_shortlisted_items` - Implement the bounded LLM wording slice on top of deterministic scoring. Status: `Done`.
+- `task_005_day_captain_llm_digest_wording_for_shortlisted_items` - Add provider-configurable LLM summarization with deterministic fallback and tests. Status: `Done`.

@@ -28,6 +28,14 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_GRAPH_SEND_ENABLED"] = "true"
             os.environ["DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS"] = "45"
             os.environ["DAY_CAPTAIN_GRAPH_SCOPES"] = "Mail.Read, Calendars.Read, Mail.Send"
+            os.environ["DAY_CAPTAIN_LLM_PROVIDER"] = "openai"
+            os.environ["DAY_CAPTAIN_LLM_API_KEY"] = "sk-test"
+            os.environ["DAY_CAPTAIN_LLM_MODEL"] = "gpt-5-mini"
+            os.environ["DAY_CAPTAIN_LLM_BASE_URL"] = "https://api.openai.com/v1"
+            os.environ["DAY_CAPTAIN_LLM_TIMEOUT_SECONDS"] = "20"
+            os.environ["DAY_CAPTAIN_LLM_SHORTLIST_LIMIT"] = "4"
+            os.environ["DAY_CAPTAIN_LLM_MAX_OUTPUT_TOKENS"] = "180"
+            os.environ["DAY_CAPTAIN_LLM_TEMPERATURE"] = "0.1"
             settings = DayCaptainSettings.from_env()
         finally:
             os.environ.clear()
@@ -52,6 +60,15 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertTrue(settings.graph_send_enabled)
         self.assertEqual(settings.graph_timeout_seconds, 45)
         self.assertEqual(settings.graph_scopes, ("User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"))
+        self.assertEqual(settings.llm_provider, "openai")
+        self.assertEqual(settings.llm_api_key, "sk-test")
+        self.assertEqual(settings.llm_model, "gpt-5-mini")
+        self.assertEqual(settings.llm_base_url, "https://api.openai.com/v1")
+        self.assertEqual(settings.llm_timeout_seconds, 20)
+        self.assertEqual(settings.llm_shortlist_limit, 4)
+        self.assertEqual(settings.llm_max_output_tokens, 180)
+        self.assertEqual(settings.llm_temperature, 0.1)
+        self.assertTrue(settings.llm_is_enabled())
         self.assertEqual(
             settings.graph_login_scopes(),
             ("openid", "profile", "offline_access", "User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"),
@@ -66,6 +83,9 @@ class DayCaptainSettingsTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             settings.validate_hosted()
+
+    def test_llm_is_disabled_by_default(self) -> None:
+        self.assertFalse(DayCaptainSettings().llm_is_enabled())
 
 
 if __name__ == "__main__":

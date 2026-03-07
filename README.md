@@ -6,6 +6,7 @@ It currently supports:
 - delegated Microsoft Graph auth through Microsoft Entra ID device code flow
 - message and meeting ingestion from Graph
 - deterministic scoring and anti-noise filtering
+- optional bounded LLM wording on shortlisted digest items with deterministic fallback
 - digest generation with `critical_topics`, `actions_to_take`, `watch_items`, and `upcoming_meetings`
 - persisted runs, feedback, and preferences
 - local CLI usage
@@ -68,6 +69,9 @@ DAY_CAPTAIN_GRAPH_TENANT_ID=common
 DAY_CAPTAIN_GRAPH_CLIENT_ID=your-app-client-id
 DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH=.day_captain_auth.json
 DAY_CAPTAIN_GRAPH_SCOPES=User.Read,Mail.Read,Calendars.Read
+DAY_CAPTAIN_LLM_PROVIDER=disabled
+DAY_CAPTAIN_LLM_MODEL=
+DAY_CAPTAIN_LLM_API_KEY=
 ```
 
 Hosted deployment typically uses:
@@ -79,12 +83,22 @@ DAY_CAPTAIN_JOB_SECRET=...
 DAY_CAPTAIN_DELIVERY_MODE=graph_send
 DAY_CAPTAIN_GRAPH_CLIENT_ID=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
+DAY_CAPTAIN_LLM_PROVIDER=openai
+DAY_CAPTAIN_LLM_MODEL=gpt-5-mini
+DAY_CAPTAIN_LLM_API_KEY=...
 ```
 
 Important:
 - never commit `.env`
 - never commit Graph access or refresh tokens
+- never commit LLM API keys
 - local token cache and local databases are already git-ignored
+
+## AI wording layer
+
+The digest still uses deterministic scoring and guardrails to decide what matters.
+
+If `DAY_CAPTAIN_LLM_PROVIDER` is enabled, Day Captain sends only a bounded shortlist of already-prioritized digest items to an OpenAI-compatible chat-completions endpoint to improve summary wording. If the provider is disabled, misconfigured, or fails at runtime, the app falls back to the deterministic summaries already present in the scored items.
 
 ## Microsoft auth setup
 
