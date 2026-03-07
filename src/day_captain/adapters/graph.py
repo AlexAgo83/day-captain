@@ -151,9 +151,13 @@ class GraphApiClient:
                 params=next_params,
                 headers=headers,
             )
-            batch = payload.get("value") or ()
+            batch = payload.get("value")
             if not isinstance(batch, list):
-                raise GraphApiError("Expected Graph collection response to contain a list in `value`.")
+                raise GraphApiError(
+                    "Expected Graph collection response to contain a list in `value`. Got keys: {0}".format(
+                        ", ".join(sorted(str(key) for key in payload.keys()))
+                    )
+                )
             items.extend(item for item in batch if isinstance(item, dict))
             next_path = payload.get("@odata.nextLink")
             next_params = None

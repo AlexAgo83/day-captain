@@ -42,10 +42,10 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.graph_user_id, "alex@example.com")
         self.assertTrue(settings.graph_send_enabled)
         self.assertEqual(settings.graph_timeout_seconds, 45)
-        self.assertEqual(settings.graph_scopes, ("Mail.Read", "Calendars.Read", "Mail.Send"))
+        self.assertEqual(settings.graph_scopes, ("User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"))
         self.assertEqual(
             settings.graph_login_scopes(),
-            ("openid", "profile", "offline_access", "Mail.Read", "Calendars.Read", "Mail.Send"),
+            ("openid", "profile", "offline_access", "User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"),
         )
 
 

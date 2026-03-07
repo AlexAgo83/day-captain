@@ -76,7 +76,12 @@ class DeviceCodeAuthenticator:
     def _endpoint(self, name: str) -> str:
         return "https://login.microsoftonline.com/{0}/oauth2/v2.0/{1}".format(self.tenant_id, name)
 
-    def _post_form(self, endpoint: str, payload: Mapping[str, str]) -> Mapping[str, Any]:
+    def _post_form(
+        self,
+        endpoint: str,
+        payload: Mapping[str, str],
+        allow_error_response: bool = False,
+    ) -> Mapping[str, Any]:
         body = parse.urlencode(payload).encode("utf-8")
         req = request.Request(
             self._endpoint(endpoint),
@@ -89,6 +94,15 @@ class DeviceCodeAuthenticator:
                 raw = response.read().decode("utf-8")
         except error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
+            if allow_error_response:
+                try:
+                    data = json.loads(detail or "{}")
+                except json.JSONDecodeError as decode_error:
+                    raise EntraAuthError(
+                        "Entra auth request failed with {0}: {1}".format(exc.code, detail)
+                    ) from decode_error
+                if isinstance(data, dict):
+                    return data
             raise EntraAuthError("Entra auth request failed with {0}: {1}".format(exc.code, detail)) from exc
         except error.URLError as exc:
             raise EntraAuthError("Unable to reach Microsoft Entra ID: {0}".format(exc.reason)) from exc
@@ -127,6 +141,7 @@ class DeviceCodeAuthenticator:
                     "client_id": self.client_id,
                     "device_code": session.device_code,
                 },
+                allow_error_response=True,
             )
             error_code = str(data.get("error") or "")
             if not error_code:

@@ -93,6 +93,99 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].section_name, "upcoming_meetings")
         self.assertIn("meeting_soon", prioritized[0].reason_codes)
 
+    def test_filters_dmarc_aggregate_reports_and_cold_outreach(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-dmarc",
+                thread_id="thread-dmarc",
+                subject="Report Domain: example.com Submitter: protection.outlook.com",
+                from_address="postmaster@protection.outlook.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 30, tzinfo=timezone.utc),
+                body_preview="This is a DMARC aggregate report. You are receiving this because of the rua tag.",
+                has_attachments=True,
+            ),
+            MessageRecord(
+                graph_message_id="msg-sales",
+                thread_id="thread-sales",
+                subject="Custom Cable Solutions for ELD Hardware",
+                from_address="sales@vendor.example",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 35, tzinfo=timezone.utc),
+                body_preview="We help ELD providers with custom cables. Key features include connector customization and OEM support.",
+                is_unread=True,
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized, ())
+
+    def test_collapses_duplicate_messages_from_same_thread(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-thread-1",
+                thread_id="thread-print",
+                subject="Print request",
+                from_address="vendor@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 0, tzinfo=timezone.utc),
+                body_preview="First reply in the thread.",
+            ),
+            MessageRecord(
+                graph_message_id="msg-thread-2",
+                thread_id="thread-print",
+                subject="Re: Print request",
+                from_address="vendor@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 30, tzinfo=timezone.utc),
+                body_preview="Latest reply in the thread.",
+                has_attachments=True,
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].source_id, "msg-thread-2")
+        self.assertIn("thread_collapsed", prioritized[0].reason_codes)
+
+    def test_filters_trivial_no_subject_messages_and_cleans_summary(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-empty",
+                thread_id="thread-empty",
+                subject="",
+                from_address="vendor@example.com",
+                received_at=datetime(2026, 3, 7, 7, 45, tzinfo=timezone.utc),
+                body_preview="Sent from Outlook for Mac",
+            ),
+            MessageRecord(
+                graph_message_id="msg-clean",
+                thread_id="thread-clean",
+                subject="Print request",
+                from_address="vendor@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 50, tzinfo=timezone.utc),
+                body_preview=(
+                    "Bonjour,\r\n\r\nVoici la piece jointe.\r\n\r\n"
+                    "De : Vendor <vendor@example.com>\r\nObjet : Print request"
+                ),
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].source_id, "msg-clean")
+        self.assertEqual(prioritized[0].summary, "Bonjour, Voici la piece jointe.")
+
 
 if __name__ == "__main__":
     unittest.main()

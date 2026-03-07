@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
+from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import normalize_meeting
 from day_captain.adapters.graph import normalize_message
 
@@ -18,6 +19,15 @@ class FakeGraphApiClient:
     def get_object(self, path, access_token, params=None, headers=None):
         self.calls.append((path, access_token))
         return {"id": "user-123", "userPrincipalName": "alex@example.com"}
+
+
+class EmptyCollectionApiClient:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def get_object(self, path, access_token, params=None, headers=None):
+        self.calls.append((path, access_token))
+        return {"@odata.context": "https://graph.microsoft.com/v1.0/$metadata#empty", "value": []}
 
 
 class GraphAdapterTest(unittest.TestCase):
@@ -87,6 +97,17 @@ class GraphAdapterTest(unittest.TestCase):
         self.assertEqual(meeting.location, "Teams")
         self.assertTrue(meeting.is_online_meeting)
         self.assertEqual(meeting.join_url, "https://teams.example.com/join/1")
+
+    def test_list_collection_accepts_empty_value_list(self) -> None:
+        client = GraphApiClient(
+            base_url="https://graph.microsoft.com/v1.0",
+            opener=None,
+        )
+        client.get_object = EmptyCollectionApiClient().get_object
+
+        items = client.list_collection("/me/calendar/calendarView", access_token="token")
+
+        self.assertEqual(items, ())
 
 
 if __name__ == "__main__":
