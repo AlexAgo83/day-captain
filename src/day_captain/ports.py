@@ -100,6 +100,14 @@ class DigestRenderer(Protocol):
         ...
 
 
+class DigestWordingEngine(Protocol):
+    def rewrite(
+        self,
+        prioritized_items: Sequence[DigestEntry],
+    ) -> Sequence[DigestEntry]:
+        ...
+
+
 class RecallProvider(Protocol):
     def build_recall(self, run: DigestRunRecord) -> DigestPayload:
         ...

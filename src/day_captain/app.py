@@ -17,6 +17,7 @@ from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import GraphCalendarCollector
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.adapters.graph import GraphMailCollector
+from day_captain.adapters.llm import OpenAICompatibleDigestWordingProvider
 from day_captain.adapters.storage import PostgresStorage
 from day_captain.adapters.storage import SQLiteStorage
 from day_captain.config import DayCaptainSettings
@@ -32,12 +33,15 @@ from day_captain.models import UserPreference
 from day_captain.ports import AuthProvider
 from day_captain.ports import CalendarCollector
 from day_captain.ports import DigestRenderer
+from day_captain.ports import DigestWordingEngine
 from day_captain.ports import FeedbackProcessor
 from day_captain.ports import MailCollector
 from day_captain.ports import RecallProvider
 from day_captain.ports import ScoringEngine
 from day_captain.ports import Storage
 from day_captain.services import DeterministicScoringEngine
+from day_captain.services import IdentityDigestWordingEngine
+from day_captain.services import LlmDigestWordingEngine
 from day_captain.services import PreferenceFeedbackProcessor
 from day_captain.services import SECTION_NAMES
 from day_captain.services import SnapshotRecallProvider
@@ -229,6 +233,26 @@ class DefaultFeedbackProcessor:
         PreferenceFeedbackProcessor().process_feedback(storage, feedback)
 
 
+def _default_digest_wording_engine(settings: DayCaptainSettings) -> DigestWordingEngine:
+    if not settings.llm_is_enabled():
+        return IdentityDigestWordingEngine()
+    provider_name = settings.llm_provider.strip().lower()
+    if provider_name in {"openai", "openai_compatible"} and settings.llm_api_key and settings.llm_model:
+        provider = OpenAICompatibleDigestWordingProvider(
+            api_key=settings.llm_api_key,
+            model=settings.llm_model,
+            base_url=settings.llm_base_url,
+            timeout_seconds=settings.llm_timeout_seconds,
+            max_output_tokens=settings.llm_max_output_tokens,
+            temperature=settings.llm_temperature,
+        )
+        return LlmDigestWordingEngine(
+            provider=provider,
+            shortlist_limit=settings.llm_shortlist_limit,
+        )
+    return IdentityDigestWordingEngine()
+
+
 class DayCaptainApplication:
     def __init__(
         self,
@@ -238,6 +262,7 @@ class DayCaptainApplication:
         calendar_collector: CalendarCollector,
         storage: Storage,
         scoring_engine: ScoringEngine,
+        digest_wording_engine: DigestWordingEngine,
         digest_renderer: DigestRenderer,
         recall_provider: RecallProvider,
         feedback_processor: FeedbackProcessor,
@@ -248,6 +273,7 @@ class DayCaptainApplication:
         self.calendar_collector = calendar_collector
         self.storage = storage
         self.scoring_engine = scoring_engine
+        self.digest_wording_engine = digest_wording_engine
         self.digest_renderer = digest_renderer
         self.recall_provider = recall_provider
         self.feedback_processor = feedback_processor
@@ -279,6 +305,7 @@ class DayCaptainApplication:
             preferences,
             reference_time=current_time,
         )
+        prioritized_items = self.digest_wording_engine.rewrite(prioritized_items)
         selected_delivery_mode = delivery_mode or self.settings.delivery_mode
         run_id = uuid.uuid4().hex
         payload = self.digest_renderer.render(
@@ -346,6 +373,7 @@ def build_application(
     mail_collector: Optional[MailCollector] = None,
     calendar_collector: Optional[CalendarCollector] = None,
     scoring_engine: Optional[ScoringEngine] = None,
+    digest_wording_engine: Optional[DigestWordingEngine] = None,
     digest_renderer: Optional[DigestRenderer] = None,
     recall_provider: Optional[RecallProvider] = None,
     feedback_processor: Optional[FeedbackProcessor] = None,
@@ -406,6 +434,7 @@ def build_application(
         calendar_collector=resolved_calendar_collector,
         storage=resolved_storage,
         scoring_engine=scoring_engine or DeterministicScoringEngine(),
+        digest_wording_engine=digest_wording_engine or _default_digest_wording_engine(resolved_settings),
         digest_renderer=digest_renderer or StructuredDigestRenderer(),
         recall_provider=recall_provider or SnapshotRecallProvider(),
         feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),

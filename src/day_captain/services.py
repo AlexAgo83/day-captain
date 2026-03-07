@@ -527,6 +527,57 @@ class StructuredDigestRenderer:
         return "\n".join(lines).strip()
 
 
+class IdentityDigestWordingEngine:
+    def rewrite(
+        self,
+        prioritized_items: Sequence[DigestEntry],
+    ) -> Sequence[DigestEntry]:
+        return tuple(prioritized_items)
+
+
+class LlmDigestWordingEngine:
+    def __init__(
+        self,
+        provider,
+        shortlist_limit: int = 5,
+    ) -> None:
+        self.provider = provider
+        self.shortlist_limit = max(0, shortlist_limit)
+
+    def rewrite(
+        self,
+        prioritized_items: Sequence[DigestEntry],
+    ) -> Sequence[DigestEntry]:
+        items = tuple(prioritized_items)
+        if self.shortlist_limit <= 0 or not items:
+            return items
+        shortlisted = items[: self.shortlist_limit]
+        try:
+            rewritten = self.provider.rewrite_summaries(shortlisted)
+        except Exception:
+            return items
+        updated_items = []
+        for item in items:
+            ref = "{0}:{1}".format(item.source_kind, item.source_id)
+            summary = str(rewritten.get(ref) or "").strip()
+            if not summary:
+                updated_items.append(item)
+                continue
+            updated_items.append(
+                DigestEntry(
+                    title=item.title,
+                    summary=summary,
+                    section_name=item.section_name,
+                    source_kind=item.source_kind,
+                    source_id=item.source_id,
+                    score=item.score,
+                    reason_codes=item.reason_codes,
+                    guardrail_applied=item.guardrail_applied,
+                )
+            )
+        return tuple(updated_items)
+
+
 class SnapshotRecallProvider:
     def build_recall(self, run: DigestRunRecord) -> DigestPayload:
         payload = run.summary

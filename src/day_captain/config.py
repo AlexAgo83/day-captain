@@ -47,6 +47,14 @@ class DayCaptainSettings:
     graph_send_enabled: bool = False
     graph_timeout_seconds: int = 30
     graph_scopes: Tuple[str, ...] = ("User.Read", "Mail.Read", "Calendars.Read")
+    llm_provider: str = "disabled"
+    llm_api_key: str = ""
+    llm_model: str = ""
+    llm_base_url: str = "https://api.openai.com/v1"
+    llm_timeout_seconds: int = 30
+    llm_shortlist_limit: int = 5
+    llm_max_output_tokens: int = 300
+    llm_temperature: float = 0.2
 
     @classmethod
     def from_env(cls) -> "DayCaptainSettings":
@@ -71,6 +79,14 @@ class DayCaptainSettings:
             graph_send_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_GRAPH_SEND_ENABLED"), default=False),
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
             graph_scopes=_parse_scopes(os.getenv("DAY_CAPTAIN_GRAPH_SCOPES", "")),
+            llm_provider=os.getenv("DAY_CAPTAIN_LLM_PROVIDER", "disabled"),
+            llm_api_key=os.getenv("DAY_CAPTAIN_LLM_API_KEY", ""),
+            llm_model=os.getenv("DAY_CAPTAIN_LLM_MODEL", ""),
+            llm_base_url=os.getenv("DAY_CAPTAIN_LLM_BASE_URL", "https://api.openai.com/v1"),
+            llm_timeout_seconds=int(os.getenv("DAY_CAPTAIN_LLM_TIMEOUT_SECONDS", "30")),
+            llm_shortlist_limit=int(os.getenv("DAY_CAPTAIN_LLM_SHORTLIST_LIMIT", "5")),
+            llm_max_output_tokens=int(os.getenv("DAY_CAPTAIN_LLM_MAX_OUTPUT_TOKENS", "300")),
+            llm_temperature=float(os.getenv("DAY_CAPTAIN_LLM_TEMPERATURE", "0.2")),
         )
 
     def graph_login_scopes(self) -> Tuple[str, ...]:
@@ -86,6 +102,9 @@ class DayCaptainSettings:
     def validate_hosted(self) -> None:
         if self.is_hosted_environment() and not self.job_secret:
             raise ValueError("DAY_CAPTAIN_JOB_SECRET is required in hosted environments.")
+
+    def llm_is_enabled(self) -> bool:
+        return self.llm_provider.strip().lower() not in {"", "disabled", "none"}
 
     def resolved_database_url(self) -> str:
         if not self.database_url:
