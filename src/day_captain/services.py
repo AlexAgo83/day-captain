@@ -1,5 +1,6 @@
 """Business logic services for Day Captain."""
 
+from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
@@ -108,6 +109,8 @@ NEWSLETTER_PATTERNS = (
 SELF_DIGEST_PATTERNS = (
     "day captain digest for",
     "day captain morning digest",
+    "your day captain brief",
+    "votre brief day captain",
 )
 
 AUTOMATED_SENDERS = (
@@ -174,6 +177,99 @@ QUOTE_BOUNDARY_PREFIXES = (
     "objet :",
     "objet:",
 )
+
+LANGUAGE_COPY = {
+    "en": {
+        "digest_title": "Your Day Captain brief",
+        "subject": "Your Day Captain brief for {date}",
+        "prepared": "Prepared for you {date}",
+        "coverage": "Covering updates from {start} to {end}",
+        "sections": {
+            "critical_topics": "Critical topics",
+            "actions_to_take": "Actions to take",
+            "watch_items": "Watch items",
+            "upcoming_meetings": "Upcoming meetings",
+        },
+        "empty": {
+            "critical_topics": "Nothing urgent is on top of the stack.",
+            "actions_to_take": "No immediate follow-up is waiting on you.",
+            "watch_items": "Nothing else looks worth flagging right now.",
+            "upcoming_meetings": "No meetings are on deck for {day}.",
+        },
+        "meeting_notes": {
+            "weekend_monday": "Looking ahead to {day}.",
+            "next_day": "Nothing else is scheduled for today, so here is {day}.",
+        },
+        "summary": {
+            "critical": "Needs attention: {text}",
+            "action": "Likely needs your follow-up: {text}",
+            "watch": "Worth noting: {text}",
+            "file_shared": "Shared a file or document for your review.",
+            "download_shared": "Shared a download link for the latest version.",
+            "from_sender": "From {sender}",
+            "meeting_today": "Today at {time} with {organizer}",
+            "meeting_day": "{day} at {time} with {organizer}",
+            "meeting_location": " on {location}",
+            "unknown_organizer": "an unknown organizer",
+        },
+    },
+    "fr": {
+        "digest_title": "Votre brief Day Captain",
+        "subject": "Votre brief Day Captain du {date}",
+        "prepared": "Préparé pour vous le {date}",
+        "coverage": "Couvre les nouveautés du {start} au {end}",
+        "sections": {
+            "critical_topics": "Points critiques",
+            "actions_to_take": "Actions à mener",
+            "watch_items": "À surveiller",
+            "upcoming_meetings": "Réunions à venir",
+        },
+        "empty": {
+            "critical_topics": "Rien d'urgent ne remonte pour l'instant.",
+            "actions_to_take": "Aucun suivi immédiat ne semble vous attendre.",
+            "watch_items": "Rien d'autre ne mérite d'être signalé pour l'instant.",
+            "upcoming_meetings": "Aucune réunion n'est prévue pour {day}.",
+        },
+        "meeting_notes": {
+            "weekend_monday": "Aperçu des réunions de {day}.",
+            "next_day": "Rien d'autre n'est prévu aujourd'hui, voici {day}.",
+        },
+        "summary": {
+            "critical": "À surveiller de près : {text}",
+            "action": "Demande probablement un suivi de votre part : {text}",
+            "watch": "À garder en tête : {text}",
+            "file_shared": "Un fichier ou document a été partagé pour consultation.",
+            "download_shared": "Un lien de téléchargement a été partagé pour la dernière version.",
+            "from_sender": "De la part de {sender}",
+            "meeting_today": "Aujourd'hui à {time} avec {organizer}",
+            "meeting_day": "{day} à {time} avec {organizer}",
+            "meeting_location": " sur {location}",
+            "unknown_organizer": "un organisateur inconnu",
+        },
+    },
+}
+
+WEEKDAY_NAMES = {
+    "en": {
+        "short": ("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"),
+        "long": ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"),
+    },
+    "fr": {
+        "short": ("lun.", "mar.", "mer.", "jeu.", "ven.", "sam.", "dim."),
+        "long": ("lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi", "dimanche"),
+    },
+}
+
+MONTH_NAMES = {
+    "en": {
+        "short": ("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"),
+        "long": ("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"),
+    },
+    "fr": {
+        "short": ("janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."),
+        "long": ("janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"),
+    },
+}
 
 
 def _normalize_text(*parts: str) -> str:
@@ -243,7 +339,81 @@ def _is_self_digest_message(subject: str, preview: str) -> bool:
     return _contains_any(normalized_preview, SELF_DIGEST_PATTERNS)
 
 
+def _normalize_language(value: str) -> str:
+    candidate = (value or "").strip().lower()
+    if candidate in LANGUAGE_COPY:
+        return candidate
+    return "en"
+
+
+def _language_copy(language: str) -> Mapping[str, object]:
+    return LANGUAGE_COPY[_normalize_language(language)]
+
+
+def _display_zone(name: str):
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return timezone.utc
+
+
+def _local_date(value: datetime, display_timezone: str) -> date:
+    return value.astimezone(_display_zone(display_timezone)).date()
+
+
+def _weekday_name(target_day: date, language: str, short: bool = False) -> str:
+    key = "short" if short else "long"
+    return WEEKDAY_NAMES[_normalize_language(language)][key][target_day.weekday()]
+
+
+def _month_name(target_day: date, language: str, short: bool = False) -> str:
+    key = "short" if short else "long"
+    return MONTH_NAMES[_normalize_language(language)][key][target_day.month - 1]
+
+
+def _format_day_label(target_day: date, language: str, short: bool = False, include_year: bool = False) -> str:
+    weekday = _weekday_name(target_day, language, short=short)
+    month = _month_name(target_day, language, short=short)
+    if _normalize_language(language) == "fr":
+        base = "{0} {1:02d} {2}".format(weekday, target_day.day, month)
+    else:
+        base = "{0} {1:02d} {2}".format(weekday, target_day.day, month)
+    if include_year:
+        base += " {0}".format(target_day.year)
+    return base
+
+
+def _format_localized_timestamp(
+    value: datetime,
+    display_timezone: str,
+    language: str,
+    include_zone: bool = True,
+) -> str:
+    target = value.astimezone(_display_zone(display_timezone))
+    day_label = _format_day_label(target.date(), language, short=True, include_year=True)
+    if _normalize_language(language) == "fr":
+        rendered = "{0} à {1}".format(day_label, target.strftime("%H:%M"))
+    else:
+        rendered = "{0} at {1}".format(day_label, target.strftime("%H:%M"))
+    if include_zone:
+        rendered += " {0}".format(target.tzname() or display_timezone)
+    return rendered
+
+
+def _meeting_day_reference(target_day: date, source_day: date, language: str) -> str:
+    normalized = _normalize_language(language)
+    if target_day == source_day:
+        return "today" if normalized == "en" else "aujourd'hui"
+    if target_day == source_day + timedelta(days=1):
+        return "tomorrow" if normalized == "en" else "demain"
+    return _weekday_name(target_day, normalized, short=False)
+
+
 class DeterministicScoringEngine:
+    def __init__(self, digest_language: str = "en", display_timezone: str = "UTC") -> None:
+        self.digest_language = _normalize_language(digest_language)
+        self.display_timezone = display_timezone
+
     def prioritize(
         self,
         messages: Sequence[MessageRecord],
@@ -418,6 +588,9 @@ class DeterministicScoringEngine:
 
     def _score_meeting(self, meeting: MeetingRecord, now: datetime) -> DigestEntry:
         hours_until = (meeting.start_at - now).total_seconds() / 3600.0
+        copy = _language_copy(self.digest_language)["summary"]
+        local_start = meeting.start_at.astimezone(_display_zone(self.display_timezone))
+        local_now = now.astimezone(_display_zone(self.display_timezone))
         score = 1.0
         reason_codes = ["meeting_context"]
         if hours_until <= 2:
@@ -429,12 +602,19 @@ class DeterministicScoringEngine:
         if meeting.is_online_meeting:
             score += 0.25
             reason_codes.append("online_meeting")
-        summary = "Starts {0} with {1}".format(
-            meeting.start_at.strftime("%H:%M"),
-            meeting.organizer_address or "organizer unknown",
-        )
+        if local_start.date() == local_now.date():
+            summary = copy["meeting_today"].format(
+                time=local_start.strftime("%H:%M"),
+                organizer=meeting.organizer_address or copy["unknown_organizer"],
+            )
+        else:
+            summary = copy["meeting_day"].format(
+                day=_format_day_label(local_start.date(), self.digest_language, short=True, include_year=False),
+                time=local_start.strftime("%H:%M"),
+                organizer=meeting.organizer_address or copy["unknown_organizer"],
+            )
         if meeting.location:
-            summary += " in {0}".format(meeting.location)
+            summary += copy["meeting_location"].format(location=meeting.location)
         return DigestEntry(
             title=meeting.subject or "(untitled meeting)",
             summary=summary,
@@ -452,18 +632,25 @@ class DeterministicScoringEngine:
         cleaned_preview: str,
         reason_codes: Sequence[str],
     ) -> str:
+        copy = _language_copy(self.digest_language)["summary"]
         preview = cleaned_preview or (message.body_preview or "").strip()
-        base = preview if preview else "From {0}".format(message.from_address)
+        normalized_preview = _normalize_text(preview)
+        base = preview if preview else copy["from_sender"].format(sender=message.from_address)
+        if "deliverable_shared" in reason_codes:
+            if "download" in normalized_preview or "telechargement" in normalized_preview or "téléchargement" in normalized_preview:
+                return copy["download_shared"]
+            return copy["file_shared"]
         if "critical_keyword" in reason_codes:
-            return "Urgent: {0}".format(base)
+            return copy["critical"].format(text=base)
         if "action_keyword" in reason_codes:
-            return base
-        return base
+            return copy["action"].format(text=base)
+        return copy["watch"].format(text=base)
 
 
 class StructuredDigestRenderer:
-    def __init__(self, display_timezone: str = "UTC") -> None:
+    def __init__(self, display_timezone: str = "UTC", digest_language: str = "en") -> None:
         self.display_timezone = display_timezone
+        self.digest_language = _normalize_language(digest_language)
 
     def render(
         self,
@@ -473,6 +660,7 @@ class StructuredDigestRenderer:
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         sections = {name: [] for name in SECTION_NAMES}
         for item in prioritized_items:
@@ -481,15 +669,25 @@ class StructuredDigestRenderer:
         for name in SECTION_NAMES:
             sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[:5]
 
-        delivery_subject = "Day Captain digest for {0}".format(generated_at.date().isoformat())
-        delivery_body = self._build_delivery_body(generated_at, window_start, window_end, sections)
-        delivery_html = self._build_delivery_html(generated_at, window_start, window_end, sections)
+        localized = _language_copy(self.digest_language)
+        delivery_subject = localized["subject"].format(
+            date=_format_day_label(
+                _local_date(generated_at, self.display_timezone),
+                self.digest_language,
+                short=True,
+                include_year=False,
+            )
+        )
+        delivery_body = self._build_delivery_body(generated_at, window_start, window_end, sections, meeting_horizon or {})
+        delivery_html = self._build_delivery_html(generated_at, window_start, window_end, sections, meeting_horizon or {})
         delivery_payload = {
             "mode": delivery_mode,
             "run_id": run_id,
             "subject": delivery_subject,
             "body": delivery_body,
             "html_body": delivery_html,
+            "meeting_horizon": dict(meeting_horizon or {}),
+            "digest_language": self.digest_language,
             "sections": {
                 name: [self._entry_payload(item) for item in sections[name]]
                 for name in SECTION_NAMES
@@ -536,29 +734,34 @@ class StructuredDigestRenderer:
         window_start: datetime,
         window_end: datetime,
         sections: Mapping[str, Sequence[DigestEntry]],
+        meeting_horizon: Mapping[str, str],
     ) -> str:
-        generated_label = self._format_timestamp(generated_at)
+        localized = _language_copy(self.digest_language)
+        generated_label = _format_localized_timestamp(generated_at, self.display_timezone, self.digest_language)
         window_label = "{0} to {1}".format(
-            self._format_timestamp(window_start, include_zone=False),
-            self._format_timestamp(window_end),
+            _format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
+            _format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
         )
+        if self.digest_language == "fr":
+            window_label = "{0} au {1}".format(
+                _format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
+                _format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
+            )
         lines = [
-            "Day Captain digest",
-            "Generated {0}".format(generated_label),
-            "Review window: {0}".format(window_label),
+            localized["digest_title"],
+            localized["prepared"].format(date=generated_label),
+            localized["coverage"].format(start=_format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False), end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language)),
             "",
         ]
-        labels = {
-            "critical_topics": "Critical topics",
-            "actions_to_take": "Actions to take",
-            "watch_items": "Watch items",
-            "upcoming_meetings": "Upcoming meetings",
-        }
+        labels = localized["sections"]
         for name in SECTION_NAMES:
             lines.append(labels[name])
+            meeting_note = self._meeting_note(name, meeting_horizon)
+            if meeting_note:
+                lines.append(meeting_note)
             items = sections[name]
             if not items:
-                lines.append("- None")
+                lines.append(self._empty_state(name, meeting_horizon))
             else:
                 for item in items:
                     lines.append("- {0}".format(item.title))
@@ -572,34 +775,34 @@ class StructuredDigestRenderer:
         window_start: datetime,
         window_end: datetime,
         sections: Mapping[str, Sequence[DigestEntry]],
+        meeting_horizon: Mapping[str, str],
     ) -> str:
-        generated_label = self._format_timestamp(generated_at)
-        window_label = "{0} to {1}".format(
-            self._format_timestamp(window_start, include_zone=False),
-            self._format_timestamp(window_end),
+        localized = _language_copy(self.digest_language)
+        generated_label = _format_localized_timestamp(generated_at, self.display_timezone, self.digest_language)
+        coverage = localized["coverage"].format(
+            start=_format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
+            end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
         )
-        labels = {
-            "critical_topics": "Critical topics",
-            "actions_to_take": "Actions to take",
-            "watch_items": "Watch items",
-            "upcoming_meetings": "Upcoming meetings",
-        }
         parts = [
             "<html><body style=\"font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
             "<div style=\"max-width:720px;margin:0 auto;padding:24px;\">",
-            "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">Day Captain digest</h1>",
-            "<p style=\"margin:0 0 4px;color:#475569;\"><strong>Generated</strong> {0}</p>".format(generated_label),
-            "<p style=\"margin:0 0 24px;color:#475569;\"><strong>Review window</strong> {0}</p>".format(window_label),
+            "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
+            "<p style=\"margin:0 0 4px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
+            "<p style=\"margin:0 0 24px;color:#475569;\">{0}</p>".format(self._html_escape(coverage)),
         ]
+        labels = localized["sections"]
         for name in SECTION_NAMES:
             parts.append(
                 "<section style=\"margin:0 0 24px;\"><h2 style=\"margin:0 0 10px;font-size:20px;color:#0f172a;\">{0}</h2>".format(
-                    labels[name]
+                    self._html_escape(labels[name])
                 )
             )
+            meeting_note = self._meeting_note(name, meeting_horizon)
+            if meeting_note:
+                parts.append("<p style=\"margin:0 0 10px;color:#475569;\">{0}</p>".format(self._html_escape(meeting_note)))
             items = sections[name]
             if not items:
-                parts.append("<p style=\"margin:0;color:#64748b;\">None</p>")
+                parts.append("<p style=\"margin:0;color:#64748b;\">{0}</p>".format(self._html_escape(self._empty_state(name, meeting_horizon))))
             else:
                 parts.append("<ul style=\"margin:0;padding-left:20px;\">")
                 for item in items:
@@ -614,19 +817,50 @@ class StructuredDigestRenderer:
         parts.append("</div></body></html>")
         return "".join(parts)
 
-    def _format_timestamp(self, value: datetime, include_zone: bool = True) -> str:
-        target = value
-        try:
-            zone = ZoneInfo(self.display_timezone)
-            target = value.astimezone(zone)
-        except Exception:
-            zone = None
-        rendered = target.strftime("%a %d %b %Y at %H:%M")
-        if include_zone and zone is not None:
-            rendered += " {0}".format(target.tzname() or self.display_timezone)
-        elif include_zone:
-            rendered += " UTC"
-        return rendered
+    def _meeting_note(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
+        if section_name != "upcoming_meetings":
+            return ""
+        mode = str(meeting_horizon.get("mode") or "same_day")
+        if mode not in {"weekend_monday", "next_day"}:
+            return ""
+        localized = _language_copy(self.digest_language)
+        target_day = self._meeting_target_day(meeting_horizon)
+        if target_day is None:
+            return ""
+        return localized["meeting_notes"][mode].format(
+            day=self._meeting_horizon_day_label(mode, target_day, self._meeting_source_day(meeting_horizon) or target_day)
+        )
+
+    def _empty_state(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
+        localized = _language_copy(self.digest_language)
+        if section_name != "upcoming_meetings":
+            return localized["empty"][section_name]
+        target_day = self._meeting_target_day(meeting_horizon)
+        source_day = self._meeting_source_day(meeting_horizon)
+        if target_day is None:
+            target_day = datetime.now(_display_zone(self.display_timezone)).date()
+        if source_day is None:
+            source_day = target_day
+        return localized["empty"]["upcoming_meetings"].format(
+            day=self._meeting_horizon_day_label(str(meeting_horizon.get("mode") or "same_day"), target_day, source_day)
+        )
+
+    def _meeting_target_day(self, meeting_horizon: Mapping[str, str]) -> Optional[date]:
+        raw = str(meeting_horizon.get("target_date") or "").strip()
+        if not raw:
+            return None
+        return date.fromisoformat(raw)
+
+    def _meeting_source_day(self, meeting_horizon: Mapping[str, str]) -> Optional[date]:
+        raw = str(meeting_horizon.get("source_date") or "").strip()
+        if not raw:
+            return None
+        return date.fromisoformat(raw)
+
+    def _meeting_horizon_day_label(self, mode: str, target_day: date, source_day: date) -> str:
+        if mode == "weekend_monday":
+            return _weekday_name(target_day, self.digest_language, short=False)
+        return _meeting_day_reference(target_day, source_day, self.digest_language)
 
     def _html_escape(self, value: str) -> str:
         return (

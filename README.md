@@ -70,6 +70,8 @@ DAY_CAPTAIN_GRAPH_CLIENT_ID=your-app-client-id
 DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH=.day_captain_auth.json
 DAY_CAPTAIN_GRAPH_SCOPES=User.Read,Mail.Read,Calendars.Read,Mail.Send
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
+DAY_CAPTAIN_DIGEST_LANGUAGE=en
+DAY_CAPTAIN_LLM_LANGUAGE=
 DAY_CAPTAIN_LLM_PROVIDER=disabled
 DAY_CAPTAIN_LLM_MODEL=
 DAY_CAPTAIN_LLM_API_KEY=
@@ -86,6 +88,8 @@ DAY_CAPTAIN_GRAPH_CLIENT_ID=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
 DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
+DAY_CAPTAIN_DIGEST_LANGUAGE=en
+DAY_CAPTAIN_LLM_LANGUAGE=en
 DAY_CAPTAIN_LLM_PROVIDER=openai
 DAY_CAPTAIN_LLM_MODEL=gpt-5-mini
 DAY_CAPTAIN_LLM_API_KEY=...
@@ -103,7 +107,14 @@ The digest still uses deterministic scoring and guardrails to decide what matter
 
 If `DAY_CAPTAIN_LLM_PROVIDER` is enabled, Day Captain sends only a bounded shortlist of already-prioritized digest items to an OpenAI-compatible chat-completions endpoint to improve summary wording. If the provider is disabled, misconfigured, or fails at runtime, the app falls back to the deterministic summaries already present in the scored items.
 
-You can constrain that wording pass with `DAY_CAPTAIN_LLM_ENABLED_SECTIONS` and steer the tone with `DAY_CAPTAIN_LLM_STYLE_PROMPT`.
+You can constrain that wording pass with `DAY_CAPTAIN_LLM_ENABLED_SECTIONS`, steer the tone with `DAY_CAPTAIN_LLM_STYLE_PROMPT`, and force the wording language with `DAY_CAPTAIN_LLM_LANGUAGE`. If `DAY_CAPTAIN_LLM_LANGUAGE` is unset, it falls back to `DAY_CAPTAIN_DIGEST_LANGUAGE`.
+
+## Digest presentation
+
+The delivered digest now supports:
+- localized product copy through `DAY_CAPTAIN_DIGEST_LANGUAGE` with English default and French support
+- assistant-style header and empty-state wording even when the LLM layer is disabled
+- weekend meeting fallback to Monday and next-day meeting fallback when no meetings remain for the current day
 
 ## Microsoft auth setup
 

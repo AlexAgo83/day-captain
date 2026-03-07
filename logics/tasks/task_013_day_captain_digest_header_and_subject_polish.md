@@ -1,9 +1,9 @@
 ## task_013_day_captain_digest_header_and_subject_polish - Improve digest header copy and inbox subject wording
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,11 +25,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Replace technical header labels and metadata phrasing with more natural assistant-style copy.
-- [ ] 2. Improve the email subject line so it reads naturally in the inbox while remaining stable and clear.
-- [ ] 3. Ensure the updated subject and header behave consistently in both `json` and `graph_send`.
-- [ ] 4. Validate the updated output on a real delivered digest.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Replace technical header labels and metadata phrasing with more natural assistant-style copy.
+- [x] 2. Improve the email subject line so it reads naturally in the inbox while remaining stable and clear.
+- [x] 3. Ensure the updated subject and header behave consistently in both `json` and `graph_send`.
+- [x] 4. Validate the updated output on a real delivered digest.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> Plan step 1 improves header and metadata tone. Proof: task explicitly rewrites technical phrasing.
@@ -50,10 +50,17 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Replaced system-like header copy with assistant-style wording in `src/day_captain/services.py`, including new title, preparation line, and coverage line.
+- Updated the delivered inbox subject from the utilitarian digest subject to a more natural brief-style subject while preserving stable date context.
+- Added coverage in `tests/test_digest_renderer.py` and `tests/test_app.py` for the updated header and subject behavior.
+- Validation executed:
+  - `python3 -m unittest tests.test_digest_renderer tests.test_delivery_contract`
+  - `python3 -m unittest discover -s tests`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
+- Real delivered validation confirmed the subject and header now read as a user-facing brief instead of an internal report export.

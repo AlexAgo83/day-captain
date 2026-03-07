@@ -58,6 +58,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         provider = OpenAICompatibleDigestWordingProvider(
             api_key="sk-test",
             model="gpt-5-mini",
+            language="fr",
             style_prompt="Write like my chief of staff.",
             opener=opener,
         )
@@ -83,6 +84,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertEqual(captured["body"]["model"], "gpt-5-mini")
         self.assertEqual(captured["body"]["messages"][1]["role"], "user")
         self.assertIn("chief of staff", captured["body"]["messages"][0]["content"])
+        self.assertIn("French", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             rewritten["message:msg-1"],
             "Review the budget before noon because the request is urgent.",

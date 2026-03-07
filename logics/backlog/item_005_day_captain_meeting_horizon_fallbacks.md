@@ -1,9 +1,9 @@
 ## item_005_day_captain_meeting_horizon_fallbacks - Improve meeting section usefulness with weekend and next-day fallbacks
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -54,7 +54,7 @@ flowchart LR
 
 # Links
 - Request: `req_005_day_captain_meeting_horizon_fallbacks`
-- Primary task(s): `task_011_day_captain_meeting_horizon_fallbacks`
+- Primary task(s): `task_011_day_captain_meeting_horizon_fallbacks` (`Done`)
 
 # Priority
 - Impact: Medium - this improves day-to-day usefulness of the meeting section without changing the rest of the digest.
@@ -63,3 +63,5 @@ flowchart LR
 # Notes
 - Derived from request `req_005_day_captain_meeting_horizon_fallbacks`.
 - Likely implementation areas include `src/day_captain/services.py`, digest rendering tests, and delivery contract tests.
+- Weekend runs now preview Monday meetings, same-day empty windows fall back to the next day, and the rendered digest explicitly names the fallback horizon.
+- Validation covered unit tests, full test suite, and a real `graph_send` run on Saturday, March 7, 2026 showing Monday meetings in the delivered digest.

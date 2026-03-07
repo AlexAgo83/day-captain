@@ -9,6 +9,7 @@ from typing import Dict
 from typing import Iterable
 from typing import Optional
 from typing import Sequence
+from zoneinfo import ZoneInfo
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
 from day_captain.adapters.auth import DatabaseTokenCache
@@ -60,6 +61,32 @@ def _coerce_datetime(value: Optional[datetime]) -> datetime:
 
 def _end_of_day(value: datetime) -> datetime:
     return value.replace(hour=23, minute=59, second=59, microsecond=0)
+
+
+def _display_zone(name: str):
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return timezone.utc
+
+
+def _end_of_local_day(value: datetime, zone) -> datetime:
+    local = value.astimezone(zone)
+    return local.replace(hour=23, minute=59, second=59, microsecond=0).astimezone(timezone.utc)
+
+
+def _full_local_day_window(target_day: date, zone) -> tuple:
+    local_start = datetime(
+        target_day.year,
+        target_day.month,
+        target_day.day,
+        0,
+        0,
+        0,
+        tzinfo=zone,
+    )
+    local_end = local_start + timedelta(days=1) - timedelta(seconds=1)
+    return local_start.astimezone(timezone.utc), local_end.astimezone(timezone.utc)
 
 
 def _seed_token_cache_from_settings(cache, settings: DayCaptainSettings) -> None:
@@ -190,6 +217,10 @@ class InMemoryStorage:
 
 
 class StubScoringEngine:
+    def __init__(self, digest_language: str = "en", display_timezone: str = "UTC") -> None:
+        self.digest_language = digest_language
+        self.display_timezone = display_timezone
+
     def prioritize(
         self,
         messages: Sequence[MessageRecord],
@@ -197,7 +228,10 @@ class StubScoringEngine:
         preferences: Sequence[UserPreference],
         reference_time: Optional[datetime] = None,
     ) -> Sequence[DigestEntry]:
-        return DeterministicScoringEngine().prioritize(
+        return DeterministicScoringEngine(
+            digest_language=self.digest_language,
+            display_timezone=self.display_timezone,
+        ).prioritize(
             messages,
             meetings,
             preferences,
@@ -206,6 +240,10 @@ class StubScoringEngine:
 
 
 class StubDigestRenderer:
+    def __init__(self, display_timezone: str = "UTC", digest_language: str = "en") -> None:
+        self.display_timezone = display_timezone
+        self.digest_language = digest_language
+
     def render(
         self,
         run_id: str,
@@ -214,14 +252,19 @@ class StubDigestRenderer:
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        meeting_horizon: Optional[Dict[str, str]] = None,
     ) -> DigestPayload:
-        return StructuredDigestRenderer().render(
+        return StructuredDigestRenderer(
+            display_timezone=self.display_timezone,
+            digest_language=self.digest_language,
+        ).render(
             run_id=run_id,
             generated_at=generated_at,
             window_start=window_start,
             window_end=window_end,
             delivery_mode=delivery_mode,
             prioritized_items=prioritized_items,
+            meeting_horizon=meeting_horizon,
         )
 
 
@@ -252,6 +295,7 @@ def _default_digest_wording_engine(settings: DayCaptainSettings) -> DigestWordin
             timeout_seconds=settings.llm_timeout_seconds,
             max_output_tokens=settings.llm_max_output_tokens,
             temperature=settings.llm_temperature,
+            language=settings.resolved_llm_language(),
             style_prompt=settings.llm_style_prompt,
         )
         return LlmDigestWordingEngine(
@@ -296,6 +340,42 @@ class DayCaptainApplication:
         self.recall_provider = recall_provider
         self.feedback_processor = feedback_processor
 
+    def _collect_meetings(
+        self,
+        auth_context: AuthContext,
+        current_time: datetime,
+    ) -> tuple[Sequence[MeetingRecord], Dict[str, str]]:
+        zone = _display_zone(self.settings.display_timezone)
+        local_date = current_time.astimezone(zone).date()
+        weekday = local_date.weekday()
+        if weekday >= 5:
+            target_date = local_date + timedelta(days=7 - weekday)
+            window_start, window_end = _full_local_day_window(target_date, zone)
+            meetings = self.calendar_collector.collect_meetings(auth_context, window_start, window_end)
+            return meetings, {
+                "mode": "weekend_monday",
+                "target_date": target_date.isoformat(),
+                "source_date": local_date.isoformat(),
+            }
+
+        meetings_end = _end_of_local_day(current_time, zone)
+        meetings = self.calendar_collector.collect_meetings(auth_context, current_time, meetings_end)
+        if meetings:
+            return meetings, {
+                "mode": "same_day",
+                "target_date": local_date.isoformat(),
+                "source_date": local_date.isoformat(),
+            }
+
+        target_date = local_date + timedelta(days=1)
+        next_start, next_end = _full_local_day_window(target_date, zone)
+        meetings = self.calendar_collector.collect_meetings(auth_context, next_start, next_end)
+        return meetings, {
+            "mode": "next_day",
+            "target_date": target_date.isoformat(),
+            "source_date": local_date.isoformat(),
+        }
+
     def run_morning_digest(
         self,
         now: Optional[datetime] = None,
@@ -310,10 +390,9 @@ class DayCaptainApplication:
             else current_time - timedelta(hours=self.settings.default_lookback_hours)
         )
         window_end = current_time
-        meetings_end = _end_of_day(current_time)
         auth_context = self.auth_provider.authenticate(self.settings.graph_scopes)
         messages = self.mail_collector.collect_messages(auth_context, window_start, window_end)
-        meetings = self.calendar_collector.collect_meetings(auth_context, current_time, meetings_end)
+        meetings, meeting_horizon = self._collect_meetings(auth_context, current_time)
         self.storage.upsert_messages(messages)
         self.storage.upsert_meetings(meetings)
         preferences = self.storage.load_preferences()
@@ -333,6 +412,7 @@ class DayCaptainApplication:
             window_end=window_end,
             delivery_mode=selected_delivery_mode,
             prioritized_items=prioritized_items,
+            meeting_horizon=meeting_horizon,
         )
         if selected_delivery_mode == "graph_send":
             _validate_graph_send_prerequisites(self.settings, auth_context)
@@ -455,9 +535,17 @@ def build_application(
         mail_collector=resolved_mail_collector,
         calendar_collector=resolved_calendar_collector,
         storage=resolved_storage,
-        scoring_engine=scoring_engine or DeterministicScoringEngine(),
+        scoring_engine=scoring_engine
+        or DeterministicScoringEngine(
+            digest_language=resolved_settings.resolved_digest_language(),
+            display_timezone=resolved_settings.display_timezone,
+        ),
         digest_wording_engine=digest_wording_engine or _default_digest_wording_engine(resolved_settings),
-        digest_renderer=digest_renderer or StructuredDigestRenderer(display_timezone=resolved_settings.display_timezone),
+        digest_renderer=digest_renderer
+        or StructuredDigestRenderer(
+            display_timezone=resolved_settings.display_timezone,
+            digest_language=resolved_settings.resolved_digest_language(),
+        ),
         digest_delivery=digest_delivery or GraphDigestDelivery(graph_client),
         recall_provider=recall_provider or SnapshotRecallProvider(),
         feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),

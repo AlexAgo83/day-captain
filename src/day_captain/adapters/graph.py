@@ -13,6 +13,7 @@ from typing import Sequence
 from urllib import error
 from urllib import parse
 from urllib import request
+from zoneinfo import ZoneInfo
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
 from day_captain.adapters.auth import TokenCache
@@ -43,9 +44,26 @@ def _normalize_graph_datetime(payload: Mapping[str, Any]) -> datetime:
     raw_value = str(payload.get("dateTime") or "")
     if not raw_value:
         return datetime.now(timezone.utc)
-    parsed = parse_datetime(raw_value)
+    normalized = raw_value
+    if "." in normalized:
+        head, tail = normalized.split(".", 1)
+        fraction = []
+        suffix = []
+        for char in tail:
+            if char.isdigit() and not suffix:
+                fraction.append(char)
+            else:
+                suffix.append(char)
+        normalized = "{0}.{1}{2}".format(head, "".join(fraction[:6]), "".join(suffix)).rstrip(".")
+    parsed = parse_datetime(normalized)
     if parsed.tzinfo is None:
-        return parsed.replace(tzinfo=timezone.utc)
+        timezone_name = str(payload.get("timeZone") or "").strip()
+        if timezone_name.upper() == "UTC":
+            return parsed.replace(tzinfo=timezone.utc)
+        try:
+            return parsed.replace(tzinfo=ZoneInfo(timezone_name))
+        except Exception:
+            return parsed.replace(tzinfo=timezone.utc)
     return parsed
 
 

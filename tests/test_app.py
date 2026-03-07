@@ -20,7 +20,7 @@ from day_captain.models import UserPreference
 
 class DayCaptainApplicationTest(unittest.TestCase):
     def test_morning_digest_returns_sections_and_persists_run(self) -> None:
-        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         storage = InMemoryStorage(
             preferences=[
                 UserPreference(
@@ -42,7 +42,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
                         thread_id="thread-1",
                         subject="Urgent budget review",
                         from_address="boss@example.com",
-                        received_at=datetime(2026, 3, 7, 7, 30, tzinfo=timezone.utc),
+                        received_at=datetime(2026, 3, 9, 7, 30, tzinfo=timezone.utc),
                         body_preview="Please review before noon.",
                     ),
                     MessageRecord(
@@ -50,7 +50,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
                         thread_id="thread-2",
                         subject="Action needed on roadmap",
                         from_address="pm@example.com",
-                        received_at=datetime(2026, 3, 7, 7, 45, tzinfo=timezone.utc),
+                        received_at=datetime(2026, 3, 9, 7, 45, tzinfo=timezone.utc),
                         body_preview="Need your input for planning.",
                     ),
                 ]
@@ -60,8 +60,8 @@ class DayCaptainApplicationTest(unittest.TestCase):
                     MeetingRecord(
                         graph_event_id="mtg-1",
                         subject="Weekly leadership sync",
-                        start_at=datetime(2026, 3, 7, 10, 0, tzinfo=timezone.utc),
-                        end_at=datetime(2026, 3, 7, 10, 30, tzinfo=timezone.utc),
+                        start_at=datetime(2026, 3, 9, 10, 0, tzinfo=timezone.utc),
+                        end_at=datetime(2026, 3, 9, 10, 30, tzinfo=timezone.utc),
                         organizer_address="ceo@example.com",
                     )
                 ]
@@ -203,11 +203,66 @@ class DayCaptainApplicationTest(unittest.TestCase):
             timeout_seconds=30,
             max_output_tokens=300,
             temperature=0.2,
+            language="en",
             style_prompt="Write like my chief of staff.",
         )
         self.assertEqual(app.digest_wording_engine.shortlist_limit, 3)
         self.assertEqual(app.digest_wording_engine.enabled_sections, ("critical_topics",))
         self.assertEqual(app.digest_renderer.display_timezone, "Europe/Paris")
+        self.assertEqual(app.digest_renderer.digest_language, "en")
+        self.assertEqual(app.scoring_engine.display_timezone, "Europe/Paris")
+
+    def test_weekend_run_falls_back_to_monday_meetings(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(
+                (
+                    MeetingRecord(
+                        graph_event_id="mtg-1",
+                        subject="Monday planning",
+                        start_at=datetime(2026, 3, 9, 9, 0, tzinfo=timezone.utc),
+                        end_at=datetime(2026, 3, 9, 9, 30, tzinfo=timezone.utc),
+                        organizer_address="pm@example.com",
+                    ),
+                )
+            ),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertEqual(len(payload.upcoming_meetings), 1)
+        self.assertEqual(payload.delivery_payload["meeting_horizon"]["mode"], "weekend_monday")
+        self.assertIn("looking ahead to monday.", payload.delivery_body.lower())
+
+    def test_empty_same_day_falls_back_to_next_day_meetings(self) -> None:
+        now = datetime(2026, 3, 9, 16, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(
+                (
+                    MeetingRecord(
+                        graph_event_id="mtg-2",
+                        subject="Tomorrow sync",
+                        start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                        end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                        organizer_address="lead@example.com",
+                    ),
+                )
+            ),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertEqual(len(payload.upcoming_meetings), 1)
+        self.assertEqual(payload.delivery_payload["meeting_horizon"]["mode"], "next_day")
+        self.assertIn("here is tomorrow", payload.delivery_body.lower())
 
     def test_graph_send_requires_graph_send_enabled(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)

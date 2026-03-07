@@ -1,9 +1,9 @@
 ## task_011_day_captain_meeting_horizon_fallbacks - Implement weekend and next-day meeting horizon fallbacks
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,12 +25,12 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Implement weekend fallback so Saturday and Sunday digests display Monday meetings.
-- [ ] 2. Implement next-day fallback when the current digest day contains no meetings.
-- [ ] 3. Update rendered output so the section explicitly states when Monday or next-day fallback is being shown.
-- [ ] 4. Add focused tests for weekend fallback, empty-day fallback, and unchanged same-day behavior.
-- [ ] 5. Validate the updated digest contract for both `json` and `graph_send`.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Implement weekend fallback so Saturday and Sunday digests display Monday meetings.
+- [x] 2. Implement next-day fallback when the current digest day contains no meetings.
+- [x] 3. Update rendered output so the section explicitly states when Monday or next-day fallback is being shown.
+- [x] 4. Add focused tests for weekend fallback, empty-day fallback, and unchanged same-day behavior.
+- [x] 5. Validate the updated digest contract for both `json` and `graph_send`.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> Plan step 1 implements weekend behavior. Proof: task explicitly requires Saturday/Sunday fallback to Monday.
@@ -53,10 +53,17 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Added meeting-horizon selection in `src/day_captain/app.py` so weekend runs preview Monday meetings and empty same-day windows fall back to the next day.
+- Updated `src/day_captain/services.py` to render explicit fallback notes in the `Upcoming meetings` section and to keep the result compatible with both `json` and `graph_send`.
+- Added focused coverage in `tests/test_app.py` and `tests/test_digest_renderer.py` for weekend fallback, empty-day fallback, and unchanged same-day behavior.
+- Validation executed:
+  - `python3 -m unittest tests.test_scoring tests.test_digest_renderer tests.test_delivery_contract`
+  - `python3 -m unittest discover -s tests`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
+- Real delivered validation on Saturday, March 7, 2026 confirmed the digest explicitly said `Looking ahead to Monday.` and included Monday meetings instead of an empty section.

@@ -1,7 +1,7 @@
 ## req_006_day_captain_digest_language_configuration - Day Captain digest and LLM language configuration via environment
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
 > Complexity: Medium
 > Theme: Localization
@@ -80,5 +80,5 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_006_day_captain_digest_language_configuration` - Make digest language configurable through environment-backed settings. Status: `Ready`.
-- `task_012_day_captain_digest_language_configuration` - Implement env-driven digest and LLM language selection with English default and French support. Status: `Ready`.
+- `item_006_day_captain_digest_language_configuration` - Make digest language configurable through environment-backed settings. Status: `Done`.
+- `task_012_day_captain_digest_language_configuration` - Implement env-driven digest and LLM language selection with English default and French support. Status: `Done`.

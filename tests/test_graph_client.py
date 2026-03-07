@@ -125,6 +125,20 @@ class GraphAdapterTest(unittest.TestCase):
         self.assertTrue(meeting.is_online_meeting)
         self.assertEqual(meeting.join_url, "https://teams.example.com/join/1")
 
+    def test_normalize_meeting_accepts_graph_fractional_datetime_without_offset(self) -> None:
+        payload = {
+            "id": "mtg-2",
+            "subject": "Monday planning",
+            "start": {"dateTime": "2026-03-09T00:00:00.0000000", "timeZone": "UTC"},
+            "end": {"dateTime": "2026-03-09T00:30:00.0000000", "timeZone": "UTC"},
+            "organizer": {"emailAddress": {"address": "pm@example.com"}},
+        }
+
+        meeting = normalize_meeting(payload)
+
+        self.assertEqual(meeting.start_at, datetime(2026, 3, 9, 0, 0, tzinfo=timezone.utc))
+        self.assertEqual(meeting.end_at, datetime(2026, 3, 9, 0, 30, tzinfo=timezone.utc))
+
     def test_list_collection_accepts_empty_value_list(self) -> None:
         client = GraphApiClient(
             base_url="https://graph.microsoft.com/v1.0",

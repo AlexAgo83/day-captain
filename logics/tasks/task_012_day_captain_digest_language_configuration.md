@@ -1,9 +1,9 @@
 ## task_012_day_captain_digest_language_configuration - Implement env-driven digest and LLM language selection
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Localization
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,12 +25,12 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Add environment-backed language configuration with English default and documented French support.
-- [ ] 2. Update digest rendering labels and deterministic wording to honor the configured language.
-- [ ] 3. Update the LLM wording path so prompts and wording behavior honor the configured language.
-- [ ] 4. Add focused tests for default English, configured French, and deterministic fallback safety.
-- [ ] 5. Validate the updated behavior for both `json` and `graph_send`.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Add environment-backed language configuration with English default and documented French support.
+- [x] 2. Update digest rendering labels and deterministic wording to honor the configured language.
+- [x] 3. Update the LLM wording path so prompts and wording behavior honor the configured language.
+- [x] 4. Add focused tests for default English, configured French, and deterministic fallback safety.
+- [x] 5. Validate the updated behavior for both `json` and `graph_send`.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> Plan step 1 implements env-backed configuration. Proof: task explicitly adds runtime language settings.
@@ -54,10 +54,19 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Added env-backed `digest_language` and `llm_language` settings in `src/day_captain/config.py`, plus new `.env.example` and `README.md` guidance.
+- Updated `src/day_captain/services.py` so section labels, header copy, empty states, deterministic summaries, and meeting phrasing honor the selected digest language.
+- Updated `src/day_captain/adapters/llm.py` and `src/day_captain/app.py` so the bounded LLM prompt path explicitly writes in the configured language.
+- Added focused coverage in `tests/test_settings.py`, `tests/test_llm.py`, `tests/test_digest_renderer.py`, `tests/test_app.py`, and `tests/test_scoring.py`.
+- Validation executed:
+  - `python3 -m unittest tests.test_settings tests.test_digest_renderer tests.test_llm tests.test_delivery_contract`
+  - `python3 -m unittest discover -s tests`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
+  - `DAY_CAPTAIN_DIGEST_LANGUAGE=fr DAY_CAPTAIN_LLM_LANGUAGE=fr PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force`
+- Validation confirmed default English delivery remains intact and French output can be produced through environment-only configuration.

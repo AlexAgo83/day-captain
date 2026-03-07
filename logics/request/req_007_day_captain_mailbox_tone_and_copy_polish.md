@@ -1,7 +1,7 @@
 ## req_007_day_captain_mailbox_tone_and_copy_polish - Day Captain mailbox tone and copy polish after real digest review
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
 > Complexity: Medium
 > Theme: Quality
@@ -85,6 +85,6 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_007_day_captain_mailbox_tone_and_copy_polish` - Remove the remaining system-report feel from the delivered digest. Status: `Ready`.
-- `task_013_day_captain_digest_header_and_subject_polish` - Improve digest header copy and inbox subject wording. Status: `Ready`.
-- `task_014_day_captain_digest_empty_states_and_fallback_copy_polish` - Replace technical empty states and improve deterministic assistant copy. Status: `Ready`.
+- `item_007_day_captain_mailbox_tone_and_copy_polish` - Remove the remaining system-report feel from the delivered digest. Status: `Done`.
+- `task_013_day_captain_digest_header_and_subject_polish` - Improve digest header copy and inbox subject wording. Status: `Done`.
+- `task_014_day_captain_digest_empty_states_and_fallback_copy_polish` - Replace technical empty states and improve deterministic assistant copy. Status: `Done`.

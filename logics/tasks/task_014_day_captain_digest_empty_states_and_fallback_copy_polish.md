@@ -1,9 +1,9 @@
 ## task_014_day_captain_digest_empty_states_and_fallback_copy_polish - Replace technical empty states and improve deterministic assistant copy
 > From version: 0.5.0
-> Status: Ready
-> Understanding: 99%
+> Status: Done
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,11 +25,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Replace `None`-style empty states with assistant-like section copy.
-- [ ] 2. Improve deterministic fallback summaries so they are concise, factual, and more user-facing.
-- [ ] 3. Preserve safe behavior when the LLM wording path is disabled or unavailable.
-- [ ] 4. Validate the updated wording on local payloads and a real delivered digest.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Replace `None`-style empty states with assistant-like section copy.
+- [x] 2. Improve deterministic fallback summaries so they are concise, factual, and more user-facing.
+- [x] 3. Preserve safe behavior when the LLM wording path is disabled or unavailable.
+- [x] 4. Validate the updated wording on local payloads and a real delivered digest.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC3 -> Plan step 1 replaces technical empty states. Proof: task explicitly removes `None`-style output.
@@ -51,10 +51,17 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Replaced `None`-style empty states with assistant-style copy in `src/day_captain/services.py`.
+- Improved deterministic fallback summaries so shared files and download links are rewritten into concise assistant-friendly wording even with the LLM path disabled.
+- Preserved safe fallback behavior and extended coverage in `tests/test_scoring.py`, `tests/test_digest_renderer.py`, and `tests/test_llm.py`.
+- Validation executed:
+  - `python3 -m unittest tests.test_digest_renderer tests.test_llm tests.test_delivery_contract`
+  - `python3 -m unittest discover -s tests`
+  - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
+- Real delivered validation confirmed cleaner empty states and more polished deterministic summaries in the mailbox output.

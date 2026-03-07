@@ -45,6 +45,7 @@ class OpenAICompatibleDigestWordingProvider:
         timeout_seconds: int = 30,
         max_output_tokens: int = 300,
         temperature: float = 0.2,
+        language: str = "en",
         style_prompt: str = "Write like a concise executive assistant.",
         opener: Optional[Callable[..., Any]] = None,
     ) -> None:
@@ -54,6 +55,7 @@ class OpenAICompatibleDigestWordingProvider:
         self.timeout_seconds = timeout_seconds
         self.max_output_tokens = max_output_tokens
         self.temperature = temperature
+        self.language = (language or "en").strip().lower() or "en"
         self.style_prompt = style_prompt.strip() or "Write like a concise executive assistant."
         self._opener = opener or request.urlopen
 
@@ -71,11 +73,15 @@ class OpenAICompatibleDigestWordingProvider:
                     "role": "system",
                     "content": (
                         "Rewrite each digest item summary in one sentence. "
-                        "{0} "
+                        "Write the output in {0}. "
+                        "{1} "
                         "Preserve facts, urgency, and requested actions. "
                         "Do not invent details. Return JSON with an `items` array "
                         "containing `{ref, summary}` objects only."
-                    ).replace("{ref, summary}", "{{ref, summary}}").format(self.style_prompt),
+                    ).replace("{ref, summary}", "{{ref, summary}}").format(
+                        "French" if self.language == "fr" else "English",
+                        self.style_prompt,
+                    ),
                 },
                 {
                     "role": "user",

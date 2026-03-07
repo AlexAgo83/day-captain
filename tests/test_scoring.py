@@ -184,7 +184,10 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         self.assertEqual(len(prioritized), 1)
         self.assertEqual(prioritized[0].source_id, "msg-clean")
-        self.assertEqual(prioritized[0].summary, "Bonjour, Voici la piece jointe.")
+        self.assertEqual(
+            prioritized[0].summary,
+            "Likely needs your follow-up: Bonjour, Voici la piece jointe.",
+        )
 
     def test_marks_feedback_requests_as_actions(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
@@ -245,17 +248,35 @@ class DeterministicScoringEngineTest(unittest.TestCase):
             MessageRecord(
                 graph_message_id="msg-digest",
                 thread_id="thread-digest",
-                subject="Day Captain digest for 2026-03-07",
+                subject="Your Day Captain brief for Sat 07 Mar",
                 from_address="alex@example.com",
                 to_addresses=("alex@example.com",),
                 received_at=datetime(2026, 3, 7, 7, 59, tzinfo=timezone.utc),
-                body_preview="Urgent: Day Captain digest Generated Sat 07 Mar 2026 at 17:39 CET",
+                body_preview="Your Day Captain brief Prepared for you Sat 07 Mar 2026 at 17:39 CET",
             ),
         )
 
         prioritized = engine.prioritize(messages, (), (), reference_time=now)
 
         self.assertEqual(prioritized, ())
+
+    def test_localizes_french_meeting_summary(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-fr",
+                subject="Point équipe",
+                start_at=datetime(2026, 3, 9, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 9, 9, 30, tzinfo=timezone.utc),
+                organizer_address="lead@example.com",
+                location="Teams",
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(prioritized[0].summary, "Aujourd'hui à 10:00 avec lead@example.com sur Teams")
 
 
 if __name__ == "__main__":
