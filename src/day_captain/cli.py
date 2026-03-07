@@ -15,6 +15,7 @@ from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.app import build_application
 from day_captain.config import DayCaptainSettings
 from day_captain.models import to_jsonable
+from day_captain.web import serve
 
 
 def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -43,6 +44,10 @@ def build_parser() -> argparse.ArgumentParser:
     morning.add_argument("--now", help="ISO datetime override for the run clock.")
     morning.add_argument("--delivery-mode", help="Override the configured delivery mode.")
     morning.add_argument("--force", action="store_true", help="Ignore the last successful run window.")
+
+    serve_parser = subparsers.add_parser("serve", help="Run the Day Captain HTTP service.")
+    serve_parser.add_argument("--host", help="Override the configured bind host.")
+    serve_parser.add_argument("--port", type=int, help="Override the configured bind port.")
 
     recall = subparsers.add_parser("recall-digest", help="Recall the latest completed digest.")
     recall.add_argument("--run-id", help="Specific digest run identifier.")
@@ -129,6 +134,9 @@ def main(argv: Optional[list] = None) -> int:
     if args.command == "auth":
         result = _run_auth_command(args, settings)
         print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+    if args.command == "serve":
+        serve(settings=settings, host=args.host, port=args.port)
         return 0
 
     app = build_application(settings=settings)

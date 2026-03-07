@@ -14,6 +14,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         try:
             os.environ["DAY_CAPTAIN_ENV"] = "test"
             os.environ["DAY_CAPTAIN_SQLITE_PATH"] = "/tmp/day-captain.sqlite3"
+            os.environ["DAY_CAPTAIN_DATABASE_URL"] = "postgresql://user:pass@localhost:5432/day_captain"
             os.environ["DAY_CAPTAIN_DELIVERY_MODE"] = "graph_send"
             os.environ["DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS"] = "12"
             os.environ["DAY_CAPTAIN_GRAPH_TENANT_ID"] = "common"
@@ -32,6 +33,10 @@ class DayCaptainSettingsTest(unittest.TestCase):
 
         self.assertEqual(settings.environment, "test")
         self.assertEqual(settings.sqlite_path, "/tmp/day-captain.sqlite3")
+        self.assertEqual(
+            settings.database_url,
+            "postgresql://user:pass@localhost:5432/day_captain",
+        )
         self.assertEqual(settings.delivery_mode, "graph_send")
         self.assertEqual(settings.default_lookback_hours, 12)
         self.assertEqual(settings.graph_tenant_id, "common")

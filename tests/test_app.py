@@ -3,6 +3,7 @@ from datetime import timezone
 from pathlib import Path
 import sys
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -102,6 +103,18 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(feedback.run_id, run.run_id)
         self.assertEqual(len(storage.list_feedback(run.run_id)), 1)
+
+    def test_build_application_uses_postgres_storage_when_database_url_is_configured(self) -> None:
+        settings = DayCaptainSettings(
+            database_url="postgresql://user:pass@localhost:5432/day_captain",
+        )
+
+        fake_storage = InMemoryStorage()
+        with mock.patch("day_captain.app.PostgresStorage", return_value=fake_storage) as postgres_storage:
+            app = build_application(settings=settings)
+
+        postgres_storage.assert_called_once_with("postgresql://user:pass@localhost:5432/day_captain")
+        self.assertIs(app.storage, fake_storage)
 
 
 if __name__ == "__main__":

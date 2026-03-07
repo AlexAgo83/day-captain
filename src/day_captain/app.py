@@ -16,6 +16,7 @@ from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import GraphCalendarCollector
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.adapters.graph import GraphMailCollector
+from day_captain.adapters.storage import PostgresStorage
 from day_captain.adapters.storage import SQLiteStorage
 from day_captain.config import DayCaptainSettings
 from day_captain.models import AuthContext
@@ -339,7 +340,12 @@ def build_application(
         client_id=resolved_settings.graph_client_id,
         timeout_seconds=resolved_settings.graph_timeout_seconds,
     )
-    resolved_storage = storage or SQLiteStorage(resolved_settings.sqlite_path)
+    if storage is not None:
+        resolved_storage = storage
+    elif resolved_settings.database_url:
+        resolved_storage = PostgresStorage(resolved_settings.database_url)
+    else:
+        resolved_storage = SQLiteStorage(resolved_settings.sqlite_path)
     if auth_provider is not None:
         resolved_auth_provider = auth_provider
     elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:

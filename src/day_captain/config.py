@@ -25,6 +25,10 @@ def _parse_scopes(value: str) -> Tuple[str, ...]:
 class DayCaptainSettings:
     environment: str = "development"
     sqlite_path: str = "day_captain.sqlite3"
+    database_url: str = ""
+    http_host: str = "0.0.0.0"
+    http_port: int = 8000
+    job_secret: str = ""
     delivery_mode: str = "json"
     default_lookback_hours: int = 24
     graph_tenant_id: str = "common"
@@ -43,6 +47,10 @@ class DayCaptainSettings:
         return cls(
             environment=os.getenv("DAY_CAPTAIN_ENV", "development"),
             sqlite_path=os.getenv("DAY_CAPTAIN_SQLITE_PATH", "day_captain.sqlite3"),
+            database_url=os.getenv("DAY_CAPTAIN_DATABASE_URL", ""),
+            http_host=os.getenv("DAY_CAPTAIN_HTTP_HOST", "0.0.0.0"),
+            http_port=int(os.getenv("PORT", os.getenv("DAY_CAPTAIN_HTTP_PORT", "8000"))),
+            job_secret=os.getenv("DAY_CAPTAIN_JOB_SECRET", ""),
             delivery_mode=os.getenv("DAY_CAPTAIN_DELIVERY_MODE", "json"),
             default_lookback_hours=int(os.getenv("DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS", "24")),
             graph_tenant_id=os.getenv("DAY_CAPTAIN_GRAPH_TENANT_ID", "common"),
