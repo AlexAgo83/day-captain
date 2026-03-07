@@ -8,8 +8,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.adapters.graph import GraphApiClient
+from day_captain.adapters.graph import GraphMailCollector
 from day_captain.adapters.graph import normalize_meeting
 from day_captain.adapters.graph import normalize_message
+from day_captain.models import AuthContext
 
 
 class FakeGraphApiClient:
@@ -28,6 +30,15 @@ class EmptyCollectionApiClient:
     def get_object(self, path, access_token, params=None, headers=None):
         self.calls.append((path, access_token))
         return {"@odata.context": "https://graph.microsoft.com/v1.0/$metadata#empty", "value": []}
+
+
+class CollectionRecorderApiClient:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def list_collection(self, path, access_token, params=None, headers=None):
+        self.calls.append((path, access_token, params))
+        return ()
 
 
 class GraphAdapterTest(unittest.TestCase):
@@ -108,6 +119,27 @@ class GraphAdapterTest(unittest.TestCase):
         items = client.list_collection("/me/calendar/calendarView", access_token="token")
 
         self.assertEqual(items, ())
+
+    def test_mail_collector_reads_from_inbox_only(self) -> None:
+        api_client = CollectionRecorderApiClient()
+        collector = GraphMailCollector(api_client)
+        auth_context = AuthContext(
+            access_token="delegated-token",
+            granted_scopes=("User.Read", "Mail.Read"),
+            user_id="user-123",
+        )
+
+        collector.collect_messages(
+            auth_context,
+            datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+        )
+
+        self.assertEqual(len(api_client.calls), 1)
+        path, access_token, params = api_client.calls[0]
+        self.assertEqual(path, "/me/mailFolders/Inbox/messages")
+        self.assertEqual(access_token, "delegated-token")
+        self.assertEqual(params["$top"], 100)
 
 
 if __name__ == "__main__":

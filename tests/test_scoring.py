@@ -186,6 +186,27 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].source_id, "msg-clean")
         self.assertEqual(prioritized[0].summary, "Bonjour, Voici la piece jointe.")
 
+    def test_marks_feedback_requests_as_actions(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-feedback",
+                thread_id="thread-feedback",
+                subject="Re: product demo review",
+                from_address="agency@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 55, tzinfo=timezone.utc),
+                body_preview="Bonjour, voici les dernieres remarques et feedback a integrer.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].section_name, "actions_to_take")
+        self.assertIn("action_keyword", prioritized[0].reason_codes)
+
 
 if __name__ == "__main__":
     unittest.main()

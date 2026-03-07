@@ -248,7 +248,7 @@ class GraphMailCollector:
             )
         )
         payloads = self.api_client.list_collection(
-            "/me/messages",
+            "/me/mailFolders/Inbox/messages",
             access_token=auth_context.access_token,
             params={
                 "$filter": filter_value,
