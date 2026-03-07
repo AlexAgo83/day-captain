@@ -1,9 +1,9 @@
 ## item_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 97%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 30%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -74,3 +74,4 @@ flowchart LR
 - Source file: `logics/request/req_000_day_captain_daily_assistant_for_microsoft_365.md`.
 - Supporting spec: `logics/specs/spec_000_day_captain_v1_digest_contract.md`.
 - Execution is intentionally split into three tasks: contract/bootstrap, ingestion/storage, and scoring/rendering/recall.
+- `task_000_day_captain_daily_assistant_for_microsoft_365` is complete and delivered the initial Python package skeleton, typed contracts, stub adapters, CLI entrypoints, and smoke tests.

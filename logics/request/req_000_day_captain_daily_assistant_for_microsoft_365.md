@@ -1,8 +1,8 @@
 ## req_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
+> Status: In Progress
+> Understanding: 98%
+> Confidence: 96%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -90,6 +90,6 @@ flowchart LR
 
 # Backlog
 - `item_000_day_captain_daily_assistant_for_microsoft_365` - V1 delivery slice refined by `spec_000_day_captain_v1_digest_contract`.
-- `task_000_day_captain_daily_assistant_for_microsoft_365` - Freeze the V1 contract and bootstrap the service skeleton.
+- `task_000_day_captain_daily_assistant_for_microsoft_365` - Freeze the V1 contract and bootstrap the service skeleton. Status: `Done`.
 - `task_001_day_captain_graph_ingestion_and_storage` - Implement Graph ingestion and SQLite persistence.
 - `task_002_day_captain_digest_scoring_recall_and_delivery` - Implement scoring, digest rendering, recall, and n8n-compatible delivery.
