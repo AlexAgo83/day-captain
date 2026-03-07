@@ -1,15 +1,18 @@
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+import io
 import json
 from pathlib import Path
 import sys
 import tempfile
 import unittest
+from urllib import error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
+from day_captain.adapters.auth import DeviceCodeSession
 from day_captain.adapters.auth import FileTokenCache
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.cli import _run_auth_command
@@ -39,7 +42,19 @@ class SequenceOpener:
     def __call__(self, req, timeout=0):
         self.requests.append((req.full_url, req.data.decode("utf-8") if req.data else ""))
         payload = self.payloads.pop(0)
+        if isinstance(payload, Exception):
+            raise payload
         return FakeResponse(payload)
+
+
+def http_json_error(status, payload):
+    return error.HTTPError(
+        url="https://login.microsoftonline.com/common/oauth2/v2.0/token",
+        code=status,
+        msg="error",
+        hdrs=None,
+        fp=io.BytesIO(json.dumps(payload).encode("utf-8")),
+    )
 
 
 class StaticApiClient:
@@ -91,6 +106,48 @@ class AuthFlowTest(unittest.TestCase):
         self.assertEqual(bundle.access_token, "new-access")
         self.assertEqual(bundle.refresh_token, "new-refresh")
         self.assertEqual(bundle.scopes, ("Mail.Read", "Calendars.Read"))
+
+    def test_device_code_poll_handles_authorization_pending_then_succeeds(self) -> None:
+        opener = SequenceOpener(
+            [
+                http_json_error(
+                    400,
+                    {
+                        "error": "authorization_pending",
+                        "error_description": "Authorization is pending.",
+                    },
+                ),
+                {
+                    "access_token": "ready-access",
+                    "refresh_token": "ready-refresh",
+                    "expires_in": 3600,
+                    "scope": "Mail.Read Calendars.Read",
+                    "token_type": "Bearer",
+                },
+            ]
+        )
+        sleeps = []
+        authenticator = DeviceCodeAuthenticator(
+            tenant_id="common",
+            client_id="client-id",
+            opener=opener,
+            sleeper=lambda seconds: sleeps.append(seconds),
+        )
+
+        bundle = authenticator.poll_for_tokens(
+            DeviceCodeSession(
+                device_code="device-code",
+                user_code="user-code",
+                verification_uri="https://microsoft.com/devicelogin",
+                expires_in=900,
+                interval=5,
+                message="",
+            ),
+            ("Mail.Read", "Calendars.Read"),
+        )
+
+        self.assertEqual(bundle.access_token, "ready-access")
+        self.assertEqual(sleeps, [5])
 
     def test_graph_provider_uses_cached_token_and_refresh(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

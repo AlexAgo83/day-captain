@@ -85,6 +85,11 @@ NEWSLETTER_PATTERNS = (
     "subscription",
     "daily news",
     "weekly update",
+    "aggregate report",
+    "report domain:",
+    "submitter:",
+    "dmarc",
+    "rua tag",
 )
 
 AUTOMATED_SENDERS = (
@@ -94,6 +99,19 @@ AUTOMATED_SENDERS = (
     "notifications",
     "automated",
     "daemon",
+    "postmaster",
+    "enterprise.protection.outlook.com",
+    "protection.outlook.com",
+)
+
+COLD_OUTREACH_PATTERNS = (
+    "we help",
+    "key features",
+    "connector and pinout",
+    "logo printing",
+    "oem support",
+    "custom cable solutions",
+    "commercial vehicles",
 )
 
 EXECUTIVE_HINTS = (
@@ -107,6 +125,36 @@ EXECUTIVE_HINTS = (
     "vp",
     "head",
     "leadership",
+)
+
+SECTION_PRIORITY = {
+    "critical_topics": 3,
+    "actions_to_take": 2,
+    "watch_items": 1,
+}
+
+TRIVIAL_PREVIEW_LINES = (
+    "sent from outlook for mac",
+    "sent from outlook for ios",
+    "envoye a partir de outlook pour ios",
+    "envoye a partir de outlook pour mac",
+    "envoyé à partir de outlook pour ios",
+    "envoyé à partir de outlook pour mac",
+)
+
+QUOTE_BOUNDARY_PREFIXES = (
+    "from:",
+    "de :",
+    "de:",
+    "date:",
+    "to:",
+    "a :",
+    "a:",
+    "à :",
+    "à:",
+    "subject:",
+    "objet :",
+    "objet:",
 )
 
 
@@ -136,6 +184,39 @@ def _clamp_weight(value: float) -> float:
     return max(-3.0, min(3.0, round(value, 2)))
 
 
+def _clean_preview(preview: str) -> str:
+    if not preview:
+        return ""
+    normalized = preview.replace("\r\n", "\n").replace("\r", "\n").strip()
+    if not normalized:
+        return ""
+
+    selected_lines = []
+    for raw_line in normalized.split("\n"):
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        lowered = line.lower()
+        if lowered in TRIVIAL_PREVIEW_LINES:
+            if selected_lines:
+                break
+            continue
+        if lowered.startswith("________________________________") or lowered.startswith("-----original message-----"):
+            break
+        if lowered.startswith(QUOTE_BOUNDARY_PREFIXES):
+            if selected_lines:
+                break
+            continue
+
+        selected_lines.append(line)
+        if len(selected_lines) >= 3:
+            break
+
+    cleaned = " ".join(selected_lines).strip()
+    return cleaned[:280]
+
+
 class DeterministicScoringEngine:
     def prioritize(
         self,
@@ -149,13 +230,55 @@ class DeterministicScoringEngine:
             preference.preference_key: preference.weight for preference in preferences
         }
         prioritized = []
+        thread_candidates = {}
         for message in messages:
             entry = self._score_message(message, preference_weights, now)
             if entry is not None:
-                prioritized.append(entry)
+                thread_key = self._thread_key(message)
+                existing = thread_candidates.get(thread_key)
+                if existing is None:
+                    thread_candidates[thread_key] = (message, entry, 1)
+                else:
+                    kept_message, kept_entry, duplicate_count = existing
+                    duplicate_count += 1
+                    if self._message_rank(message, entry) > self._message_rank(kept_message, kept_entry):
+                        thread_candidates[thread_key] = (message, entry, duplicate_count)
+                    else:
+                        thread_candidates[thread_key] = (kept_message, kept_entry, duplicate_count)
+        for _message, entry, duplicate_count in thread_candidates.values():
+            prioritized.append(self._with_thread_reason(entry, duplicate_count))
         for meeting in meetings:
             prioritized.append(self._score_meeting(meeting, now))
         return tuple(sorted(prioritized, key=lambda item: (-item.score, item.title.lower())))
+
+    def _thread_key(self, message: MessageRecord) -> str:
+        if message.thread_id:
+            return message.thread_id
+        subject = re.sub(r"^(re|fw|fwd)\s*:\s*", "", (message.subject or "").strip(), flags=re.IGNORECASE)
+        return subject.lower() or message.graph_message_id
+
+    def _message_rank(self, message: MessageRecord, entry: DigestEntry) -> tuple:
+        return (
+            SECTION_PRIORITY.get(entry.section_name, 0),
+            entry.score,
+            message.received_at.timestamp(),
+            1 if message.is_unread else 0,
+            1 if message.has_attachments else 0,
+        )
+
+    def _with_thread_reason(self, entry: DigestEntry, duplicate_count: int) -> DigestEntry:
+        if duplicate_count <= 1:
+            return entry
+        return DigestEntry(
+            title=entry.title,
+            summary=entry.summary,
+            section_name=entry.section_name,
+            source_kind=entry.source_kind,
+            source_id=entry.source_id,
+            score=entry.score,
+            reason_codes=tuple(entry.reason_codes) + ("thread_collapsed",),
+            guardrail_applied=entry.guardrail_applied,
+        )
 
     def _score_message(
         self,
@@ -164,11 +287,15 @@ class DeterministicScoringEngine:
         now: datetime,
     ) -> Optional[DigestEntry]:
         subject = message.subject or "(no subject)"
+        cleaned_preview = _clean_preview(message.body_preview)
         combined_text = _normalize_text(subject, message.body_preview)
         sender = message.from_address.lower()
         reason_codes = []
         score = 0.0
         guardrail = False
+
+        if not (message.subject or "").strip() and not cleaned_preview:
+            return None
 
         sender_key = "sender:{0}".format(sender)
         domain = _domain_from_email(sender)
@@ -220,13 +347,21 @@ class DeterministicScoringEngine:
 
         is_newsletter = _contains_any(combined_text, NEWSLETTER_PATTERNS)
         is_automated = _contains_any(sender, AUTOMATED_SENDERS)
+        is_bulk_report = "report domain:" in combined_text and "submitter:" in combined_text
+        is_cold_outreach = _contains_any(combined_text, COLD_OUTREACH_PATTERNS)
         low_signal_cc = bool(message.cc_addresses and not message.to_addresses and not guardrail and "action_keyword" not in reason_codes)
-        if (is_newsletter or is_automated or low_signal_cc) and not guardrail:
+        if is_bulk_report:
+            reason_codes.append("bulk_report")
+        if is_cold_outreach:
+            reason_codes.append("cold_outreach")
+        if (is_newsletter or is_automated or is_bulk_report or is_cold_outreach or low_signal_cc) and not guardrail:
             reason_codes.append("noise_filtered")
-            if is_newsletter or is_automated:
+            if is_newsletter or is_automated or is_bulk_report or is_cold_outreach:
                 return None
             if score < 1.5:
                 return None
+        if score <= 0.0 and not guardrail:
+            return None
 
         if guardrail:
             section_name = "critical_topics"
@@ -235,7 +370,7 @@ class DeterministicScoringEngine:
         else:
             section_name = "watch_items"
 
-        summary = self._summarize_message(message, reason_codes)
+        summary = self._summarize_message(message, cleaned_preview, reason_codes)
         return DigestEntry(
             title=subject,
             summary=summary,
@@ -277,8 +412,13 @@ class DeterministicScoringEngine:
             guardrail_applied=False,
         )
 
-    def _summarize_message(self, message: MessageRecord, reason_codes: Sequence[str]) -> str:
-        preview = (message.body_preview or "").strip()
+    def _summarize_message(
+        self,
+        message: MessageRecord,
+        cleaned_preview: str,
+        reason_codes: Sequence[str],
+    ) -> str:
+        preview = cleaned_preview or (message.body_preview or "").strip()
         base = preview if preview else "From {0}".format(message.from_address)
         if "critical_keyword" in reason_codes:
             return "Critical: {0}".format(base)

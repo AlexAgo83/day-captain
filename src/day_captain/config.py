@@ -13,9 +13,12 @@ def _parse_bool(value: str, default: bool = False) -> bool:
 
 def _parse_scopes(value: str) -> Tuple[str, ...]:
     if not value:
-        return ("Mail.Read", "Calendars.Read")
+        return ("User.Read", "Mail.Read", "Calendars.Read")
     parts = [part.strip() for part in value.split(",")]
-    return tuple(part for part in parts if part)
+    scopes = [part for part in parts if part]
+    if "User.Read" not in scopes:
+        scopes.insert(0, "User.Read")
+    return tuple(scopes)
 
 
 @dataclass(frozen=True)
@@ -33,7 +36,7 @@ class DayCaptainSettings:
     graph_user_id: str = ""
     graph_send_enabled: bool = False
     graph_timeout_seconds: int = 30
-    graph_scopes: Tuple[str, ...] = ("Mail.Read", "Calendars.Read")
+    graph_scopes: Tuple[str, ...] = ("User.Read", "Mail.Read", "Calendars.Read")
 
     @classmethod
     def from_env(cls) -> "DayCaptainSettings":
