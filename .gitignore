@@ -1,6 +1,7 @@
 .env
 .env.*
 !.env.example
+.env.render
 
 .day_captain_auth.json
 .day_captain_auth.*.json
@@ -9,6 +10,7 @@ day_captain.sqlite3
 *.sqlite3
 *.sqlite
 *.db
+*.egg-info/
 
 logics/external/private/
 tmp/
