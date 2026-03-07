@@ -1,9 +1,9 @@
 ## task_007_day_captain_mailbox_delivery_end_to_end_validation - Validate delegated Outlook delivery end to end in the real mailbox
 > From version: 0.3.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 99%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,11 +25,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Update local config to enable `graph_send`, explicit send mode, and `Mail.Send` in delegated scopes.
-- [ ] 2. Re-run delegated auth login so the local token cache contains the required send scope.
-- [ ] 3. Execute a real local digest send and confirm the message is received in the target mailbox.
-- [ ] 4. Capture the exact validation outcome, observed constraints, and any follow-up gaps.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Update local config to enable `graph_send`, explicit send mode, and `Mail.Send` in delegated scopes.
+- [x] 2. Re-run delegated auth login so the local token cache contains the required send scope.
+- [x] 3. Execute a real local digest send and confirm the message is received in the target mailbox.
+- [x] 4. Capture the exact validation outcome, observed constraints, and any follow-up gaps.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC2 -> Plan steps 1 and 2 validate prerequisites. Proof: task explicitly requires send-mode config and refreshed delegated auth.
@@ -45,15 +45,19 @@ flowchart LR
 - set -a && source .env && set +a
 - PYTHONPATH=src python3 -m day_captain auth login
 - PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force
-- mailbox receipt check in Outlook
+- mailbox receipt check via Microsoft Graph mailbox readback (`SentItems` and `Inbox`)
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation and real mailbox validation.
+- Updated local validation config to `DAY_CAPTAIN_DELIVERY_MODE=graph_send`, `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`, and delegated scopes including `Mail.Send`.
+- Re-ran delegated `auth login` and confirmed the refreshed cache contained `Mail.Send`.
+- Executed a real local `morning-digest --delivery-mode graph_send --force` run successfully against Microsoft Graph.
+- Verified the delivered message subject `Day Captain digest for 2026-03-07` in both `SentItems` and `Inbox` via Graph mailbox readback, confirming end-to-end receipt in the authenticated mailbox.
+- Observed follow-up detail: the first live send attempt failed with `ErrorInvalidRecipients` until the send path defaulted missing recipients to the authenticated mailbox profile; that fix is now implemented in `task_006`.

@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 100%
+> Confidence: 99%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -101,6 +101,6 @@ flowchart LR
 - The repository now includes Microsoft Entra ID device-code auth and token cache handling for delegated Microsoft Graph access in local/CLI flows.
 - `task_002_day_captain_digest_scoring_recall_and_delivery` - Implement scoring, digest rendering, recall, and webhook/Graph-send delivery. Status: `Delivered, pending chain closure`.
 - `task_003_day_captain_render_deployment_and_scheduler` - Package the hosted deployment path on Render with GitHub Actions scheduling and Postgres-backed persistence. Status: `Ready`.
-- `item_003_day_captain_graph_send_and_mailbox_delivery_validation` - Add real delegated Outlook delivery and mailbox validation for the digest send path. Status: `Ready`.
-- `task_006_day_captain_graph_send_delivery_execution` - Implement real Graph `sendMail` execution for digest delivery. Status: `Ready`.
-- `task_007_day_captain_mailbox_delivery_end_to_end_validation` - Validate the delegated send flow end to end against the real mailbox. Status: `Ready`.
+- `item_003_day_captain_graph_send_and_mailbox_delivery_validation` - Add real delegated Outlook delivery and mailbox validation for the digest send path. Status: `Done`.
+- `task_006_day_captain_graph_send_delivery_execution` - Implement real Graph `sendMail` execution for digest delivery. Status: `Done`.
+- `task_007_day_captain_mailbox_delivery_end_to_end_validation` - Validate the delegated send flow end to end against the real mailbox. Status: `Done`.

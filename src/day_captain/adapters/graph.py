@@ -329,11 +329,25 @@ class GraphDigestDelivery:
         graph_message = payload.delivery_payload.get("graph_message")
         if not isinstance(graph_message, dict):
             raise ValueError("graph_send delivery requires a `graph_message` payload.")
+        message_payload = dict(graph_message)
+        recipients = message_payload.get("toRecipients")
+        if not isinstance(recipients, list) or not recipients:
+            profile = self.api_client.get_object("/me", access_token=auth_context.access_token)
+            mailbox_address = str(profile.get("mail") or profile.get("userPrincipalName") or "").strip()
+            if not mailbox_address:
+                raise ValueError("graph_send delivery could not determine a mailbox recipient from the Graph profile.")
+            message_payload["toRecipients"] = [
+                {
+                    "emailAddress": {
+                        "address": mailbox_address,
+                    }
+                }
+            ]
         self.api_client.post_object(
             "/me/sendMail",
             access_token=auth_context.access_token,
             payload={
-                "message": graph_message,
+                "message": message_payload,
                 "saveToSentItems": True,
             },
             expected_statuses=(202,),
