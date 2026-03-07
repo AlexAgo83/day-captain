@@ -8,10 +8,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.adapters.graph import GraphApiClient
+from day_captain.adapters.graph import GraphDigestDelivery
 from day_captain.adapters.graph import GraphMailCollector
 from day_captain.adapters.graph import normalize_meeting
 from day_captain.adapters.graph import normalize_message
 from day_captain.models import AuthContext
+from day_captain.models import DigestPayload
 
 
 class FakeGraphApiClient:
@@ -39,6 +41,15 @@ class CollectionRecorderApiClient:
     def list_collection(self, path, access_token, params=None, headers=None):
         self.calls.append((path, access_token, params))
         return ()
+
+
+class DeliveryRecorderApiClient:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def post_object(self, path, access_token, payload, headers=None, expected_statuses=(200, 201, 202, 204)):
+        self.calls.append((path, access_token, payload, headers, expected_statuses))
+        return {}
 
 
 class GraphAdapterTest(unittest.TestCase):
@@ -140,6 +151,38 @@ class GraphAdapterTest(unittest.TestCase):
         self.assertEqual(path, "/me/mailFolders/Inbox/messages")
         self.assertEqual(access_token, "delegated-token")
         self.assertEqual(params["$top"], 100)
+
+    def test_graph_digest_delivery_posts_send_mail_request(self) -> None:
+        api_client = DeliveryRecorderApiClient()
+        delivery = GraphDigestDelivery(api_client)
+        auth_context = AuthContext(
+            access_token="delegated-token",
+            granted_scopes=("User.Read", "Mail.Read", "Mail.Send"),
+            user_id="user-123",
+        )
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="graph_send",
+            delivery_payload={
+                "graph_message": {
+                    "subject": "Day Captain digest",
+                    "body": {"contentType": "Text", "content": "Digest body"},
+                }
+            },
+        )
+
+        delivery.deliver_digest(auth_context, payload)
+
+        self.assertEqual(len(api_client.calls), 1)
+        path, access_token, posted_payload, _headers, expected_statuses = api_client.calls[0]
+        self.assertEqual(path, "/me/sendMail")
+        self.assertEqual(access_token, "delegated-token")
+        self.assertEqual(posted_payload["message"]["subject"], "Day Captain digest")
+        self.assertTrue(posted_payload["saveToSentItems"])
+        self.assertEqual(expected_statuses, (202,))
 
 
 if __name__ == "__main__":
