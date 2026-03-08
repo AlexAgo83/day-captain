@@ -28,9 +28,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_008_day_captain_llm_top_summary_block`] --> Problem[Digest lacks a high-level opening synthesis]
+    Req[Request source 008 day captain llm top summary block] --> Problem[Digest lacks a high level opening synthesis]
     Problem --> Scope[Short top summary over existing sections]
-    Scope --> Tasks[`task_015`]
+    Scope --> Tasks[task 015]
 ```
 
 # Acceptance criteria

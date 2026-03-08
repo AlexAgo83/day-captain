@@ -33,8 +33,8 @@
 ```mermaid
 flowchart LR
     Local[Local delegated auth] --> CLI[CLI and local validation]
-    Hosted[Hosted app-only auth] --> Service[Render-hosted service]
-    Service --> Users[/users/{id} mail + calendar + sendMail/]
+    Hosted[Hosted app only auth] --> Service[Render hosted service]
+    Service --> Users[Users id mail calendar and send routes]
     Users --> Digest[Morning digest execution]
     Digest --> Mailbox[Target mailbox]
 ```

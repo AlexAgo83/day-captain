@@ -17,9 +17,9 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_005_day_captain_meeting_horizon_fallbacks`] --> Step1[Define meeting-horizon fallback rules]
+    Backlog[Backlog source 005 day captain meeting horizon fallbacks] --> Step1[Define meeting horizon fallback rules]
     Step1 --> Step2[Render explicit labels for fallback day selection]
-    Step2 --> Step3[Validate json and graph_send outputs]
+    Step2 --> Step3[Validate json and graph send outputs]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]
 ```

@@ -17,11 +17,11 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_010_day_captain_tenant_scoped_multi_user_digests`] --> Step1[Add stable tenant and user scopes to domain and storage]
-    Step1 --> Step2[Add operator-managed tenant configuration and explicit target users]
+    Backlog[Backlog source 010 day captain tenant scoped multi user digests] --> Step1[Add stable tenant and user scopes to domain and storage]
+    Step1 --> Step2[Add operator managed tenant configuration and explicit target users]
     Step2 --> Step3[Execute digest and delivery per selected user]
     Step3 --> Step4[Clean up env and config surface]
-    Step4 --> Step5[Add isolation tests and migration/docs]
+    Step4 --> Step5[Add isolation tests and migration docs]
     Step5 --> Validation[Validation]
     Validation --> Report[Report and Done]
 ```

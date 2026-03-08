@@ -29,9 +29,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_003_day_captain_graph_send_and_mailbox_delivery_validation`] --> Problem[Digest stops at payload generation]
-    Problem --> Scope[Real Graph send + mailbox proof]
-    Scope --> Tasks[`task_006` implementation + `task_007` validation]
+    Req[Request source 003 day captain graph send and mailbox delivery validation] --> Problem[Digest stops at payload generation]
+    Problem --> Scope[Real Graph send and mailbox proof]
+    Scope --> Tasks[task 006 implementation and task 007 validation]
 ```
 
 # Acceptance criteria

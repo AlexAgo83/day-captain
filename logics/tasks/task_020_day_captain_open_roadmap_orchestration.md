@@ -17,11 +17,11 @@
 
 ```mermaid
 flowchart LR
-    Start[Current state] --> Auth[`task_016` app-only hosted auth]
-    Auth --> Hosted[`task_017` hosted validation]
-    Hosted --> Multi[`task_018` tenant-scoped multi-user foundations]
-    Multi --> Ops[`task_019` tenant-scoped validation and operator docs]
-    Ops --> LLM[`task_010` live LLM wording activation]
+    Start[Current state] --> Auth[task 016 app only hosted auth]
+    Auth --> Hosted[task 017 hosted validation]
+    Hosted --> Multi[task 018 tenant scoped multi user foundations]
+    Multi --> Ops[task 019 tenant scoped validation and operator docs]
+    Ops --> LLM[task 010 live LLM wording activation]
     LLM --> Close[Close open delivery slices]
 ```
 

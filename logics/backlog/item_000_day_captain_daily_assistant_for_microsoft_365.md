@@ -32,12 +32,12 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_000_day_captain_daily_assistant_for_microsoft_365`] --> Collect[Graph mail and calendar collection]
-    Collect --> Spec[Spec: `spec_000_day_captain_v1_digest_contract`]
-    Spec --> Prioritize[Filter, score, and apply guardrails]
+    Req[Request source 000 day captain daily assistant for microsoft 365] --> Collect[Graph mail and calendar collection]
+    Collect --> Spec[Spec source spec 000 day captain v1 digest contract]
+    Spec --> Prioritize[Filter score and apply guardrails]
     Prioritize --> Digest[Render the morning digest]
     Digest --> Recall[Store context for later recall]
-    Recall --> Tasks[Tasks: `task_000` + `task_001` + `task_002`]
+    Recall --> Tasks[Tasks task 000 and task 001 and task 002]
 ```
 
 # Acceptance criteria

@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_003_day_captain_graph_send_and_mailbox_delivery_validation`] --> Step1[Enable Mail.Send and graph_send config locally]
+    Backlog[Backlog source 003 day captain graph send and mailbox delivery validation] --> Step1[Enable Mail Send and graph send config locally]
     Step1 --> Step2[Refresh delegated auth with the required scope]
     Step2 --> Step3[Run a real digest send and verify mailbox receipt]
     Step3 --> Validation[Validation]

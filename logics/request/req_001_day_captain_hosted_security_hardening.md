@@ -42,12 +42,12 @@
 ```mermaid
 flowchart LR
     Scheduler[GitHub Actions scheduler] --> Trigger[Hosted job trigger]
-    Trigger --> Service[Render-hosted Python service]
+    Trigger --> Service[Render hosted Python service]
     Service --> Graph[Microsoft Graph mail and calendar access]
     Service --> Store[Hosted persistence]
     Service --> Digest[Digest payload or Graph send]
     Digest --> User[Single hosted V1 user]
-    Risks[Logs, secrets, tokens, runtime, error leakage] --> Guardrails[Security hardening]
+    Risks[Logs secrets tokens runtime error leakage] --> Guardrails[Security hardening]
     Guardrails --> Service
     Guardrails --> Scheduler
 ```

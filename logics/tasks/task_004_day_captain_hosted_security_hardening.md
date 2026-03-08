@@ -17,9 +17,9 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_001_day_captain_hosted_security_hardening`] --> Step1[Harden hosted trigger auth, responses, and log behavior]
+    Backlog[Backlog source 001 day captain hosted security hardening] --> Step1[Harden hosted trigger auth responses and log behavior]
     Step1 --> Step2[Move hosted runtime and token handling to safer production defaults]
-    Step2 --> Step3[Add tests, deployment checklist, and hosted security docs]
+    Step2 --> Step3[Add tests deployment checklist and hosted security docs]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]
 ```

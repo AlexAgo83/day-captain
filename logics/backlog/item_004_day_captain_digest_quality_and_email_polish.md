@@ -30,9 +30,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_004_day_captain_digest_quality_and_email_polish`] --> Problem[Delivered digest feels too raw]
-    Problem --> Scope[Rendering + signal quality + wording quality]
-    Scope --> Tasks[`task_008` + `task_009` + `task_010`]
+    Req[Request source 004 day captain digest quality and email polish] --> Problem[Delivered digest feels too raw]
+    Problem --> Scope[Rendering and signal quality and wording quality]
+    Scope --> Tasks[task 008 and task 009 and task 010]
 ```
 
 # Acceptance criteria

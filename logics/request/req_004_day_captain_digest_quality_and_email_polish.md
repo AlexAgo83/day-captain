@@ -34,7 +34,7 @@
 
 ```mermaid
 flowchart LR
-    Data[Mailbox + calendar inputs] --> Score[Prioritization and filtering]
+    Data[Mailbox and calendar inputs] --> Score[Prioritization and filtering]
     Score --> Wording[Bounded LLM wording]
     Wording --> Render[Readable email rendering]
     Render --> Mailbox[Delivered Outlook digest]

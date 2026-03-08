@@ -34,10 +34,10 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_001_day_captain_hosted_security_hardening`] --> Problem[Hosted deployment security gaps]
+    Req[Request source 001 day captain hosted security hardening] --> Problem[Hosted deployment security gaps]
     Problem --> Scope[Constrain the hosted attack surface]
     Scope --> AC[Hardening acceptance criteria]
-    AC --> Tasks[Implementation task: `task_004_day_captain_hosted_security_hardening`]
+    AC --> Tasks[Implementation task task 004 day captain hosted security hardening]
 ```
 
 # Acceptance criteria

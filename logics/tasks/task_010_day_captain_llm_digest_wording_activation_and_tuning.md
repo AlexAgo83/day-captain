@@ -17,8 +17,8 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_004_day_captain_digest_quality_and_email_polish`] --> Step1[Enable and configure bounded LLM wording locally]
-    Step1 --> Step2[Tune prompts/settings for delivered digests]
+    Backlog[Backlog source 004 day captain digest quality and email polish] --> Step1[Enable and configure bounded LLM wording locally]
+    Step1 --> Step2[Tune prompts settings for delivered digests]
     Step2 --> Step3[Validate wording quality and fallback behavior]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]

@@ -68,17 +68,17 @@
 
 ```mermaid
 flowchart LR
-    Mail[Outlook emails since previous day] --> Filter[Anti-noise filter]
+    Mail[Outlook emails since previous day] --> Filter[Anti noise filter]
     Cal[Calendar meetings for today] --> Score[Priority scoring]
     Filter --> Score
     Prefs[User preferences and feedback] --> Score
     Score --> Summary[LLM summary generation]
     Summary --> Digest[Morning digest]
     Digest --> User[Busy Microsoft 365 user]
-    User --> Recall[On-demand recall later in the day]
-    User --> Feedback[Useful / not useful feedback]
+    User --> Recall[On demand recall later in the day]
+    User --> Feedback[Useful not useful feedback]
     Feedback --> Prefs
-    Score --> Guardrails[Critical-topic guardrails]
+    Score --> Guardrails[Critical topic guardrails]
     Guardrails --> Digest
 ```
 

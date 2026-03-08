@@ -28,9 +28,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_009_day_captain_hosted_graph_app_only_authentication`] --> Problem[Hosted delegated auth is brittle]
-    Problem --> Scope[App-only hosted auth plus explicit mailbox targeting]
-    Scope --> Tasks[`task_016` + `task_017`]
+    Req[Request source 009 day captain hosted graph app only authentication] --> Problem[Hosted delegated auth is brittle]
+    Problem --> Scope[App only hosted auth plus explicit mailbox targeting]
+    Scope --> Tasks[task 016 and task 017]
 ```
 
 # Acceptance criteria

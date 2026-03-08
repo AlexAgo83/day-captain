@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_009_day_captain_hosted_graph_app_only_authentication`] --> Step1[Configure hosted app-only secrets and mailbox target]
+    Backlog[Backlog source 009 day captain hosted graph app only authentication] --> Step1[Configure hosted app only secrets and mailbox target]
     Step1 --> Step2[Trigger the hosted digest]
     Step2 --> Step3[Validate mailbox delivery and hosted persistence]
     Step3 --> Report[Report and Done]

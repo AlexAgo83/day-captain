@@ -38,7 +38,7 @@ flowchart LR
     Users --> Scheduler[Digest scheduler]
     Scheduler --> UserA[Run for user A]
     Scheduler --> UserB[Run for user B]
-    UserA --> Store[(Tenant + user scoped storage)]
+    UserA --> Store[Tenant and user scoped storage]
     UserB --> Store
     Store --> DigestA[Digest for user A]
     Store --> DigestB[Digest for user B]

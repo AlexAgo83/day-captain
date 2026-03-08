@@ -30,10 +30,10 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_002_day_captain_llm_digest_wording_for_shortlisted_items`] --> Problem[Digest wording remains heuristic]
+    Req[Request source 002 day captain llm digest wording for shortlisted items] --> Problem[Digest wording remains heuristic]
     Problem --> Scope[Bounded LLM wording layer]
-    Scope --> AC[Cheap, safe, fallback-friendly AI integration]
-    AC --> Task[Implementation task: `task_005_day_captain_llm_digest_wording_for_shortlisted_items`]
+    Scope --> AC[Cheap safe fallback friendly AI integration]
+    AC --> Task[Implementation task task 005 day captain llm digest wording for shortlisted items]
 ```
 
 # Acceptance criteria

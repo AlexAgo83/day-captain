@@ -17,9 +17,9 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_002_day_captain_llm_digest_wording_for_shortlisted_items`] --> Step1[Add config and provider abstraction for bounded LLM use]
-    Step1 --> Step2[Rewrite shortlisted digest-item summaries while preserving deterministic decisions]
-    Step2 --> Step3[Add fallback handling, docs, and automated coverage]
+    Backlog[Backlog source 002 day captain llm digest wording for shortlisted items] --> Step1[Add config and provider abstraction for bounded LLM use]
+    Step1 --> Step2[Rewrite shortlisted digest item summaries while preserving deterministic decisions]
+    Step2 --> Step3[Add fallback handling docs and automated coverage]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]
 ```

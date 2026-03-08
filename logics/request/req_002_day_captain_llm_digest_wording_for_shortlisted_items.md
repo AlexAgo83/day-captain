@@ -43,7 +43,7 @@ flowchart LR
     Shortlist --> LLM[Bounded LLM wording pass]
     LLM --> Digest[Polished morning digest]
     Digest --> User[Single user]
-    Config[Provider, model, key, limits, timeout] --> LLM
+    Config[Provider model key limits timeout] --> LLM
     Fallback[Deterministic summary fallback] --> Digest
 ```
 

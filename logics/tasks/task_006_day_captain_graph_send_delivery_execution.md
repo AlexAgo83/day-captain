@@ -17,8 +17,8 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_003_day_captain_graph_send_and_mailbox_delivery_validation`] --> Step1[Add Graph send adapter support and config/auth guardrails]
-    Step1 --> Step2[Execute sendMail for graph_send delivery]
+    Backlog[Backlog source 003 day captain graph send and mailbox delivery validation] --> Step1[Add Graph send adapter support and config auth guardrails]
+    Step1 --> Step2[Execute sendMail for graph send delivery]
     Step2 --> Step3[Add tests and docs for the send path]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]

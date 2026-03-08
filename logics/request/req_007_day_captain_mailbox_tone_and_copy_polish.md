@@ -39,7 +39,7 @@
 flowchart LR
     Feedback[Real delivered digest review] --> Tone[Header and metadata tone]
     Feedback --> Subject[Inbox subject line]
-    Feedback --> Empty[Empty-state wording]
+    Feedback --> Empty[Empty state wording]
     Feedback --> Copy[Deterministic assistant copy]
     Tone --> Mailbox[Delivered digest quality]
     Subject --> Mailbox
