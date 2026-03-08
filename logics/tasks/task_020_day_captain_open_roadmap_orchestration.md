@@ -2,8 +2,8 @@
 > From version: 0.8.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 98%
-> Progress: 95%
+> Confidence: 99%
+> Progress: 96%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -57,4 +57,5 @@ flowchart LR
 # Report
 - The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, hosted Render proof for app-only auth is complete, and private-ops scheduler proof with cold-start-tolerant wake-up behavior is now also complete.
 - Scheduler, operator docs, target-user validation, private-ops bootstrap tooling, and hosted validation helpers now align with that order, so the remaining closure path is narrower and explicit.
-- Remaining work for closure is now concentrated almost entirely in `task_010`: live LLM wording validation on the delivered digest path, plus final parent-chain cleanup once that slice is closed.
+- Fresh verification on Sunday, March 8, 2026 reconfirmed that the remaining closure blocker is not repo work: the live LLM provider still returns `429 insufficient_quota`, while the application continues to fall back safely to deterministic wording.
+- Remaining work for closure is now concentrated almost entirely in `task_010`: enable provider quota or billing, rerun live delivered validation with actual LLM output, then perform the final parent-chain cleanup once that slice is closed.
