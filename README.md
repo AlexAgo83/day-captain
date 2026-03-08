@@ -125,6 +125,8 @@ DAY_CAPTAIN_GRAPH_CLIENT_ID=...
 DAY_CAPTAIN_GRAPH_CLIENT_SECRET=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
 DAY_CAPTAIN_TARGET_USERS=alice@example.com,bob@example.com
+DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com
+DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=alice@example.com
 DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_DIGEST_LANGUAGE=en
@@ -137,6 +139,8 @@ DAY_CAPTAIN_LLM_API_KEY=...
 Important hosted note:
 - hosted runs are now tenant-scoped and user-scoped, with one explicit target user per execution
 - configure explicit recipients with `DAY_CAPTAIN_TARGET_USERS`
+- `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` can send mail from a dedicated mailbox such as `daycaptain@company.com` while reads stay scoped to the selected target mailbox
+- `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can allow a bounded helper sender set for inbound email-command recall in single-target setups
 - `DAY_CAPTAIN_GRAPH_USER_ID` remains supported as a single-user fallback and default target
 - hosted Graph auth now supports an explicit `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` path for unattended environments
 
@@ -246,9 +250,11 @@ Hosted app-only workflow:
 - provide `DAY_CAPTAIN_GRAPH_CLIENT_SECRET`
 - provide `DAY_CAPTAIN_GRAPH_TENANT_ID`
 - provide `DAY_CAPTAIN_TARGET_USERS`
+- optionally provide `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` for a dedicated sender mailbox
+- optionally provide `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` for bounded inbound command senders in a single-target deployment
 - grant the corresponding Graph application permissions in Entra
 
-In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity. When several users are configured, each run must choose one explicit target user.
+In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity. When several users are configured, each run must choose one explicit target user. If `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` is set, reads still target the selected mailbox but `sendMail` is routed through the dedicated sender mailbox instead.
 
 ## Local usage
 
@@ -277,6 +283,15 @@ Recall a specific configured target:
 
 ```bash
 PYTHONPATH=src python3 -m day_captain recall-digest --target-user alice@example.com
+```
+
+Process an inbound email command locally:
+
+```bash
+PYTHONPATH=src python3 -m day_captain email-command-recall \
+  --message-id inbound-123 \
+  --sender-address alice@example.com \
+  --subject recall-week
 ```
 
 Record feedback:
@@ -342,6 +357,56 @@ curl -X POST http://127.0.0.1:8000/jobs/recall-digest \
   -d '{}'
 ```
 
+Process an inbound email command through HTTP:
+
+```bash
+curl -X POST http://127.0.0.1:8000/jobs/email-command-recall \
+  -H "Content-Type: application/json" \
+  -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
+  -d '{"command_message_id":"inbound-123","sender_address":"alice@example.com","subject":"recall-week"}'
+```
+
+## Email-command recall
+
+Day Captain now supports a bounded inbound command surface intended to be fed later by a Graph webhook, a polling job, or an external Microsoft 365 automation.
+
+Supported commands:
+- `recall`
+- `recall-today`
+- `recall-week`
+
+Behavior:
+- `recall` and `recall-today` generate a digest for the current local day.
+- `recall-week` generates a digest from Monday `00:00` through now in `DAY_CAPTAIN_DISPLAY_TIMEZONE`.
+- duplicate inbound events are suppressed by `command_message_id`.
+- sender validation is deterministic:
+  - if the sender matches one configured target user, that user is recalled
+  - in a single-target deployment, `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can authorize a helper sender such as `assistant@company.com`
+
+Hosted trigger tooling also supports this path:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=https://your-render-service.example.com \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain trigger-hosted-job \
+  --job email-command-recall \
+  --message-id inbound-123 \
+  --sender-address alice@example.com \
+  --command-text recall-week
+```
+
+And hosted validation can now include it:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=https://your-render-service.example.com \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain validate-hosted-service \
+  --target-user alice@example.com \
+  --check-email-command \
+  --email-command-sender alice@example.com \
+  --email-command-text recall-week
+```
+
 ## Testing
 
 Run the full test suite:
@@ -389,6 +454,8 @@ Expected hosted secrets/config include:
 - `DAY_CAPTAIN_DATABASE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
 - Graph / Entra settings
+- optional `DAY_CAPTAIN_GRAPH_SENDER_USER_ID`
+- optional `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
 
 When `X-Day-Captain-Secret` is supplied to `GET /healthz`, the service also returns a runtime summary with the resolved auth mode, storage backend, target-user count, and delivery configuration. This is intended for private ops validation, not public monitoring.
 

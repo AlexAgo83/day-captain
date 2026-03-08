@@ -26,6 +26,10 @@ services:
         sync: false
       - key: DAY_CAPTAIN_TARGET_USERS
         sync: false
+      - key: DAY_CAPTAIN_GRAPH_SENDER_USER_ID
+        sync: false
+      - key: DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS
+        sync: false
       - key: DAY_CAPTAIN_DISPLAY_TIMEZONE
         sync: false
       - key: DAY_CAPTAIN_DIGEST_LANGUAGE
