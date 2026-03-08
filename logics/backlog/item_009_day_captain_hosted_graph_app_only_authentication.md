@@ -1,9 +1,9 @@
 ## item_009_day_captain_hosted_graph_app_only_authentication - Replace hosted delegated Graph refresh handling with app-only auth
 > From version: 0.7.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 82%
+> Progress: 100%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -55,7 +55,7 @@ flowchart LR
 
 # Links
 - Request: `req_009_day_captain_hosted_graph_app_only_authentication`
-- Primary task(s): `task_016_day_captain_hosted_graph_app_only_authentication_implementation` (`Delivered, pending deployed validation`), `task_017_day_captain_hosted_graph_app_only_authentication_validation` (`In Progress`)
+- Primary task(s): `task_016_day_captain_hosted_graph_app_only_authentication_implementation` (`Done`), `task_017_day_captain_hosted_graph_app_only_authentication_validation` (`Done`)
 
 # Priority
 - Impact: High - this is the cleanest path to a stable hosted deployment.
@@ -64,5 +64,5 @@ flowchart LR
 # Notes
 - Derived from request `req_009_day_captain_hosted_graph_app_only_authentication`.
 - This slice intentionally keeps local delegated auth because it still provides the best developer ergonomics for local mailbox testing.
-- `task_016_day_captain_hosted_graph_app_only_authentication_implementation` is complete: hosted app-only auth, explicit `/users/{id}` routing, and supporting tests/docs are now in place.
-- `task_017_day_captain_hosted_graph_app_only_authentication_validation` is now materially advanced: local preflight validation, runtime summary checks, scheduler targeting support, cold-start-aware readiness tooling, and hosted setup docs are in place, with Render-hosted proof still pending.
+- `task_016_day_captain_hosted_graph_app_only_authentication_implementation` is complete: hosted app-only auth, explicit `/users/{id}` routing, and supporting tests/docs are in place.
+- `task_017_day_captain_hosted_graph_app_only_authentication_validation` is complete: the Render-hosted service now proves `app_only` auth, Postgres-backed storage, and successful `morning-digest` plus `recall-digest` execution against the real mailbox target after Entra `Application` permissions and admin consent were corrected.
