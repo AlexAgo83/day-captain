@@ -66,6 +66,7 @@ class DayCaptainSettings:
     graph_base_url: str = "https://graph.microsoft.com/v1.0"
     graph_access_token: str = ""
     graph_user_id: str = ""
+    target_users: Tuple[str, ...] = ()
     graph_send_enabled: bool = False
     graph_timeout_seconds: int = 30
     graph_scopes: Tuple[str, ...] = ("User.Read", "Mail.Read", "Calendars.Read")
@@ -104,6 +105,7 @@ class DayCaptainSettings:
             graph_base_url=os.getenv("DAY_CAPTAIN_GRAPH_BASE_URL", "https://graph.microsoft.com/v1.0"),
             graph_access_token=os.getenv("DAY_CAPTAIN_GRAPH_ACCESS_TOKEN", ""),
             graph_user_id=os.getenv("DAY_CAPTAIN_GRAPH_USER_ID", ""),
+            target_users=_parse_csv(os.getenv("DAY_CAPTAIN_TARGET_USERS", "")),
             graph_send_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_GRAPH_SEND_ENABLED"), default=False),
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
             graph_scopes=_parse_scopes(os.getenv("DAY_CAPTAIN_GRAPH_SCOPES", "")),
@@ -140,10 +142,28 @@ class DayCaptainSettings:
     def resolved_graph_auth_mode(self) -> str:
         mode = _normalize_graph_auth_mode(self.graph_auth_mode, default="delegated")
         if mode == "auto":
-            if self.graph_client_secret and self.graph_user_id:
+            if self.graph_client_secret and self.resolved_target_users():
                 return "app_only"
             return "delegated"
         return mode
+
+    def resolved_tenant_scope(self) -> str:
+        return self.graph_tenant_id.strip() or "common"
+
+    def resolved_target_users(self) -> Tuple[str, ...]:
+        if self.target_users:
+            return tuple(dict.fromkeys(self.target_users))
+        if self.graph_user_id.strip():
+            return (self.graph_user_id.strip(),)
+        return ()
+
+    def resolved_default_target_user(self) -> str:
+        if self.graph_user_id.strip():
+            return self.graph_user_id.strip()
+        targets = self.resolved_target_users()
+        if len(targets) == 1:
+            return targets[0]
+        return ""
 
     def is_hosted_environment(self) -> bool:
         return self.environment.strip().lower() in {"production", "staging"}

@@ -44,6 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     morning.add_argument("--now", help="ISO datetime override for the run clock.")
     morning.add_argument("--delivery-mode", help="Override the configured delivery mode.")
     morning.add_argument("--force", action="store_true", help="Ignore the last successful run window.")
+    morning.add_argument("--target-user", help="Configured mailbox/user to run.")
 
     serve_parser = subparsers.add_parser("serve", help="Run the Day Captain HTTP service.")
     serve_parser.add_argument("--host", help="Override the configured bind host.")
@@ -52,6 +53,7 @@ def build_parser() -> argparse.ArgumentParser:
     recall = subparsers.add_parser("recall-digest", help="Recall the latest completed digest.")
     recall.add_argument("--run-id", help="Specific digest run identifier.")
     recall.add_argument("--day", help="ISO date used to find the latest run for a day.")
+    recall.add_argument("--target-user", help="Configured mailbox/user to recall.")
 
     feedback = subparsers.add_parser("record-feedback", help="Record user feedback on a digest item.")
     feedback.add_argument("--run-id", required=True)
@@ -60,6 +62,7 @@ def build_parser() -> argparse.ArgumentParser:
     feedback.add_argument("--signal-type", required=True)
     feedback.add_argument("--signal-value", required=True)
     feedback.add_argument("--recorded-at", help="ISO datetime for the feedback event.")
+    feedback.add_argument("--target-user", help="Configured mailbox/user tied to the feedback.")
 
     return parser
 
@@ -147,11 +150,13 @@ def main(argv: Optional[list] = None) -> int:
             now=_parse_datetime(args.now),
             delivery_mode=args.delivery_mode,
             force=args.force,
+            target_user_id=args.target_user,
         )
     elif args.command == "recall-digest":
         result = app.recall_digest(
             run_id=args.run_id,
             day=_parse_date(args.day),
+            target_user_id=args.target_user,
         )
     else:
         result = app.record_feedback(
@@ -161,6 +166,7 @@ def main(argv: Optional[list] = None) -> int:
             signal_type=args.signal_type,
             signal_value=args.signal_value,
             recorded_at=_parse_datetime(args.recorded_at),
+            target_user_id=args.target_user,
         )
 
     print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))

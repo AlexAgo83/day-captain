@@ -19,7 +19,12 @@ from day_captain.models import UserPreference
 
 
 class AuthProvider(Protocol):
-    def authenticate(self, scopes: Sequence[str]) -> AuthContext:
+    def authenticate(
+        self,
+        scopes: Sequence[str],
+        target_user_id: str = "",
+        tenant_id: str = "",
+    ) -> AuthContext:
         ...
 
 
@@ -44,37 +49,67 @@ class CalendarCollector(Protocol):
 
 
 class Storage(Protocol):
-    def load_preferences(self) -> Sequence[UserPreference]:
+    def load_preferences(self, tenant_id: str = "", user_id: str = "") -> Sequence[UserPreference]:
         ...
 
-    def upsert_preferences(self, preferences: Sequence[UserPreference]) -> None:
+    def upsert_preferences(
+        self,
+        preferences: Sequence[UserPreference],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
         ...
 
-    def upsert_messages(self, messages: Sequence[MessageRecord]) -> None:
+    def upsert_messages(
+        self,
+        messages: Sequence[MessageRecord],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
         ...
 
-    def upsert_meetings(self, meetings: Sequence[MeetingRecord]) -> None:
+    def upsert_meetings(
+        self,
+        meetings: Sequence[MeetingRecord],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
         ...
 
-    def get_message(self, graph_message_id: str) -> Optional[MessageRecord]:
+    def get_message(
+        self,
+        graph_message_id: str,
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> Optional[MessageRecord]:
         ...
 
-    def get_meeting(self, graph_event_id: str) -> Optional[MeetingRecord]:
+    def get_meeting(
+        self,
+        graph_event_id: str,
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> Optional[MeetingRecord]:
         ...
 
     def save_run(self, run: DigestRunRecord) -> None:
         ...
 
-    def get_run(self, run_id: str) -> Optional[DigestRunRecord]:
+    def get_run(self, run_id: str, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         ...
 
-    def get_latest_completed_run(self) -> Optional[DigestRunRecord]:
+    def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         ...
 
-    def get_latest_completed_run_for_day(self, target_day: date) -> Optional[DigestRunRecord]:
+    def get_latest_completed_run_for_day(
+        self,
+        target_day: date,
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> Optional[DigestRunRecord]:
         ...
 
-    def save_feedback(self, feedback: FeedbackRecord) -> None:
+    def save_feedback(self, feedback: FeedbackRecord, tenant_id: str = "", user_id: str = "") -> None:
         ...
 
 

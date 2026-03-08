@@ -15,6 +15,7 @@ class AuthContext:
     access_token: str
     granted_scopes: Sequence[str]
     user_id: str
+    tenant_id: str = ""
     auth_mode: str = "delegated"
     graph_root_path: str = "/me"
 
@@ -46,6 +47,8 @@ class UserPreference:
     weight: float
     source: str
     updated_at: datetime
+    tenant_id: str = ""
+    user_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -63,6 +66,8 @@ class MessageRecord:
     is_unread: bool = True
     has_attachments: bool = False
     raw_payload: Mapping[str, Any] = field(default_factory=dict)
+    tenant_id: str = ""
+    user_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -78,6 +83,8 @@ class MeetingRecord:
     body_preview: str = ""
     is_online_meeting: bool = True
     raw_payload: Mapping[str, Any] = field(default_factory=dict)
+    tenant_id: str = ""
+    user_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -99,6 +106,8 @@ class DigestPayload:
     window_start: datetime
     window_end: datetime
     delivery_mode: str
+    tenant_id: str = ""
+    user_id: str = ""
     delivery_subject: str = ""
     delivery_body: str = ""
     top_summary: str = ""
@@ -125,6 +134,8 @@ class DigestRunRecord:
     window_end: datetime
     delivery_mode: str
     summary: DigestPayload
+    tenant_id: str = ""
+    user_id: str = ""
 
 
 @dataclass(frozen=True)
@@ -136,6 +147,8 @@ class FeedbackRecord:
     signal_type: str
     signal_value: str
     recorded_at: datetime
+    tenant_id: str = ""
+    user_id: str = ""
 
 
 def _serialize(value: Any) -> Any:
@@ -185,6 +198,8 @@ def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
         window_start=parse_datetime(str(payload.get("window_start"))),
         window_end=parse_datetime(str(payload.get("window_end"))),
         delivery_mode=str(payload.get("delivery_mode") or "json"),
+        tenant_id=str(payload.get("tenant_id") or ""),
+        user_id=str(payload.get("user_id") or ""),
         delivery_subject=str(payload.get("delivery_subject") or ""),
         delivery_body=str(payload.get("delivery_body") or ""),
         top_summary=str(payload.get("top_summary") or ""),

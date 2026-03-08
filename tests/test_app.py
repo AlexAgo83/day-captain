@@ -159,7 +159,9 @@ class DayCaptainApplicationTest(unittest.TestCase):
             app = build_application(settings=settings)
 
         postgres_storage.assert_called_once_with(
-            "postgresql://user:pass@localhost:5432/day_captain?sslmode=prefer"
+            "postgresql://user:pass@localhost:5432/day_captain?sslmode=prefer",
+            default_tenant_id="common",
+            default_user_id="",
         )
         self.assertIs(app.storage, fake_storage)
 
@@ -205,6 +207,56 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         app_only_provider.assert_called_once()
         self.assertEqual(app.auth_provider, app_only_provider.return_value)
+
+    def test_morning_digest_requires_explicit_target_when_multiple_users_are_configured(self) -> None:
+        app = build_application(
+            settings=DayCaptainSettings(
+                target_users=("alice@example.com", "bob@example.com"),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaises(ValueError):
+            app.run_morning_digest(now=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc))
+
+    def test_morning_digest_is_isolated_per_target_user(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(
+                target_users=("alice@example.com", "bob@example.com"),
+            ),
+            storage=storage,
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(
+                [
+                    MessageRecord(
+                        graph_message_id="msg-1",
+                        thread_id="thread-1",
+                        subject="Urgent budget review",
+                        from_address="boss@example.com",
+                        received_at=datetime(2026, 3, 9, 7, 30, tzinfo=timezone.utc),
+                        body_preview="Please review before noon.",
+                    ),
+                ]
+            ),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        alice_run = app.run_morning_digest(now=now, target_user_id="alice@example.com")
+        bob_run = app.run_morning_digest(now=now, target_user_id="bob@example.com", force=True)
+
+        self.assertEqual(alice_run.user_id, "alice@example.com")
+        self.assertEqual(bob_run.user_id, "bob@example.com")
+        self.assertIsNotNone(
+            storage.get_latest_completed_run(tenant_id="common", user_id="alice@example.com")
+        )
+        self.assertIsNotNone(
+            storage.get_latest_completed_run(tenant_id="common", user_id="bob@example.com")
+        )
 
     def test_build_application_uses_llm_provider_when_configured(self) -> None:
         settings = DayCaptainSettings(

@@ -235,7 +235,12 @@ class GraphDelegatedAuthProvider:
         self.authenticator = authenticator
         self.user_id = user_id
 
-    def authenticate(self, scopes: Sequence[str]) -> AuthContext:
+    def authenticate(
+        self,
+        scopes: Sequence[str],
+        target_user_id: str = "",
+        tenant_id: str = "",
+    ) -> AuthContext:
         access_token = self.access_token
         cached_bundle = self.token_cache.load() if self.token_cache is not None else None
         if not access_token and cached_bundle is not None:
@@ -267,10 +272,14 @@ class GraphDelegatedAuthProvider:
                         user_id=resolved_user_id,
                     )
                 )
+        requested_user_id = str(target_user_id or "").strip()
+        if requested_user_id and requested_user_id != resolved_user_id:
+            raise ValueError("Delegated auth can only run for the authenticated user.")
         return AuthContext(
             access_token=access_token,
             granted_scopes=tuple(scopes),
             user_id=resolved_user_id,
+            tenant_id=str(tenant_id or "").strip(),
             auth_mode="delegated",
             graph_root_path="/me",
         )
@@ -294,18 +303,24 @@ class GraphAppOnlyAuthProvider:
         self.user_id = user_id
         self.configured_scopes = tuple(configured_scopes)
 
-    def authenticate(self, scopes: Sequence[str]) -> AuthContext:
+    def authenticate(
+        self,
+        scopes: Sequence[str],
+        target_user_id: str = "",
+        tenant_id: str = "",
+    ) -> AuthContext:
         bundle = self.authenticator.request_access_token()
-        target_user_id = str(self.user_id or "").strip()
-        if not target_user_id:
+        resolved_user_id = str(target_user_id or self.user_id or "").strip()
+        if not resolved_user_id:
             raise ValueError("DAY_CAPTAIN_GRAPH_USER_ID is required for app-only auth.")
         granted_scopes = tuple(self.configured_scopes or scopes)
         return AuthContext(
             access_token=bundle.access_token,
             granted_scopes=granted_scopes,
-            user_id=target_user_id,
+            user_id=resolved_user_id,
+            tenant_id=str(tenant_id or "").strip(),
             auth_mode="app_only",
-            graph_root_path=_user_graph_root(target_user_id),
+            graph_root_path=_user_graph_root(resolved_user_id),
         )
 
 

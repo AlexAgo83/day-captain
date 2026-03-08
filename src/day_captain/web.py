@@ -48,6 +48,7 @@ class DayCaptainWebApp:
                     now=_parse_datetime(payload.get("now")),
                     delivery_mode=payload.get("delivery_mode"),
                     force=bool(payload.get("force", False)),
+                    target_user_id=payload.get("target_user_id"),
                 )
                 return self._json_response(start_response, 200, self._job_ack("morning_digest", result))
             if path == "/jobs/recall-digest" and method == "POST":
@@ -57,6 +58,7 @@ class DayCaptainWebApp:
                 result = app.recall_digest(
                     run_id=payload.get("run_id"),
                     day=_parse_date(payload.get("day")),
+                    target_user_id=payload.get("target_user_id"),
                 )
                 return self._json_response(start_response, 200, self._job_ack("recall_digest", result))
             return self._json_response(start_response, 404, {"error": "not_found"})

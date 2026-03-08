@@ -1,5 +1,6 @@
 """Relational storage adapters for Day Captain."""
 
+from dataclasses import replace
 from datetime import date
 import json
 import sqlite3
@@ -15,7 +16,6 @@ except ImportError:  # pragma: no cover - exercised only when psycopg isn't inst
     psycopg = None
     dict_row = None
 
-from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
 from day_captain.models import FeedbackRecord
@@ -34,6 +34,9 @@ SECTION_NAMES = (
     "upcoming_meetings",
 )
 
+DEFAULT_TENANT_ID = "default-tenant"
+DEFAULT_USER_ID = "default-user"
+
 
 def _json_dumps(value: Any) -> str:
     return json.dumps(to_jsonable(value), sort_keys=True)
@@ -45,15 +48,44 @@ def _json_loads(value: Optional[str]) -> Any:
     return json.loads(value)
 
 
+def _normalize_scope_value(value: str, fallback: str) -> str:
+    normalized = str(value or "").strip()
+    return normalized or fallback
+
+
 class SQLiteStorage:
-    def __init__(self, path: str) -> None:
+    def __init__(
+        self,
+        path: str,
+        default_tenant_id: str = DEFAULT_TENANT_ID,
+        default_user_id: str = DEFAULT_USER_ID,
+    ) -> None:
         self.path = path
+        self.default_tenant_id = _normalize_scope_value(default_tenant_id, DEFAULT_TENANT_ID)
+        self.default_user_id = _normalize_scope_value(default_user_id, DEFAULT_USER_ID)
         self._ensure_schema()
+
+    def _scope(self, tenant_id: str = "", user_id: str = "") -> tuple[str, str]:
+        return (
+            _normalize_scope_value(tenant_id, self.default_tenant_id),
+            _normalize_scope_value(user_id, self.default_user_id),
+        )
 
     def _connect(self) -> sqlite3.Connection:
         connection = sqlite3.connect(self.path)
         connection.row_factory = sqlite3.Row
         return connection
+
+    def _table_exists(self, connection: sqlite3.Connection, table_name: str) -> bool:
+        row = connection.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' AND name = ?",
+            (table_name,),
+        ).fetchone()
+        return row is not None
+
+    def _table_is_empty(self, connection: sqlite3.Connection, table_name: str) -> bool:
+        row = connection.execute("SELECT COUNT(*) AS count FROM {0}".format(table_name)).fetchone()
+        return row is not None and int(row["count"]) == 0
 
     def _ensure_schema(self) -> None:
         with self._connect() as connection:
@@ -61,8 +93,10 @@ class SQLiteStorage:
                 """
                 PRAGMA foreign_keys = ON;
 
-                CREATE TABLE IF NOT EXISTS messages (
-                    graph_message_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_messages (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    graph_message_id TEXT NOT NULL,
                     thread_id TEXT NOT NULL,
                     internet_message_id TEXT NOT NULL,
                     subject TEXT NOT NULL,
@@ -76,11 +110,14 @@ class SQLiteStorage:
                     has_attachments INTEGER NOT NULL,
                     raw_payload_json TEXT NOT NULL,
                     first_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    last_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    last_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (tenant_id, user_id, graph_message_id)
                 );
 
-                CREATE TABLE IF NOT EXISTS meetings (
-                    graph_event_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_meetings (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    graph_event_id TEXT NOT NULL,
                     subject TEXT NOT NULL,
                     start_at TEXT NOT NULL,
                     end_at TEXT NOT NULL,
@@ -92,21 +129,27 @@ class SQLiteStorage:
                     is_online_meeting INTEGER NOT NULL,
                     raw_payload_json TEXT NOT NULL,
                     first_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    last_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    last_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (tenant_id, user_id, graph_event_id)
                 );
 
-                CREATE TABLE IF NOT EXISTS digest_runs (
-                    run_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_digest_runs (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    run_id TEXT NOT NULL,
                     run_type TEXT NOT NULL,
                     status TEXT NOT NULL,
                     generated_at TEXT NOT NULL,
                     window_start TEXT NOT NULL,
                     window_end TEXT NOT NULL,
                     delivery_mode TEXT NOT NULL,
-                    summary_json TEXT NOT NULL
+                    summary_json TEXT NOT NULL,
+                    PRIMARY KEY (tenant_id, user_id, run_id)
                 );
 
-                CREATE TABLE IF NOT EXISTS digest_items (
+                CREATE TABLE IF NOT EXISTS scoped_digest_items (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     item_type TEXT NOT NULL,
                     source_kind TEXT NOT NULL,
@@ -116,40 +159,204 @@ class SQLiteStorage:
                     guardrail_applied INTEGER NOT NULL,
                     section_name TEXT NOT NULL,
                     rendered_text TEXT NOT NULL,
-                    PRIMARY KEY (run_id, section_name, source_kind, source_id),
-                    FOREIGN KEY (run_id) REFERENCES digest_runs(run_id) ON DELETE CASCADE
+                    PRIMARY KEY (tenant_id, user_id, run_id, section_name, source_kind, source_id),
+                    FOREIGN KEY (tenant_id, user_id, run_id)
+                        REFERENCES scoped_digest_runs(tenant_id, user_id, run_id)
+                        ON DELETE CASCADE
                 );
 
-                CREATE TABLE IF NOT EXISTS feedback (
-                    feedback_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_feedback (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    feedback_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     source_kind TEXT NOT NULL,
                     source_id TEXT NOT NULL,
                     signal_type TEXT NOT NULL,
                     signal_value TEXT NOT NULL,
-                    recorded_at TEXT NOT NULL
+                    recorded_at TEXT NOT NULL,
+                    PRIMARY KEY (tenant_id, user_id, feedback_id)
                 );
 
-                CREATE TABLE IF NOT EXISTS preferences (
+                CREATE TABLE IF NOT EXISTS scoped_preferences (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
                     preference_key TEXT NOT NULL,
                     preference_type TEXT NOT NULL,
                     weight REAL NOT NULL,
                     source TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
-                    PRIMARY KEY (preference_key, preference_type)
+                    PRIMARY KEY (tenant_id, user_id, preference_key, preference_type)
                 );
                 """
             )
+            self._migrate_legacy_data(connection)
 
-    def load_preferences(self) -> Sequence[UserPreference]:
-        with self._connect() as connection:
-            rows = connection.execute(
+    def _migrate_legacy_data(self, connection: sqlite3.Connection) -> None:
+        tenant_id, user_id = self._scope()
+        migrations = (
+            (
+                "messages",
+                "scoped_messages",
                 """
-                SELECT preference_key, preference_type, weight, source, updated_at
+                INSERT INTO scoped_messages (
+                    tenant_id,
+                    user_id,
+                    graph_message_id,
+                    thread_id,
+                    internet_message_id,
+                    subject,
+                    from_address,
+                    to_addresses_json,
+                    cc_addresses_json,
+                    received_at,
+                    body_preview,
+                    categories_json,
+                    is_unread,
+                    has_attachments,
+                    raw_payload_json,
+                    first_seen_at,
+                    last_seen_at
+                )
+                SELECT ?, ?, graph_message_id, thread_id, internet_message_id, subject, from_address,
+                       to_addresses_json, cc_addresses_json, received_at, body_preview, categories_json,
+                       is_unread, has_attachments, raw_payload_json, first_seen_at, last_seen_at
+                FROM messages
+                """,
+            ),
+            (
+                "meetings",
+                "scoped_meetings",
+                """
+                INSERT INTO scoped_meetings (
+                    tenant_id,
+                    user_id,
+                    graph_event_id,
+                    subject,
+                    start_at,
+                    end_at,
+                    organizer_address,
+                    attendees_json,
+                    location,
+                    join_url,
+                    body_preview,
+                    is_online_meeting,
+                    raw_payload_json,
+                    first_seen_at,
+                    last_seen_at
+                )
+                SELECT ?, ?, graph_event_id, subject, start_at, end_at, organizer_address, attendees_json,
+                       location, join_url, body_preview, is_online_meeting, raw_payload_json, first_seen_at, last_seen_at
+                FROM meetings
+                """,
+            ),
+            (
+                "digest_runs",
+                "scoped_digest_runs",
+                """
+                INSERT INTO scoped_digest_runs (
+                    tenant_id,
+                    user_id,
+                    run_id,
+                    run_type,
+                    status,
+                    generated_at,
+                    window_start,
+                    window_end,
+                    delivery_mode,
+                    summary_json
+                )
+                SELECT ?, ?, run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
+                FROM digest_runs
+                """,
+            ),
+            (
+                "digest_items",
+                "scoped_digest_items",
+                """
+                INSERT INTO scoped_digest_items (
+                    tenant_id,
+                    user_id,
+                    run_id,
+                    item_type,
+                    source_kind,
+                    source_id,
+                    score,
+                    reason_codes_json,
+                    guardrail_applied,
+                    section_name,
+                    rendered_text
+                )
+                SELECT ?, ?, run_id, item_type, source_kind, source_id, score, reason_codes_json,
+                       guardrail_applied, section_name, rendered_text
+                FROM digest_items
+                """,
+            ),
+            (
+                "feedback",
+                "scoped_feedback",
+                """
+                INSERT INTO scoped_feedback (
+                    tenant_id,
+                    user_id,
+                    feedback_id,
+                    run_id,
+                    source_kind,
+                    source_id,
+                    signal_type,
+                    signal_value,
+                    recorded_at
+                )
+                SELECT ?, ?, feedback_id, run_id, source_kind, source_id, signal_type, signal_value, recorded_at
+                FROM feedback
+                """,
+            ),
+            (
+                "preferences",
+                "scoped_preferences",
+                """
+                INSERT INTO scoped_preferences (
+                    tenant_id,
+                    user_id,
+                    preference_key,
+                    preference_type,
+                    weight,
+                    source,
+                    updated_at
+                )
+                SELECT ?, ?, preference_key, preference_type, weight, source, updated_at
                 FROM preferences
-                ORDER BY preference_type, preference_key
-                """
-            ).fetchall()
+                """,
+            ),
+        )
+        for legacy_name, scoped_name, statement in migrations:
+            if not self._table_exists(connection, legacy_name):
+                continue
+            if not self._table_is_empty(connection, scoped_name):
+                continue
+            connection.execute(statement, (tenant_id, user_id))
+
+    def load_preferences(self, tenant_id: str = "", user_id: str = "") -> Sequence[UserPreference]:
+        with self._connect() as connection:
+            if tenant_id or user_id:
+                scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
+                rows = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, preference_key, preference_type, weight, source, updated_at
+                    FROM scoped_preferences
+                    WHERE tenant_id = ? AND user_id = ?
+                    ORDER BY preference_type, preference_key
+                    """,
+                    (scoped_tenant_id, scoped_user_id),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, preference_key, preference_type, weight, source, updated_at
+                    FROM scoped_preferences
+                    ORDER BY tenant_id, user_id, preference_type, preference_key
+                    """
+                ).fetchall()
         return tuple(
             UserPreference(
                 preference_key=row["preference_key"],
@@ -157,28 +364,40 @@ class SQLiteStorage:
                 weight=float(row["weight"]),
                 source=row["source"],
                 updated_at=parse_datetime(row["updated_at"]),
+                tenant_id=row["tenant_id"],
+                user_id=row["user_id"],
             )
             for row in rows
         )
 
-    def upsert_preferences(self, preferences: Sequence[UserPreference]) -> None:
+    def upsert_preferences(
+        self,
+        preferences: Sequence[UserPreference],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             for preference in preferences:
                 connection.execute(
                     """
-                    INSERT INTO preferences (
+                    INSERT INTO scoped_preferences (
+                        tenant_id,
+                        user_id,
                         preference_key,
                         preference_type,
                         weight,
                         source,
                         updated_at
-                    ) VALUES (?, ?, ?, ?, ?)
-                    ON CONFLICT(preference_key, preference_type) DO UPDATE SET
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(tenant_id, user_id, preference_key, preference_type) DO UPDATE SET
                         weight = excluded.weight,
                         source = excluded.source,
                         updated_at = excluded.updated_at
                     """,
                     (
+                        scoped_tenant_id,
+                        scoped_user_id,
                         preference.preference_key,
                         preference.preference_type,
                         preference.weight,
@@ -187,12 +406,20 @@ class SQLiteStorage:
                     ),
                 )
 
-    def upsert_messages(self, messages: Sequence[MessageRecord]) -> None:
+    def upsert_messages(
+        self,
+        messages: Sequence[MessageRecord],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             for message in messages:
                 connection.execute(
                     """
-                    INSERT INTO messages (
+                    INSERT INTO scoped_messages (
+                        tenant_id,
+                        user_id,
                         graph_message_id,
                         thread_id,
                         internet_message_id,
@@ -208,8 +435,8 @@ class SQLiteStorage:
                         raw_payload_json,
                         first_seen_at,
                         last_seen_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT(graph_message_id) DO UPDATE SET
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT(tenant_id, user_id, graph_message_id) DO UPDATE SET
                         thread_id = excluded.thread_id,
                         internet_message_id = excluded.internet_message_id,
                         subject = excluded.subject,
@@ -225,6 +452,8 @@ class SQLiteStorage:
                         last_seen_at = CURRENT_TIMESTAMP
                     """,
                     (
+                        scoped_tenant_id,
+                        scoped_user_id,
                         message.graph_message_id,
                         message.thread_id,
                         message.internet_message_id,
@@ -241,12 +470,20 @@ class SQLiteStorage:
                     ),
                 )
 
-    def upsert_meetings(self, meetings: Sequence[MeetingRecord]) -> None:
+    def upsert_meetings(
+        self,
+        meetings: Sequence[MeetingRecord],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             for meeting in meetings:
                 connection.execute(
                     """
-                    INSERT INTO meetings (
+                    INSERT INTO scoped_meetings (
+                        tenant_id,
+                        user_id,
                         graph_event_id,
                         subject,
                         start_at,
@@ -260,8 +497,8 @@ class SQLiteStorage:
                         raw_payload_json,
                         first_seen_at,
                         last_seen_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT(graph_event_id) DO UPDATE SET
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT(tenant_id, user_id, graph_event_id) DO UPDATE SET
                         subject = excluded.subject,
                         start_at = excluded.start_at,
                         end_at = excluded.end_at,
@@ -275,6 +512,8 @@ class SQLiteStorage:
                         last_seen_at = CURRENT_TIMESTAMP
                     """,
                     (
+                        scoped_tenant_id,
+                        scoped_user_id,
                         meeting.graph_event_id,
                         meeting.subject,
                         meeting.start_at.isoformat(),
@@ -289,17 +528,18 @@ class SQLiteStorage:
                     ),
                 )
 
-    def get_message(self, graph_message_id: str) -> Optional[MessageRecord]:
+    def get_message(self, graph_message_id: str, tenant_id: str = "", user_id: str = "") -> Optional[MessageRecord]:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
                 SELECT graph_message_id, thread_id, internet_message_id, subject, from_address,
                        to_addresses_json, cc_addresses_json, received_at, body_preview, categories_json,
                        is_unread, has_attachments, raw_payload_json
-                FROM messages
-                WHERE graph_message_id = ?
+                FROM scoped_messages
+                WHERE tenant_id = ? AND user_id = ? AND graph_message_id = ?
                 """,
-                (graph_message_id,),
+                (scoped_tenant_id, scoped_user_id, graph_message_id),
             ).fetchone()
         if row is None:
             return None
@@ -317,18 +557,21 @@ class SQLiteStorage:
             is_unread=bool(row["is_unread"]),
             has_attachments=bool(row["has_attachments"]),
             raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
         )
 
-    def get_meeting(self, graph_event_id: str) -> Optional[MeetingRecord]:
+    def get_meeting(self, graph_event_id: str, tenant_id: str = "", user_id: str = "") -> Optional[MeetingRecord]:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
                 SELECT graph_event_id, subject, start_at, end_at, organizer_address, attendees_json,
                        location, join_url, body_preview, is_online_meeting, raw_payload_json
-                FROM meetings
-                WHERE graph_event_id = ?
+                FROM scoped_meetings
+                WHERE tenant_id = ? AND user_id = ? AND graph_event_id = ?
                 """,
-                (graph_event_id,),
+                (scoped_tenant_id, scoped_user_id, graph_event_id),
             ).fetchone()
         if row is None:
             return None
@@ -344,16 +587,28 @@ class SQLiteStorage:
             body_preview=row["body_preview"],
             is_online_meeting=bool(row["is_online_meeting"]),
             raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
         )
 
-    def _save_digest_items(self, connection: sqlite3.Connection, payload: DigestPayload) -> None:
-        connection.execute("DELETE FROM digest_items WHERE run_id = ?", (payload.run_id,))
+    def _save_digest_items(
+        self,
+        connection: sqlite3.Connection,
+        payload: DigestPayload,
+        tenant_id: str,
+        user_id: str,
+    ) -> None:
+        connection.execute(
+            "DELETE FROM scoped_digest_items WHERE tenant_id = ? AND user_id = ? AND run_id = ?",
+            (tenant_id, user_id, payload.run_id),
+        )
         for section_name in SECTION_NAMES:
-            entries = getattr(payload, section_name)
-            for entry in entries:
+            for entry in getattr(payload, section_name):
                 connection.execute(
                     """
-                    INSERT INTO digest_items (
+                    INSERT INTO scoped_digest_items (
+                        tenant_id,
+                        user_id,
                         run_id,
                         item_type,
                         source_kind,
@@ -363,9 +618,11 @@ class SQLiteStorage:
                         guardrail_applied,
                         section_name,
                         rendered_text
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
+                        tenant_id,
+                        user_id,
                         payload.run_id,
                         "digest_entry",
                         entry.source_kind,
@@ -379,10 +636,14 @@ class SQLiteStorage:
                 )
 
     def save_run(self, run: DigestRunRecord) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(run.tenant_id, run.user_id)
+        scoped_summary = replace(run.summary, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
         with self._connect() as connection:
             connection.execute(
                 """
-                INSERT INTO digest_runs (
+                INSERT INTO scoped_digest_runs (
+                    tenant_id,
+                    user_id,
                     run_id,
                     run_type,
                     status,
@@ -391,8 +652,8 @@ class SQLiteStorage:
                     window_end,
                     delivery_mode,
                     summary_json
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(run_id) DO UPDATE SET
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(tenant_id, user_id, run_id) DO UPDATE SET
                     run_type = excluded.run_type,
                     status = excluded.status,
                     generated_at = excluded.generated_at,
@@ -402,6 +663,8 @@ class SQLiteStorage:
                     summary_json = excluded.summary_json
                 """,
                 (
+                    scoped_tenant_id,
+                    scoped_user_id,
                     run.run_id,
                     run.run_type,
                     run.status,
@@ -409,13 +672,15 @@ class SQLiteStorage:
                     run.window_start.isoformat(),
                     run.window_end.isoformat(),
                     run.delivery_mode,
-                    _json_dumps(run.summary),
+                    _json_dumps(scoped_summary),
                 ),
             )
-            self._save_digest_items(connection, run.summary)
+            self._save_digest_items(connection, scoped_summary, scoped_tenant_id, scoped_user_id)
 
     def _row_to_run(self, row: sqlite3.Row) -> DigestRunRecord:
         summary = digest_payload_from_dict(_json_loads(row["summary_json"]) or {})
+        if not summary.tenant_id or not summary.user_id:
+            summary = replace(summary, tenant_id=row["tenant_id"], user_id=row["user_id"])
         return DigestRunRecord(
             run_id=row["run_id"],
             run_type=row["run_type"],
@@ -425,59 +690,105 @@ class SQLiteStorage:
             window_end=parse_datetime(row["window_end"]),
             delivery_mode=row["delivery_mode"],
             summary=summary,
+            tenant_id=row["tenant_id"],
+            user_id=row["user_id"],
         )
 
-    def get_run(self, run_id: str) -> Optional[DigestRunRecord]:
+    def get_run(self, run_id: str, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         with self._connect() as connection:
-            row = connection.execute(
-                """
-                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
-                FROM digest_runs
-                WHERE run_id = ?
-                """,
-                (run_id,),
-            ).fetchone()
+            if tenant_id or user_id:
+                scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
+                row = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                           delivery_mode, summary_json
+                    FROM scoped_digest_runs
+                    WHERE tenant_id = ? AND user_id = ? AND run_id = ?
+                    """,
+                    (scoped_tenant_id, scoped_user_id, run_id),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                           delivery_mode, summary_json
+                    FROM scoped_digest_runs
+                    WHERE run_id = ?
+                    LIMIT 1
+                    """,
+                    (run_id,),
+                ).fetchone()
         if row is None:
             return None
         return self._row_to_run(row)
 
-    def get_latest_completed_run(self) -> Optional[DigestRunRecord]:
+    def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+        params = []
+        where_clauses = ["status = 'completed'"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = ?")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = ?")
+            params.append(scoped_user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
-                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
-                FROM digest_runs
-                WHERE status = 'completed'
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
             ).fetchone()
         if row is None:
             return None
         return self._row_to_run(row)
 
-    def get_latest_completed_run_for_day(self, target_day: date) -> Optional[DigestRunRecord]:
+    def get_latest_completed_run_for_day(
+        self,
+        target_day: date,
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> Optional[DigestRunRecord]:
+        params = [target_day.isoformat()]
+        where_clauses = ["status = 'completed'", "substr(generated_at, 1, 10) = ?"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = ?")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = ?")
+            params.append(scoped_user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
-                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
-                FROM digest_runs
-                WHERE status = 'completed'
-                  AND substr(generated_at, 1, 10) = ?
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """,
-                (target_day.isoformat(),),
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
             ).fetchone()
         if row is None:
             return None
         return self._row_to_run(row)
 
-    def save_feedback(self, feedback: FeedbackRecord) -> None:
+    def save_feedback(self, feedback: FeedbackRecord, tenant_id: str = "", user_id: str = "") -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id or feedback.tenant_id, user_id or feedback.user_id)
         with self._connect() as connection:
             connection.execute(
                 """
-                INSERT INTO feedback (
+                INSERT INTO scoped_feedback (
+                    tenant_id,
+                    user_id,
                     feedback_id,
                     run_id,
                     source_kind,
@@ -485,8 +796,8 @@ class SQLiteStorage:
                     signal_type,
                     signal_value,
                     recorded_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?)
-                ON CONFLICT(feedback_id) DO UPDATE SET
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(tenant_id, user_id, feedback_id) DO UPDATE SET
                     run_id = excluded.run_id,
                     source_kind = excluded.source_kind,
                     source_id = excluded.source_id,
@@ -495,6 +806,8 @@ class SQLiteStorage:
                     recorded_at = excluded.recorded_at
                 """,
                 (
+                    scoped_tenant_id,
+                    scoped_user_id,
                     feedback.feedback_id,
                     feedback.run_id,
                     feedback.source_kind,
@@ -505,18 +818,20 @@ class SQLiteStorage:
                 ),
             )
 
-    def list_feedback(self, run_id: Optional[str] = None) -> Sequence[FeedbackRecord]:
+    def list_feedback(self, run_id: Optional[str] = None, tenant_id: str = "", user_id: str = "") -> Sequence[FeedbackRecord]:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         query = """
             SELECT feedback_id, run_id, source_kind, source_id, signal_type, signal_value, recorded_at
-            FROM feedback
+            FROM scoped_feedback
+            WHERE tenant_id = ? AND user_id = ?
         """
-        params = ()
+        params = [scoped_tenant_id, scoped_user_id]
         if run_id is not None:
-            query += " WHERE run_id = ?"
-            params = (run_id,)
+            query += " AND run_id = ?"
+            params.append(run_id)
         query += " ORDER BY recorded_at"
         with self._connect() as connection:
-            rows = connection.execute(query, params).fetchall()
+            rows = connection.execute(query, tuple(params)).fetchall()
         return tuple(
             FeedbackRecord(
                 feedback_id=row["feedback_id"],
@@ -526,29 +841,61 @@ class SQLiteStorage:
                 signal_type=row["signal_type"],
                 signal_value=row["signal_value"],
                 recorded_at=parse_datetime(row["recorded_at"]),
+                tenant_id=scoped_tenant_id,
+                user_id=scoped_user_id,
             )
             for row in rows
         )
 
 
 class PostgresStorage:
-    def __init__(self, database_url: str) -> None:
+    def __init__(
+        self,
+        database_url: str,
+        default_tenant_id: str = DEFAULT_TENANT_ID,
+        default_user_id: str = DEFAULT_USER_ID,
+    ) -> None:
         if psycopg is None or dict_row is None:
             raise RuntimeError(
                 "Postgres storage requires the `psycopg` package to be installed."
             )
         self.database_url = database_url
+        self.default_tenant_id = _normalize_scope_value(default_tenant_id, DEFAULT_TENANT_ID)
+        self.default_user_id = _normalize_scope_value(default_user_id, DEFAULT_USER_ID)
         self._ensure_schema()
+
+    def _scope(self, tenant_id: str = "", user_id: str = "") -> tuple[str, str]:
+        return (
+            _normalize_scope_value(tenant_id, self.default_tenant_id),
+            _normalize_scope_value(user_id, self.default_user_id),
+        )
 
     def _connect(self):
         return psycopg.connect(self.database_url, row_factory=dict_row)
+
+    def _table_exists(self, connection, table_name: str) -> bool:
+        row = connection.execute(
+            """
+            SELECT table_name
+            FROM information_schema.tables
+            WHERE table_schema = 'public' AND table_name = %s
+            """,
+            (table_name,),
+        ).fetchone()
+        return row is not None
+
+    def _table_is_empty(self, connection, table_name: str) -> bool:
+        row = connection.execute("SELECT COUNT(*) AS count FROM {0}".format(table_name)).fetchone()
+        return row is not None and int(row["count"]) == 0
 
     def _ensure_schema(self) -> None:
         with self._connect() as connection:
             connection.execute(
                 """
-                CREATE TABLE IF NOT EXISTS messages (
-                    graph_message_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_messages (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    graph_message_id TEXT NOT NULL,
                     thread_id TEXT NOT NULL,
                     internet_message_id TEXT NOT NULL,
                     subject TEXT NOT NULL,
@@ -562,14 +909,17 @@ class PostgresStorage:
                     has_attachments BOOLEAN NOT NULL,
                     raw_payload_json TEXT NOT NULL,
                     first_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (tenant_id, user_id, graph_message_id)
                 )
                 """
             )
             connection.execute(
                 """
-                CREATE TABLE IF NOT EXISTS meetings (
-                    graph_event_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_meetings (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    graph_event_id TEXT NOT NULL,
                     subject TEXT NOT NULL,
                     start_at TEXT NOT NULL,
                     end_at TEXT NOT NULL,
@@ -581,27 +931,33 @@ class PostgresStorage:
                     is_online_meeting BOOLEAN NOT NULL,
                     raw_payload_json TEXT NOT NULL,
                     first_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+                    last_seen_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (tenant_id, user_id, graph_event_id)
                 )
                 """
             )
             connection.execute(
                 """
-                CREATE TABLE IF NOT EXISTS digest_runs (
-                    run_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_digest_runs (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    run_id TEXT NOT NULL,
                     run_type TEXT NOT NULL,
                     status TEXT NOT NULL,
                     generated_at TEXT NOT NULL,
                     window_start TEXT NOT NULL,
                     window_end TEXT NOT NULL,
                     delivery_mode TEXT NOT NULL,
-                    summary_json TEXT NOT NULL
+                    summary_json TEXT NOT NULL,
+                    PRIMARY KEY (tenant_id, user_id, run_id)
                 )
                 """
             )
             connection.execute(
                 """
-                CREATE TABLE IF NOT EXISTS digest_items (
+                CREATE TABLE IF NOT EXISTS scoped_digest_items (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     item_type TEXT NOT NULL,
                     source_kind TEXT NOT NULL,
@@ -611,47 +967,211 @@ class PostgresStorage:
                     guardrail_applied BOOLEAN NOT NULL,
                     section_name TEXT NOT NULL,
                     rendered_text TEXT NOT NULL,
-                    PRIMARY KEY (run_id, section_name, source_kind, source_id),
-                    FOREIGN KEY (run_id) REFERENCES digest_runs(run_id) ON DELETE CASCADE
+                    PRIMARY KEY (tenant_id, user_id, run_id, section_name, source_kind, source_id),
+                    FOREIGN KEY (tenant_id, user_id, run_id)
+                        REFERENCES scoped_digest_runs(tenant_id, user_id, run_id)
+                        ON DELETE CASCADE
                 )
                 """
             )
             connection.execute(
                 """
-                CREATE TABLE IF NOT EXISTS feedback (
-                    feedback_id TEXT PRIMARY KEY,
+                CREATE TABLE IF NOT EXISTS scoped_feedback (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    feedback_id TEXT NOT NULL,
                     run_id TEXT NOT NULL,
                     source_kind TEXT NOT NULL,
                     source_id TEXT NOT NULL,
                     signal_type TEXT NOT NULL,
                     signal_value TEXT NOT NULL,
-                    recorded_at TEXT NOT NULL
+                    recorded_at TEXT NOT NULL,
+                    PRIMARY KEY (tenant_id, user_id, feedback_id)
                 )
                 """
             )
             connection.execute(
                 """
-                CREATE TABLE IF NOT EXISTS preferences (
+                CREATE TABLE IF NOT EXISTS scoped_preferences (
+                    tenant_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
                     preference_key TEXT NOT NULL,
                     preference_type TEXT NOT NULL,
                     weight DOUBLE PRECISION NOT NULL,
                     source TEXT NOT NULL,
                     updated_at TEXT NOT NULL,
-                    PRIMARY KEY (preference_key, preference_type)
+                    PRIMARY KEY (tenant_id, user_id, preference_key, preference_type)
                 )
                 """
             )
+            self._migrate_legacy_data(connection)
             connection.commit()
 
-    def load_preferences(self) -> Sequence[UserPreference]:
-        with self._connect() as connection:
-            rows = connection.execute(
+    def _migrate_legacy_data(self, connection) -> None:
+        tenant_id, user_id = self._scope()
+        migrations = (
+            (
+                "messages",
+                "scoped_messages",
                 """
-                SELECT preference_key, preference_type, weight, source, updated_at
+                INSERT INTO scoped_messages (
+                    tenant_id,
+                    user_id,
+                    graph_message_id,
+                    thread_id,
+                    internet_message_id,
+                    subject,
+                    from_address,
+                    to_addresses_json,
+                    cc_addresses_json,
+                    received_at,
+                    body_preview,
+                    categories_json,
+                    is_unread,
+                    has_attachments,
+                    raw_payload_json,
+                    first_seen_at,
+                    last_seen_at
+                )
+                SELECT %s, %s, graph_message_id, thread_id, internet_message_id, subject, from_address,
+                       to_addresses_json, cc_addresses_json, received_at, body_preview, categories_json,
+                       is_unread, has_attachments, raw_payload_json, first_seen_at, last_seen_at
+                FROM messages
+                """,
+            ),
+            (
+                "meetings",
+                "scoped_meetings",
+                """
+                INSERT INTO scoped_meetings (
+                    tenant_id,
+                    user_id,
+                    graph_event_id,
+                    subject,
+                    start_at,
+                    end_at,
+                    organizer_address,
+                    attendees_json,
+                    location,
+                    join_url,
+                    body_preview,
+                    is_online_meeting,
+                    raw_payload_json,
+                    first_seen_at,
+                    last_seen_at
+                )
+                SELECT %s, %s, graph_event_id, subject, start_at, end_at, organizer_address, attendees_json,
+                       location, join_url, body_preview, is_online_meeting, raw_payload_json, first_seen_at, last_seen_at
+                FROM meetings
+                """,
+            ),
+            (
+                "digest_runs",
+                "scoped_digest_runs",
+                """
+                INSERT INTO scoped_digest_runs (
+                    tenant_id,
+                    user_id,
+                    run_id,
+                    run_type,
+                    status,
+                    generated_at,
+                    window_start,
+                    window_end,
+                    delivery_mode,
+                    summary_json
+                )
+                SELECT %s, %s, run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
+                FROM digest_runs
+                """,
+            ),
+            (
+                "digest_items",
+                "scoped_digest_items",
+                """
+                INSERT INTO scoped_digest_items (
+                    tenant_id,
+                    user_id,
+                    run_id,
+                    item_type,
+                    source_kind,
+                    source_id,
+                    score,
+                    reason_codes_json,
+                    guardrail_applied,
+                    section_name,
+                    rendered_text
+                )
+                SELECT %s, %s, run_id, item_type, source_kind, source_id, score, reason_codes_json,
+                       guardrail_applied, section_name, rendered_text
+                FROM digest_items
+                """,
+            ),
+            (
+                "feedback",
+                "scoped_feedback",
+                """
+                INSERT INTO scoped_feedback (
+                    tenant_id,
+                    user_id,
+                    feedback_id,
+                    run_id,
+                    source_kind,
+                    source_id,
+                    signal_type,
+                    signal_value,
+                    recorded_at
+                )
+                SELECT %s, %s, feedback_id, run_id, source_kind, source_id, signal_type, signal_value, recorded_at
+                FROM feedback
+                """,
+            ),
+            (
+                "preferences",
+                "scoped_preferences",
+                """
+                INSERT INTO scoped_preferences (
+                    tenant_id,
+                    user_id,
+                    preference_key,
+                    preference_type,
+                    weight,
+                    source,
+                    updated_at
+                )
+                SELECT %s, %s, preference_key, preference_type, weight, source, updated_at
                 FROM preferences
-                ORDER BY preference_type, preference_key
-                """
-            ).fetchall()
+                """,
+            ),
+        )
+        for legacy_name, scoped_name, statement in migrations:
+            if not self._table_exists(connection, legacy_name):
+                continue
+            if not self._table_is_empty(connection, scoped_name):
+                continue
+            connection.execute(statement, (tenant_id, user_id))
+
+    def load_preferences(self, tenant_id: str = "", user_id: str = "") -> Sequence[UserPreference]:
+        with self._connect() as connection:
+            if tenant_id or user_id:
+                scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
+                rows = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, preference_key, preference_type, weight, source, updated_at
+                    FROM scoped_preferences
+                    WHERE tenant_id = %s AND user_id = %s
+                    ORDER BY preference_type, preference_key
+                    """,
+                    (scoped_tenant_id, scoped_user_id),
+                ).fetchall()
+            else:
+                rows = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, preference_key, preference_type, weight, source, updated_at
+                    FROM scoped_preferences
+                    ORDER BY tenant_id, user_id, preference_type, preference_key
+                    """
+                ).fetchall()
         return tuple(
             UserPreference(
                 preference_key=row["preference_key"],
@@ -659,28 +1179,40 @@ class PostgresStorage:
                 weight=float(row["weight"]),
                 source=row["source"],
                 updated_at=parse_datetime(row["updated_at"]),
+                tenant_id=row["tenant_id"],
+                user_id=row["user_id"],
             )
             for row in rows
         )
 
-    def upsert_preferences(self, preferences: Sequence[UserPreference]) -> None:
+    def upsert_preferences(
+        self,
+        preferences: Sequence[UserPreference],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             for preference in preferences:
                 connection.execute(
                     """
-                    INSERT INTO preferences (
+                    INSERT INTO scoped_preferences (
+                        tenant_id,
+                        user_id,
                         preference_key,
                         preference_type,
                         weight,
                         source,
                         updated_at
-                    ) VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT(preference_key, preference_type) DO UPDATE SET
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT(tenant_id, user_id, preference_key, preference_type) DO UPDATE SET
                         weight = EXCLUDED.weight,
                         source = EXCLUDED.source,
                         updated_at = EXCLUDED.updated_at
                     """,
                     (
+                        scoped_tenant_id,
+                        scoped_user_id,
                         preference.preference_key,
                         preference.preference_type,
                         preference.weight,
@@ -690,12 +1222,20 @@ class PostgresStorage:
                 )
             connection.commit()
 
-    def upsert_messages(self, messages: Sequence[MessageRecord]) -> None:
+    def upsert_messages(
+        self,
+        messages: Sequence[MessageRecord],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             for message in messages:
                 connection.execute(
                     """
-                    INSERT INTO messages (
+                    INSERT INTO scoped_messages (
+                        tenant_id,
+                        user_id,
                         graph_message_id,
                         thread_id,
                         internet_message_id,
@@ -711,8 +1251,8 @@ class PostgresStorage:
                         raw_payload_json,
                         first_seen_at,
                         last_seen_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT(graph_message_id) DO UPDATE SET
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT(tenant_id, user_id, graph_message_id) DO UPDATE SET
                         thread_id = EXCLUDED.thread_id,
                         internet_message_id = EXCLUDED.internet_message_id,
                         subject = EXCLUDED.subject,
@@ -728,6 +1268,8 @@ class PostgresStorage:
                         last_seen_at = CURRENT_TIMESTAMP
                     """,
                     (
+                        scoped_tenant_id,
+                        scoped_user_id,
                         message.graph_message_id,
                         message.thread_id,
                         message.internet_message_id,
@@ -745,12 +1287,20 @@ class PostgresStorage:
                 )
             connection.commit()
 
-    def upsert_meetings(self, meetings: Sequence[MeetingRecord]) -> None:
+    def upsert_meetings(
+        self,
+        meetings: Sequence[MeetingRecord],
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             for meeting in meetings:
                 connection.execute(
                     """
-                    INSERT INTO meetings (
+                    INSERT INTO scoped_meetings (
+                        tenant_id,
+                        user_id,
                         graph_event_id,
                         subject,
                         start_at,
@@ -764,8 +1314,8 @@ class PostgresStorage:
                         raw_payload_json,
                         first_seen_at,
                         last_seen_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
-                    ON CONFLICT(graph_event_id) DO UPDATE SET
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+                    ON CONFLICT(tenant_id, user_id, graph_event_id) DO UPDATE SET
                         subject = EXCLUDED.subject,
                         start_at = EXCLUDED.start_at,
                         end_at = EXCLUDED.end_at,
@@ -779,6 +1329,8 @@ class PostgresStorage:
                         last_seen_at = CURRENT_TIMESTAMP
                     """,
                     (
+                        scoped_tenant_id,
+                        scoped_user_id,
                         meeting.graph_event_id,
                         meeting.subject,
                         meeting.start_at.isoformat(),
@@ -794,17 +1346,18 @@ class PostgresStorage:
                 )
             connection.commit()
 
-    def get_message(self, graph_message_id: str) -> Optional[MessageRecord]:
+    def get_message(self, graph_message_id: str, tenant_id: str = "", user_id: str = "") -> Optional[MessageRecord]:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
                 SELECT graph_message_id, thread_id, internet_message_id, subject, from_address,
                        to_addresses_json, cc_addresses_json, received_at, body_preview, categories_json,
                        is_unread, has_attachments, raw_payload_json
-                FROM messages
-                WHERE graph_message_id = %s
+                FROM scoped_messages
+                WHERE tenant_id = %s AND user_id = %s AND graph_message_id = %s
                 """,
-                (graph_message_id,),
+                (scoped_tenant_id, scoped_user_id, graph_message_id),
             ).fetchone()
         if row is None:
             return None
@@ -822,18 +1375,21 @@ class PostgresStorage:
             is_unread=bool(row["is_unread"]),
             has_attachments=bool(row["has_attachments"]),
             raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
         )
 
-    def get_meeting(self, graph_event_id: str) -> Optional[MeetingRecord]:
+    def get_meeting(self, graph_event_id: str, tenant_id: str = "", user_id: str = "") -> Optional[MeetingRecord]:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
                 SELECT graph_event_id, subject, start_at, end_at, organizer_address, attendees_json,
                        location, join_url, body_preview, is_online_meeting, raw_payload_json
-                FROM meetings
-                WHERE graph_event_id = %s
+                FROM scoped_meetings
+                WHERE tenant_id = %s AND user_id = %s AND graph_event_id = %s
                 """,
-                (graph_event_id,),
+                (scoped_tenant_id, scoped_user_id, graph_event_id),
             ).fetchone()
         if row is None:
             return None
@@ -849,16 +1405,22 @@ class PostgresStorage:
             body_preview=row["body_preview"],
             is_online_meeting=bool(row["is_online_meeting"]),
             raw_payload=dict(_json_loads(row["raw_payload_json"]) or {}),
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
         )
 
-    def _save_digest_items(self, connection, payload: DigestPayload) -> None:
-        connection.execute("DELETE FROM digest_items WHERE run_id = %s", (payload.run_id,))
+    def _save_digest_items(self, connection, payload: DigestPayload, tenant_id: str, user_id: str) -> None:
+        connection.execute(
+            "DELETE FROM scoped_digest_items WHERE tenant_id = %s AND user_id = %s AND run_id = %s",
+            (tenant_id, user_id, payload.run_id),
+        )
         for section_name in SECTION_NAMES:
-            entries = getattr(payload, section_name)
-            for entry in entries:
+            for entry in getattr(payload, section_name):
                 connection.execute(
                     """
-                    INSERT INTO digest_items (
+                    INSERT INTO scoped_digest_items (
+                        tenant_id,
+                        user_id,
                         run_id,
                         item_type,
                         source_kind,
@@ -868,9 +1430,11 @@ class PostgresStorage:
                         guardrail_applied,
                         section_name,
                         rendered_text
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
                     """,
                     (
+                        tenant_id,
+                        user_id,
                         payload.run_id,
                         "digest_entry",
                         entry.source_kind,
@@ -884,10 +1448,14 @@ class PostgresStorage:
                 )
 
     def save_run(self, run: DigestRunRecord) -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(run.tenant_id, run.user_id)
+        scoped_summary = replace(run.summary, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
         with self._connect() as connection:
             connection.execute(
                 """
-                INSERT INTO digest_runs (
+                INSERT INTO scoped_digest_runs (
+                    tenant_id,
+                    user_id,
                     run_id,
                     run_type,
                     status,
@@ -896,8 +1464,8 @@ class PostgresStorage:
                     window_end,
                     delivery_mode,
                     summary_json
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT(run_id) DO UPDATE SET
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT(tenant_id, user_id, run_id) DO UPDATE SET
                     run_type = EXCLUDED.run_type,
                     status = EXCLUDED.status,
                     generated_at = EXCLUDED.generated_at,
@@ -907,6 +1475,8 @@ class PostgresStorage:
                     summary_json = EXCLUDED.summary_json
                 """,
                 (
+                    scoped_tenant_id,
+                    scoped_user_id,
                     run.run_id,
                     run.run_type,
                     run.status,
@@ -914,14 +1484,16 @@ class PostgresStorage:
                     run.window_start.isoformat(),
                     run.window_end.isoformat(),
                     run.delivery_mode,
-                    _json_dumps(run.summary),
+                    _json_dumps(scoped_summary),
                 ),
             )
-            self._save_digest_items(connection, run.summary)
+            self._save_digest_items(connection, scoped_summary, scoped_tenant_id, scoped_user_id)
             connection.commit()
 
     def _row_to_run(self, row: Mapping[str, Any]) -> DigestRunRecord:
         summary = digest_payload_from_dict(_json_loads(row["summary_json"]) or {})
+        if not summary.tenant_id or not summary.user_id:
+            summary = replace(summary, tenant_id=row["tenant_id"], user_id=row["user_id"])
         return DigestRunRecord(
             run_id=row["run_id"],
             run_type=row["run_type"],
@@ -931,59 +1503,105 @@ class PostgresStorage:
             window_end=parse_datetime(row["window_end"]),
             delivery_mode=row["delivery_mode"],
             summary=summary,
+            tenant_id=row["tenant_id"],
+            user_id=row["user_id"],
         )
 
-    def get_run(self, run_id: str) -> Optional[DigestRunRecord]:
+    def get_run(self, run_id: str, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         with self._connect() as connection:
-            row = connection.execute(
-                """
-                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
-                FROM digest_runs
-                WHERE run_id = %s
-                """,
-                (run_id,),
-            ).fetchone()
+            if tenant_id or user_id:
+                scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
+                row = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                           delivery_mode, summary_json
+                    FROM scoped_digest_runs
+                    WHERE tenant_id = %s AND user_id = %s AND run_id = %s
+                    """,
+                    (scoped_tenant_id, scoped_user_id, run_id),
+                ).fetchone()
+            else:
+                row = connection.execute(
+                    """
+                    SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                           delivery_mode, summary_json
+                    FROM scoped_digest_runs
+                    WHERE run_id = %s
+                    LIMIT 1
+                    """,
+                    (run_id,),
+                ).fetchone()
         if row is None:
             return None
         return self._row_to_run(row)
 
-    def get_latest_completed_run(self) -> Optional[DigestRunRecord]:
+    def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+        params = []
+        where_clauses = ["status = 'completed'"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = %s")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = %s")
+            params.append(scoped_user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
-                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
-                FROM digest_runs
-                WHERE status = 'completed'
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
             ).fetchone()
         if row is None:
             return None
         return self._row_to_run(row)
 
-    def get_latest_completed_run_for_day(self, target_day: date) -> Optional[DigestRunRecord]:
+    def get_latest_completed_run_for_day(
+        self,
+        target_day: date,
+        tenant_id: str = "",
+        user_id: str = "",
+    ) -> Optional[DigestRunRecord]:
+        params = [target_day.isoformat()]
+        where_clauses = ["status = 'completed'", "generated_at::date = %s::date"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = %s")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = %s")
+            params.append(scoped_user_id)
         with self._connect() as connection:
             row = connection.execute(
                 """
-                SELECT run_id, run_type, status, generated_at, window_start, window_end, delivery_mode, summary_json
-                FROM digest_runs
-                WHERE status = 'completed'
-                  AND generated_at::date = %s::date
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """,
-                (target_day.isoformat(),),
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
             ).fetchone()
         if row is None:
             return None
         return self._row_to_run(row)
 
-    def save_feedback(self, feedback: FeedbackRecord) -> None:
+    def save_feedback(self, feedback: FeedbackRecord, tenant_id: str = "", user_id: str = "") -> None:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id or feedback.tenant_id, user_id or feedback.user_id)
         with self._connect() as connection:
             connection.execute(
                 """
-                INSERT INTO feedback (
+                INSERT INTO scoped_feedback (
+                    tenant_id,
+                    user_id,
                     feedback_id,
                     run_id,
                     source_kind,
@@ -991,8 +1609,8 @@ class PostgresStorage:
                     signal_type,
                     signal_value,
                     recorded_at
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT(feedback_id) DO UPDATE SET
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT(tenant_id, user_id, feedback_id) DO UPDATE SET
                     run_id = EXCLUDED.run_id,
                     source_kind = EXCLUDED.source_kind,
                     source_id = EXCLUDED.source_id,
@@ -1001,6 +1619,8 @@ class PostgresStorage:
                     recorded_at = EXCLUDED.recorded_at
                 """,
                 (
+                    scoped_tenant_id,
+                    scoped_user_id,
                     feedback.feedback_id,
                     feedback.run_id,
                     feedback.source_kind,
@@ -1012,14 +1632,16 @@ class PostgresStorage:
             )
             connection.commit()
 
-    def list_feedback(self, run_id: Optional[str] = None) -> Sequence[FeedbackRecord]:
+    def list_feedback(self, run_id: Optional[str] = None, tenant_id: str = "", user_id: str = "") -> Sequence[FeedbackRecord]:
+        scoped_tenant_id, scoped_user_id = self._scope(tenant_id, user_id)
         query = """
             SELECT feedback_id, run_id, source_kind, source_id, signal_type, signal_value, recorded_at
-            FROM feedback
+            FROM scoped_feedback
+            WHERE tenant_id = %s AND user_id = %s
         """
-        params = []
+        params = [scoped_tenant_id, scoped_user_id]
         if run_id is not None:
-            query += " WHERE run_id = %s"
+            query += " AND run_id = %s"
             params.append(run_id)
         query += " ORDER BY recorded_at"
         with self._connect() as connection:
@@ -1033,6 +1655,8 @@ class PostgresStorage:
                 signal_type=row["signal_type"],
                 signal_value=row["signal_value"],
                 recorded_at=parse_datetime(row["recorded_at"]),
+                tenant_id=scoped_tenant_id,
+                user_id=scoped_user_id,
             )
             for row in rows
         )

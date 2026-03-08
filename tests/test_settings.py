@@ -27,6 +27,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_GRAPH_BASE_URL"] = "https://graph.microsoft.com/v1.0"
             os.environ["DAY_CAPTAIN_GRAPH_ACCESS_TOKEN"] = "delegated-token"
             os.environ["DAY_CAPTAIN_GRAPH_USER_ID"] = "alex@example.com"
+            os.environ["DAY_CAPTAIN_TARGET_USERS"] = "alex@example.com, bob@example.com"
             os.environ["DAY_CAPTAIN_GRAPH_SEND_ENABLED"] = "true"
             os.environ["DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS"] = "45"
             os.environ["DAY_CAPTAIN_GRAPH_SCOPES"] = "Mail.Read, Calendars.Read, Mail.Send"
@@ -66,6 +67,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.graph_base_url, "https://graph.microsoft.com/v1.0")
         self.assertEqual(settings.graph_access_token, "delegated-token")
         self.assertEqual(settings.graph_user_id, "alex@example.com")
+        self.assertEqual(settings.target_users, ("alex@example.com", "bob@example.com"))
         self.assertTrue(settings.graph_send_enabled)
         self.assertEqual(settings.graph_timeout_seconds, 45)
         self.assertEqual(settings.graph_scopes, ("User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"))
@@ -94,6 +96,8 @@ class DayCaptainSettingsTest(unittest.TestCase):
             "postgresql://user:pass@localhost:5432/day_captain?sslmode=require",
         )
         self.assertEqual(settings.resolved_graph_auth_mode(), "app_only")
+        self.assertEqual(settings.resolved_target_users(), ("alex@example.com", "bob@example.com"))
+        self.assertEqual(settings.resolved_default_target_user(), "alex@example.com")
 
     def test_validate_hosted_requires_job_secret(self) -> None:
         settings = DayCaptainSettings(environment="production", job_secret="")
@@ -110,7 +114,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         settings = DayCaptainSettings(
             graph_auth_mode="auto",
             graph_client_secret="secret",
-            graph_user_id="alex@example.com",
+            target_users=("alex@example.com", "bob@example.com"),
         )
 
         self.assertEqual(settings.resolved_graph_auth_mode(), "app_only")
