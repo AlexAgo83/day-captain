@@ -31,6 +31,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
   - `POST /jobs/morning-digest`
   - `POST /jobs/recall-digest`
 - Require `X-Day-Captain-Secret` on job endpoints.
+- Verify `GET /healthz` returns only `{"status":"ok"}` for unauthenticated probes and includes runtime summary metadata only when `X-Day-Captain-Secret` is supplied.
 - Verify successful job responses contain only acknowledgement metadata and section counts.
 - Verify unhandled server errors return `{"error":"internal_error"}` without internal details.
 
@@ -44,5 +45,5 @@ Use this checklist before treating the Render-hosted Day Captain service as read
   - the job returns HTTP `200`
   - a digest run is persisted successfully
   - only the requested `target_user_id` receives the digest and persistence stays isolated from other configured users
-- Run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ...` from the private ops repo or equivalent environment.
+- Run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ... --expect-graph-auth-mode app_only --expect-storage-backend postgres` from the private ops repo or equivalent environment.
 - Follow [`tenant_scoped_multi_user_operator_guide.md`](/Users/alexandreagostini/Documents/day-captain/docs/tenant_scoped_multi_user_operator_guide.md) for the bounded operator workflow.

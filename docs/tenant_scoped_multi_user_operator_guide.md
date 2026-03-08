@@ -64,7 +64,10 @@ Run the hosted validation flow:
 ```bash
 DAY_CAPTAIN_SERVICE_URL=... \
 DAY_CAPTAIN_JOB_SECRET=... \
-PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com
+PYTHONPATH=src python3 -m day_captain validate-hosted-service \
+  --target-user alice@example.com \
+  --expect-graph-auth-mode app_only \
+  --expect-storage-backend postgres
 ```
 
 ## Scheduling model

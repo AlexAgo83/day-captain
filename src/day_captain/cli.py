@@ -117,6 +117,16 @@ def build_parser() -> argparse.ArgumentParser:
     validate_hosted.add_argument("--target-user", help="Explicit target user for hosted validation.")
     validate_hosted.add_argument("--timeout-seconds", type=int, default=30)
     validate_hosted.add_argument(
+        "--expect-graph-auth-mode",
+        choices=("delegated", "app_only"),
+        help="Fail if the hosted runtime summary reports a different Graph auth mode.",
+    )
+    validate_hosted.add_argument(
+        "--expect-storage-backend",
+        choices=("sqlite", "postgres"),
+        help="Fail if the hosted runtime summary reports a different storage backend.",
+    )
+    validate_hosted.add_argument(
         "--skip-recall",
         action="store_true",
         help="Skip recall-digest validation after the morning-digest trigger.",
@@ -229,6 +239,8 @@ def _run_validate_hosted_service_command(args: argparse.Namespace) -> object:
             service_url,
             job_secret,
             target_user_id=str(args.target_user or "").strip(),
+            expected_graph_auth_mode=str(getattr(args, "expect_graph_auth_mode", "") or "").strip(),
+            expected_storage_backend=str(getattr(args, "expect_storage_backend", "") or "").strip(),
             timeout_seconds=int(args.timeout_seconds),
             check_recall=not bool(args.skip_recall),
         )

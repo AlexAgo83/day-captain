@@ -36,14 +36,16 @@ Your private ops repo should contain:
 ## Validation before enabling cron
 
 - run `PYTHONPATH=src python3 -m day_captain validate-config --target-user alice@example.com`
-- run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com`
+- run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com --expect-graph-auth-mode app_only --expect-storage-backend postgres`
 - trigger one hosted job manually for each target user
 - confirm delivery and persistence before enabling the scheduled trigger
 
 The hosted validation helper checks:
 
 - `GET /healthz`
+- protected runtime summary from `GET /healthz` using `X-Day-Captain-Secret`
 - `POST /jobs/morning-digest`
 - optional `POST /jobs/recall-digest`
+- runtime expectations such as `graph_auth_mode=app_only` and `storage_backend=postgres`
 - acknowledgement shape (`status`, `job`, `run_id`, `generated_at`, `delivery_mode`, `section_counts`)
 - `run_id` consistency between morning-digest and recall-digest

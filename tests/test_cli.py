@@ -2,6 +2,7 @@ from pathlib import Path
 import os
 import sys
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -49,7 +50,7 @@ class ValidateConfigCommandTest(unittest.TestCase):
         try:
             os.environ["DAY_CAPTAIN_SERVICE_URL"] = "https://example.com"
             os.environ["DAY_CAPTAIN_JOB_SECRET"] = "secret"
-            with unittest.mock.patch("day_captain.cli.trigger_hosted_job", return_value={"status": "ok"}) as trigger:
+            with mock.patch("day_captain.cli.trigger_hosted_job", return_value={"status": "ok"}) as trigger:
                 result = _run_trigger_hosted_job_command(
                     type(
                         "Args",
@@ -80,7 +81,7 @@ class ValidateConfigCommandTest(unittest.TestCase):
         try:
             os.environ["DAY_CAPTAIN_SERVICE_URL"] = "https://example.com"
             os.environ["DAY_CAPTAIN_JOB_SECRET"] = "secret"
-            with unittest.mock.patch(
+            with mock.patch(
                 "day_captain.cli.validate_hosted_service",
                 return_value={"status": "ok"},
             ) as validate_hosted:
@@ -92,6 +93,8 @@ class ValidateConfigCommandTest(unittest.TestCase):
                             "service_url": "",
                             "job_secret": "",
                             "target_user": "alice@example.com",
+                            "expect_graph_auth_mode": "",
+                            "expect_storage_backend": "",
                             "timeout_seconds": 30,
                             "skip_recall": False,
                         },

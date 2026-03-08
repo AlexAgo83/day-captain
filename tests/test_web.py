@@ -69,6 +69,28 @@ class DayCaptainWebAppTest(unittest.TestCase):
         self.assertEqual(response["status"], "200 OK")
         self.assertEqual(response["json"]["status"], "ok")
 
+    def test_healthz_returns_runtime_summary_when_secret_matches(self) -> None:
+        app = create_web_app(
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_auth_mode="app_only",
+                graph_client_id="client-id",
+                graph_client_secret="client-secret",
+                target_users=("alice@example.com",),
+            )
+        )
+
+        response = self._request(app, "GET", "/healthz", secret="secret")
+
+        self.assertEqual(response["status"], "200 OK")
+        self.assertEqual(response["json"]["status"], "ok")
+        self.assertEqual(response["json"]["runtime"]["graph_auth_mode"], "app_only")
+        self.assertEqual(response["json"]["runtime"]["storage_backend"], "postgres")
+
     def test_morning_digest_requires_secret(self) -> None:
         app = create_web_app(DayCaptainSettings(job_secret="secret"))
 

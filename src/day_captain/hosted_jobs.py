@@ -54,18 +54,62 @@ def _validate_job_ack(payload: Mapping[str, Any], expected_job_name: str) -> Map
     return payload
 
 
+def _validate_runtime_summary(
+    payload: Mapping[str, Any],
+    *,
+    expected_graph_auth_mode: str = "",
+    expected_storage_backend: str = "",
+) -> Mapping[str, Any]:
+    status = str(payload.get("status") or "").strip()
+    if status != "ok":
+        raise HostedJobError("Hosted runtime summary did not report status=ok.")
+    storage_backend = str(payload.get("storage_backend") or "").strip()
+    if storage_backend not in {"postgres", "sqlite"}:
+        raise HostedJobError("Hosted runtime summary did not include a valid storage_backend.")
+    graph_auth_mode = str(payload.get("graph_auth_mode") or "").strip()
+    if graph_auth_mode not in {"delegated", "app_only"}:
+        raise HostedJobError("Hosted runtime summary did not include a valid graph_auth_mode.")
+    configured_target_user_count = payload.get("configured_target_user_count")
+    if not isinstance(configured_target_user_count, int):
+        raise HostedJobError("Hosted runtime summary did not include configured_target_user_count.")
+    if "database_configured" not in payload:
+        raise HostedJobError("Hosted runtime summary did not include database_configured.")
+    if expected_graph_auth_mode and graph_auth_mode != expected_graph_auth_mode:
+        raise HostedJobError(
+            "Hosted runtime summary reported graph_auth_mode={0}, expected {1}.".format(
+                graph_auth_mode,
+                expected_graph_auth_mode,
+            )
+        )
+    if expected_storage_backend and storage_backend != expected_storage_backend:
+        raise HostedJobError(
+            "Hosted runtime summary reported storage_backend={0}, expected {1}.".format(
+                storage_backend,
+                expected_storage_backend,
+            )
+        )
+    return payload
+
+
 def check_hosted_health(
     service_url: str,
     *,
+    job_secret: str = "",
+    include_runtime_summary: bool = False,
+    expected_graph_auth_mode: str = "",
+    expected_storage_backend: str = "",
     timeout_seconds: int = 30,
     opener: Optional[Callable[..., Any]] = None,
 ) -> Mapping[str, Any]:
     normalized_service_url = _normalized_service_url(service_url)
     opener = opener or request.urlopen
     url = "{0}/healthz".format(normalized_service_url)
+    headers = {"Accept": "application/json"}
+    if include_runtime_summary:
+        headers["X-Day-Captain-Secret"] = _normalized_job_secret(job_secret)
     req = request.Request(
         url,
-        headers={"Accept": "application/json"},
+        headers=headers,
         method="GET",
     )
     try:
@@ -85,11 +129,22 @@ def check_hosted_health(
         raise HostedJobError("Hosted healthcheck returned unexpected status {0}.".format(status_code))
     if payload.get("status") != "ok":
         raise HostedJobError("Hosted healthcheck did not return status=ok.")
+    runtime_summary = None
+    if include_runtime_summary:
+        runtime_payload = payload.get("runtime")
+        if not isinstance(runtime_payload, dict):
+            raise HostedJobError("Hosted healthcheck did not include runtime summary.")
+        runtime_summary = _validate_runtime_summary(
+            runtime_payload,
+            expected_graph_auth_mode=expected_graph_auth_mode,
+            expected_storage_backend=expected_storage_backend,
+        )
     return {
         "status": "ok",
         "url": url,
         "status_code": status_code,
         "response": payload,
+        "runtime": runtime_summary,
     }
 
 
@@ -186,12 +241,18 @@ def validate_hosted_service(
     job_secret: str,
     *,
     target_user_id: str = "",
+    expected_graph_auth_mode: str = "",
+    expected_storage_backend: str = "",
     timeout_seconds: int = 30,
     check_recall: bool = True,
     opener: Optional[Callable[..., Any]] = None,
 ) -> Mapping[str, Any]:
     health = check_hosted_health(
         service_url,
+        job_secret=job_secret,
+        include_runtime_summary=True,
+        expected_graph_auth_mode=expected_graph_auth_mode,
+        expected_storage_backend=expected_storage_backend,
         timeout_seconds=timeout_seconds,
         opener=opener,
     )
@@ -231,6 +292,7 @@ def validate_hosted_service(
         "service_url": _normalized_service_url(service_url),
         "target_user_id": str(target_user_id or "").strip(),
         "health": health,
+        "runtime": health.get("runtime"),
         "morning_digest": morning,
         "recall_digest": recall,
     }

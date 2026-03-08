@@ -203,16 +203,21 @@ class DayCaptainSettings:
         self.validate_hosted()
         self.validate_target_user(target_user_id)
         resolved_target = str(target_user_id or "").strip()
+        resolved_targets = self.resolved_target_users()
+        resolved_database_url = self.resolved_database_url()
         return {
             "status": "ok",
             "environment": self.environment,
+            "hosted": self.is_hosted_environment(),
             "delivery_mode": self.delivery_mode,
             "graph_auth_mode": self.resolved_graph_auth_mode(),
             "tenant_id": self.resolved_tenant_scope(),
-            "configured_target_users": self.resolved_target_users(),
+            "configured_target_users": resolved_targets,
+            "configured_target_user_count": len(resolved_targets),
             "selected_target_user": resolved_target,
             "graph_send_enabled": self.graph_send_enabled,
-            "hosted": self.is_hosted_environment(),
+            "database_configured": bool(resolved_database_url),
+            "storage_backend": "postgres" if resolved_database_url else "sqlite",
         }
 
     def llm_is_enabled(self) -> bool:
