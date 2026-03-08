@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 98%
 > Confidence: 96%
-> Progress: 92%
+> Progress: 95%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -61,3 +61,4 @@ flowchart LR
 - Implementation is underway: bounded cleanup rules are being added for rough labels such as `A imprimer`, meeting wording now starts to guard against self-reference phrasing when the organizer matches the target user, and the next focus is better overview/meeting fallback phrasing.
 - The current slice now also tightens the LLM wording path so summaries repeat titles less often and `En bref` gets stronger meeting-specific guidance.
 - The latest local slice also keeps `Suivi` / `Next step` cues when long rewritten summaries are compacted, so the wording cleanup stays concise without losing the actionable tail.
+- `En bref` input is now being compacted before the LLM overview call as well, so verbose candidate/profile summaries are less likely to leak long machine-like detail into the top block.

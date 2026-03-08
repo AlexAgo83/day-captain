@@ -1317,11 +1317,39 @@ class LlmDigestOverviewEngine:
 
     def _overview_sections(self, payload: DigestPayload) -> Mapping[str, Sequence[DigestEntry]]:
         return {
-            "critical_topics": tuple(payload.critical_topics[:1]),
-            "actions_to_take": tuple(payload.actions_to_take[:1]),
-            "watch_items": tuple(payload.watch_items[:1]),
-            "upcoming_meetings": tuple(payload.upcoming_meetings[:1]),
+            "critical_topics": self._compact_overview_items(tuple(payload.critical_topics[:1])),
+            "actions_to_take": self._compact_overview_items(tuple(payload.actions_to_take[:1])),
+            "watch_items": self._compact_overview_items(tuple(payload.watch_items[:1])),
+            "upcoming_meetings": self._compact_overview_items(tuple(payload.upcoming_meetings[:1])),
         }
+
+    def _compact_overview_items(self, items: Sequence[DigestEntry]) -> Sequence[DigestEntry]:
+        compacted = []
+        for item in items:
+            compacted.append(
+                DigestEntry(
+                    title=item.title,
+                    summary=_normalize_item_summary(item.title, item.summary, max_chars=self._overview_summary_limit(item)),
+                    section_name=item.section_name,
+                    source_kind=item.source_kind,
+                    source_id=item.source_id,
+                    score=item.score,
+                    reason_codes=item.reason_codes,
+                    guardrail_applied=item.guardrail_applied,
+                )
+            )
+        return tuple(compacted)
+
+    def _overview_summary_limit(self, item: DigestEntry) -> int:
+        if item.source_kind == "meeting":
+            return 90
+        if item.section_name == "critical_topics":
+            return 110
+        if item.section_name == "actions_to_take":
+            return 120
+        if item.section_name == "watch_items":
+            return 120
+        return 120
 
     def _overview_meeting_note(self, payload: DigestPayload, language: str) -> str:
         meetings = tuple(payload.upcoming_meetings)
