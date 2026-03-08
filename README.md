@@ -269,6 +269,15 @@ curl -X POST http://127.0.0.1:8000/jobs/morning-digest \
   -d '{"force": true}'
 ```
 
+Trigger one configured target user explicitly:
+
+```bash
+curl -X POST http://127.0.0.1:8000/jobs/morning-digest \
+  -H "Content-Type: application/json" \
+  -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
+  -d '{"force": false, "target_user_id": "alice@example.com"}'
+```
+
 Recall through HTTP:
 
 ```bash
@@ -335,6 +344,9 @@ This repository currently includes two workflow categories:
 The scheduler workflow is in [`morning-digest-scheduler.yml`](./.github/workflows/morning-digest-scheduler.yml) and expects:
 - `DAY_CAPTAIN_SERVICE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
+- optional `DAY_CAPTAIN_TARGET_USERS_JSON` repository variable for scheduled multi-user fan-out
+
+For the operator workflow used by the bounded multi-user model, see [`tenant_scoped_multi_user_operator_guide.md`](./docs/tenant_scoped_multi_user_operator_guide.md).
 
 Recommended production setup:
 - keep CI here if you want public validation

@@ -1,9 +1,9 @@
 ## item_010_day_captain_tenant_scoped_multi_user_digests - Introduce bounded tenant-scoped multi-user digest operation
 > From version: 0.7.0
-> Status: In Progress
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 50%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -59,7 +59,7 @@ flowchart LR
 
 # Links
 - Request: `req_010_day_captain_tenant_scoped_multi_user_digests`
-- Primary task(s): `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` (`Done`), `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` (`Ready`)
+- Primary task(s): `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` (`Done`), `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` (`Done`)
 
 # Priority
 - Impact: High - this is the gateway from a personal prototype to a reusable team product.
@@ -69,4 +69,4 @@ flowchart LR
 - Derived from request `req_010_day_captain_tenant_scoped_multi_user_digests`.
 - This slice deliberately targets an operator-managed deployment first, not a public SaaS control plane.
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` is complete: tenant-scoped persistence, explicit per-user execution, target-user configuration, and isolation-focused automated tests are implemented.
-- `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` remains open for hosted validation and operator-proof documentation on the deployed path.
+- `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` is complete: operator workflow docs, scheduler support, and local isolation validation are now captured.

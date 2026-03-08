@@ -258,6 +258,39 @@ class DayCaptainApplicationTest(unittest.TestCase):
             storage.get_latest_completed_run(tenant_id="common", user_id="bob@example.com")
         )
 
+    def test_recall_is_isolated_per_target_user(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(
+                target_users=("alice@example.com", "bob@example.com"),
+            ),
+            storage=storage,
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(
+                [
+                    MessageRecord(
+                        graph_message_id="msg-1",
+                        thread_id="thread-1",
+                        subject="Urgent budget review",
+                        from_address="boss@example.com",
+                        received_at=datetime(2026, 3, 9, 7, 30, tzinfo=timezone.utc),
+                        body_preview="Please review before noon.",
+                    ),
+                ]
+            ),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        alice_run = app.run_morning_digest(now=now, target_user_id="alice@example.com", force=True)
+        bob_run = app.run_morning_digest(now=now, target_user_id="bob@example.com", force=True)
+
+        recalled_alice = app.recall_digest(day=now.date(), target_user_id="alice@example.com")
+        recalled_bob = app.recall_digest(day=now.date(), target_user_id="bob@example.com")
+
+        self.assertEqual(recalled_alice.run_id, alice_run.run_id)
+        self.assertEqual(recalled_bob.run_id, bob_run.run_id)
+
     def test_build_application_uses_llm_provider_when_configured(self) -> None:
         settings = DayCaptainSettings(
             llm_provider="openai",

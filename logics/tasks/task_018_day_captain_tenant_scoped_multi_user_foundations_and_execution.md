@@ -1,9 +1,9 @@
 ## task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution - Implement tenant-scoped storage, config, and per-user digest execution
 > From version: 0.7.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
 > Confidence: 97%
-> Progress: 95%
+> Progress: 100%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -58,14 +58,14 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Added stable `tenant_id` and `user_id` scope fields to domain payloads, auth context, persisted runs, feedback, preferences, messages, and meetings so stored state is partitioned per tenant and target user.
 - Reworked `SQLiteStorage` and `PostgresStorage` onto tenant-scoped and user-scoped tables, including legacy-table migration into the new scoped tables for existing single-user data.
 - Added operator-managed target-user configuration through `DAY_CAPTAIN_TARGET_USERS`, explicit `--target-user` CLI options, and hosted `target_user_id` payload support so each run executes for one selected configured user.
 - Added focused isolation coverage for same-id cross-user storage, explicit target-user selection, and per-user run persistence, then updated `.env.example`, `README.md`, and hosted deployment docs to reflect the tenant-scoped model.
-- Implementation is complete; task status remains `In Progress` only because backlog item `item_010` stays open until the hosted/operator validation slice in `task_019` is captured.
+- Implementation and linked validation are complete; the tenant-scoped multi-user backlog slice is now ready to close.
 - Validation executed:
   - `python3 -m unittest tests.test_storage tests.test_app tests.test_delivery_contract`
   - `python3 -m unittest discover -s tests`
