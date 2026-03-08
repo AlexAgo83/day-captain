@@ -91,6 +91,17 @@ PYTHONPATH=src python3 -m day_captain check-hosted-health \
   --expect-storage-backend postgres
 ```
 
+Then use trigger-only calls for the routine schedule:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=... \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain trigger-hosted-job \
+  --job morning-digest \
+  --target-user alice@example.com \
+  --timeout-seconds 90
+```
+
 ## Scheduling model
 
 The GitHub Actions scheduler supports two modes:
@@ -114,6 +125,7 @@ If the hosted web service is on a plan that can sleep:
 
 - use the private ops workflow to call `GET /healthz` as a warm-up step before the real trigger
 - for multi-user schedules, do that warm-up once before the per-user fan-out rather than once per user
+- use trigger-only job calls for the daily schedule, and keep full `validate-hosted-service` runs for manual validation or rollout checks
 - allow bounded retries before `POST /jobs/morning-digest`
 - use longer timeout settings than for an always-on deployment
 - keep this as a fallback mode only; prefer a paid always-on service for routine production delivery

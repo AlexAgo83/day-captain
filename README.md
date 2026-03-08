@@ -231,6 +231,11 @@ If the hosted web service can sleep between runs, treat the first request as a w
 - use longer timeouts in the private ops repo than you would on an always-on service
 - treat this as a fallback operating mode, not the preferred production posture
 
+Recommended scheduler split:
+- use `check-hosted-health` for a standalone readiness step
+- use `trigger-hosted-job --job morning-digest` for the routine daily cron
+- reserve `validate-hosted-service` for manual checks, rollout validation, or pre-cron verification
+
 If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
 
 When `delivery_mode=graph_send`, the current local delegated flow sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.
