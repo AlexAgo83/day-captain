@@ -1,9 +1,9 @@
 ## task_016_day_captain_hosted_graph_app_only_authentication_implementation - Implement hosted Graph app-only auth and explicit mailbox routes
 > From version: 0.7.0
-> Status: Ready
-> Understanding: 99%
+> Status: In Progress
+> Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 95%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,11 +25,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Add a hosted Graph app-only authentication mode using client credentials.
-- [ ] 2. Add explicit mailbox targeting for hosted mail, calendar, and send operations through `/users/{id}` routes.
-- [ ] 3. Preserve delegated local auth behavior and select the correct auth mode from config.
-- [ ] 4. Add focused tests and docs for hosted app-only auth, route selection, and config requirements.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Add a hosted Graph app-only authentication mode using client credentials.
+- [x] 2. Add explicit mailbox targeting for hosted mail, calendar, and send operations through `/users/{id}` routes.
+- [x] 3. Preserve delegated local auth behavior and select the correct auth mode from config.
+- [x] 4. Add focused tests and docs for hosted app-only auth, route selection, and config requirements.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> Plan step 1 replaces hosted delegated refresh handling. Proof: task explicitly adds client-credentials auth.
@@ -50,10 +50,18 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Added hosted client-credentials authentication through `ClientCredentialsAuthenticator`, plus `GraphAppOnlyAuthProvider` so hosted runs can authenticate without delegated refresh-token handling.
+- Routed hosted mailbox reads, calendar reads, and `sendMail` through explicit `/users/{id}` roots while preserving delegated `/me` behavior for local auth and local CLI workflows.
+- Updated config and operator docs so hosted app-only setup is explicit in `.env.example`, `README.md`, and the hosted deployment checklist.
+- Implementation is complete; task status remains `In Progress` only because backlog item `item_009` stays open until the deployed Render validation in `task_017` is captured.
+- Validation executed:
+  - `python3 -m unittest tests.test_auth tests.test_graph_client tests.test_app tests.test_delivery_contract`
+  - `python3 -m unittest discover -s tests`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`

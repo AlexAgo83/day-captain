@@ -35,7 +35,7 @@ class SQLiteStorageTest(unittest.TestCase):
             storage.upsert_messages((message,))
 
             with sqlite3.connect(path) as connection:
-                count = connection.execute("SELECT COUNT(*) FROM messages").fetchone()[0]
+                count = connection.execute("SELECT COUNT(*) FROM scoped_messages").fetchone()[0]
 
             self.assertEqual(count, 1)
 
@@ -80,7 +80,7 @@ class SQLiteStorageTest(unittest.TestCase):
             self.assertIsNotNone(loaded)
             self.assertEqual(loaded.summary.critical_topics[0].source_id, "msg-1")
             with sqlite3.connect(path) as connection:
-                item_count = connection.execute("SELECT COUNT(*) FROM digest_items").fetchone()[0]
+                item_count = connection.execute("SELECT COUNT(*) FROM scoped_digest_items").fetchone()[0]
 
             self.assertEqual(item_count, 1)
 
@@ -136,6 +136,47 @@ class SQLiteStorageTest(unittest.TestCase):
             loaded = storage.load_preferences()
             self.assertEqual(len(loaded), 1)
             self.assertEqual(loaded[0].weight, 2.0)
+
+    def test_storage_isolates_same_message_id_across_users(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "day_captain.sqlite3")
+            storage = SQLiteStorage(path)
+            shared_id = "msg-1"
+
+            storage.upsert_messages(
+                (
+                    MessageRecord(
+                        graph_message_id=shared_id,
+                        thread_id="thread-a",
+                        internet_message_id="<a@example.com>",
+                        subject="Digest for Alice",
+                        from_address="boss@example.com",
+                        received_at=datetime(2026, 3, 7, 7, 30, tzinfo=timezone.utc),
+                    ),
+                ),
+                tenant_id="tenant-1",
+                user_id="alice@example.com",
+            )
+            storage.upsert_messages(
+                (
+                    MessageRecord(
+                        graph_message_id=shared_id,
+                        thread_id="thread-b",
+                        internet_message_id="<b@example.com>",
+                        subject="Digest for Bob",
+                        from_address="pm@example.com",
+                        received_at=datetime(2026, 3, 7, 7, 35, tzinfo=timezone.utc),
+                    ),
+                ),
+                tenant_id="tenant-1",
+                user_id="bob@example.com",
+            )
+
+            alice_message = storage.get_message(shared_id, tenant_id="tenant-1", user_id="alice@example.com")
+            bob_message = storage.get_message(shared_id, tenant_id="tenant-1", user_id="bob@example.com")
+
+            self.assertEqual(alice_message.subject, "Digest for Alice")
+            self.assertEqual(bob_message.subject, "Digest for Bob")
 
 
 if __name__ == "__main__":

@@ -39,10 +39,10 @@ Current package version: `0.8.0`
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
 Current operating model:
-- local and delivered flows are implemented around one mailbox at a time
+- local runs still default to one mailbox at a time
 - the roadmap now explicitly targets one company tenant with multiple users, each receiving a separate digest
-- that tenant-scoped multi-user model is planned in Logics and is not fully implemented yet
-- the future tenant-scoped model will target an explicit recipient list, not everyone in the tenant by default
+- tenant-scoped storage and explicit per-user execution are implemented for operator-managed multi-user hosting
+- the remaining Logics work is now mainly hosted validation and operational proof for that model
 
 ## Repository layout
 
@@ -124,7 +124,7 @@ DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only
 DAY_CAPTAIN_GRAPH_CLIENT_ID=...
 DAY_CAPTAIN_GRAPH_CLIENT_SECRET=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
-DAY_CAPTAIN_GRAPH_USER_ID=...
+DAY_CAPTAIN_TARGET_USERS=alice@example.com,bob@example.com
 DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_DIGEST_LANGUAGE=en
@@ -135,9 +135,9 @@ DAY_CAPTAIN_LLM_API_KEY=...
 ```
 
 Important hosted note:
-- the current shipped hosted path still assumes one active target mailbox at a time
-- the target architecture is evolving toward tenant-scoped multi-user operation with several configured users in one deployment
-- that future model will require a cleanup of `.env*` and hosted settings so stale single-user variables do not remain ambiguous
+- hosted runs are now tenant-scoped and user-scoped, with one explicit target user per execution
+- configure explicit recipients with `DAY_CAPTAIN_TARGET_USERS`
+- `DAY_CAPTAIN_GRAPH_USER_ID` remains supported as a single-user fallback and default target
 - hosted Graph auth now supports an explicit `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` path for unattended environments
 
 Important:
@@ -197,10 +197,10 @@ Hosted app-only workflow:
 - provide `DAY_CAPTAIN_GRAPH_CLIENT_ID`
 - provide `DAY_CAPTAIN_GRAPH_CLIENT_SECRET`
 - provide `DAY_CAPTAIN_GRAPH_TENANT_ID`
-- provide `DAY_CAPTAIN_GRAPH_USER_ID`
+- provide `DAY_CAPTAIN_TARGET_USERS`
 - grant the corresponding Graph application permissions in Entra
 
-In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity.
+In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity. When several users are configured, each run must choose one explicit target user.
 
 ## Local usage
 
@@ -213,10 +213,22 @@ set +a
 PYTHONPATH=src python3 -m day_captain morning-digest --force
 ```
 
+Run a digest for one configured hosted target:
+
+```bash
+PYTHONPATH=src python3 -m day_captain morning-digest --force --target-user alice@example.com
+```
+
 Recall the latest digest:
 
 ```bash
 PYTHONPATH=src python3 -m day_captain recall-digest
+```
+
+Recall a specific configured target:
+
+```bash
+PYTHONPATH=src python3 -m day_captain recall-digest --target-user alice@example.com
 ```
 
 Record feedback:
@@ -227,7 +239,8 @@ PYTHONPATH=src python3 -m day_captain record-feedback \
   --source-kind message \
   --source-id MESSAGE_ID \
   --signal-type useful \
-  --signal-value true
+  --signal-value true \
+  --target-user alice@example.com
 ```
 
 ## Local HTTP service
@@ -283,7 +296,7 @@ python3 -m unittest tests.test_graph_client
 
 ## Storage model
 
-Current persistence covers:
+Current persistence covers tenant-scoped and user-scoped tables for:
 - `messages`
 - `meetings`
 - `digest_runs`
@@ -291,12 +304,10 @@ Current persistence covers:
 - `feedback`
 - `preferences`
 
-Current limitation:
-- the shipped schema is still effectively single-user in practice
-
-Planned evolution:
-- add stable `tenant_id` and `user_id` scoping across persisted product data
-- execute ingestion, digest generation, recall, and delivery per configured user inside one company tenant
+Current model:
+- one deployment serves one Microsoft 365 tenant
+- digest data is partitioned by `tenant_id` and `user_id`
+- only users listed in `DAY_CAPTAIN_TARGET_USERS` are valid hosted recipients by default
 
 Local mode uses `SQLite`.
 

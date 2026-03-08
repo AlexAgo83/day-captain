@@ -18,8 +18,8 @@ class FakeHostedApp:
     def __init__(self) -> None:
         self.calls = []
 
-    def run_morning_digest(self, now=None, delivery_mode=None, force=False):
-        self.calls.append(("morning", now, delivery_mode, force))
+    def run_morning_digest(self, now=None, delivery_mode=None, force=False, target_user_id=None):
+        self.calls.append(("morning", now, delivery_mode, force, target_user_id))
         return DigestPayload(
             run_id="run-1",
             generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
@@ -28,8 +28,8 @@ class FakeHostedApp:
             delivery_mode=delivery_mode or "json",
         )
 
-    def recall_digest(self, run_id=None, day=None):
-        self.calls.append(("recall", run_id, day))
+    def recall_digest(self, run_id=None, day=None, target_user_id=None):
+        self.calls.append(("recall", run_id, day, target_user_id))
         return DigestPayload(
             run_id=run_id or "run-1",
             generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
@@ -91,6 +91,7 @@ class DayCaptainWebAppTest(unittest.TestCase):
                     "now": "2026-03-07T08:30:00+00:00",
                     "delivery_mode": "graph_send",
                     "force": True,
+                    "target_user_id": "alex@example.com",
                 },
             )
 
@@ -98,6 +99,7 @@ class DayCaptainWebAppTest(unittest.TestCase):
         self.assertEqual(fake_app.calls[0][0], "morning")
         self.assertEqual(fake_app.calls[0][2], "graph_send")
         self.assertTrue(fake_app.calls[0][3])
+        self.assertEqual(fake_app.calls[0][4], "alex@example.com")
         self.assertEqual(response["json"]["run_id"], "run-1")
         self.assertEqual(response["json"]["status"], "completed")
         self.assertEqual(response["json"]["section_counts"]["watch_items"], 0)

@@ -688,6 +688,8 @@ class StructuredDigestRenderer:
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        tenant_id: str = "",
+        user_id: str = "",
         top_summary: str = "",
         top_summary_source: str = "none",
         meeting_horizon: Optional[Mapping[str, str]] = None,
@@ -727,6 +729,8 @@ class StructuredDigestRenderer:
         delivery_payload = {
             "mode": delivery_mode,
             "run_id": run_id,
+            "tenant_id": tenant_id,
+            "user_id": user_id,
             "subject": delivery_subject,
             "body": delivery_body,
             "html_body": delivery_html,
@@ -754,6 +758,8 @@ class StructuredDigestRenderer:
             window_start=window_start,
             window_end=window_end,
             delivery_mode=delivery_mode,
+            tenant_id=tenant_id,
+            user_id=user_id,
             delivery_subject=delivery_subject,
             delivery_body=delivery_body,
             top_summary=top_summary,
@@ -1081,6 +1087,8 @@ class SnapshotRecallProvider:
             window_end=payload.window_end,
             delivery_mode=payload.delivery_mode,
             prioritized_items=tuple(items),
+            tenant_id=payload.tenant_id,
+            user_id=payload.user_id,
             top_summary=payload.top_summary,
             top_summary_source=str(payload.delivery_payload.get("top_summary_source") or "none"),
         )
@@ -1088,17 +1096,20 @@ class SnapshotRecallProvider:
 
 class PreferenceFeedbackProcessor:
     def process_feedback(self, storage: Storage, feedback: FeedbackRecord) -> None:
-        storage.save_feedback(feedback)
+        storage.save_feedback(feedback, tenant_id=feedback.tenant_id, user_id=feedback.user_id)
         if feedback.source_kind != "message":
             return
-        message = storage.get_message(feedback.source_id)
+        message = storage.get_message(feedback.source_id, tenant_id=feedback.tenant_id, user_id=feedback.user_id)
         if message is None:
             return
         delta = self._feedback_delta(feedback)
         if delta == 0.0:
             return
 
-        existing = {pref.preference_key: pref for pref in storage.load_preferences()}
+        existing = {
+            pref.preference_key: pref
+            for pref in storage.load_preferences(tenant_id=feedback.tenant_id, user_id=feedback.user_id)
+        }
         updates = []
         timestamp = feedback.recorded_at
 
@@ -1116,7 +1127,7 @@ class PreferenceFeedbackProcessor:
                 self._updated_preference(existing.get(keyword_key), keyword_key, "keyword", delta * 0.25, timestamp)
             )
 
-        storage.upsert_preferences(tuple(updates))
+        storage.upsert_preferences(tuple(updates), tenant_id=feedback.tenant_id, user_id=feedback.user_id)
 
     def _feedback_delta(self, feedback: FeedbackRecord) -> float:
         signal = feedback.signal_type.strip().lower()

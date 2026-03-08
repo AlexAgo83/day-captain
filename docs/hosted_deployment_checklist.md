@@ -6,6 +6,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Set `DAY_CAPTAIN_JOB_SECRET` in Render and in the GitHub Actions scheduler secrets.
 - Do not deploy hosted environments with an empty `DAY_CAPTAIN_JOB_SECRET`.
 - Set `DAY_CAPTAIN_GRAPH_CLIENT_ID` and `DAY_CAPTAIN_GRAPH_TENANT_ID`.
+- Set `DAY_CAPTAIN_TARGET_USERS` to the explicit mailbox list served by this deployment.
 - Prefer `DAY_CAPTAIN_GRAPH_REFRESH_TOKEN` for hosted delegated auth bootstrap.
 - Do not commit `.env`, token caches, database files, or mailbox-derived fixtures.
 
@@ -18,6 +19,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 ## Runtime and scheduling
 - Serve the hosted app with `gunicorn`, not the standard-library WSGI server.
 - Keep the scheduler workflow calling only `/jobs/morning-digest`.
+- Include `target_user_id` in hosted job payloads when several target users are configured.
 - Ensure the scheduler checks the HTTP status code without printing the response body.
 - Store `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET` as GitHub Actions secrets.
 
@@ -38,3 +40,4 @@ Use this checklist before treating the Render-hosted Day Captain service as read
   - scheduler logs do not contain digest content
   - the job returns HTTP `200`
   - a digest run is persisted successfully
+  - only the requested `target_user_id` receives the digest and persistence stays isolated from other configured users
