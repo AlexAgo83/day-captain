@@ -1,6 +1,7 @@
 """Helpers for triggering hosted Day Captain jobs from external automation."""
 
 import json
+import socket
 import time
 from typing import Any
 from typing import Callable
@@ -122,6 +123,8 @@ def check_hosted_health(
         raise HostedJobError("Hosted healthcheck failed with {0}: {1}".format(exc.code, detail)) from exc
     except error.URLError as exc:
         raise HostedJobError("Unable to reach hosted Day Captain service: {0}".format(exc.reason)) from exc
+    except (TimeoutError, socket.timeout) as exc:
+        raise HostedJobError("Hosted healthcheck timed out after {0} second(s).".format(timeout_seconds)) from exc
     try:
         payload = json.loads(raw or "{}")
     except json.JSONDecodeError:
@@ -281,6 +284,8 @@ def trigger_hosted_job(
         raise HostedJobError("Hosted job failed with {0}: {1}".format(exc.code, detail)) from exc
     except error.URLError as exc:
         raise HostedJobError("Unable to reach hosted Day Captain service: {0}".format(exc.reason)) from exc
+    except (TimeoutError, socket.timeout) as exc:
+        raise HostedJobError("Hosted job request timed out after {0} second(s).".format(timeout_seconds)) from exc
 
     response_payload: Any
     try:
