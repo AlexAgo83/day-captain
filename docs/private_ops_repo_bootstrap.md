@@ -19,7 +19,9 @@ Your private ops repo should contain:
 - deployment-specific notes or runbooks
 - optional Power Automate runbook if inbound email-command recall is operated outside GitHub Actions
 
-Use [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) as the starting workflow file to copy into `.github/workflows/morning-digest.yml` in the private ops repo.
+Use these copy-ready templates in the private ops repo:
+- [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) -> `.github/workflows/morning-digest.yml`
+- [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) -> `.github/workflows/weekly-digest.yml`
 
 ## Recommended workflow pattern
 
@@ -29,9 +31,11 @@ Use [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Do
 4. If the hosted service can sleep, run one standalone readiness step with `scripts/check_hosted_health.py --wake-service` before the real trigger fan-out.
 5. Keep the workflow output free of digest content.
 
-## Copy-ready workflow
+## Copy-ready workflows
 
-Copy [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) into the private ops repo as `.github/workflows/morning-digest.yml`.
+Copy:
+- [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) into the private ops repo as `.github/workflows/morning-digest.yml`
+- [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) into the private ops repo as `.github/workflows/weekly-digest.yml`
 
 Assumptions baked into that template:
 
@@ -40,6 +44,7 @@ Assumptions baked into that template:
 - the ops workflow installs the package from that `release` branch before calling the hosted helper scripts
 - the hosted service may sleep, so the workflow performs one readiness/wake-up pass before per-user fan-out
 - `DAY_CAPTAIN_TARGET_USERS_JSON` is mandatory in the ops repo so the scheduler never silently falls back to an ambiguous single-user trigger
+- the morning scheduler stays weekday-only, while the weekly scheduler is a separate Sunday-evening contract
 
 ## Suggested repository variables
 
@@ -60,6 +65,7 @@ Assumptions baked into that template:
 - if using a dedicated sender mailbox, confirm the hosted env also sets `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com` and verify delivery is sent from that mailbox while the selected target mailbox remains the data source
 - if using inbound email-command recall, run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres --check-email-command --email-command-sender alice@example.com --email-command-text recall-week`
 - trigger one hosted job manually for each target user with `day-captain trigger-hosted-job --job morning-digest`
+- trigger one hosted weekly job manually with `day-captain trigger-hosted-job --job weekly-digest`
 - trigger one hosted `email-command-recall` job manually if that surface is enabled and confirm duplicate suppression by replaying the same `command_message_id`
 - confirm delivery and persistence before enabling the scheduled trigger
 - if the hosted plan can sleep, document the warm-up path and timeout policy in the private ops workflow before enabling cron
@@ -70,6 +76,7 @@ The hosted validation helper checks:
 - `GET /healthz`
 - protected runtime summary from `GET /healthz` using `X-Day-Captain-Secret`
 - `POST /jobs/morning-digest`
+- `POST /jobs/weekly-digest`
 - optional `POST /jobs/recall-digest`
 - optional `POST /jobs/email-command-recall`
 - runtime expectations such as `graph_auth_mode=app_only` and `storage_backend=postgres`
@@ -82,4 +89,5 @@ Recommended sleeping-service fallback:
 - warm the service with `check-hosted-health --wake-service`
 - wait for readiness or retry within a bounded window
 - only then trigger `POST /jobs/morning-digest` through `trigger-hosted-job --job morning-digest`
+- use a separate Sunday workflow for `POST /jobs/weekly-digest` instead of broadening the weekday morning cron
 - keep longer timeouts in the ops workflow than you would on an always-on service

@@ -217,11 +217,11 @@ def build_job_payload(
     body: str = "",
 ) -> Mapping[str, Any]:
     normalized_job = str(job_name or "").strip()
-    if normalized_job not in {"morning-digest", "recall-digest", "email-command-recall"}:
+    if normalized_job not in {"morning-digest", "weekly-digest", "recall-digest", "email-command-recall"}:
         raise HostedJobError("Unsupported hosted job: {0}".format(normalized_job or "<empty>"))
 
     payload: dict[str, Any] = {}
-    if normalized_job == "morning-digest":
+    if normalized_job in {"morning-digest", "weekly-digest"}:
         payload["force"] = bool(force)
         if delivery_mode:
             payload["delivery_mode"] = delivery_mode
@@ -267,7 +267,7 @@ def trigger_hosted_job(
     normalized_service_url = _normalized_service_url(service_url)
     normalized_secret = _normalized_job_secret(job_secret)
     normalized_job = str(job_name or "").strip()
-    if normalized_job not in {"morning-digest", "recall-digest", "email-command-recall"}:
+    if normalized_job not in {"morning-digest", "weekly-digest", "recall-digest", "email-command-recall"}:
         raise HostedJobError("Unsupported hosted job: {0}".format(normalized_job or "<empty>"))
 
     opener = opener or request.urlopen
