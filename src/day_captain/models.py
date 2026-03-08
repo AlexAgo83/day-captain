@@ -18,6 +18,8 @@ class AuthContext:
     tenant_id: str = ""
     auth_mode: str = "delegated"
     graph_root_path: str = "/me"
+    sender_user_id: str = ""
+    sender_graph_root_path: str = "/me"
 
 
 @dataclass(frozen=True)

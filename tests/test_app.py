@@ -248,6 +248,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
             graph_client_id="client-id",
             graph_client_secret="client-secret",
             graph_user_id="alex@example.com",
+            graph_sender_user_id="daycaptain@example.com",
             graph_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
         )
 
@@ -258,6 +259,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
             app = build_application(settings=settings)
 
         app_only_provider.assert_called_once()
+        self.assertEqual(app_only_provider.call_args.kwargs["sender_user_id"], "daycaptain@example.com")
         self.assertEqual(app.auth_provider, app_only_provider.return_value)
 
     def test_morning_digest_requires_explicit_target_when_multiple_users_are_configured(self) -> None:
@@ -479,6 +481,24 @@ class DayCaptainApplicationTest(unittest.TestCase):
                 delivery_mode="graph_send",
                 graph_send_enabled=True,
                 graph_scopes=("User.Read", "Mail.Read"),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaises(ValueError):
+            app.run_morning_digest(now=now, force=True)
+
+    def test_graph_send_rejects_dedicated_sender_without_app_only_auth(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_sender_user_id="daycaptain@example.com",
+                graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
             ),
             storage=InMemoryStorage(),
             auth_provider=StubAuthProvider(),
