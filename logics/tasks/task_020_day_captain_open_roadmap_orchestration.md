@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 98%
-> Progress: 88%
+> Progress: 95%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -28,7 +28,7 @@ flowchart LR
 
 # Plan
 - [x] 1. Freeze the execution order and dependency rules for the remaining open slices.
-- [ ] 2. Drive hosted readiness first: complete app-only Graph auth, then complete hosted validation and cold-start-tolerant trigger behavior.
+- [x] 2. Drive hosted readiness first: complete app-only Graph auth, then complete hosted validation and cold-start-tolerant trigger behavior.
 - [x] 3. Drive tenant-scoped multi-user work next: foundations first, then isolation and operator validation.
 - [ ] 4. Close the remaining live-quality validation work for bounded LLM wording once the deployment path is stable enough to validate it properly.
 - [ ] 5. Update the parent request/backlog statuses so the remaining open work has one coherent closure path instead of several disconnected partial tracks.
@@ -55,6 +55,6 @@ flowchart LR
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, and hosted Render proof for app-only auth is now also complete.
+- The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, hosted Render proof for app-only auth is complete, and private-ops scheduler proof with cold-start-tolerant wake-up behavior is now also complete.
 - Scheduler, operator docs, target-user validation, private-ops bootstrap tooling, and hosted validation helpers now align with that order, so the remaining closure path is narrower and explicit.
-- Remaining work for closure is now concentrated in two areas: validate the sleeping-service fallback in real hosted sleeping conditions for `task_021`, then close the live LLM wording validation in `task_010`.
+- Remaining work for closure is now concentrated almost entirely in `task_010`: live LLM wording validation on the delivered digest path, plus final parent-chain cleanup once that slice is closed.

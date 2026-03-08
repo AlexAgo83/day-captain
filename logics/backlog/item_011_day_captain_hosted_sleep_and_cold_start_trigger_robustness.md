@@ -1,9 +1,9 @@
 ## item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness - Make hosted triggering resilient to sleeping or cold-starting services
 > From version: 0.8.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
-> Confidence: 99%
-> Progress: 95%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -64,5 +64,5 @@ flowchart LR
 - Derived from request `req_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness`.
 - This slice is intentionally operational: it improves hosted trigger resilience without pretending sleeping infrastructure is equivalent to always-on hosting.
 - The likely implementation areas are `src/day_captain/hosted_jobs.py`, `src/day_captain/cli.py`, the example scheduler workflow, and the private-ops deployment docs.
-- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` is now mostly implemented: wake-up-aware health probing, bounded retry/timeouts, a standalone readiness command, scheduler warm-up before fan-out, trigger-only cron calls, and operator docs are all in place.
-- Real hosted proof has started on the deployed Render service: protected health probing and full hosted validation now succeed against the live app-only deployment, so the remaining work is specifically to validate the same tooling against an actually sleeping instance before closure.
+- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` is complete: wake-up-aware health probing, bounded retry/timeouts, a standalone readiness command, scheduler warm-up before fan-out, trigger-only cron calls, and operator docs are all in place.
+- Real hosted proof is also complete: the private `day-captain-ops` workflow now validates the warm-up path against the live Render deployment, and the cold-start timeout edge case found during the first run was fixed in the application repo before the successful retry and confirmed mailbox delivery.
