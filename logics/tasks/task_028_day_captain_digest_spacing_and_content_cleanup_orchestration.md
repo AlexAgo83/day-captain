@@ -1,9 +1,9 @@
 ## task_028_day_captain_digest_spacing_and_content_cleanup_orchestration - Day Captain digest spacing and content cleanup orchestration
 > From version: 1.2.0
 > Status: In Progress
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 0%
+> Understanding: 97%
+> Confidence: 95%
+> Progress: 70%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -24,9 +24,9 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Increase spacing around `Périmètre`, `En bref`, and the first detailed section.
-- [ ] 2. Slightly soften card border weight and shorten footer helper copy.
-- [ ] 3. Add bounded cleanup rules for awkward labels and self-reference meeting wording.
+- [x] 1. Increase spacing around `Périmètre`, `En bref`, and the first detailed section.
+- [x] 2. Slightly soften card border weight and shorten footer helper copy.
+- [x] 3. Add bounded cleanup rules for awkward labels and self-reference meeting wording.
 - [ ] 4. Validate the final rendering in Outlook and update README/docs if needed.
 - [ ] FINAL: Update related Logics docs
 
@@ -56,3 +56,10 @@ flowchart LR
 
 # Report
 - Created on Monday, March 9, 2026 after live Outlook review showed that the remaining gaps are now mainly micro-spacing, content cleanup, and self-reference wording polish rather than structural layout issues.
+- Implementation in progress:
+  - increased spacing around the top summary transition so `Périmètre`, `En bref`, and the first detailed section breathe more cleanly
+  - softened card border treatment slightly and shortened the footer helper copy
+  - added bounded cleanup for rough labels and a first identity-aware meeting wording guard so the target user is not framed as meeting with themselves
+- Remaining before closure:
+  - validate the refined rendering in a real Outlook mailbox
+  - then update closure links and promote the request/backlog/task chain to `Done`

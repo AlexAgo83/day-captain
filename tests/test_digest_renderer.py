@@ -60,9 +60,10 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("In brief", payload.delivery_payload["html_body"])
         self.assertIn("No meetings are lined up for today.", payload.delivery_body)
         self.assertIn("Quick actions", payload.delivery_body)
-        self.assertIn("Opens a draft to Day Captain with the command prefilled in the subject and body.", payload.delivery_body)
+        self.assertIn("Opens a Day Captain draft.", payload.delivery_body)
         self.assertIn("subject/body: recall", payload.delivery_body)
         self.assertIn("mailto:daycaptain@example.com?subject=recall&amp;body=recall", payload.delivery_payload["html_body"])
+        self.assertIn("margin:10px 0 24px;padding:0 0 0 14px;border-left:3px solid #94a3b8;", payload.delivery_payload["html_body"])
         self.assertNotIn("background:#f8fafc", payload.delivery_payload["html_body"])
 
     def test_localizes_french_copy_and_meeting_fallback_note(self) -> None:
@@ -151,7 +152,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
 
         self.assertIn("Actions rapides", payload.delivery_body)
-        self.assertIn("Ouvre un brouillon vers Day Captain avec la commande préremplie dans l'objet et le corps.", payload.delivery_body)
+        self.assertIn("Ouvre un brouillon Day Captain.", payload.delivery_body)
         self.assertIn("Rappeler ce brief", payload.delivery_payload["html_body"])
         self.assertIn("subject=recall-week&amp;body=recall-week", payload.delivery_payload["html_body"])
 

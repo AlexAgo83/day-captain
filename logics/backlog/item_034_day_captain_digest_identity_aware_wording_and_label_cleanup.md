@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 97%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 70%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -50,4 +50,4 @@ flowchart LR
 
 # Notes
 - Derived from the March 9, 2026 Outlook review and direct operator feedback.
-- This item isolates bounded wording cleanup from purely visual spacing work.
+- Implementation is underway: bounded cleanup rules are being added for rough labels such as `A imprimer`, and meeting wording now starts to guard against self-reference phrasing when the organizer matches the target user.
