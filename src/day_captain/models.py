@@ -153,6 +153,26 @@ class FeedbackRecord:
     user_id: str = ""
 
 
+@dataclass(frozen=True)
+class EmailCommandRecord:
+    command_message_id: str
+    normalized_command: str
+    sender_address: str
+    processed_at: datetime
+    response_run_id: str
+    tenant_id: str = ""
+    user_id: str = ""
+
+
+@dataclass(frozen=True)
+class EmailCommandResult:
+    command_message_id: str
+    command_name: str
+    target_user_id: str
+    payload: DigestPayload
+    deduplicated: bool = False
+
+
 def _serialize(value: Any) -> Any:
     if isinstance(value, datetime):
         return value.isoformat()

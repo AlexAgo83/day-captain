@@ -31,6 +31,8 @@ from day_captain.models import AuthTokenBundle
 from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
+from day_captain.models import EmailCommandRecord
+from day_captain.models import EmailCommandResult
 from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -93,6 +95,35 @@ def _full_local_day_window(target_day: date, zone) -> tuple:
     )
     local_end = local_start + timedelta(days=1) - timedelta(seconds=1)
     return local_start.astimezone(timezone.utc), local_end.astimezone(timezone.utc)
+
+
+def _start_of_local_day(target_day: date, zone) -> datetime:
+    return datetime(
+        target_day.year,
+        target_day.month,
+        target_day.day,
+        0,
+        0,
+        0,
+        tzinfo=zone,
+    ).astimezone(timezone.utc)
+
+
+def _start_of_local_week(value: datetime, zone) -> datetime:
+    local_now = value.astimezone(zone)
+    target_day = local_now.date() - timedelta(days=local_now.weekday())
+    return _start_of_local_day(target_day, zone)
+
+
+def _normalized_email_command(*values: str) -> str:
+    for raw_value in values:
+        candidate = str(raw_value or "").strip().lower()
+        if not candidate:
+            continue
+        line = candidate.splitlines()[0].strip()
+        if line in {"recall", "recall-today", "recall-week"}:
+            return line
+    raise ValueError("Unsupported email command. Use recall, recall-today, or recall-week.")
 
 
 def _seed_token_cache_from_settings(cache, settings: DayCaptainSettings) -> None:
@@ -184,6 +215,7 @@ class InMemoryStorage:
         self._messages: Dict[str, MessageRecord] = {}
         self._meetings: Dict[str, MeetingRecord] = {}
         self._runs: Dict[str, DigestRunRecord] = {}
+        self._email_commands: Dict[str, EmailCommandRecord] = {}
         self._feedback: Dict[str, FeedbackRecord] = {}
         self._preferences = list(preferences or [])
 
@@ -235,6 +267,17 @@ class InMemoryStorage:
 
     def save_run(self, run: DigestRunRecord) -> None:
         self._runs[self._scope_key(run.tenant_id, run.user_id, run.run_id)] = run
+
+    def get_email_command(self, command_message_id: str, tenant_id: str = "") -> Optional[EmailCommandRecord]:
+        normalized_tenant_id = tenant_id or "default-tenant"
+        return self._email_commands.get("{0}:{1}".format(normalized_tenant_id, command_message_id))
+
+    def save_email_command(self, record: EmailCommandRecord, tenant_id: str = "") -> None:
+        scoped_tenant_id = tenant_id or record.tenant_id or "default-tenant"
+        self._email_commands["{0}:{1}".format(scoped_tenant_id, record.command_message_id)] = replace(
+            record,
+            tenant_id=scoped_tenant_id,
+        )
 
     def get_run(self, run_id: str, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         if tenant_id or user_id:
@@ -500,15 +543,31 @@ class DayCaptainApplication:
             "source_date": local_date.isoformat(),
         }
 
-    def run_morning_digest(
+    def _resolve_email_command_target_user(self, sender_address: str) -> str:
+        normalized_sender = str(sender_address or "").strip().lower()
+        if not normalized_sender:
+            raise ValueError("sender_address is required for email-command recall.")
+        configured_users = tuple(user.lower() for user in self.settings.resolved_target_users())
+        if normalized_sender in configured_users:
+            return normalized_sender
+        allowed_senders = tuple(sender.lower() for sender in self.settings.email_command_allowed_senders)
+        if len(configured_users) == 1 and (
+            normalized_sender == configured_users[0]
+            or normalized_sender in allowed_senders
+        ):
+            return configured_users[0]
+        raise ValueError("sender_address is not allowed to trigger email-command recall.")
+
+    def _build_digest_for_window(
         self,
-        now: Optional[datetime] = None,
-        delivery_mode: Optional[str] = None,
-        force: bool = False,
+        *,
+        current_time: datetime,
+        window_start: datetime,
+        delivery_mode: str,
+        run_type: str,
         target_user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
     ) -> DigestPayload:
-        current_time = _coerce_datetime(now)
         auth_context = self.auth_provider.authenticate(
             self.settings.graph_scopes,
             target_user_id=self._resolve_target_user_id(target_user_id),
@@ -516,15 +575,6 @@ class DayCaptainApplication:
         )
         scoped_tenant_id = auth_context.tenant_id or self._resolve_tenant_id(tenant_id)
         scoped_user_id = auth_context.user_id
-        previous_run = None if force else self.storage.get_latest_completed_run(
-            tenant_id=scoped_tenant_id,
-            user_id=scoped_user_id,
-        )
-        window_start = (
-            previous_run.window_end + timedelta(microseconds=1)
-            if previous_run is not None
-            else current_time - timedelta(hours=self.settings.default_lookback_hours)
-        )
         window_end = current_time
         messages = self.mail_collector.collect_messages(auth_context, window_start, window_end)
         meetings, meeting_horizon = self._collect_meetings(auth_context, current_time)
@@ -540,14 +590,13 @@ class DayCaptainApplication:
             reference_time=current_time,
         )
         prioritized_items = self.digest_wording_engine.rewrite(prioritized_items)
-        selected_delivery_mode = delivery_mode or self.settings.delivery_mode
         run_id = uuid.uuid4().hex
         payload = self.digest_renderer.render(
             run_id=run_id,
             generated_at=current_time,
             window_start=window_start,
             window_end=window_end,
-            delivery_mode=selected_delivery_mode,
+            delivery_mode=delivery_mode,
             prioritized_items=prioritized_items,
             tenant_id=scoped_tenant_id,
             user_id=scoped_user_id,
@@ -560,7 +609,7 @@ class DayCaptainApplication:
                 generated_at=current_time,
                 window_start=window_start,
                 window_end=window_end,
-                delivery_mode=selected_delivery_mode,
+                delivery_mode=delivery_mode,
                 prioritized_items=prioritized_items,
                 tenant_id=scoped_tenant_id,
                 user_id=scoped_user_id,
@@ -568,24 +617,53 @@ class DayCaptainApplication:
                 top_summary_source=overview.source,
                 meeting_horizon=meeting_horizon,
             )
-        if selected_delivery_mode == "graph_send":
+        if delivery_mode == "graph_send":
             _validate_graph_send_prerequisites(self.settings, auth_context)
             self.digest_delivery.deliver_digest(auth_context, payload)
         self.storage.save_run(
             DigestRunRecord(
                 run_id=run_id,
-                run_type="morning_digest",
+                run_type=run_type,
                 status="completed",
                 generated_at=current_time,
                 window_start=window_start,
                 window_end=window_end,
-                delivery_mode=selected_delivery_mode,
+                delivery_mode=delivery_mode,
                 summary=payload,
                 tenant_id=scoped_tenant_id,
                 user_id=scoped_user_id,
             )
         )
         return payload
+
+    def run_morning_digest(
+        self,
+        now: Optional[datetime] = None,
+        delivery_mode: Optional[str] = None,
+        force: bool = False,
+        target_user_id: Optional[str] = None,
+        tenant_id: Optional[str] = None,
+    ) -> DigestPayload:
+        current_time = _coerce_datetime(now)
+        scoped_tenant_id = self._resolve_tenant_id(tenant_id)
+        scoped_user_id = self._resolve_target_user_id(target_user_id)
+        previous_run = None if force else self.storage.get_latest_completed_run(
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
+        )
+        window_start = (
+            previous_run.window_end + timedelta(microseconds=1)
+            if previous_run is not None
+            else current_time - timedelta(hours=self.settings.default_lookback_hours)
+        )
+        return self._build_digest_for_window(
+            current_time=current_time,
+            window_start=window_start,
+            delivery_mode=delivery_mode or self.settings.delivery_mode,
+            run_type="morning_digest",
+            target_user_id=scoped_user_id,
+            tenant_id=scoped_tenant_id,
+        )
 
     def recall_digest(
         self,
@@ -621,6 +699,68 @@ class DayCaptainApplication:
         if run is None:
             raise LookupError("No completed digest run found for recall.")
         return self.recall_provider.build_recall(run)
+
+    def process_email_command_recall(
+        self,
+        *,
+        command_message_id: str,
+        sender_address: str,
+        command_text: str = "",
+        subject: str = "",
+        body: str = "",
+        now: Optional[datetime] = None,
+        tenant_id: Optional[str] = None,
+    ) -> EmailCommandResult:
+        scoped_tenant_id = self._resolve_tenant_id(tenant_id)
+        normalized_message_id = str(command_message_id or "").strip()
+        if not normalized_message_id:
+            raise ValueError("command_message_id is required for email-command recall.")
+        existing = self.storage.get_email_command(normalized_message_id, tenant_id=scoped_tenant_id)
+        if existing is not None:
+            run = self.storage.get_run(existing.response_run_id, tenant_id=existing.tenant_id, user_id=existing.user_id)
+            if run is None:
+                raise LookupError("Previously processed email-command recall run could not be loaded.")
+            return EmailCommandResult(
+                command_message_id=existing.command_message_id,
+                command_name=existing.normalized_command,
+                target_user_id=existing.user_id,
+                payload=self.recall_provider.build_recall(run),
+                deduplicated=True,
+            )
+
+        normalized_command = _normalized_email_command(command_text, subject, body)
+        target_user_id = self._resolve_email_command_target_user(sender_address)
+        current_time = _coerce_datetime(now)
+        zone = _display_zone(self.settings.display_timezone)
+        if normalized_command in {"recall", "recall-today"}:
+            window_start = _start_of_local_day(current_time.astimezone(zone).date(), zone)
+        else:
+            window_start = _start_of_local_week(current_time, zone)
+        payload = self._build_digest_for_window(
+            current_time=current_time,
+            window_start=window_start,
+            delivery_mode="graph_send",
+            run_type="email_command_recall",
+            target_user_id=target_user_id,
+            tenant_id=scoped_tenant_id,
+        )
+        record = EmailCommandRecord(
+            command_message_id=normalized_message_id,
+            normalized_command=normalized_command,
+            sender_address=str(sender_address or "").strip().lower(),
+            processed_at=current_time,
+            response_run_id=payload.run_id,
+            tenant_id=scoped_tenant_id,
+            user_id=target_user_id,
+        )
+        self.storage.save_email_command(record, tenant_id=scoped_tenant_id)
+        return EmailCommandResult(
+            command_message_id=normalized_message_id,
+            command_name=normalized_command,
+            target_user_id=target_user_id,
+            payload=payload,
+            deduplicated=False,
+        )
 
     def record_feedback(
         self,

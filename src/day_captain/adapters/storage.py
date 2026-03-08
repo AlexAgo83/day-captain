@@ -20,6 +20,7 @@ except ImportError:  # pragma: no cover - exercised only when psycopg isn't inst
 
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
+from day_captain.models import EmailCommandRecord
 from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -185,6 +186,17 @@ class SQLiteStorage:
                     signal_value TEXT NOT NULL,
                     recorded_at TEXT NOT NULL,
                     PRIMARY KEY (tenant_id, user_id, feedback_id)
+                );
+
+                CREATE TABLE IF NOT EXISTS scoped_email_commands (
+                    tenant_id TEXT NOT NULL,
+                    command_message_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    normalized_command TEXT NOT NULL,
+                    sender_address TEXT NOT NULL,
+                    processed_at TEXT NOT NULL,
+                    response_run_id TEXT NOT NULL,
+                    PRIMARY KEY (tenant_id, command_message_id)
                 );
 
                 CREATE TABLE IF NOT EXISTS scoped_preferences (
@@ -703,6 +715,17 @@ class SQLiteStorage:
             user_id=row["user_id"],
         )
 
+    def _row_to_email_command(self, row: sqlite3.Row) -> EmailCommandRecord:
+        return EmailCommandRecord(
+            command_message_id=row["command_message_id"],
+            normalized_command=row["normalized_command"],
+            sender_address=row["sender_address"],
+            processed_at=parse_datetime(row["processed_at"]),
+            response_run_id=row["response_run_id"],
+            tenant_id=row["tenant_id"],
+            user_id=row["user_id"],
+        )
+
     def get_run(self, run_id: str, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         with self._connect() as connection:
             if tenant_id or user_id:
@@ -827,6 +850,54 @@ class SQLiteStorage:
                     feedback.signal_type,
                     feedback.signal_value,
                     feedback.recorded_at.isoformat(),
+                ),
+            )
+
+    def get_email_command(self, command_message_id: str, tenant_id: str = "") -> Optional[EmailCommandRecord]:
+        scoped_tenant_id, _ = self._scope(tenant_id, "")
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT tenant_id, command_message_id, user_id, normalized_command, sender_address, processed_at, response_run_id
+                FROM scoped_email_commands
+                WHERE tenant_id = ? AND command_message_id = ?
+                LIMIT 1
+                """,
+                (scoped_tenant_id, command_message_id),
+            ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_email_command(row)
+
+    def save_email_command(self, record: EmailCommandRecord, tenant_id: str = "") -> None:
+        scoped_tenant_id, _ = self._scope(tenant_id or record.tenant_id, "")
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO scoped_email_commands (
+                    tenant_id,
+                    command_message_id,
+                    user_id,
+                    normalized_command,
+                    sender_address,
+                    processed_at,
+                    response_run_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+                ON CONFLICT(tenant_id, command_message_id) DO UPDATE SET
+                    user_id = excluded.user_id,
+                    normalized_command = excluded.normalized_command,
+                    sender_address = excluded.sender_address,
+                    processed_at = excluded.processed_at,
+                    response_run_id = excluded.response_run_id
+                """,
+                (
+                    scoped_tenant_id,
+                    record.command_message_id,
+                    record.user_id,
+                    record.normalized_command,
+                    record.sender_address,
+                    record.processed_at.isoformat(),
+                    record.response_run_id,
                 ),
             )
 
@@ -999,6 +1070,20 @@ class PostgresStorage:
                     signal_value TEXT NOT NULL,
                     recorded_at TEXT NOT NULL,
                     PRIMARY KEY (tenant_id, user_id, feedback_id)
+                )
+                """
+            )
+            connection.execute(
+                """
+                CREATE TABLE IF NOT EXISTS scoped_email_commands (
+                    tenant_id TEXT NOT NULL,
+                    command_message_id TEXT NOT NULL,
+                    user_id TEXT NOT NULL,
+                    normalized_command TEXT NOT NULL,
+                    sender_address TEXT NOT NULL,
+                    processed_at TEXT NOT NULL,
+                    response_run_id TEXT NOT NULL,
+                    PRIMARY KEY (tenant_id, command_message_id)
                 )
                 """
             )
@@ -1519,6 +1604,17 @@ class PostgresStorage:
             user_id=row["user_id"],
         )
 
+    def _row_to_email_command(self, row: Mapping[str, Any]) -> EmailCommandRecord:
+        return EmailCommandRecord(
+            command_message_id=row["command_message_id"],
+            normalized_command=row["normalized_command"],
+            sender_address=row["sender_address"],
+            processed_at=parse_datetime(row["processed_at"]),
+            response_run_id=row["response_run_id"],
+            tenant_id=row["tenant_id"],
+            user_id=row["user_id"],
+        )
+
     def get_run(self, run_id: str, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         with self._connect() as connection:
             if tenant_id or user_id:
@@ -1643,6 +1739,55 @@ class PostgresStorage:
                     feedback.signal_type,
                     feedback.signal_value,
                     feedback.recorded_at.isoformat(),
+                ),
+            )
+            connection.commit()
+
+    def get_email_command(self, command_message_id: str, tenant_id: str = "") -> Optional[EmailCommandRecord]:
+        scoped_tenant_id, _ = self._scope(tenant_id, "")
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT tenant_id, command_message_id, user_id, normalized_command, sender_address, processed_at, response_run_id
+                FROM scoped_email_commands
+                WHERE tenant_id = %s AND command_message_id = %s
+                LIMIT 1
+                """,
+                (scoped_tenant_id, command_message_id),
+            ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_email_command(row)
+
+    def save_email_command(self, record: EmailCommandRecord, tenant_id: str = "") -> None:
+        scoped_tenant_id, _ = self._scope(tenant_id or record.tenant_id, "")
+        with self._connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO scoped_email_commands (
+                    tenant_id,
+                    command_message_id,
+                    user_id,
+                    normalized_command,
+                    sender_address,
+                    processed_at,
+                    response_run_id
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT(tenant_id, command_message_id) DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    normalized_command = EXCLUDED.normalized_command,
+                    sender_address = EXCLUDED.sender_address,
+                    processed_at = EXCLUDED.processed_at,
+                    response_run_id = EXCLUDED.response_run_id
+                """,
+                (
+                    scoped_tenant_id,
+                    record.command_message_id,
+                    record.user_id,
+                    record.normalized_command,
+                    record.sender_address,
+                    record.processed_at.isoformat(),
+                    record.response_run_id,
                 ),
             )
             connection.commit()

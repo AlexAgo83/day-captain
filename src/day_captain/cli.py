@@ -62,6 +62,17 @@ def build_parser() -> argparse.ArgumentParser:
     recall.add_argument("--day", help="ISO date used to find the latest run for a day.")
     recall.add_argument("--target-user", help="Configured mailbox/user to recall.")
 
+    email_command = subparsers.add_parser(
+        "email-command-recall",
+        help="Process a bounded inbound email command and generate the requested recall digest.",
+    )
+    email_command.add_argument("--message-id", required=True, help="Inbound command email/message identifier.")
+    email_command.add_argument("--sender-address", required=True, help="Sender email address.")
+    email_command.add_argument("--command-text", help="Explicit normalized command text.")
+    email_command.add_argument("--subject", help="Inbound email subject used for command parsing.")
+    email_command.add_argument("--body", help="Inbound email body used for command parsing.")
+    email_command.add_argument("--now", help="Optional ISO datetime override.")
+
     feedback = subparsers.add_parser("record-feedback", help="Record user feedback on a digest item.")
     feedback.add_argument("--run-id", required=True)
     feedback.add_argument("--source-kind", required=True)
@@ -124,7 +135,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     trigger.add_argument(
         "--job",
-        choices=("morning-digest", "recall-digest"),
+        choices=("morning-digest", "recall-digest", "email-command-recall"),
         default="morning-digest",
     )
     trigger.add_argument("--target-user", help="Explicit target user for the hosted run.")
@@ -133,6 +144,11 @@ def build_parser() -> argparse.ArgumentParser:
     trigger.add_argument("--now", help="Optional ISO datetime override for morning digest.")
     trigger.add_argument("--run-id", help="Run identifier for recall.")
     trigger.add_argument("--day", help="ISO date for recall when run-id is omitted.")
+    trigger.add_argument("--message-id", help="Inbound command message identifier.")
+    trigger.add_argument("--sender-address", help="Inbound command sender email address.")
+    trigger.add_argument("--command-text", help="Explicit normalized command text.")
+    trigger.add_argument("--subject", help="Inbound command email subject.")
+    trigger.add_argument("--body", help="Inbound command email body.")
     trigger.add_argument("--timeout-seconds", type=int, default=30)
     trigger.add_argument(
         "--wake-service",
@@ -296,6 +312,11 @@ def _run_trigger_hosted_job_command(args: argparse.Namespace) -> object:
         now=str(getattr(args, "now", "") or "").strip(),
         run_id=str(getattr(args, "run_id", "") or "").strip(),
         day=str(getattr(args, "day", "") or "").strip(),
+        command_message_id=str(getattr(args, "message_id", "") or "").strip(),
+        sender_address=str(getattr(args, "sender_address", "") or "").strip(),
+        command_text=str(getattr(args, "command_text", "") or "").strip(),
+        subject=str(getattr(args, "subject", "") or "").strip(),
+        body=str(getattr(args, "body", "") or "").strip(),
     )
     try:
         return trigger_hosted_job(
@@ -377,6 +398,15 @@ def main(argv: Optional[list] = None) -> int:
             run_id=args.run_id,
             day=_parse_date(args.day),
             target_user_id=args.target_user,
+        )
+    elif args.command == "email-command-recall":
+        result = app.process_email_command_recall(
+            command_message_id=args.message_id,
+            sender_address=args.sender_address,
+            command_text=args.command_text or "",
+            subject=args.subject or "",
+            body=args.body or "",
+            now=_parse_datetime(args.now),
         )
     else:
         result = app.record_feedback(

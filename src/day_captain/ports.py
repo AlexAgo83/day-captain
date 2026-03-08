@@ -12,6 +12,7 @@ from day_captain.models import DigestEntry
 from day_captain.models import DigestOverview
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
+from day_captain.models import EmailCommandRecord
 from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -111,6 +112,12 @@ class Storage(Protocol):
         ...
 
     def save_feedback(self, feedback: FeedbackRecord, tenant_id: str = "", user_id: str = "") -> None:
+        ...
+
+    def get_email_command(self, command_message_id: str, tenant_id: str = "") -> Optional[EmailCommandRecord]:
+        ...
+
+    def save_email_command(self, record: EmailCommandRecord, tenant_id: str = "") -> None:
         ...
 
 

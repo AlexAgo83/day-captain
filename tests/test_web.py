@@ -38,6 +38,26 @@ class FakeHostedApp:
             delivery_mode="json",
         )
 
+    def process_email_command_recall(self, command_message_id="", sender_address="", command_text="", subject="", body="", now=None):
+        self.calls.append(("email_command", command_message_id, sender_address, command_text, subject, body, now))
+        return type(
+            "EmailCommandResult",
+            (),
+            {
+                "command_message_id": command_message_id,
+                "command_name": command_text or subject,
+                "target_user_id": sender_address,
+                "deduplicated": False,
+                "payload": DigestPayload(
+                    run_id="run-email",
+                    generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+                    window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+                    window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+                    delivery_mode="graph_send",
+                ),
+            },
+        )()
+
 
 class DayCaptainWebAppTest(unittest.TestCase):
     def _request(self, app, method, path, payload=None, secret="secret"):
@@ -140,6 +160,30 @@ class DayCaptainWebAppTest(unittest.TestCase):
 
         self.assertEqual(response["status"], "500 Internal Server Error")
         self.assertEqual(response["json"]["error"], "internal_error")
+
+    def test_email_command_recall_executes_hosted_app(self) -> None:
+        settings = DayCaptainSettings(job_secret="secret")
+        fake_app = FakeHostedApp()
+        app = create_web_app(settings)
+
+        with mock.patch("day_captain.web.build_application", return_value=fake_app):
+            response = self._request(
+                app,
+                "POST",
+                "/jobs/email-command-recall",
+                payload={
+                    "command_message_id": "cmd-1",
+                    "sender_address": "alice@example.com",
+                    "subject": "recall-week",
+                    "now": "2026-03-11T10:00:00+00:00",
+                },
+            )
+
+        self.assertEqual(response["status"], "200 OK")
+        self.assertEqual(fake_app.calls[0][0], "email_command")
+        self.assertEqual(fake_app.calls[0][1], "cmd-1")
+        self.assertEqual(response["json"]["job"], "email_command_recall")
+        self.assertEqual(response["json"]["run_id"], "run-email")
 
     def test_morning_digest_returns_400_when_target_user_is_missing_for_multi_user_setup(self) -> None:
         settings = DayCaptainSettings(

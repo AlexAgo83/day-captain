@@ -509,6 +509,104 @@ class DayCaptainApplicationTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             app.run_morning_digest(now=now, force=True)
 
+    def test_email_command_recall_generates_today_digest_and_deduplicates(self) -> None:
+        now = datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc)
+        delivery = mock.Mock()
+        app = build_application(
+            settings=DayCaptainSettings(
+                graph_send_enabled=True,
+                graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
+                target_users=("alice@example.com",),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(
+                [
+                    MessageRecord(
+                        graph_message_id="msg-1",
+                        thread_id="thread-1",
+                        subject="Today item",
+                        from_address="boss@example.com",
+                        received_at=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+                        body_preview="Needs action.",
+                    ),
+                ]
+            ),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        first = app.process_email_command_recall(
+            command_message_id="cmd-1",
+            sender_address="alice@example.com",
+            subject="recall",
+            now=now,
+        )
+        second = app.process_email_command_recall(
+            command_message_id="cmd-1",
+            sender_address="alice@example.com",
+            subject="recall",
+            now=now,
+        )
+
+        self.assertFalse(first.deduplicated)
+        self.assertTrue(second.deduplicated)
+        self.assertEqual(first.payload.run_id, second.payload.run_id)
+        delivery.deliver_digest.assert_called_once()
+
+    def test_email_command_recall_week_uses_start_of_local_week(self) -> None:
+        now = datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc)
+        delivery = mock.Mock()
+        app = build_application(
+            settings=DayCaptainSettings(
+                display_timezone="Europe/Paris",
+                graph_send_enabled=True,
+                graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
+                target_users=("alice@example.com",),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        result = app.process_email_command_recall(
+            command_message_id="cmd-week",
+            sender_address="alice@example.com",
+            subject="recall-week",
+            now=now,
+        )
+
+        self.assertEqual(result.payload.window_start, datetime(2026, 3, 8, 23, 0, tzinfo=timezone.utc))
+        delivery.deliver_digest.assert_called_once()
+
+    def test_email_command_recall_allows_single_target_via_explicit_allowlist(self) -> None:
+        now = datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc)
+        delivery = mock.Mock()
+        app = build_application(
+            settings=DayCaptainSettings(
+                graph_send_enabled=True,
+                graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
+                target_users=("alice@example.com",),
+                email_command_allowed_senders=("assistant@example.com",),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        result = app.process_email_command_recall(
+            command_message_id="cmd-allow",
+            sender_address="assistant@example.com",
+            subject="recall-today",
+            now=now,
+        )
+
+        self.assertEqual(result.target_user_id, "alice@example.com")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -7,6 +7,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest import mock
 from urllib import error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -282,7 +283,7 @@ class AuthFlowTest(unittest.TestCase):
         self.assertEqual(bundle.scopes, ("https://graph.microsoft.com/.default",))
 
     def test_app_only_provider_uses_explicit_target_user_and_users_root_path(self) -> None:
-        authenticator = unittest.mock.Mock()
+        authenticator = mock.Mock()
         authenticator.request_access_token.return_value = AuthTokenBundle(
             access_token="app-only-access",
             refresh_token="",
