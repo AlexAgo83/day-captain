@@ -173,6 +173,7 @@ Example repository variable:
 ```
 
 The weekday scheduler issues one hosted `/jobs/morning-digest` call per listed target user. The Sunday scheduler issues one hosted `/jobs/weekly-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the example workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
+- The Sunday scheduler should tolerate normal GitHub Actions cron jitter. Prefer the shared helper-backed gate from the copy-ready weekly workflow template instead of requiring an exact `20:30 Europe/Paris` process start.
 
 ## Sleeping-service fallback
 
@@ -197,6 +198,8 @@ After adding or changing users, validate:
 - recall for `alice@example.com` never returns `bob@example.com`'s latest run
 - if a dedicated sender mailbox is configured, delivery still arrives for the target user while the visible sender is `daycaptain@...`
 - if inbound email-command recall is enabled, only authorized senders can trigger it and replaying the same inbound `command_message_id` is deduplicated
+- a run left in `delivery_pending` still means delivery may already have happened and requires reconciliation before another send
+- a run marked `delivery_failed` means Graph prerequisites or delivery failed before acceptance was likely, so a later retry is expected to be safe
 - feedback recorded against one user changes only that user's preferences
 - persisted rows for messages, meetings, runs, feedback, and preferences stay partitioned by `tenant_id` and `user_id`
 

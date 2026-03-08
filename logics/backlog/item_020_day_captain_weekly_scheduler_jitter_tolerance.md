@@ -1,9 +1,9 @@
 ## item_020_day_captain_weekly_scheduler_jitter_tolerance - Make Sunday weekly scheduling tolerant to GitHub cron jitter
 > From version: 0.11.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Operations
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -50,7 +50,7 @@ flowchart LR
 
 # Links
 - Request: `req_019_day_captain_post_review_reliability_and_scheduler_recovery`
-- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: High - a skipped weekly digest is a user-visible failure of the new Sunday scheduling feature.

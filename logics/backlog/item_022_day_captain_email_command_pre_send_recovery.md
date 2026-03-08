@@ -1,9 +1,9 @@
 ## item_022_day_captain_email_command_pre_send_recovery - Refine email-command dedupe so pre-send failures do not become unrecoverable
 > From version: 0.11.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -51,7 +51,7 @@ flowchart LR
 
 # Links
 - Request: `req_019_day_captain_post_review_reliability_and_scheduler_recovery`
-- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: High - a stale dedupe barrier can make email-command recall appear broken to the user.
