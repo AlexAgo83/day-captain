@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.cli import _run_trigger_hosted_job_command
 from day_captain.cli import _run_validate_command
+from day_captain.cli import _run_validate_hosted_service_command
 from day_captain.config import DayCaptainSettings
 
 
@@ -72,6 +73,35 @@ class ValidateConfigCommandTest(unittest.TestCase):
             os.environ.update(previous)
 
         trigger.assert_called_once()
+        self.assertEqual(result["status"], "ok")
+
+    def test_validate_hosted_service_command_uses_env_fallbacks(self) -> None:
+        previous = dict(os.environ)
+        try:
+            os.environ["DAY_CAPTAIN_SERVICE_URL"] = "https://example.com"
+            os.environ["DAY_CAPTAIN_JOB_SECRET"] = "secret"
+            with unittest.mock.patch(
+                "day_captain.cli.validate_hosted_service",
+                return_value={"status": "ok"},
+            ) as validate_hosted:
+                result = _run_validate_hosted_service_command(
+                    type(
+                        "Args",
+                        (),
+                        {
+                            "service_url": "",
+                            "job_secret": "",
+                            "target_user": "alice@example.com",
+                            "timeout_seconds": 30,
+                            "skip_recall": False,
+                        },
+                    )()
+                )
+        finally:
+            os.environ.clear()
+            os.environ.update(previous)
+
+        validate_hosted.assert_called_once()
         self.assertEqual(result["status"], "ok")
 
 

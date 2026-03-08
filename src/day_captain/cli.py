@@ -17,7 +17,9 @@ from day_captain.app import build_application
 from day_captain.config import DayCaptainSettings
 from day_captain.hosted_jobs import HostedJobError
 from day_captain.hosted_jobs import build_job_payload
+from day_captain.hosted_jobs import check_hosted_health
 from day_captain.hosted_jobs import trigger_hosted_job
+from day_captain.hosted_jobs import validate_hosted_service
 from day_captain.models import to_jsonable
 from day_captain.web import serve
 
@@ -97,6 +99,28 @@ def build_parser() -> argparse.ArgumentParser:
     trigger.add_argument("--run-id", help="Run identifier for recall.")
     trigger.add_argument("--day", help="ISO date for recall when run-id is omitted.")
     trigger.add_argument("--timeout-seconds", type=int, default=30)
+
+    validate_hosted = subparsers.add_parser(
+        "validate-hosted-service",
+        help="Run a hosted healthcheck plus morning-digest/recall validation, intended for ops automation.",
+    )
+    validate_hosted.add_argument(
+        "--service-url",
+        default="",
+        help="Hosted Day Captain base URL. Falls back to DAY_CAPTAIN_SERVICE_URL.",
+    )
+    validate_hosted.add_argument(
+        "--job-secret",
+        default="",
+        help="Hosted job secret. Falls back to DAY_CAPTAIN_JOB_SECRET.",
+    )
+    validate_hosted.add_argument("--target-user", help="Explicit target user for hosted validation.")
+    validate_hosted.add_argument("--timeout-seconds", type=int, default=30)
+    validate_hosted.add_argument(
+        "--skip-recall",
+        action="store_true",
+        help="Skip recall-digest validation after the morning-digest trigger.",
+    )
 
     return parser
 
@@ -197,6 +221,21 @@ def _run_trigger_hosted_job_command(args: argparse.Namespace) -> object:
         raise SystemExit(str(exc))
 
 
+def _run_validate_hosted_service_command(args: argparse.Namespace) -> object:
+    service_url = str(args.service_url or "").strip() or str(os.getenv("DAY_CAPTAIN_SERVICE_URL") or "").strip()
+    job_secret = str(args.job_secret or "").strip() or str(os.getenv("DAY_CAPTAIN_JOB_SECRET") or "").strip()
+    try:
+        return validate_hosted_service(
+            service_url,
+            job_secret,
+            target_user_id=str(args.target_user or "").strip(),
+            timeout_seconds=int(args.timeout_seconds),
+            check_recall=not bool(args.skip_recall),
+        )
+    except HostedJobError as exc:
+        raise SystemExit(str(exc))
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -212,6 +251,10 @@ def main(argv: Optional[list] = None) -> int:
         return 0
     if args.command == "trigger-hosted-job":
         result = _run_trigger_hosted_job_command(args)
+        print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+    if args.command == "validate-hosted-service":
+        result = _run_validate_hosted_service_command(args)
         print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
         return 0
     if args.command == "serve":
