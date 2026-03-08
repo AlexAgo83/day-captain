@@ -317,6 +317,29 @@ def _domain_from_email(address: str) -> str:
     return address.split("@", 1)[1].lower()
 
 
+def _humanize_identifier(value: str) -> str:
+    candidate = " ".join((value or "").strip().split())
+    if not candidate:
+        return ""
+    if "@" not in candidate:
+        return candidate
+    local_part = candidate.split("@", 1)[0].strip()
+    local_part = re.sub(r"[._-]+", " ", local_part)
+    local_part = re.sub(r"\b(ext|external|intern|interne)\b", "", local_part, flags=re.IGNORECASE)
+    local_part = re.sub(r"\s+", " ", local_part).strip()
+    if not local_part:
+        return candidate
+    words = []
+    for raw_word in local_part.split():
+        lower = raw_word.lower()
+        if lower in {"ceo", "cto", "cfo", "coo", "hr", "it", "ops"}:
+            words.append(lower.upper())
+            continue
+        words.append(lower.capitalize())
+    rendered = " ".join(words).strip()
+    return rendered or candidate
+
+
 def _clamp_weight(value: float) -> float:
     return max(-3.0, min(3.0, round(value, 2)))
 
@@ -630,16 +653,17 @@ class DeterministicScoringEngine:
         if meeting.is_online_meeting:
             score += 0.25
             reason_codes.append("online_meeting")
+        organizer = _humanize_identifier(meeting.organizer_address) or copy["unknown_organizer"]
         if local_start.date() == local_now.date():
             summary = copy["meeting_today"].format(
                 time=local_start.strftime("%H:%M"),
-                organizer=meeting.organizer_address or copy["unknown_organizer"],
+                organizer=organizer,
             )
         else:
             summary = copy["meeting_day"].format(
                 day=_format_day_label(local_start.date(), self.digest_language, short=True, include_year=False),
                 time=local_start.strftime("%H:%M"),
-                organizer=meeting.organizer_address or copy["unknown_organizer"],
+                organizer=organizer,
             )
         if meeting.location:
             summary += copy["meeting_location"].format(location=meeting.location)
@@ -1001,22 +1025,37 @@ class LlmDigestOverviewEngine:
     ) -> DigestOverview:
         language = _normalize_language(str(payload.delivery_payload.get("digest_language") or "en"))
         labels = _language_copy(language)["sections"]
-        sections = {
-            "critical_topics": tuple(payload.critical_topics),
-            "actions_to_take": tuple(payload.actions_to_take),
-            "watch_items": tuple(payload.watch_items),
-            "upcoming_meetings": tuple(payload.upcoming_meetings),
-        }
+        sections = self._overview_sections(payload)
         if not any(sections[name] for name in SECTION_NAMES):
             return self.fallback_engine.summarize(payload)
         try:
-            summary = self.provider.summarize_digest(sections=sections, labels=labels)
+            summary = self.provider.summarize_digest(
+                sections=sections,
+                labels=labels,
+                meeting_note=self._overview_meeting_note(payload, language),
+            )
         except Exception:
             return self.fallback_engine.summarize(payload)
         summary = str(summary or "").strip()
         if not summary:
             return self.fallback_engine.summarize(payload)
         return DigestOverview(summary=summary, source="llm")
+
+    def _overview_sections(self, payload: DigestPayload) -> Mapping[str, Sequence[DigestEntry]]:
+        return {
+            "critical_topics": tuple(payload.critical_topics[:1]),
+            "actions_to_take": tuple(payload.actions_to_take[:1]),
+            "watch_items": tuple(payload.watch_items[:1]),
+            "upcoming_meetings": tuple(payload.upcoming_meetings[:1]),
+        }
+
+    def _overview_meeting_note(self, payload: DigestPayload, language: str) -> str:
+        meetings = tuple(payload.upcoming_meetings)
+        if len(meetings) <= 1:
+            return ""
+        if language == "fr":
+            return "{0} réunions sont prévues. Résume-les brièvement sans toutes les lister.".format(len(meetings))
+        return "{0} meetings are scheduled. Summarize them briefly without listing them all.".format(len(meetings))
 
 
 class LlmDigestWordingEngine:
