@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 94%
+> Progress: 95%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -79,6 +79,7 @@ flowchart LR
 - Delegated auth is now operable through Microsoft Entra ID device code flow, token cache storage, and refresh-token reuse for CLI-driven local runs.
 - `task_002_day_captain_digest_scoring_recall_and_delivery` is functionally implemented: deterministic ranking, anti-noise filters, digest rendering, persisted recall, feedback-driven preferences, and webhook/Graph-send delivery payload generation are all covered by automated tests.
 - `task_003_day_captain_render_deployment_and_scheduler` is the next delivery slice: hosted Render packaging, GitHub Actions scheduling, and Postgres-backed persistence for the first non-local deployment.
+- `task_003_day_captain_render_deployment_and_scheduler` is mostly implemented in-repo: Render/Postgres config, hosted HTTP surface, private-ops scheduler tooling, runtime validation, and sleeping-service fallback support are now in place, with real hosted proof still pending.
 - `task_016_day_captain_hosted_graph_app_only_authentication_implementation` is complete: hosted Graph app-only auth and explicit `/users/{id}` mailbox routing are implemented.
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` is complete: tenant-scoped storage and explicit per-user execution are now implemented for operator-managed multi-user hosting.
 - `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` is complete: operator workflow docs, explicit scheduler fan-out, and local isolation proof are now captured.

@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 95%
+> Progress: 99%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -63,4 +63,4 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
 - Real delivered output now surfaces only the two meaningful action items seen in the mailbox sample, with the prior self-digest leakage removed.
-- Signal tuning and delivered validation are complete. Status remains `In Progress` only because the parent backlog item stays open until the live LLM wording slice is also validated end to end.
+- Signal tuning and delivered validation are complete. Status remains `In Progress` only because the parent backlog item stays open until the live LLM wording slice is resolved.

@@ -1,8 +1,8 @@
 ## req_004_day_captain_digest_quality_and_email_polish - Day Captain digest quality, email polish, and assistant usefulness
 > From version: 0.4.0
 > Status: In Progress
-> Understanding: 100%
-> Confidence: 98%
+> Understanding: 99%
+> Confidence: 97%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -69,6 +69,6 @@ flowchart LR
 
 # Backlog
 - `item_004_day_captain_digest_quality_and_email_polish` - Improve the usefulness and presentation quality of the delivered digest. Status: `In Progress`.
-- `task_008_day_captain_email_rendering_and_formatting_upgrade` - Upgrade email rendering, structure, and timestamp formatting. Status: `Done`.
-- `task_009_day_captain_digest_signal_quality_tuning` - Refine prioritization and filtering to reduce weak digest items. Status: `Done`.
+- `task_008_day_captain_email_rendering_and_formatting_upgrade` - Upgrade email rendering, structure, and timestamp formatting. Status: `Delivered, pending chain closure`.
+- `task_009_day_captain_digest_signal_quality_tuning` - Refine prioritization and filtering to reduce weak digest items. Status: `Delivered, pending chain closure`.
 - `task_010_day_captain_llm_digest_wording_activation_and_tuning` - Configure and tune bounded LLM wording for delivered digests. Status: `In Progress`.
