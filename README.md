@@ -184,12 +184,12 @@ The digest can also render a short top summary block above the detailed sections
 
 The delivered digest now supports:
 - localized product copy through `DAY_CAPTAIN_DIGEST_LANGUAGE` with English default and French support
-- a condensed header with explicit as-of/window metadata instead of verbose report phrasing
+- a condensed header with explicit as-of/window metadata and a more polished coverage line instead of verbose report phrasing
 - a highlighted `In brief` / `En bref` executive summary block above the detailed sections
 - compact meeting cards that keep time, organizer, and location easy to scan with more natural day-horizon wording
 - lighter empty-state presentation even when the LLM layer is disabled
 - lighter hero/card visual treatment than the first readability pass
-- optional footer quick actions using `mailto:` links for recall commands when a command mailbox is known
+- optional footer quick actions using `mailto:` links that open a prefilled draft for recall commands when a command mailbox is known
 - weekend meeting fallback to Monday and next-day meeting fallback when no meetings remain for the current day
 
 For the current local-preview and final Outlook validation workflow, see [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
