@@ -131,6 +131,58 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(recalled.run_id, created.run_id)
 
+    def test_recall_returns_run_by_id_without_explicit_target_user(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(settings=DayCaptainSettings(), storage=storage)
+
+        created = app.run_morning_digest(now=now)
+
+        recalled = app.recall_digest(run_id=created.run_id)
+
+        self.assertEqual(recalled.run_id, created.run_id)
+
+    def test_recall_uses_display_timezone_for_day_lookup(self) -> None:
+        now = datetime(2026, 3, 7, 23, 30, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+        )
+
+        created = app.run_morning_digest(now=now, force=True)
+
+        recalled = app.recall_digest(day=datetime(2026, 3, 8, tzinfo=timezone.utc).date())
+
+        self.assertEqual(recalled.run_id, created.run_id)
+
+    def test_consecutive_runs_do_not_duplicate_boundary_message(self) -> None:
+        first_now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        second_now = datetime(2026, 3, 7, 9, 0, tzinfo=timezone.utc)
+        boundary_message = MessageRecord(
+            graph_message_id="msg-boundary",
+            thread_id="thread-boundary",
+            subject="Boundary item",
+            from_address="boss@example.com",
+            received_at=first_now,
+            body_preview="Should only appear once.",
+        )
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            mail_collector=StaticMailCollector((boundary_message,)),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        first_payload = app.run_morning_digest(now=first_now, force=True)
+        second_payload = app.run_morning_digest(now=second_now)
+
+        self.assertEqual(first_payload.critical_topics[0].source_id, "msg-boundary")
+        self.assertFalse(
+            any(item.source_id == "msg-boundary" for item in second_payload.critical_topics + second_payload.actions_to_take)
+        )
+
     def test_record_feedback_saves_signal(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         storage = InMemoryStorage()

@@ -62,7 +62,7 @@ def _coerce_datetime(value: Optional[datetime]) -> datetime:
         return datetime.now(timezone.utc)
     if value.tzinfo is None:
         return value.replace(tzinfo=timezone.utc)
-    return value
+    return value.astimezone(timezone.utc)
 
 
 def _end_of_day(value: datetime) -> datetime:
@@ -259,12 +259,14 @@ class InMemoryStorage:
         target_day: date,
         tenant_id: str = "",
         user_id: str = "",
+        display_timezone: str = "UTC",
     ) -> Optional[DigestRunRecord]:
+        zone = _display_zone(display_timezone)
         completed = [
             run
             for run in self._runs.values()
             if run.status == "completed"
-            and run.generated_at.date() == target_day
+            and run.generated_at.astimezone(zone).date() == target_day
             and (not tenant_id or run.tenant_id == tenant_id)
             and (not user_id or run.user_id == user_id)
         ]
@@ -514,7 +516,7 @@ class DayCaptainApplication:
             user_id=scoped_user_id,
         )
         window_start = (
-            previous_run.window_end
+            previous_run.window_end + timedelta(microseconds=1)
             if previous_run is not None
             else current_time - timedelta(hours=self.settings.default_lookback_hours)
         )
@@ -588,15 +590,28 @@ class DayCaptainApplication:
         tenant_id: Optional[str] = None,
     ) -> DigestPayload:
         scoped_tenant_id = self._resolve_tenant_id(tenant_id)
-        scoped_user_id = self._resolve_target_user_id(target_user_id)
         if run_id:
-            run = self.storage.get_run(run_id, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
+            requested_user_id = str(target_user_id or "").strip()
+            run = (
+                self.storage.get_run(
+                    run_id,
+                    tenant_id=scoped_tenant_id,
+                    user_id=self._resolve_target_user_id(requested_user_id),
+                )
+                if requested_user_id
+                else self.storage.get_run(run_id)
+            )
+            if run is not None and run.tenant_id != scoped_tenant_id:
+                run = None
         else:
-            target_day = day or datetime.now(timezone.utc).date()
+            scoped_user_id = self._resolve_target_user_id(target_user_id)
+            zone = _display_zone(self.settings.display_timezone)
+            target_day = day or datetime.now(zone).date()
             run = self.storage.get_latest_completed_run_for_day(
                 target_day,
                 tenant_id=scoped_tenant_id,
                 user_id=scoped_user_id,
+                display_timezone=self.settings.display_timezone,
             )
         if run is None:
             raise LookupError("No completed digest run found for recall.")

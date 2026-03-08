@@ -106,6 +106,7 @@ class Storage(Protocol):
         target_day: date,
         tenant_id: str = "",
         user_id: str = "",
+        display_timezone: str = "UTC",
     ) -> Optional[DigestRunRecord]:
         ...
 
