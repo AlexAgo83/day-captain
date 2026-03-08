@@ -401,6 +401,13 @@ def _same_identity(left: str, right: str) -> bool:
     return not left_tokens.isdisjoint(right_tokens)
 
 
+def _first_non_self_attendee(meeting: MeetingRecord) -> str:
+    for attendee in meeting.attendees:
+        if not _same_identity(attendee, meeting.user_id):
+            return _humanize_identifier(attendee)
+    return ""
+
+
 def _clamp_weight(value: float) -> float:
     return max(-3.0, min(3.0, round(value, 2)))
 
@@ -462,6 +469,16 @@ def _clean_overview_fragment(value: str) -> str:
     return cleaned.rstrip(" .!?:;,\n\t") or cleaned
 
 
+def _truncate_sentence(value: str, max_chars: int = 220) -> str:
+    cleaned = " ".join((value or "").strip().split())
+    if len(cleaned) <= max_chars:
+        return cleaned
+    truncated = cleaned[:max_chars].rstrip()
+    if " " in truncated:
+        truncated = truncated.rsplit(" ", 1)[0].rstrip()
+    return truncated.rstrip(" .!?:;,\n\t") + "..."
+
+
 def _normalize_top_summary(value: str, max_sentences: int = 2, max_chars: int = 220) -> str:
     cleaned = " ".join((value or "").strip().split())
     if not cleaned:
@@ -471,12 +488,43 @@ def _normalize_top_summary(value: str, max_sentences: int = 2, max_chars: int = 
         selected = [sentence.strip() for sentence in sentence_candidates if sentence.strip()][:max_sentences]
         if selected:
             cleaned = " ".join(selected).strip()
-    if len(cleaned) <= max_chars:
-        return cleaned
-    truncated = cleaned[:max_chars].rstrip()
-    if " " in truncated:
-        truncated = truncated.rsplit(" ", 1)[0].rstrip()
-    return truncated.rstrip(" .!?:;,\n\t") + "..."
+    return _truncate_sentence(cleaned, max_chars=max_chars)
+
+
+def _strip_redundant_title_prefix(title: str, summary: str) -> str:
+    cleaned = " ".join((summary or "").strip().split())
+    if not cleaned:
+        return ""
+    normalized_title = " ".join((title or "").strip().split())
+    prefixes = []
+    if normalized_title:
+        prefixes.append(normalized_title)
+    for separator in (" - ", " — ", ": "):
+        if separator in normalized_title:
+            prefixes.append(normalized_title.split(separator, 1)[0].strip())
+    for prefix in prefixes:
+        if not prefix:
+            continue
+        cleaned = re.sub(
+            r"^{0}\s*[:\-—]\s*".format(re.escape(prefix)),
+            "",
+            cleaned,
+            count=1,
+            flags=re.IGNORECASE,
+        ).strip()
+    return cleaned
+
+
+def _normalize_item_summary(title: str, summary: str, max_chars: int = 220) -> str:
+    cleaned = _strip_redundant_title_prefix(title, summary)
+    cleaned = re.sub(r"\baction attendue\s*:", "Suivi :", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bexpected action\s*:", "Next step:", cleaned, flags=re.IGNORECASE)
+    cleaned = " ".join(cleaned.split())
+    return _truncate_sentence(cleaned, max_chars=max_chars)
+
+
+def _normalized_place(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", " ", (value or "").strip().lower()).strip()
 
 
 def _display_zone(name: str):
@@ -733,19 +781,21 @@ class DeterministicScoringEngine:
             reason_codes.append("online_meeting")
         organizer = _humanize_identifier(meeting.organizer_address) or copy["unknown_organizer"]
         organizer_is_target_user = _same_identity(meeting.organizer_address, meeting.user_id)
+        fallback_person = _first_non_self_attendee(meeting) if organizer_is_target_user else ""
+        displayed_person = fallback_person or organizer
         if local_start.date() == local_now.date():
-            if organizer_is_target_user:
+            if organizer_is_target_user and not fallback_person:
                 summary = copy["meeting_today_self"].format(time=local_start.strftime("%H:%M"))
             else:
                 summary = copy["meeting_today"].format(
                     time=local_start.strftime("%H:%M"),
-                    organizer=organizer,
+                    organizer=displayed_person,
                 )
         else:
             day_label = _meeting_day_reference(local_start.date(), local_now.date(), self.digest_language)
             if day_label:
                 day_label = day_label[:1].upper() + day_label[1:]
-            if organizer_is_target_user:
+            if organizer_is_target_user and not fallback_person:
                 summary = copy["meeting_day_self"].format(
                     day=day_label,
                     time=local_start.strftime("%H:%M"),
@@ -754,9 +804,9 @@ class DeterministicScoringEngine:
                 summary = copy["meeting_day"].format(
                     day=day_label,
                     time=local_start.strftime("%H:%M"),
-                    organizer=organizer,
+                    organizer=displayed_person,
                 )
-        if meeting.location:
+        if meeting.location and _normalized_place(meeting.location) != _normalized_place(meeting.subject):
             summary += copy["meeting_location"].format(location=meeting.location)
         return DigestEntry(
             title=_normalize_display_title(meeting.subject or "(untitled meeting)"),
@@ -1190,7 +1240,8 @@ class DeterministicDigestOverviewEngine:
                 break
         meetings = sections["upcoming_meetings"]
         if meetings and len(sentences) < 2:
-            sentences.append(localized["meeting"].format(text=_clean_overview_fragment(meetings[0].summary)))
+            meeting_text = _normalize_item_summary(meetings[0].title, meetings[0].summary, max_chars=120)
+            sentences.append(localized["meeting"].format(text=_clean_overview_fragment(meeting_text)))
         if not sentences:
             sentences.append(localized["clear"])
         return DigestOverview(
@@ -1240,7 +1291,7 @@ class LlmDigestOverviewEngine:
         summary = str(summary or "").strip()
         if not summary:
             return self.fallback_engine.summarize(payload)
-        return DigestOverview(summary=summary, source="llm")
+        return DigestOverview(summary=_normalize_top_summary(summary), source="llm")
 
     def _overview_sections(self, payload: DigestPayload) -> Mapping[str, Sequence[DigestEntry]]:
         return {
@@ -1257,11 +1308,13 @@ class LlmDigestOverviewEngine:
         if language == "fr":
             return (
                 "{0} réunions sont prévues. Résume-les brièvement sans toutes les lister. "
-                "Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'."
+                "Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'. "
+                "Si tu mentionnes une réunion, cite la plus proche avec un horaire concret et évite les formulations vagues."
             ).format(len(meetings))
         return (
             "{0} meetings are scheduled. Summarize them briefly without listing them all. "
-            "If they are tomorrow or Monday, say that instead of 'next week'."
+            "If they are tomorrow or Monday, say that instead of 'next week'. "
+            "If you mention a meeting, cite the nearest one with a concrete time and avoid vague phrasing."
         ).format(len(meetings))
 
 
@@ -1301,6 +1354,7 @@ class LlmDigestWordingEngine:
             if not summary:
                 updated_items.append(item)
                 continue
+            summary = _normalize_item_summary(item.title, summary)
             updated_items.append(
                 DigestEntry(
                     title=item.title,
