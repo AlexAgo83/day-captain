@@ -1,6 +1,6 @@
 ## req_018_day_captain_sunday_evening_weekly_digest - Day Captain Sunday evening weekly digest
 > From version: 0.10.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
 > Complexity: Medium
@@ -54,8 +54,8 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_018_day_captain_sunday_evening_weekly_digest` - Add a Sunday-evening weekly digest schedule. Status: `Ready`.
-- `task_023_day_captain_weekend_window_and_reliability_orchestration` - Orchestrate weekend digest horizon, weekday-only ops scheduling, Sunday weekly digest scheduling, and reliability hardening, with README/docs closure required before `Done`. Status: `Ready`.
+- `item_018_day_captain_sunday_evening_weekly_digest` - Add a Sunday-evening weekly digest schedule. Status: `Done`.
+- `task_023_day_captain_weekend_window_and_reliability_orchestration` - Orchestrate weekend digest horizon, weekday-only ops scheduling, Sunday weekly digest scheduling, and reliability hardening, with README/docs closure required before `Done`. Status: `Done`.
 - Suggested split:
   - one implementation or ops task for the Sunday weekly scheduler path
   - one documentation or validation task for the distinct weekly-digest contract

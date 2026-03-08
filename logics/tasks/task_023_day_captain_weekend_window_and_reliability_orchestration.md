@@ -1,9 +1,9 @@
 ## task_023_day_captain_weekend_window_and_reliability_orchestration - Orchestrate weekend digest horizon, weekday-only ops scheduling, Sunday weekly scheduling, and reliability hardening
 > From version: 0.10.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
 > Confidence: 100%
-> Progress: 80%
+> Progress: 100%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -37,7 +37,7 @@ flowchart LR
 - [x] 4. Add and validate a separate Sunday-evening `weekly digest` scheduler contract at `20:30` without reopening weekend `morning-digest` auto-send.
 - [x] 5. Validate the combined behavior through automated regression tests and any needed ops-level scheduler semantics checks.
 - [x] 6. Update the README files and the relevant operator/setup docs before closing the task; do not mark this task `Done` while the scheduler semantics and weekend digest horizon remain undocumented in user-facing docs.
-- [ ] FINAL: Update related Logics docs, statuses, and closure links across the linked requests and backlog items.
+- [x] FINAL: Update related Logics docs, statuses, and closure links across the linked requests and backlog items.
 
 # AC Traceability
 - Req016 AC1 -> Plan step 1. Proof: task explicitly fixes cross-user `run_id` recall before any product-behavior expansion.
@@ -75,13 +75,13 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Reliability hardening for `run_id` isolation and partial-failure retry safety is implemented and validated.
-- [ ] Weekend first-run digest fallback starts at Friday local midnight on Saturday and Sunday, while repeated runs remain incremental.
-- [ ] Ops scheduler remains explicitly weekday-only for automatic sends.
-- [ ] A separate Sunday `20:30` weekly digest scheduler contract is implemented and validated.
-- [ ] Scheduler time semantics and weekend digest behavior are documented in the README files and operator docs before status moves to `Done`.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Reliability hardening for `run_id` isolation and partial-failure retry safety is implemented and validated.
+- [x] Weekend first-run digest fallback starts at Friday local midnight on Saturday and Sunday, while repeated runs remain incremental.
+- [x] Ops scheduler remains explicitly weekday-only for automatic sends.
+- [x] A separate Sunday `20:30` weekly digest scheduler contract is implemented and validated.
+- [x] Scheduler time semantics and weekend digest behavior are documented in the README files and operator docs before status moves to `Done`.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Sunday, March 8, 2026 to group the next corrective slice after the latest review plus the newly requested weekend digest behavior.
@@ -103,5 +103,5 @@ flowchart LR
   - the private ops repo now has a separate `.github/workflows/weekly-digest.yml` scheduler, keeping weekday `morning-digest` auto-send distinct from the Sunday-evening weekly recap
   - README and operator docs now describe the split between weekday `morning-digest`, manual weekend access, and Sunday `weekly-digest`
 - Remaining closure work:
-  - update linked request and backlog statuses once the new scheduler paths are considered operationally accepted
-  - capture any final live ops proof you want before moving the orchestration task to `Done`
+  - none inside this repo; linked requests and backlog items are now closed
+  - optional future operator proof can be recorded separately without reopening this orchestration slice
