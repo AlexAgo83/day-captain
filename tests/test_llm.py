@@ -93,6 +93,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("chief of staff", captured["body"]["messages"][0]["content"])
         self.assertIn("French", captured["body"]["messages"][0]["content"])
         self.assertIn("Do not repeat the title at the start of the summary", captured["body"]["messages"][0]["content"])
+        self.assertIn("under 160 characters", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             rewritten["message:msg-1"],
             "Review the budget before noon because the request is urgent.",
@@ -182,6 +183,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertNotIn("temperature", captured["body"])
         self.assertIn("Use 1 to 2 short factual sentences", captured["body"]["messages"][0]["content"])
         self.assertIn("avoid vague phrasing", captured["body"]["messages"][0]["content"])
+        self.assertIn("Avoid unfinished endings", captured["body"]["messages"][0]["content"])
         self.assertIn("Prefer readable names over raw email addresses", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             summary,
@@ -377,7 +379,7 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
 
         self.assertNotIn("Candidature spontanée :", rewritten[0].summary)
         self.assertIn("Suivi :", rewritten[0].summary)
-        self.assertLessEqual(len(rewritten[0].summary), 223)
+        self.assertLessEqual(len(rewritten[0].summary), 183)
 
 
 class DigestOverviewEngineTest(unittest.TestCase):
