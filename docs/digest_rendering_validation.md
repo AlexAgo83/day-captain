@@ -66,6 +66,9 @@ That run produced a stub preview with:
 - sections:
   - `Critical topics`, `Actions to take`, `Watch items`, and `Upcoming meetings` have a steady visual rhythm
   - item cards remain readable without large vertical gaps
+- footer:
+  - if quick actions are present, the `mailto:` links point to the intended Day Captain mailbox
+  - the command subjects are prefilled as `recall`, `recall-today`, or `recall-week`
 - meetings:
   - each meeting line emphasizes title, time, organizer, and location quickly
   - the section does not expand into a tall report for a single meeting

@@ -278,6 +278,24 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         self.assertEqual(prioritized[0].summary, "Aujourd'hui, 10:00 | Lead | Teams")
 
+    def test_uses_natural_next_day_meeting_wording(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-next",
+                subject="Planning sync",
+                start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                organizer_address="lead@example.com",
+                location="Teams",
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(prioritized[0].summary, "Tomorrow, 10:00 | Lead | Teams")
+
 
 if __name__ == "__main__":
     unittest.main()
