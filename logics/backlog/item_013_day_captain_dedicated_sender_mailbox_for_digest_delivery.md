@@ -1,9 +1,9 @@
 ## item_013_day_captain_dedicated_sender_mailbox_for_digest_delivery - Decouple digest sender mailbox from the source mailbox
 > From version: 0.9.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -55,7 +55,7 @@ flowchart LR
 
 # Links
 - Request: `req_013_day_captain_dedicated_sender_mailbox_for_digest_delivery`
-- Primary task(s): `task_022_day_captain_recall_and_delivery_evolution_orchestration` (`Ready`)
+- Primary task(s): `task_022_day_captain_recall_and_delivery_evolution_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - the product works without it, but delivery identity quality and operator control are constrained.
@@ -65,3 +65,4 @@ flowchart LR
 - Derived from request `req_013_day_captain_dedicated_sender_mailbox_for_digest_delivery`.
 - This slice is primarily a delivery-routing evolution for hosted app-only operation.
 - The likely implementation will touch config, auth context or delivery routing, Graph send behavior, and hosted validation docs.
+- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with real hosted validation showing `configured_sender_user=daycaptain@company.com` on Render.

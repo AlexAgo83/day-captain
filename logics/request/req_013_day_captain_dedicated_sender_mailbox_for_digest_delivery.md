@@ -1,8 +1,8 @@
 ## req_013_day_captain_dedicated_sender_mailbox_for_digest_delivery - Day Captain dedicated sender mailbox for digest delivery
 > From version: 0.9.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 99%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -67,8 +67,9 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_013_day_captain_dedicated_sender_mailbox_for_digest_delivery` - Decouple digest sender mailbox from the source mailbox. Status: `Ready`.
-- `task_022_day_captain_recall_and_delivery_evolution_orchestration` - Orchestrate recall hardening, dedicated sender delivery, and email-command recall, with README/docs closure required before `Done`. Status: `Ready`.
+- `item_013_day_captain_dedicated_sender_mailbox_for_digest_delivery` - Decouple digest sender mailbox from the source mailbox. Status: `Done`.
+- `task_022_day_captain_recall_and_delivery_evolution_orchestration` - Orchestrate recall hardening, dedicated sender delivery, and email-command recall, with README/docs closure required before `Done`. Status: `Done`.
+- Closed on Sunday, March 8, 2026 after hosted validation on `https://day-captain.onrender.com` confirmed `configured_sender_user=daycaptain@company.com`.
 - Suggested split:
   - one implementation task for sender/source mailbox identity separation in config, auth context, and delivery routing
   - one validation task for real mailbox delivery from the dedicated sender identity

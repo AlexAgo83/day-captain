@@ -1,9 +1,9 @@
 ## task_022_day_captain_recall_and_delivery_evolution_orchestration - Orchestrate recall hardening, dedicated sender delivery, and email-command recall
 > From version: 0.9.0
-> Status: In Progress
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 95%
+> Progress: 100%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -31,9 +31,9 @@ flowchart LR
 - [x] 1. Fix the recall and auth reliability defects first so explicit run recall, day recall, delegated scope validation, and collection boundaries are trustworthy before adding new recall surfaces.
 - [x] 2. Introduce dedicated sender mailbox support so Day Captain can read from a target mailbox while sending from `daycaptain@...`, with explicit recipients and hosted app-only compatibility.
 - [x] 3. Add inbound email-command recall on top of that foundation, supporting `recall`, `recall-today`, and `recall-week` with sender validation and duplicate suppression.
-- [ ] 4. Validate the combined behavior through automated tests and at least one realistic hosted/mailbox proof path.
+- [x] 4. Validate the combined behavior through automated tests and at least one realistic hosted/mailbox proof path.
 - [x] 5. Update the README and the relevant operator/setup docs before closing the task; do not mark this task `Done` while implementation details are missing from user-facing docs.
-- [ ] FINAL: Update related Logics docs, statuses, and closure links across the linked requests/backlog items.
+- [x] FINAL: Update related Logics docs, statuses, and closure links across the linked requests/backlog items.
 
 # AC Traceability
 - Req012 AC1 -> Plan step 1. Proof: task explicitly fixes explicit run recall correctness before new recall surfaces are added.
@@ -74,12 +74,12 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Recall reliability fixes are implemented and validated.
-- [ ] Dedicated sender mailbox support is implemented and validated.
-- [ ] Email-command recall is implemented and validated.
-- [ ] README and the relevant setup or operator docs are updated to reflect the shipped behavior before status moves to `Done`.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Recall reliability fixes are implemented and validated.
+- [x] Dedicated sender mailbox support is implemented and validated.
+- [x] Email-command recall is implemented and validated.
+- [x] README and the relevant setup or operator docs are updated to reflect the shipped behavior before status moves to `Done`.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Work has started on Sunday, March 8, 2026.
@@ -110,5 +110,10 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- The task remains open only because a realistic hosted/mailbox proof path for the dedicated sender and inbound command flow still needs to be executed, then the linked Logics chain can be closed cleanly.
-- Local proof is complete, but the current shell environment still does not carry the hosted `DAY_CAPTAIN_SERVICE_URL`, non-empty `DAY_CAPTAIN_JOB_SECRET`, or dedicated sender env values required to execute the final remote validation from this workstation without additional operator inputs.
+- Real hosted proof is now complete on Sunday, March 8, 2026 against `https://day-captain.onrender.com`:
+  - `GET /healthz` reported `graph_auth_mode=app_only`, `storage_backend=postgres`, `configured_sender_user=daycaptain@company.com`, and `email_command_allowed_senders=[target.user@company.com]`
+  - `validate-hosted-service --target-user target.user@company.com --check-email-command --email-command-sender target.user@company.com --email-command-text recall-week` completed successfully
+  - hosted `morning-digest` returned run `405852e67cf3420ea4dd5dede615088a`
+  - hosted `recall-digest` returned the same run id `405852e67cf3420ea4dd5dede615088a`
+  - hosted `email-command-recall` returned run `2d4c9a596e834f7c8dba84ff02340874` with `command_name=recall-week`, `target_user_id=target.user@company.com`, and `delivery_mode=graph_send`
+- The linked recall hardening, dedicated sender mailbox, and inbound email-command slices are therefore closed together by this orchestration task.

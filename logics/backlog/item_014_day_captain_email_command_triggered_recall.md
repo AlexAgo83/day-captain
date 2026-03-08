@@ -1,9 +1,9 @@
 ## item_014_day_captain_email_command_triggered_recall - Add recall triggered by inbound email commands
 > From version: 0.9.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -61,7 +61,7 @@ flowchart LR
 
 # Links
 - Request: `req_014_day_captain_email_command_triggered_recall`
-- Primary task(s): `task_022_day_captain_recall_and_delivery_evolution_orchestration` (`Ready`)
+- Primary task(s): `task_022_day_captain_recall_and_delivery_evolution_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - the product works without it, but this is a meaningful usability upgrade for recall.
@@ -71,3 +71,4 @@ flowchart LR
 - Derived from request `req_014_day_captain_email_command_triggered_recall`.
 - This slice should stay bounded: explicit commands first, not an open-ended conversational mail assistant.
 - The first shipped version can still choose between webhook, polling, or an external inbound trigger bridge as long as the user-facing contract remains stable.
+- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with hosted `email-command-recall` validation passing for `recall-week` on `https://day-captain.onrender.com`.

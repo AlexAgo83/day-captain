@@ -1,8 +1,8 @@
 ## req_012_day_captain_recall_and_auth_reliability_hardening - Day Captain recall and auth reliability hardening
 > From version: 0.9.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 99%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -64,8 +64,9 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_012_day_captain_recall_and_auth_reliability_hardening` - Harden recall correctness, auth scope truthfulness, and window boundaries. Status: `Ready`.
-- `task_022_day_captain_recall_and_delivery_evolution_orchestration` - Orchestrate recall hardening, dedicated sender delivery, and email-command recall, with README/docs closure required before `Done`. Status: `Ready`.
+- `item_012_day_captain_recall_and_auth_reliability_hardening` - Harden recall correctness, auth scope truthfulness, and window boundaries. Status: `Done`.
+- `task_022_day_captain_recall_and_delivery_evolution_orchestration` - Orchestrate recall hardening, dedicated sender delivery, and email-command recall, with README/docs closure required before `Done`. Status: `Done`.
+- Closed on Sunday, March 8, 2026 after automated regression coverage and hosted validation on `https://day-captain.onrender.com`.
 - Suggested split:
   - one implementation task for recall scope/day-boundary correctness
   - one implementation task for delegated scope truthfulness and ingestion boundary hardening
