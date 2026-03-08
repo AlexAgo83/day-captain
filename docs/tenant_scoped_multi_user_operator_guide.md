@@ -66,6 +66,8 @@ The GitHub Actions scheduler supports two modes:
 - Manual one-off override with `workflow_dispatch` input `target_user_id`
 - Scheduled fan-out from repository variable `DAY_CAPTAIN_TARGET_USERS_JSON`
 
+In production, run that scheduler from a private ops repository rather than from the application repository.
+
 Example repository variable:
 
 ```json
@@ -73,6 +75,8 @@ Example repository variable:
 ```
 
 The scheduler will issue one hosted `/jobs/morning-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
+
+Use [`private_ops_repo_bootstrap.md`](/Users/alexandreagostini/Documents/day-captain/docs/private_ops_repo_bootstrap.md) as the starting point for that private repo.
 
 ## Isolation checks
 

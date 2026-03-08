@@ -354,11 +354,12 @@ The scheduler workflow is in [`morning-digest-scheduler.yml`](./.github/workflow
 - optional `DAY_CAPTAIN_TARGET_USERS_JSON` repository variable for scheduled multi-user fan-out
 
 For the operator workflow used by the bounded multi-user model, see [`tenant_scoped_multi_user_operator_guide.md`](./docs/tenant_scoped_multi_user_operator_guide.md).
+For the private production scheduling repo shape, see [`private_ops_repo_bootstrap.md`](./docs/private_ops_repo_bootstrap.md).
 
 Recommended production setup:
 - keep CI here if you want public validation
 - move real scheduling and production secrets into a private `day-captain-ops` repository
-- let the private repo trigger the hosted Day Captain service over HTTPS
+- let the private repo trigger the hosted Day Captain service over HTTPS using `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`
 
 ## Security note
 

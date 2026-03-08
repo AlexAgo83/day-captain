@@ -19,6 +19,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 ## Runtime and scheduling
 - Serve the hosted app with `gunicorn`, not the standard-library WSGI server.
 - Keep the scheduler workflow calling only `/jobs/morning-digest`.
+- Treat `.github/workflows/morning-digest-scheduler.yml` in this repo as an example bootstrap, not the final production scheduler location.
 - Include `target_user_id` in hosted job payloads when several target users are configured.
 - If GitHub Actions drives several users, set repository variable `DAY_CAPTAIN_TARGET_USERS_JSON` to a JSON array.
 - Ensure the scheduler checks the HTTP status code without printing the response body.

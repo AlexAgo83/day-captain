@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 96%
-> Progress: 75%
+> Progress: 80%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -60,11 +60,12 @@ flowchart LR
 - Added hosted configuration seams in `src/day_captain/config.py` and `.env.example` for `DAY_CAPTAIN_DATABASE_URL`, HTTP bind settings, and a protected job secret.
 - Added `PostgresStorage` in `src/day_captain/adapters/storage.py` and automatic `SQLite` vs Postgres storage selection in `src/day_captain/app.py`.
 - Added a minimal hosted HTTP surface in `src/day_captain/web.py` with `/healthz`, a protected `/jobs/morning-digest` endpoint, and a protected `/jobs/recall-digest` endpoint, then exposed it through `day-captain serve`.
-- Added `render.yaml` for a Render web service plus managed Postgres and `.github/workflows/morning-digest-scheduler.yml` for a scheduled GitHub Actions trigger.
+- Added `render.yaml` for a Render web service plus managed Postgres and `.github/workflows/morning-digest-scheduler.yml` as an example scheduled GitHub Actions trigger.
+- Added reusable hosted trigger tooling (`scripts/trigger_hosted_digest.py` and `day-captain trigger-hosted-job`) so the real production scheduler can live in a private `day-captain-ops` repo without duplicating HTTP trigger logic.
 - Added coverage in `tests/test_app.py`, `tests/test_settings.py`, and `tests/test_web.py`.
 - Validation results:
   - `python3 -m unittest tests.test_settings tests.test_app tests.test_web` -> `OK` (`8` tests)
   - `python3 -m unittest discover -s tests` -> `OK` (`34` tests)
 - Remaining work before closure:
   - validate the Render blueprint and hosted service against a real Render environment
-  - validate the GitHub Actions scheduler against the hosted endpoint and secrets in a non-local run
+  - validate the private ops scheduler path against the hosted endpoint and secrets in a non-local run

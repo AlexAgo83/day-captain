@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 98%
-> Progress: 60%
+> Progress: 65%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -55,5 +55,5 @@ flowchart LR
 
 # Report
 - The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, while hosted Render proof and live LLM validation remain the two unresolved end-to-end slices.
-- Scheduler, operator docs, and target-user validation now align with that order, so the remaining closure path is narrower and explicit.
+- Scheduler, operator docs, target-user validation, and private-ops bootstrap tooling now align with that order, so the remaining closure path is narrower and explicit.
 - Remaining work for closure is still external-facing: complete `task_017` on the deployed Render service, then close the live LLM wording validation in `task_010`.

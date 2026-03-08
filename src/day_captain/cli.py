@@ -4,6 +4,7 @@ import argparse
 from datetime import date
 from datetime import datetime
 import json
+import os
 import sys
 from typing import Optional
 
@@ -14,6 +15,9 @@ from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.app import build_application
 from day_captain.config import DayCaptainSettings
+from day_captain.hosted_jobs import HostedJobError
+from day_captain.hosted_jobs import build_job_payload
+from day_captain.hosted_jobs import trigger_hosted_job
 from day_captain.models import to_jsonable
 from day_captain.web import serve
 
@@ -66,6 +70,33 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate-config", help="Validate current environment configuration.")
     validate.add_argument("--target-user", help="Optional target user to validate against configured recipients.")
+
+    trigger = subparsers.add_parser(
+        "trigger-hosted-job",
+        help="Trigger a hosted Day Captain job, intended for external ops automation.",
+    )
+    trigger.add_argument(
+        "--service-url",
+        default="",
+        help="Hosted Day Captain base URL. Falls back to DAY_CAPTAIN_SERVICE_URL.",
+    )
+    trigger.add_argument(
+        "--job-secret",
+        default="",
+        help="Hosted job secret. Falls back to DAY_CAPTAIN_JOB_SECRET.",
+    )
+    trigger.add_argument(
+        "--job",
+        choices=("morning-digest", "recall-digest"),
+        default="morning-digest",
+    )
+    trigger.add_argument("--target-user", help="Explicit target user for the hosted run.")
+    trigger.add_argument("--force", action="store_true", help="Force a fresh morning digest window.")
+    trigger.add_argument("--delivery-mode", help="Optional delivery-mode override for morning digest.")
+    trigger.add_argument("--now", help="Optional ISO datetime override for morning digest.")
+    trigger.add_argument("--run-id", help="Run identifier for recall.")
+    trigger.add_argument("--day", help="ISO date for recall when run-id is omitted.")
+    trigger.add_argument("--timeout-seconds", type=int, default=30)
 
     return parser
 
@@ -140,6 +171,32 @@ def _run_validate_command(args: argparse.Namespace, settings: DayCaptainSettings
         raise SystemExit(str(exc))
 
 
+def _run_trigger_hosted_job_command(args: argparse.Namespace) -> object:
+    service_url = str(args.service_url or "").strip() or str(os.getenv("DAY_CAPTAIN_SERVICE_URL") or "").strip()
+    job_secret = str(args.job_secret or "").strip()
+    if not job_secret:
+        job_secret = str(os.getenv("DAY_CAPTAIN_JOB_SECRET") or "").strip()
+    payload = build_job_payload(
+        args.job,
+        target_user_id=str(args.target_user or "").strip(),
+        force=bool(getattr(args, "force", False)),
+        delivery_mode=str(getattr(args, "delivery_mode", "") or "").strip(),
+        now=str(getattr(args, "now", "") or "").strip(),
+        run_id=str(getattr(args, "run_id", "") or "").strip(),
+        day=str(getattr(args, "day", "") or "").strip(),
+    )
+    try:
+        return trigger_hosted_job(
+            service_url,
+            job_secret,
+            job_name=args.job,
+            payload=payload,
+            timeout_seconds=int(args.timeout_seconds),
+        )
+    except HostedJobError as exc:
+        raise SystemExit(str(exc))
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -151,6 +208,10 @@ def main(argv: Optional[list] = None) -> int:
         return 0
     if args.command == "validate-config":
         result = _run_validate_command(args, settings)
+        print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+    if args.command == "trigger-hosted-job":
+        result = _run_trigger_hosted_job_command(args)
         print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
         return 0
     if args.command == "serve":

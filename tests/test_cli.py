@@ -1,9 +1,11 @@
 from pathlib import Path
+import os
 import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from day_captain.cli import _run_trigger_hosted_job_command
 from day_captain.cli import _run_validate_command
 from day_captain.config import DayCaptainSettings
 
@@ -40,6 +42,37 @@ class ValidateConfigCommandTest(unittest.TestCase):
 
         with self.assertRaises(SystemExit):
             _run_validate_command(type("Args", (), {"target_user": "bob@example.com"})(), settings)
+
+    def test_trigger_hosted_job_command_uses_env_fallbacks(self) -> None:
+        previous = dict(os.environ)
+        try:
+            os.environ["DAY_CAPTAIN_SERVICE_URL"] = "https://example.com"
+            os.environ["DAY_CAPTAIN_JOB_SECRET"] = "secret"
+            with unittest.mock.patch("day_captain.cli.trigger_hosted_job", return_value={"status": "ok"}) as trigger:
+                result = _run_trigger_hosted_job_command(
+                    type(
+                        "Args",
+                        (),
+                        {
+                            "service_url": "",
+                            "job_secret": "",
+                            "job": "morning-digest",
+                            "target_user": "alice@example.com",
+                            "force": True,
+                            "delivery_mode": "",
+                            "now": "",
+                            "run_id": "",
+                            "day": "",
+                            "timeout_seconds": 30,
+                        },
+                    )()
+                )
+        finally:
+            os.environ.clear()
+            os.environ.update(previous)
+
+        trigger.assert_called_once()
+        self.assertEqual(result["status"], "ok")
 
 
 if __name__ == "__main__":
