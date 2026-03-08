@@ -66,6 +66,10 @@ class ValidateConfigCommandTest(unittest.TestCase):
                             "run_id": "",
                             "day": "",
                             "timeout_seconds": 30,
+                            "wake_service": True,
+                            "wake_timeout_seconds": 45,
+                            "wake_max_attempts": 3,
+                            "wake_delay_seconds": 10,
                         },
                     )()
                 )
@@ -93,6 +97,10 @@ class ValidateConfigCommandTest(unittest.TestCase):
                             "service_url": "",
                             "job_secret": "",
                             "target_user": "alice@example.com",
+                            "wake_service": True,
+                            "wake_timeout_seconds": 45,
+                            "wake_max_attempts": 3,
+                            "wake_delay_seconds": 10,
                             "expect_graph_auth_mode": "",
                             "expect_storage_backend": "",
                             "timeout_seconds": 30,

@@ -12,6 +12,7 @@ from day_captain.hosted_jobs import build_job_payload
 from day_captain.hosted_jobs import check_hosted_health
 from day_captain.hosted_jobs import trigger_hosted_job
 from day_captain.hosted_jobs import validate_hosted_service
+from day_captain.hosted_jobs import wait_for_hosted_health
 
 
 class FakeResponse:
@@ -87,6 +88,48 @@ class HostedJobsTest(unittest.TestCase):
         self.assertEqual(result["runtime"]["graph_auth_mode"], "app_only")
         self.assertEqual(recorder.requests[0]["secret"], "secret")
 
+    def test_wait_for_hosted_health_retries_until_ready(self) -> None:
+        calls = []
+        sleeps = []
+
+        def delayed_health(req, timeout=0):
+            calls.append(req.full_url)
+            if len(calls) < 3:
+                raise error.URLError("warming up")
+            return FakeResponse({"status": "ok"}, status=200)
+
+        result = wait_for_hosted_health(
+            "https://example.com",
+            timeout_seconds=20,
+            max_attempts=3,
+            delay_seconds=5,
+            opener=delayed_health,
+            sleeper=sleeps.append,
+        )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["attempt_count"], 3)
+        self.assertTrue(result["warmed_up"])
+        self.assertEqual(sleeps, [5, 5])
+
+    def test_wait_for_hosted_health_raises_when_service_never_wakes(self) -> None:
+        sleeps = []
+
+        def failing_health(req, timeout=0):
+            raise error.URLError("still asleep")
+
+        with self.assertRaises(HostedJobError):
+            wait_for_hosted_health(
+                "https://example.com",
+                timeout_seconds=20,
+                max_attempts=2,
+                delay_seconds=7,
+                opener=failing_health,
+                sleeper=sleeps.append,
+            )
+
+        self.assertEqual(sleeps, [7])
+
     def test_build_job_payload_for_morning_digest(self) -> None:
         payload = build_job_payload(
             "morning-digest",
@@ -160,6 +203,54 @@ class HostedJobsTest(unittest.TestCase):
         self.assertEqual(recorder.requests[0]["secret"], "secret")
         self.assertEqual(recorder.requests[0]["timeout"], 15)
 
+    def test_trigger_hosted_job_can_wake_service_first(self) -> None:
+        payloads = [
+            {"status": "ok"},
+            {
+                "status": "completed",
+                "job": "morning_digest",
+                "run_id": "run-1",
+                "generated_at": "2026-03-08T08:00:00+00:00",
+                "delivery_mode": "json",
+                "section_counts": {
+                    "critical_topics": 0,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            },
+        ]
+
+        class SequenceRecorder:
+            def __init__(self):
+                self.requests = []
+
+            def __call__(self, req, timeout=0):
+                self.requests.append((req.full_url, timeout, req.data.decode("utf-8") if req.data else ""))
+                return FakeResponse(payloads.pop(0), status=200)
+
+        recorder = SequenceRecorder()
+        result = trigger_hosted_job(
+            "https://example.com",
+            "secret",
+            job_name="morning-digest",
+            payload={"force": False},
+            timeout_seconds=90,
+            wake_service=True,
+            wake_timeout_seconds=45,
+            wake_max_attempts=2,
+            wake_delay_seconds=5,
+            opener=recorder,
+            sleeper=lambda _: None,
+        )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["warmup"]["attempt_count"], 1)
+        self.assertEqual(recorder.requests[0][0], "https://example.com/healthz")
+        self.assertEqual(recorder.requests[0][1], 45)
+        self.assertEqual(recorder.requests[1][0], "https://example.com/jobs/morning-digest")
+        self.assertEqual(recorder.requests[1][1], 90)
+
     def test_trigger_hosted_job_raises_for_http_errors(self) -> None:
         def failing_opener(req, timeout=0):
             raise error.HTTPError(
@@ -191,6 +282,9 @@ class HostedJobsTest(unittest.TestCase):
 
     def test_validate_hosted_service_runs_health_morning_and_recall(self) -> None:
         payloads = [
+            {
+                "status": "ok",
+            },
             {
                 "status": "ok",
                 "runtime": {
@@ -244,15 +338,22 @@ class HostedJobsTest(unittest.TestCase):
             target_user_id="alice@example.com",
             expected_graph_auth_mode="app_only",
             expected_storage_backend="postgres",
+            wake_service=True,
+            wake_timeout_seconds=45,
+            wake_max_attempts=3,
+            wake_delay_seconds=10,
             opener=recorder,
+            sleeper=lambda _: None,
         )
 
         self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["warmup"]["attempt_count"], 1)
         self.assertEqual(result["runtime"]["storage_backend"], "postgres")
         self.assertEqual(recorder.requests[0][0], "https://example.com/healthz")
-        self.assertEqual(recorder.requests[1][0], "https://example.com/jobs/morning-digest")
-        self.assertEqual(recorder.requests[2][0], "https://example.com/jobs/recall-digest")
-        self.assertEqual(json.loads(recorder.requests[2][1])["run_id"], "run-1")
+        self.assertEqual(recorder.requests[1][0], "https://example.com/healthz")
+        self.assertEqual(recorder.requests[2][0], "https://example.com/jobs/morning-digest")
+        self.assertEqual(recorder.requests[3][0], "https://example.com/jobs/recall-digest")
+        self.assertEqual(json.loads(recorder.requests[3][1])["run_id"], "run-1")
 
     def test_validate_hosted_service_raises_when_recall_run_id_differs(self) -> None:
         payloads = [

@@ -99,6 +99,14 @@ def build_parser() -> argparse.ArgumentParser:
     trigger.add_argument("--run-id", help="Run identifier for recall.")
     trigger.add_argument("--day", help="ISO date for recall when run-id is omitted.")
     trigger.add_argument("--timeout-seconds", type=int, default=30)
+    trigger.add_argument(
+        "--wake-service",
+        action="store_true",
+        help="Probe /healthz first to wake a sleeping hosted service before the real job trigger.",
+    )
+    trigger.add_argument("--wake-timeout-seconds", type=int, default=30)
+    trigger.add_argument("--wake-max-attempts", type=int, default=1)
+    trigger.add_argument("--wake-delay-seconds", type=int, default=0)
 
     validate_hosted = subparsers.add_parser(
         "validate-hosted-service",
@@ -116,6 +124,14 @@ def build_parser() -> argparse.ArgumentParser:
     )
     validate_hosted.add_argument("--target-user", help="Explicit target user for hosted validation.")
     validate_hosted.add_argument("--timeout-seconds", type=int, default=30)
+    validate_hosted.add_argument(
+        "--wake-service",
+        action="store_true",
+        help="Probe /healthz first to wake a sleeping hosted service before validation.",
+    )
+    validate_hosted.add_argument("--wake-timeout-seconds", type=int, default=30)
+    validate_hosted.add_argument("--wake-max-attempts", type=int, default=1)
+    validate_hosted.add_argument("--wake-delay-seconds", type=int, default=0)
     validate_hosted.add_argument(
         "--expect-graph-auth-mode",
         choices=("delegated", "app_only"),
@@ -226,6 +242,10 @@ def _run_trigger_hosted_job_command(args: argparse.Namespace) -> object:
             job_name=args.job,
             payload=payload,
             timeout_seconds=int(args.timeout_seconds),
+            wake_service=bool(getattr(args, "wake_service", False)),
+            wake_timeout_seconds=int(getattr(args, "wake_timeout_seconds", 30)),
+            wake_max_attempts=int(getattr(args, "wake_max_attempts", 1)),
+            wake_delay_seconds=int(getattr(args, "wake_delay_seconds", 0)),
         )
     except HostedJobError as exc:
         raise SystemExit(str(exc))
@@ -243,6 +263,10 @@ def _run_validate_hosted_service_command(args: argparse.Namespace) -> object:
             expected_storage_backend=str(getattr(args, "expect_storage_backend", "") or "").strip(),
             timeout_seconds=int(args.timeout_seconds),
             check_recall=not bool(args.skip_recall),
+            wake_service=bool(getattr(args, "wake_service", False)),
+            wake_timeout_seconds=int(getattr(args, "wake_timeout_seconds", 30)),
+            wake_max_attempts=int(getattr(args, "wake_max_attempts", 1)),
+            wake_delay_seconds=int(getattr(args, "wake_delay_seconds", 0)),
         )
     except HostedJobError as exc:
         raise SystemExit(str(exc))

@@ -202,12 +202,17 @@ DAY_CAPTAIN_SERVICE_URL=https://your-render-service.example.com \
 DAY_CAPTAIN_JOB_SECRET=... \
 PYTHONPATH=src python3 -m day_captain validate-hosted-service \
   --target-user alice@example.com \
+  --wake-service \
+  --wake-timeout-seconds 45 \
+  --wake-max-attempts 6 \
+  --wake-delay-seconds 10 \
+  --timeout-seconds 90 \
   --expect-graph-auth-mode app_only \
   --expect-storage-backend postgres
 ```
 
 If the hosted web service can sleep between runs, treat the first request as a wake-up step rather than assuming the backend is already warm. In that case:
-- prefer a warm-up `GET /healthz` before the real morning trigger
+- prefer `--wake-service` so the tooling probes `GET /healthz` before the real morning trigger
 - use longer timeouts in the private ops repo than you would on an always-on service
 - treat this as a fallback operating mode, not the preferred production posture
 
@@ -387,8 +392,8 @@ Recommended production setup:
 - let the private repo trigger the hosted Day Captain service over HTTPS using `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`
 
 Fallback if the hosted service sleeps:
-- add a warm-up probe before the real job trigger in the private ops workflow
-- leave a short readiness window between warm-up and trigger, or retry until `GET /healthz` succeeds
+- add `--wake-service` in the private ops workflow before the real job trigger or validation path
+- use bounded `--wake-max-attempts` and `--wake-delay-seconds` until `GET /healthz` succeeds
 - use longer timeouts for the real trigger and validation path
 - do not treat this as equivalent to an always-on paid service for strict production reliability
 

@@ -1,6 +1,7 @@
 """Helpers for triggering hosted Day Captain jobs from external automation."""
 
 import json
+import time
 from typing import Any
 from typing import Callable
 from typing import Mapping
@@ -148,6 +149,55 @@ def check_hosted_health(
     }
 
 
+def wait_for_hosted_health(
+    service_url: str,
+    *,
+    job_secret: str = "",
+    include_runtime_summary: bool = False,
+    expected_graph_auth_mode: str = "",
+    expected_storage_backend: str = "",
+    timeout_seconds: int = 30,
+    max_attempts: int = 1,
+    delay_seconds: int = 0,
+    opener: Optional[Callable[..., Any]] = None,
+    sleeper: Optional[Callable[[float], None]] = None,
+) -> Mapping[str, Any]:
+    attempts = max(1, int(max_attempts))
+    delay = max(0, int(delay_seconds))
+    sleeper = sleeper or time.sleep
+    last_error = ""
+
+    for attempt_index in range(1, attempts + 1):
+        try:
+            result = check_hosted_health(
+                service_url,
+                job_secret=job_secret,
+                include_runtime_summary=include_runtime_summary,
+                expected_graph_auth_mode=expected_graph_auth_mode,
+                expected_storage_backend=expected_storage_backend,
+                timeout_seconds=timeout_seconds,
+                opener=opener,
+            )
+            return {
+                "status": "ok",
+                "attempt_count": attempt_index,
+                "warmed_up": attempt_index > 1,
+                "health": result,
+            }
+        except HostedJobError as exc:
+            last_error = str(exc)
+            if attempt_index >= attempts:
+                break
+            if delay > 0:
+                sleeper(delay)
+    raise HostedJobError(
+        "Hosted service did not become ready after {0} attempt(s): {1}".format(
+            attempts,
+            last_error or "unknown error",
+        )
+    )
+
+
 def build_job_payload(
     job_name: str,
     *,
@@ -186,7 +236,12 @@ def trigger_hosted_job(
     job_name: str = "morning-digest",
     payload: Optional[Mapping[str, Any]] = None,
     timeout_seconds: int = 30,
+    wake_service: bool = False,
+    wake_timeout_seconds: int = 30,
+    wake_max_attempts: int = 1,
+    wake_delay_seconds: int = 0,
     opener: Optional[Callable[..., Any]] = None,
+    sleeper: Optional[Callable[[float], None]] = None,
 ) -> Mapping[str, Any]:
     normalized_service_url = _normalized_service_url(service_url)
     normalized_secret = _normalized_job_secret(job_secret)
@@ -195,6 +250,17 @@ def trigger_hosted_job(
         raise HostedJobError("Unsupported hosted job: {0}".format(normalized_job or "<empty>"))
 
     opener = opener or request.urlopen
+    warmup = None
+    if wake_service:
+        warmup = wait_for_hosted_health(
+            normalized_service_url,
+            job_secret=normalized_secret,
+            timeout_seconds=wake_timeout_seconds,
+            max_attempts=wake_max_attempts,
+            delay_seconds=wake_delay_seconds,
+            opener=opener,
+            sleeper=sleeper,
+        )
     url = "{0}/jobs/{1}".format(normalized_service_url, normalized_job)
     body = json.dumps(dict(payload or {}), sort_keys=True).encode("utf-8")
     req = request.Request(
@@ -233,6 +299,7 @@ def trigger_hosted_job(
         "status_code": status_code,
         "request_payload": dict(payload or {}),
         "response": validated_payload,
+        "warmup": warmup,
     }
 
 
@@ -246,7 +313,23 @@ def validate_hosted_service(
     timeout_seconds: int = 30,
     check_recall: bool = True,
     opener: Optional[Callable[..., Any]] = None,
+    wake_service: bool = False,
+    wake_timeout_seconds: int = 30,
+    wake_max_attempts: int = 1,
+    wake_delay_seconds: int = 0,
+    sleeper: Optional[Callable[[float], None]] = None,
 ) -> Mapping[str, Any]:
+    warmup = None
+    if wake_service:
+        warmup = wait_for_hosted_health(
+            service_url,
+            job_secret=job_secret,
+            timeout_seconds=wake_timeout_seconds,
+            max_attempts=wake_max_attempts,
+            delay_seconds=wake_delay_seconds,
+            opener=opener,
+            sleeper=sleeper,
+        )
     health = check_hosted_health(
         service_url,
         job_secret=job_secret,
@@ -267,7 +350,9 @@ def validate_hosted_service(
         job_name="morning-digest",
         payload=morning_payload,
         timeout_seconds=timeout_seconds,
+        wake_service=False,
         opener=opener,
+        sleeper=sleeper,
     )
     recall = None
     run_id = str(((morning.get("response") or {}).get("run_id")) or "").strip()
@@ -282,7 +367,9 @@ def validate_hosted_service(
                 run_id=run_id,
             ),
             timeout_seconds=timeout_seconds,
+            wake_service=False,
             opener=opener,
+            sleeper=sleeper,
         )
         recalled_run_id = str(((recall.get("response") or {}).get("run_id")) or "").strip()
         if recalled_run_id != run_id:
@@ -291,6 +378,7 @@ def validate_hosted_service(
         "status": "ok",
         "service_url": _normalized_service_url(service_url),
         "target_user_id": str(target_user_id or "").strip(),
+        "warmup": warmup,
         "health": health,
         "runtime": health.get("runtime"),
         "morning_digest": morning,

@@ -66,11 +66,16 @@ DAY_CAPTAIN_SERVICE_URL=... \
 DAY_CAPTAIN_JOB_SECRET=... \
 PYTHONPATH=src python3 -m day_captain validate-hosted-service \
   --target-user alice@example.com \
+  --wake-service \
+  --wake-timeout-seconds 45 \
+  --wake-max-attempts 6 \
+  --wake-delay-seconds 10 \
+  --timeout-seconds 90 \
   --expect-graph-auth-mode app_only \
   --expect-storage-backend postgres
 ```
 
-If the hosted service can sleep between runs, warm it up before the real job trigger instead of assuming the first scheduler call will execute immediately.
+If the hosted service can sleep between runs, use `--wake-service` instead of assuming the first scheduler call will execute immediately.
 
 ## Scheduling model
 
@@ -94,7 +99,7 @@ The scheduler will issue one hosted `/jobs/morning-digest` call per listed targe
 If the hosted web service is on a plan that can sleep:
 
 - use the private ops workflow to call `GET /healthz` as a warm-up step before the real trigger
-- allow a short readiness window or bounded retries before `POST /jobs/morning-digest`
+- allow bounded retries before `POST /jobs/morning-digest`
 - use longer timeout settings than for an always-on deployment
 - keep this as a fallback mode only; prefer a paid always-on service for routine production delivery
 
