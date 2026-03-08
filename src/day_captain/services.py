@@ -768,13 +768,22 @@ class StructuredDigestRenderer:
             },
         }
         if delivery_mode == "graph_send":
-            delivery_payload["graph_message"] = {
+            graph_message = {
                 "subject": delivery_subject,
                 "body": {
                     "contentType": "HTML",
                     "content": delivery_html,
                 },
             }
+            if "@" in str(user_id or ""):
+                graph_message["toRecipients"] = [
+                    {
+                        "emailAddress": {
+                            "address": str(user_id),
+                        }
+                    }
+                ]
+            delivery_payload["graph_message"] = graph_message
 
         return DigestPayload(
             run_id=run_id,

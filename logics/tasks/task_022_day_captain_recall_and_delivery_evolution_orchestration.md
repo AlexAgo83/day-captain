@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 30%
+> Progress: 55%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -29,7 +29,7 @@ flowchart LR
 
 # Plan
 - [x] 1. Fix the recall and auth reliability defects first so explicit run recall, day recall, delegated scope validation, and collection boundaries are trustworthy before adding new recall surfaces.
-- [ ] 2. Introduce dedicated sender mailbox support so Day Captain can read from a target mailbox while sending from `daycaptain@...`, with explicit recipients and hosted app-only compatibility.
+- [x] 2. Introduce dedicated sender mailbox support so Day Captain can read from a target mailbox while sending from `daycaptain@...`, with explicit recipients and hosted app-only compatibility.
 - [ ] 3. Add inbound email-command recall on top of that foundation, supporting `recall`, `recall-today`, and `recall-week` with sender validation and duplicate suppression.
 - [ ] 4. Validate the combined behavior through automated tests and at least one realistic hosted/mailbox proof path.
 - [ ] 5. Update the README and the relevant operator/setup docs before closing the task; do not mark this task `Done` while implementation details are missing from user-facing docs.
@@ -88,9 +88,14 @@ flowchart LR
   - day-based recall now resolves against the configured display timezone instead of raw UTC date matching
   - delegated auth reports the scopes actually available on the active token/cache path, avoiding false `Mail.Send` positives
   - consecutive digest windows now advance past the previous boundary by one microsecond to avoid exact-boundary duplicate ingestion
+- The dedicated sender mailbox tranche is also now implemented and validated:
+  - Day Captain can keep reading mail and calendar data from the target mailbox while routing `sendMail` through a distinct sender mailbox in hosted app-only mode
+  - `graph_message` now carries an explicit recipient when the target user is an email address, preventing fallback delivery to the dedicated sender mailbox
+  - runtime guardrails now reject attempts to use a dedicated sender mailbox through delegated auth, which would otherwise be misleading
 - Automated validation executed successfully:
   - `python3 -m unittest tests.test_app tests.test_auth`
+  - `python3 -m unittest tests.test_settings tests.test_auth tests.test_graph_client tests.test_app tests.test_digest_renderer`
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- The task remains open because the dedicated sender mailbox path, inbound email-command recall, and the final README/operator-doc updates are still pending.
+- The task remains open because inbound email-command recall and the final README/operator-doc updates are still pending.

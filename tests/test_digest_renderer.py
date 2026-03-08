@@ -20,6 +20,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
             window_end=now,
             delivery_mode="graph_send",
+            user_id="alex@example.com",
             prioritized_items=(
                 DigestEntry(
                     title="Urgent budget review",
@@ -49,6 +50,10 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("graph_message", payload.delivery_payload)
         self.assertEqual(payload.delivery_payload["graph_message"]["subject"], payload.delivery_subject)
         self.assertEqual(payload.delivery_payload["graph_message"]["body"]["contentType"], "HTML")
+        self.assertEqual(
+            payload.delivery_payload["graph_message"]["toRecipients"][0]["emailAddress"]["address"],
+            "alex@example.com",
+        )
         self.assertIn("<html>", payload.delivery_payload["html_body"])
         self.assertIn("In brief", payload.delivery_payload["html_body"])
         self.assertIn("No meetings are on deck for today.", payload.delivery_body)
