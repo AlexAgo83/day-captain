@@ -1,7 +1,7 @@
 ## req_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 99%
+> Understanding: 100%
 > Confidence: 99%
 > Complexity: High
 > Theme: Productivity
@@ -128,3 +128,5 @@ flowchart LR
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` - Implement tenant-scoped storage, configuration, and per-user digest execution. Status: `Done`.
 - `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Done`.
 - `task_020_day_captain_open_roadmap_orchestration` - Orchestrate the remaining hosted, multi-user, and live-quality delivery slices into one closure path. Status: `Ready`.
+- `item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Improve hosted trigger reliability when the backend sleeps or cold-starts before the scheduled run. Status: `In Progress`.
+- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Add wake-up-aware hosted trigger behavior, bounded retry/timeout handling, and operator guidance for sleeping-service deployments. Status: `In Progress`.

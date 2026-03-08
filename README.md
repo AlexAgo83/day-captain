@@ -206,6 +206,11 @@ PYTHONPATH=src python3 -m day_captain validate-hosted-service \
   --expect-storage-backend postgres
 ```
 
+If the hosted web service can sleep between runs, treat the first request as a wake-up step rather than assuming the backend is already warm. In that case:
+- prefer a warm-up `GET /healthz` before the real morning trigger
+- use longer timeouts in the private ops repo than you would on an always-on service
+- treat this as a fallback operating mode, not the preferred production posture
+
 If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
 
 When `delivery_mode=graph_send`, the current local delegated flow sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.
@@ -380,6 +385,12 @@ Recommended production setup:
 - keep CI here if you want public validation
 - move real scheduling and production secrets into a private `day-captain-ops` repository
 - let the private repo trigger the hosted Day Captain service over HTTPS using `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`
+
+Fallback if the hosted service sleeps:
+- add a warm-up probe before the real job trigger in the private ops workflow
+- leave a short readiness window between warm-up and trigger, or retry until `GET /healthz` succeeds
+- use longer timeouts for the real trigger and validation path
+- do not treat this as equivalent to an always-on paid service for strict production reliability
 
 ## Security note
 

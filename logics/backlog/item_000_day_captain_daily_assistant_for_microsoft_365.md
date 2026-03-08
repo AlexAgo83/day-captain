@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 95%
+> Progress: 94%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -83,3 +83,4 @@ flowchart LR
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` is complete: tenant-scoped storage and explicit per-user execution are now implemented for operator-managed multi-user hosting.
 - `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` is complete: operator workflow docs, explicit scheduler fan-out, and local isolation proof are now captured.
 - `task_020_day_captain_open_roadmap_orchestration` coordinates the remaining open slices so hosted auth, hosted validation, tenant-scoped multi-user work, and live LLM validation close in a deliberate order instead of drifting independently.
+- `item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness` is now open to harden the hosted trigger path when the backend sleeps or cold-starts before the scheduled run, especially for private ops scheduling on non-always-on hosting.
