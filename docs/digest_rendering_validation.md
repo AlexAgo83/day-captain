@@ -31,6 +31,30 @@ You can use the same `--output-html` and `--output-text` flags on:
 - `recall-digest`
 - `email-command-recall`
 
+## Development stub preview
+
+In a minimal local development environment, Day Captain can still render a preview even when Microsoft Graph is not configured yet.
+
+That path uses the app's built-in stub auth and empty collectors, which means:
+- it is valid for layout and copy review
+- it is not a substitute for real mailbox-content validation
+- it is the fastest way to sanity-check digest presentation before wiring live auth
+
+On Sunday, March 8, 2026, this repository was validated locally with:
+
+```bash
+python3 -m day_captain validate-config
+python3 -m day_captain morning-digest --force \
+  --output-html tmp/day-captain-preview.html \
+  --output-text tmp/day-captain-preview.txt
+```
+
+That run produced a stub preview with:
+- the compact header enabled
+- the bounded `In brief` summary enabled
+- light empty states enabled
+- the weekend Monday meeting fallback visible in both text and HTML output
+
 ## What to check locally
 
 - header:
