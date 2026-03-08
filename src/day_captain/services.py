@@ -479,6 +479,13 @@ def _truncate_sentence(value: str, max_chars: int = 220) -> str:
     return truncated.rstrip(" .!?:;,\n\t") + "..."
 
 
+def _polish_top_summary_phrase(value: str) -> str:
+    cleaned = " ".join((value or "").strip().split())
+    cleaned = re.sub(r"\bla prochaine a lieu\b", "la plus proche est", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\bthe next one is\b", "the nearest one is", cleaned, flags=re.IGNORECASE)
+    return cleaned
+
+
 def _normalize_top_summary(value: str, max_sentences: int = 2, max_chars: int = 220) -> str:
     cleaned = " ".join((value or "").strip().split())
     if not cleaned:
@@ -488,6 +495,7 @@ def _normalize_top_summary(value: str, max_sentences: int = 2, max_chars: int = 
         selected = [sentence.strip() for sentence in sentence_candidates if sentence.strip()][:max_sentences]
         if selected:
             cleaned = " ".join(selected).strip()
+    cleaned = _polish_top_summary_phrase(cleaned)
     return _truncate_sentence(cleaned, max_chars=max_chars)
 
 
@@ -521,6 +529,9 @@ def _normalize_item_summary(title: str, summary: str, max_chars: int = 220) -> s
     cleaned = re.sub(r"\bexpected action\s*:", "Next step:", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\s*[—-]\s*(Suivi:|Next step:)", r" \1", cleaned, flags=re.IGNORECASE)
     cleaned = " ".join(cleaned.split())
+    candidate_compact = _compact_candidate_profile_summary(title, cleaned)
+    if candidate_compact:
+        cleaned = candidate_compact
     for marker in ("Suivi :", "Next step:"):
         if marker in cleaned and len(cleaned) > max_chars:
             prefix, suffix = cleaned.split(marker, 1)
@@ -543,6 +554,39 @@ def _item_summary_limit(item: DigestEntry) -> int:
     if item.section_name == "watch_items":
         return 180
     return 200
+
+
+def _compact_candidate_profile_summary(title: str, summary: str) -> str:
+    normalized = _normalize_text(title, summary)
+    candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
+    if not any(marker in normalized for marker in candidate_markers):
+        return ""
+    follow_up = ""
+    for marker in ("Suivi :", "Next step:"):
+        if marker in summary:
+            follow_up = marker + " " + summary.split(marker, 1)[1].strip()
+            break
+    company_match = re.search(r"\bchez\s+([A-Z][A-Za-z0-9&' -]+)", summary)
+    if not company_match:
+        company_match = re.search(r"\bat\s+([A-Z][A-Za-z0-9&' -]+)", summary)
+    company = company_match.group(1).strip() if company_match else ""
+    if company:
+        company = re.split(r"\b(depuis|for)\b|,", company, maxsplit=1)[0].strip()
+    role = ""
+    title_lower = title.lower()
+    if "designer" in title_lower:
+        role = "Profil designer"
+    elif "design" in normalized:
+        role = "Profil design"
+    elif "candidate" in normalized or "candidature" in normalized:
+        role = "Profil candidat"
+    if company:
+        base = "{0} chez {1}.".format(role or "Profil", company).strip()
+    else:
+        base = "{0} à examiner.".format(role or _normalize_display_title(title) or "Profil").strip()
+    if follow_up:
+        return "{0} {1}".format(base, follow_up).strip()
+    return base
 
 
 def _normalized_place(value: str) -> str:

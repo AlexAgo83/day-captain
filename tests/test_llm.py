@@ -379,7 +379,7 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
 
         rewritten = engine.rewrite(items)
 
-        self.assertNotIn("Candidature spontanée :", rewritten[0].summary)
+        self.assertIn("Profil designer chez Dassault Aviation.", rewritten[0].summary)
         self.assertIn("Suivi :", rewritten[0].summary)
         self.assertLessEqual(len(rewritten[0].summary), 183)
 
@@ -578,6 +578,40 @@ class DigestOverviewEngineTest(unittest.TestCase):
 
         self.assertEqual(overview.source, "llm")
         self.assertEqual(len(captured["sections"]["watch_items"]), 1)
-        self.assertNotIn("Candidature spontanée :", captured["sections"]["watch_items"][0].summary)
+        self.assertIn("Profil designer chez Dassault Aviation.", captured["sections"]["watch_items"][0].summary)
         self.assertIn("Suivi :", captured["sections"]["watch_items"][0].summary)
         self.assertLessEqual(len(captured["sections"]["watch_items"][0].summary), 123)
+
+    def test_llm_summary_polishes_vague_next_meeting_phrase(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            upcoming_meetings=(
+                DigestEntry(
+                    title="Daily Meeting",
+                    summary="Aujourd'hui, 11:30 | Réunion Microsoft Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-1",
+                    score=1.0,
+                ),
+            ),
+        )
+        provider = type(
+            "Provider",
+            (),
+            {
+                "summarize_digest": (
+                    lambda self, sections, labels, meeting_note="": "Trois réunions sont prévues, la prochaine a lieu à 11:30."
+                )
+            },
+        )()
+
+        overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
+
+        self.assertEqual(overview.source, "llm")
+        self.assertEqual(overview.summary, "Trois réunions sont prévues, la plus proche est à 11:30.")
