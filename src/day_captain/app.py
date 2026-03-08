@@ -137,6 +137,8 @@ class StubAuthProvider:
             tenant_id=str(tenant_id or ""),
             auth_mode="delegated",
             graph_root_path="/me",
+            sender_user_id=resolved_user_id,
+            sender_graph_root_path="/me",
         )
 
 
@@ -412,6 +414,9 @@ def _validate_graph_send_prerequisites(settings: DayCaptainSettings, auth_contex
         raise ValueError("graph_send delivery requires DAY_CAPTAIN_GRAPH_SEND_ENABLED=true.")
     if "Mail.Send" not in auth_context.granted_scopes:
         raise ValueError("graph_send delivery requires Mail.Send in DAY_CAPTAIN_GRAPH_SCOPES.")
+    configured_sender = settings.graph_sender_user_id.strip()
+    if configured_sender and auth_context.auth_mode != "app_only" and configured_sender != auth_context.user_id:
+        raise ValueError("A dedicated sender mailbox requires app-only Graph auth.")
 
 
 class DayCaptainApplication:
@@ -703,6 +708,7 @@ def build_application(
         resolved_auth_provider = GraphAppOnlyAuthProvider(
             authenticator=app_only_authenticator,
             user_id=resolved_settings.graph_user_id,
+            sender_user_id=resolved_settings.graph_sender_user_id,
             configured_scopes=resolved_settings.graph_scopes,
         )
     elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:

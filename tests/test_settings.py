@@ -27,6 +27,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_GRAPH_BASE_URL"] = "https://graph.microsoft.com/v1.0"
             os.environ["DAY_CAPTAIN_GRAPH_ACCESS_TOKEN"] = "delegated-token"
             os.environ["DAY_CAPTAIN_GRAPH_USER_ID"] = "alex@example.com"
+            os.environ["DAY_CAPTAIN_GRAPH_SENDER_USER_ID"] = "daycaptain@example.com"
             os.environ["DAY_CAPTAIN_TARGET_USERS"] = "alex@example.com, bob@example.com"
             os.environ["DAY_CAPTAIN_GRAPH_SEND_ENABLED"] = "true"
             os.environ["DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS"] = "45"
@@ -67,6 +68,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.graph_base_url, "https://graph.microsoft.com/v1.0")
         self.assertEqual(settings.graph_access_token, "delegated-token")
         self.assertEqual(settings.graph_user_id, "alex@example.com")
+        self.assertEqual(settings.graph_sender_user_id, "daycaptain@example.com")
         self.assertEqual(settings.target_users, ("alex@example.com", "bob@example.com"))
         self.assertTrue(settings.graph_send_enabled)
         self.assertEqual(settings.graph_timeout_seconds, 45)
@@ -151,6 +153,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(summary["graph_auth_mode"], "app_only")
         self.assertEqual(summary["configured_target_users"], ("alice@example.com", "bob@example.com"))
         self.assertEqual(summary["selected_target_user"], "alice@example.com")
+        self.assertEqual(summary["configured_sender_user"], "")
 
     def test_llm_is_disabled_by_default(self) -> None:
         self.assertFalse(DayCaptainSettings().llm_is_enabled())

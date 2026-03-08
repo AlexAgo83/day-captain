@@ -67,6 +67,7 @@ class DayCaptainSettings:
     graph_base_url: str = "https://graph.microsoft.com/v1.0"
     graph_access_token: str = ""
     graph_user_id: str = ""
+    graph_sender_user_id: str = ""
     target_users: Tuple[str, ...] = ()
     graph_send_enabled: bool = False
     graph_timeout_seconds: int = 30
@@ -106,6 +107,7 @@ class DayCaptainSettings:
             graph_base_url=os.getenv("DAY_CAPTAIN_GRAPH_BASE_URL", "https://graph.microsoft.com/v1.0"),
             graph_access_token=os.getenv("DAY_CAPTAIN_GRAPH_ACCESS_TOKEN", ""),
             graph_user_id=os.getenv("DAY_CAPTAIN_GRAPH_USER_ID", ""),
+            graph_sender_user_id=os.getenv("DAY_CAPTAIN_GRAPH_SENDER_USER_ID", ""),
             target_users=_parse_csv(os.getenv("DAY_CAPTAIN_TARGET_USERS", "")),
             graph_send_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_GRAPH_SEND_ENABLED"), default=False),
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
@@ -215,6 +217,7 @@ class DayCaptainSettings:
             "configured_target_users": resolved_targets,
             "configured_target_user_count": len(resolved_targets),
             "selected_target_user": resolved_target,
+            "configured_sender_user": self.graph_sender_user_id.strip(),
             "graph_send_enabled": self.graph_send_enabled,
             "database_configured": bool(resolved_database_url),
             "storage_backend": "postgres" if resolved_database_url else "sqlite",

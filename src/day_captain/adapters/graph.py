@@ -293,6 +293,8 @@ class GraphDelegatedAuthProvider:
             tenant_id=str(tenant_id or "").strip(),
             auth_mode="delegated",
             graph_root_path="/me",
+            sender_user_id=resolved_user_id,
+            sender_graph_root_path="/me",
         )
 
 
@@ -308,10 +310,12 @@ class GraphAppOnlyAuthProvider:
         self,
         authenticator,
         user_id: str,
+        sender_user_id: str = "",
         configured_scopes: Sequence[str] = (),
     ) -> None:
         self.authenticator = authenticator
         self.user_id = user_id
+        self.sender_user_id = sender_user_id
         self.configured_scopes = tuple(configured_scopes)
 
     def authenticate(
@@ -324,6 +328,7 @@ class GraphAppOnlyAuthProvider:
         resolved_user_id = str(target_user_id or self.user_id or "").strip()
         if not resolved_user_id:
             raise ValueError("DAY_CAPTAIN_GRAPH_USER_ID is required for app-only auth.")
+        resolved_sender_user_id = str(self.sender_user_id or resolved_user_id).strip()
         granted_scopes = tuple(self.configured_scopes or scopes)
         return AuthContext(
             access_token=bundle.access_token,
@@ -332,6 +337,8 @@ class GraphAppOnlyAuthProvider:
             tenant_id=str(tenant_id or "").strip(),
             auth_mode="app_only",
             graph_root_path=_user_graph_root(resolved_user_id),
+            sender_user_id=resolved_sender_user_id,
+            sender_graph_root_path=_user_graph_root(resolved_sender_user_id),
         )
 
 
@@ -424,7 +431,7 @@ class GraphDigestDelivery:
                 }
             ]
         self.api_client.post_object(
-            "{0}/sendMail".format(auth_context.graph_root_path),
+            "{0}/sendMail".format(auth_context.sender_graph_root_path or auth_context.graph_root_path),
             access_token=auth_context.access_token,
             payload={
                 "message": message_payload,
