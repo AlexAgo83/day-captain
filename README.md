@@ -4,6 +4,15 @@
   <img src="docs/assets/day-captain-logo.svg" alt="Day Captain logo" width="132" />
 </p>
 
+<p align="center">
+  <a href="https://github.com/example-owner/day-captain/actions/workflows/ci.yml"><img src="https://github.com/example-owner/day-captain/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-All%20rights%20reserved-lightgrey" alt="License" /></a>
+  <img src="https://img.shields.io/badge/version-v1.2.0-4C8BF5" alt="Version" />
+  <img src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python" />
+  <img src="https://img.shields.io/badge/Render-ready-46E3B7?logo=render&logoColor=white" alt="Render" />
+  <img src="https://img.shields.io/badge/Microsoft%20365-Graph%20digest-0078D4?logo=microsoftoutlook&logoColor=white" alt="Microsoft 365" />
+</p>
+
 Day Captain is a Python service that builds a daily Microsoft 365 digest from Outlook mail and calendar data.
 
 ```mermaid
@@ -42,7 +51,7 @@ It currently supports:
 
 ## Project status
 
-Current package version: `1.1.0`
+Current package version: `1.2.0`
 
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
@@ -60,6 +69,8 @@ Current operating model:
 - `render.yaml`: Render deployment blueprint
 - `.github/workflows/`: CI and example hosted trigger workflows
 - `docs/assets/`: shared documentation assets such as the project logo
+- `CONTRIBUTING.md`: contributor workflow and validation expectations
+- `LICENSE`: current repository license terms
 
 Recommended repository split:
 - `day-captain`: application source code
