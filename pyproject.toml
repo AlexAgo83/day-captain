@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "day-captain"
-version = "0.9.0"
+version = "0.10.0"
 description = "Day Captain daily assistant service skeleton"
 requires-python = ">=3.9"
 dependencies = ["gunicorn>=21,<24", "psycopg[binary]>=3.1,<4"]
