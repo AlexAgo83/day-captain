@@ -401,6 +401,23 @@ def _clean_overview_fragment(value: str) -> str:
     return cleaned.rstrip(" .!?:;,\n\t") or cleaned
 
 
+def _normalize_top_summary(value: str, max_sentences: int = 2, max_chars: int = 220) -> str:
+    cleaned = " ".join((value or "").strip().split())
+    if not cleaned:
+        return ""
+    if max_sentences > 0:
+        sentence_candidates = re.split(r"(?<=[.!?])\s+", cleaned)
+        selected = [sentence.strip() for sentence in sentence_candidates if sentence.strip()][:max_sentences]
+        if selected:
+            cleaned = " ".join(selected).strip()
+    if len(cleaned) <= max_chars:
+        return cleaned
+    truncated = cleaned[:max_chars].rstrip()
+    if " " in truncated:
+        truncated = truncated.rsplit(" ", 1)[0].rstrip()
+    return truncated.rstrip(" .!?:;,\n\t") + "..."
+
+
 def _display_zone(name: str):
     try:
         return ZoneInfo(name)
@@ -726,6 +743,7 @@ class StructuredDigestRenderer:
             sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[:5]
 
         localized = _language_copy(self.digest_language)
+        normalized_top_summary = _normalize_top_summary(top_summary)
         delivery_subject = localized["subject"].format(
             date=_format_day_label(
                 _local_date(generated_at, self.display_timezone),
@@ -739,7 +757,7 @@ class StructuredDigestRenderer:
             window_start,
             window_end,
             sections,
-            top_summary,
+            normalized_top_summary,
             meeting_horizon or {},
         )
         delivery_html = self._build_delivery_html(
@@ -747,7 +765,7 @@ class StructuredDigestRenderer:
             window_start,
             window_end,
             sections,
-            top_summary,
+            normalized_top_summary,
             meeting_horizon or {},
         )
         delivery_payload = {
@@ -758,7 +776,7 @@ class StructuredDigestRenderer:
             "subject": delivery_subject,
             "body": delivery_body,
             "html_body": delivery_html,
-            "top_summary": top_summary,
+            "top_summary": normalized_top_summary,
             "top_summary_source": top_summary_source,
             "meeting_horizon": dict(meeting_horizon or {}),
             "digest_language": self.digest_language,
@@ -795,7 +813,7 @@ class StructuredDigestRenderer:
             user_id=user_id,
             delivery_subject=delivery_subject,
             delivery_body=delivery_body,
-            top_summary=top_summary,
+            top_summary=normalized_top_summary,
             delivery_payload=delivery_payload,
             critical_topics=tuple(sections["critical_topics"]),
             actions_to_take=tuple(sections["actions_to_take"]),

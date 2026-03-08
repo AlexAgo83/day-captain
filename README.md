@@ -299,6 +299,15 @@ Run a digest for one configured hosted target:
 PYTHONPATH=src python3 -m day_captain morning-digest --force --target-user alice@example.com
 ```
 
+Export the rendered digest locally for manual review:
+
+```bash
+PYTHONPATH=src python3 -m day_captain morning-digest \
+  --force \
+  --output-html tmp/day-captain-preview.html \
+  --output-text tmp/day-captain-preview.txt
+```
+
 Run a weekly digest directly:
 
 ```bash
