@@ -1,9 +1,9 @@
 ## item_018_day_captain_sunday_evening_weekly_digest - Add a Sunday-evening weekly digest schedule
 > From version: 0.10.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -46,7 +46,7 @@ flowchart LR
 
 # Links
 - Request: `req_018_day_captain_sunday_evening_weekly_digest`
-- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - this adds a useful recurring recap surface without disturbing weekday delivery.
@@ -55,3 +55,4 @@ flowchart LR
 # Notes
 - Derived from request `req_018_day_captain_sunday_evening_weekly_digest`.
 - This slice should stay clear that Sunday weekly scheduling does not reopen Saturday/Sunday `morning-digest` auto-send.
+- Closed by `task_023_day_captain_weekend_window_and_reliability_orchestration` after adding the Sunday weekly digest flow, scheduler templates, ops workflow, and docs.

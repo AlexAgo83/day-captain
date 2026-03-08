@@ -1,6 +1,6 @@
 ## req_017_day_captain_ops_scheduler_weekday_only_delivery - Day Captain ops scheduler weekday-only delivery
 > From version: 0.10.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 100%
 > Complexity: Low
@@ -51,8 +51,8 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_017_day_captain_ops_scheduler_weekday_only_delivery` - Freeze ops auto-send to weekdays only. Status: `Ready`.
-- `task_023_day_captain_weekend_window_and_reliability_orchestration` - Orchestrate weekend digest horizon, weekday-only ops scheduling, and reliability hardening, with README/docs closure required before `Done`. Status: `Ready`.
+- `item_017_day_captain_ops_scheduler_weekday_only_delivery` - Freeze ops auto-send to weekdays only. Status: `Done`.
+- `task_023_day_captain_weekend_window_and_reliability_orchestration` - Orchestrate weekend digest horizon, weekday-only ops scheduling, and reliability hardening, with README/docs closure required before `Done`. Status: `Done`.
 - Suggested split:
   - one implementation or validation task for explicit weekday-only ops scheduling semantics
   - one documentation task for operator-facing explanation and verification steps
