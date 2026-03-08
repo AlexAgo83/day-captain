@@ -69,6 +69,7 @@ That run produced a stub preview with:
 - footer:
   - if quick actions are present, the `mailto:` links point to the intended Day Captain mailbox
   - the command subjects are prefilled as `recall`, `recall-today`, or `recall-week`
+  - the helper copy makes it clear that clicking opens a draft rather than auto-sending a command
 - meetings:
   - each meeting line emphasizes title, time, organizer, and location quickly
   - the section does not expand into a tall report for a single meeting

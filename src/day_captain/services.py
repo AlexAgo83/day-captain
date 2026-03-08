@@ -185,8 +185,9 @@ LANGUAGE_COPY = {
         "digest_title": "Your Day Captain brief",
         "subject": "Your Day Captain brief for {date}",
         "prepared": "As of {date}",
-        "coverage": "Window: {start} -> {end}",
         "coverage_label": "Window",
+        "coverage_separator": ": ",
+        "coverage_value": "From {start} to {end}",
         "sections": {
             "critical_topics": "Critical topics",
             "actions_to_take": "Actions to take",
@@ -205,6 +206,7 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Quick actions",
+            "hint": "Opens a draft to Day Captain with the command prefilled.",
             "recall": "Recall this brief",
             "recall_today": "Recall today",
             "recall_week": "Recall week",
@@ -237,8 +239,9 @@ LANGUAGE_COPY = {
         "digest_title": "Votre brief Day Captain",
         "subject": "Votre brief Day Captain du {date}",
         "prepared": "À jour au {date}",
-        "coverage": "Périmètre : {start} -> {end}",
         "coverage_label": "Périmètre",
+        "coverage_separator": " : ",
+        "coverage_value": "Du {start} au {end}",
         "sections": {
             "critical_topics": "Points critiques",
             "actions_to_take": "Actions à mener",
@@ -257,6 +260,7 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Actions rapides",
+            "hint": "Ouvre un brouillon vers Day Captain avec la commande préremplie.",
             "recall": "Rappeler ce brief",
             "recall_today": "Rappel aujourd'hui",
             "recall_week": "Rappel semaine",
@@ -866,10 +870,18 @@ class StructuredDigestRenderer:
     ) -> str:
         localized = _language_copy(self.digest_language)
         generated_label = _format_localized_timestamp(generated_at, self.display_timezone, self.digest_language)
+        coverage_text = localized["coverage_value"].format(
+            start=_format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
+            end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
+        )
         lines = [
             localized["digest_title"],
             localized["prepared"].format(date=generated_label),
-            localized["coverage"].format(start=_format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False), end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language)),
+            "{0}{1}{2}".format(
+                localized["coverage_label"],
+                localized.get("coverage_separator", ": "),
+                coverage_text,
+            ),
             "",
         ]
         if top_summary.strip():
@@ -907,21 +919,25 @@ class StructuredDigestRenderer:
     ) -> str:
         localized = _language_copy(self.digest_language)
         generated_label = _format_localized_timestamp(generated_at, self.display_timezone, self.digest_language)
-        coverage = localized["coverage"].format(
+        coverage_text = localized["coverage_value"].format(
             start=_format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
             end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
         )
         coverage_label = str(localized.get("coverage_label") or "")
-        coverage_value = coverage.split(":", 1)[1].strip() if ":" in coverage else coverage
         parts = [
             "<html><body style=\"margin:0;padding:0;background:transparent;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
             "<div style=\"max-width:720px;margin:0 auto;padding:18px 18px 28px;\">",
             "<section style=\"margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid #dbe4ee;\">",
             "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
             "<p style=\"margin:0 0 8px;font-size:14px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
-            "<p style=\"margin:0;\"><span style=\"display:inline-block;margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</span><br><span style=\"font-size:13px;color:#64748b;\">{1}</span></p>".format(
+            "<table role=\"presentation\" style=\"margin:0;border-collapse:collapse;\"><tr>"
+            "<td style=\"padding:0 10px 0 0;vertical-align:top;\">"
+            "<span style=\"display:inline-block;padding:4px 8px;border:1px solid #dbe4ee;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</span>"
+            "</td>"
+            "<td style=\"padding:2px 0 0;vertical-align:top;font-size:13px;color:#475569;\">{1}</td>"
+            "</tr></table>".format(
                 self._html_escape(coverage_label),
-                self._html_escape(coverage_value),
+                self._html_escape(coverage_text),
             ),
             "</section>",
         ]
@@ -1002,6 +1018,7 @@ class StructuredDigestRenderer:
         footer = _language_copy(self.digest_language)["footer"]
         return (
             str(footer["label"]),
+            str(footer["hint"]),
             "- {0}: {1} (subject: recall)".format(footer["recall"], mailbox),
             "- {0}: {1} (subject: recall-today)".format(footer["recall_today"], mailbox),
             "- {0}: {1} (subject: recall-week)".format(footer["recall_week"], mailbox),
@@ -1022,16 +1039,19 @@ class StructuredDigestRenderer:
             "<p style=\"margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>".format(
                 self._html_escape(str(footer["label"]))
             ),
+            "<p style=\"margin:0 0 10px;font-size:13px;color:#64748b;\">{0}</p>".format(
+                self._html_escape(str(footer["hint"]))
+            ),
+            "<table role=\"presentation\" style=\"margin:0;border-collapse:separate;border-spacing:0 8px;\"><tr>",
         ]
         for command, label in links:
             href = "mailto:{0}?subject={1}".format(self._html_escape(mailbox), quote(command))
             parts.append(
-                "<a href=\"{0}\" style=\"display:inline-block;margin:0 8px 8px 0;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;color:#0f172a;text-decoration:none;font-size:13px;\">{1}</a>".format(
-                    href,
-                    self._html_escape(label),
-                )
+                "<td style=\"padding:0 8px 0 0;\">"
+                "<a href=\"{0}\" style=\"display:inline-block;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;color:#0f172a;text-decoration:none;font-size:13px;white-space:nowrap;\">{1}</a>"
+                "</td>".format(href, self._html_escape(label))
             )
-        parts.append("</section>")
+        parts.append("</tr></table></section>")
         return "".join(parts)
 
     def _meeting_note(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
