@@ -1,9 +1,9 @@
 ## task_001_day_captain_graph_ingestion_and_storage - Implement Microsoft Graph ingestion and SQLite persistence
 > From version: 0.1.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
 > Confidence: 98%
-> Progress: 99%
+> Progress: 100%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -53,7 +53,7 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Added `SQLiteStorage` in `src/day_captain/adapters/storage.py` with schema bootstrap, idempotent upserts for messages and meetings, persisted digest runs/items, and feedback persistence.

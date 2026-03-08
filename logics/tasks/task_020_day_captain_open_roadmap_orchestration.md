@@ -1,9 +1,9 @@
 ## task_020_day_captain_open_roadmap_orchestration - Orchestrate the remaining hosted, multi-user, and live-quality delivery slices
 > From version: 0.8.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
-> Confidence: 99%
-> Progress: 96%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -30,9 +30,9 @@ flowchart LR
 - [x] 1. Freeze the execution order and dependency rules for the remaining open slices.
 - [x] 2. Drive hosted readiness first: complete app-only Graph auth, then complete hosted validation and cold-start-tolerant trigger behavior.
 - [x] 3. Drive tenant-scoped multi-user work next: foundations first, then isolation and operator validation.
-- [ ] 4. Close the remaining live-quality validation work for bounded LLM wording once the deployment path is stable enough to validate it properly.
-- [ ] 5. Update the parent request/backlog statuses so the remaining open work has one coherent closure path instead of several disconnected partial tracks.
-- [ ] FINAL: Update related Logics docs
+- [x] 4. Close the remaining live-quality validation work for bounded LLM wording once the deployment path is stable enough to validate it properly.
+- [x] 5. Update the parent request/backlog statuses so the remaining open work has one coherent closure path instead of several disconnected partial tracks.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC7 -> Plan steps 1 and 2 keep the hosted architecture explicit. Proof: task explicitly sequences hosted auth and hosted validation before later expansion.
@@ -49,13 +49,13 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Remaining open slices have an explicit documented execution order.
-- [ ] Dependencies and closure conditions are aligned across linked docs.
-- [ ] Parent request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Remaining open slices have an explicit documented execution order.
+- [x] Dependencies and closure conditions are aligned across linked docs.
+- [x] Parent request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, hosted Render proof for app-only auth is complete, and private-ops scheduler proof with cold-start-tolerant wake-up behavior is now also complete.
 - Scheduler, operator docs, target-user validation, private-ops bootstrap tooling, and hosted validation helpers now align with that order, so the remaining closure path is narrower and explicit.
-- Fresh verification on Sunday, March 8, 2026 reconfirmed that the remaining closure blocker is not repo work: the live LLM provider still returns `429 insufficient_quota`, while the application continues to fall back safely to deterministic wording.
-- Remaining work for closure is now concentrated almost entirely in `task_010`: enable provider quota or billing, rerun live delivered validation with actual LLM output, then perform the final parent-chain cleanup once that slice is closed.
+- Live validation on Sunday, March 8, 2026 resolved the last closure blocker: the provider now returns successful live wording output, and both `json` and `graph_send` validation runs can produce `top_summary_source=llm`.
+- The last remaining work in this orchestration slice is now purely workflow closure: mark the completed quality task chain as done and let the parent backlog/request chain close cleanly.

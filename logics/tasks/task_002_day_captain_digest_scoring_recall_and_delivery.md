@@ -1,9 +1,9 @@
 ## task_002_day_captain_digest_scoring_recall_and_delivery - Implement scoring, digest rendering, recall, and webhook/Graph-send delivery
 > From version: 0.1.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
 > Confidence: 98%
-> Progress: 99%
+> Progress: 100%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -54,7 +54,7 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Added deterministic prioritization with anti-noise rules, sender/domain/keyword preference weights, critical-topic guardrails, and meeting proximity scoring in `src/day_captain/services.py`.

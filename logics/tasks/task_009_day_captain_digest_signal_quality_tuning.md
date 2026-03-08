@@ -1,9 +1,9 @@
 ## task_009_day_captain_digest_signal_quality_tuning - Refine digest prioritization and filtering to reduce weak items
 > From version: 0.4.0
-> Status: In Progress
+> Status: Done
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 99%
+> Progress: 100%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -53,7 +53,7 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Scoring/filtering was tightened to better classify shared deliverables as `actions_to_take`, reduce weak watch items, and reject self-generated Day Captain digests from re-entering the digest.
