@@ -94,6 +94,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("French", captured["body"]["messages"][0]["content"])
         self.assertIn("Do not repeat the title at the start of the summary", captured["body"]["messages"][0]["content"])
         self.assertIn("under 160 characters", captured["body"]["messages"][0]["content"])
+        self.assertIn("candidate or profile-style messages", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             rewritten["message:msg-1"],
             "Review the budget before noon because the request is urgent.",
@@ -184,6 +185,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("Use 1 to 2 short factual sentences", captured["body"]["messages"][0]["content"])
         self.assertIn("avoid vague phrasing", captured["body"]["messages"][0]["content"])
         self.assertIn("Avoid unfinished endings", captured["body"]["messages"][0]["content"])
+        self.assertIn("candidate or profile-style items", captured["body"]["messages"][0]["content"])
         self.assertIn("Prefer readable names over raw email addresses", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             summary,
@@ -541,3 +543,41 @@ class DigestOverviewEngineTest(unittest.TestCase):
             "2 réunions sont prévues. Résume-les brièvement sans toutes les lister. Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'. Si tu mentionnes une réunion, cite la plus proche avec un horaire concret et évite les formulations vagues.",
         )
         self.assertEqual(len(captured["sections"]["upcoming_meetings"]), 1)
+
+    def test_llm_summary_compacts_verbose_watch_item_before_prompt(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            watch_items=(
+                DigestEntry(
+                    title="Candidature spontanée - Designer",
+                    summary=(
+                        "Candidature spontanée : diplômé d'un bachelor en design transport et d'un master en design urbain, "
+                        "actuellement designer chez Studio Meridian depuis plus de 4 ans, cherche une nouvelle opportunité. "
+                        "Action attendue : examiner la candidature ou proposer un suivi."
+                    ),
+                    section_name="watch_items",
+                    source_kind="message",
+                    source_id="msg-1",
+                    score=1.0,
+                ),
+            ),
+        )
+        captured = {}
+
+        class Provider:
+            def summarize_digest(self, sections, labels, meeting_note=""):
+                captured["sections"] = sections
+                return "Résumé court."
+
+        overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
+
+        self.assertEqual(overview.source, "llm")
+        self.assertEqual(len(captured["sections"]["watch_items"]), 1)
+        self.assertNotIn("Candidature spontanée :", captured["sections"]["watch_items"][0].summary)
+        self.assertIn("Suivi :", captured["sections"]["watch_items"][0].summary)
+        self.assertLessEqual(len(captured["sections"]["watch_items"][0].summary), 123)
