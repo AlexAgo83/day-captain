@@ -330,3 +330,70 @@ class DeviceCodeAuthenticator:
             scopes=tuple(raw_scopes or scopes),
             token_type=str(data.get("token_type") or "Bearer"),
         )
+
+
+class ClientCredentialsAuthenticator:
+    def __init__(
+        self,
+        tenant_id: str,
+        client_id: str,
+        client_secret: str,
+        timeout_seconds: int = 30,
+        opener: Optional[Callable[..., Any]] = None,
+    ) -> None:
+        self.tenant_id = tenant_id
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.timeout_seconds = timeout_seconds
+        self._opener = opener or request.urlopen
+
+    def _endpoint(self, name: str) -> str:
+        return "https://login.microsoftonline.com/{0}/oauth2/v2.0/{1}".format(self.tenant_id, name)
+
+    def _post_form(self, payload: Mapping[str, str]) -> Mapping[str, Any]:
+        body = parse.urlencode(payload).encode("utf-8")
+        req = request.Request(
+            self._endpoint("token"),
+            data=body,
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            method="POST",
+        )
+        try:
+            with self._opener(req, timeout=self.timeout_seconds) as response:
+                raw = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise EntraAuthError("Entra auth request failed with {0}: {1}".format(exc.code, detail)) from exc
+        except error.URLError as exc:
+            raise EntraAuthError("Unable to reach Microsoft Entra ID: {0}".format(exc.reason)) from exc
+        data = json.loads(raw or "{}")
+        if not isinstance(data, dict):
+            raise EntraAuthError("Expected JSON object from Entra ID.")
+        return data
+
+    def request_access_token(self, resource_scope: str = "https://graph.microsoft.com/.default") -> AuthTokenBundle:
+        if not self.client_id:
+            raise EntraAuthError("DAY_CAPTAIN_GRAPH_CLIENT_ID is required for app-only auth.")
+        if not self.client_secret:
+            raise EntraAuthError("DAY_CAPTAIN_GRAPH_CLIENT_SECRET is required for app-only auth.")
+        data = self._post_form(
+            {
+                "client_id": self.client_id,
+                "client_secret": self.client_secret,
+                "grant_type": "client_credentials",
+                "scope": resource_scope,
+            }
+        )
+        access_token = str(data.get("access_token") or "")
+        if not access_token:
+            raise EntraAuthError("Microsoft Entra ID did not return an access token.")
+        token_type = str(data.get("token_type") or "Bearer")
+        expires_in = int(data.get("expires_in") or 3600)
+        return AuthTokenBundle(
+            access_token=access_token,
+            refresh_token="",
+            expires_at=datetime.now(timezone.utc) + timedelta(seconds=max(0, expires_in - 60)),
+            scopes=(resource_scope,),
+            token_type=token_type,
+            user_id="",
+        )

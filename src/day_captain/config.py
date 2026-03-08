@@ -32,6 +32,13 @@ def _parse_csv(value: str) -> Tuple[str, ...]:
     return tuple(part.strip() for part in value.split(",") if part.strip())
 
 
+def _normalize_graph_auth_mode(value: str, default: str = "delegated") -> str:
+    candidate = (value or "").strip().lower()
+    if candidate in {"delegated", "app_only", "auto"}:
+        return candidate
+    return default
+
+
 def _normalize_language(value: str, default: str = "en") -> str:
     candidate = (value or "").strip().lower()
     if candidate in {"en", "fr"}:
@@ -50,6 +57,7 @@ class DayCaptainSettings:
     job_secret: str = ""
     delivery_mode: str = "json"
     default_lookback_hours: int = 24
+    graph_auth_mode: str = "delegated"
     graph_tenant_id: str = "common"
     graph_client_id: str = ""
     graph_client_secret: str = ""
@@ -87,6 +95,7 @@ class DayCaptainSettings:
             job_secret=os.getenv("DAY_CAPTAIN_JOB_SECRET", ""),
             delivery_mode=os.getenv("DAY_CAPTAIN_DELIVERY_MODE", "json"),
             default_lookback_hours=int(os.getenv("DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS", "24")),
+            graph_auth_mode=_normalize_graph_auth_mode(os.getenv("DAY_CAPTAIN_GRAPH_AUTH_MODE", "delegated")),
             graph_tenant_id=os.getenv("DAY_CAPTAIN_GRAPH_TENANT_ID", "common"),
             graph_client_id=os.getenv("DAY_CAPTAIN_GRAPH_CLIENT_ID", ""),
             graph_client_secret=os.getenv("DAY_CAPTAIN_GRAPH_CLIENT_SECRET", ""),
@@ -127,6 +136,14 @@ class DayCaptainSettings:
             if scope not in base:
                 base.append(scope)
         return tuple(base)
+
+    def resolved_graph_auth_mode(self) -> str:
+        mode = _normalize_graph_auth_mode(self.graph_auth_mode, default="delegated")
+        if mode == "auto":
+            if self.graph_client_secret and self.graph_user_id:
+                return "app_only"
+            return "delegated"
+        return mode
 
     def is_hosted_environment(self) -> bool:
         return self.environment.strip().lower() in {"production", "staging"}

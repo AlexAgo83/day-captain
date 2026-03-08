@@ -171,6 +171,28 @@ class GraphAdapterTest(unittest.TestCase):
         self.assertEqual(access_token, "delegated-token")
         self.assertEqual(params["$top"], 100)
 
+    def test_mail_collector_uses_users_route_for_app_only_context(self) -> None:
+        api_client = CollectionRecorderApiClient()
+        collector = GraphMailCollector(api_client)
+        auth_context = AuthContext(
+            access_token="app-only-token",
+            granted_scopes=("Mail.Read",),
+            user_id="alex@example.com",
+            auth_mode="app_only",
+            graph_root_path="/users/alex%40example.com",
+        )
+
+        collector.collect_messages(
+            auth_context,
+            datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+        )
+
+        path, access_token, params = api_client.calls[0]
+        self.assertEqual(path, "/users/alex%40example.com/mailFolders/Inbox/messages")
+        self.assertEqual(access_token, "app-only-token")
+        self.assertEqual(params["$top"], 100)
+
     def test_graph_digest_delivery_posts_send_mail_request(self) -> None:
         api_client = DeliveryRecorderApiClient()
         delivery = GraphDigestDelivery(api_client)
@@ -208,6 +230,31 @@ class GraphAdapterTest(unittest.TestCase):
         )
         self.assertTrue(posted_payload["saveToSentItems"])
         self.assertEqual(expected_statuses, (202,))
+
+    def test_graph_digest_delivery_uses_users_route_for_app_only_context(self) -> None:
+        api_client = DeliveryRecorderApiClient()
+        api_client.profile = {"mail": "alex@example.com"}
+        delivery = GraphDigestDelivery(api_client)
+        auth_context = AuthContext(
+            access_token="app-only-token",
+            granted_scopes=("Mail.Read", "Mail.Send"),
+            user_id="alex@example.com",
+            auth_mode="app_only",
+            graph_root_path="/users/alex%40example.com",
+        )
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="graph_send",
+            delivery_payload={"graph_message": {"subject": "Day Captain digest", "body": {"contentType": "Text", "content": "Digest body"}}},
+        )
+
+        delivery.deliver_digest(auth_context, payload)
+
+        self.assertEqual(api_client.calls[0][1], "/users/alex%40example.com")
+        self.assertEqual(api_client.calls[1][1], "/users/alex%40example.com/sendMail")
 
 
 if __name__ == "__main__":

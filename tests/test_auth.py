@@ -13,8 +13,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
 from day_captain.adapters.auth import DatabaseTokenCache
+from day_captain.adapters.auth import ClientCredentialsAuthenticator
 from day_captain.adapters.auth import DeviceCodeSession
 from day_captain.adapters.auth import FileTokenCache
+from day_captain.adapters.graph import GraphAppOnlyAuthProvider
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.cli import _run_auth_command
 from day_captain.config import DayCaptainSettings
@@ -232,6 +234,51 @@ class AuthFlowTest(unittest.TestCase):
             self.assertEqual(status["user_id"], "user-123")
             self.assertEqual(logout["status"], "logged_out")
             self.assertFalse(Path(cache_path).exists())
+
+    def test_client_credentials_authenticator_requests_app_only_token(self) -> None:
+        opener = SequenceOpener(
+            [
+                {
+                    "access_token": "app-only-access",
+                    "expires_in": 3600,
+                    "token_type": "Bearer",
+                }
+            ]
+        )
+        authenticator = ClientCredentialsAuthenticator(
+            tenant_id="common",
+            client_id="client-id",
+            client_secret="client-secret",
+            opener=opener,
+        )
+
+        bundle = authenticator.request_access_token()
+
+        self.assertEqual(bundle.access_token, "app-only-access")
+        self.assertEqual(bundle.refresh_token, "")
+        self.assertEqual(bundle.scopes, ("https://graph.microsoft.com/.default",))
+
+    def test_app_only_provider_uses_explicit_target_user_and_users_root_path(self) -> None:
+        authenticator = unittest.mock.Mock()
+        authenticator.request_access_token.return_value = AuthTokenBundle(
+            access_token="app-only-access",
+            refresh_token="",
+            expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+            scopes=("https://graph.microsoft.com/.default",),
+        )
+        provider = GraphAppOnlyAuthProvider(
+            authenticator=authenticator,
+            user_id="alex@example.com",
+            configured_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
+        )
+
+        context = provider.authenticate(("Mail.Read",))
+
+        self.assertEqual(context.access_token, "app-only-access")
+        self.assertEqual(context.user_id, "alex@example.com")
+        self.assertEqual(context.auth_mode, "app_only")
+        self.assertEqual(context.graph_root_path, "/users/alex%40example.com")
+        self.assertEqual(context.granted_scopes, ("Mail.Read", "Calendars.Read", "Mail.Send"))
 
 
 if __name__ == "__main__":

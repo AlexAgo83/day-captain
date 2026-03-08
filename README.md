@@ -120,8 +120,11 @@ DAY_CAPTAIN_ENV=production
 DAY_CAPTAIN_DATABASE_URL=postgresql://...
 DAY_CAPTAIN_JOB_SECRET=...
 DAY_CAPTAIN_DELIVERY_MODE=graph_send
+DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only
 DAY_CAPTAIN_GRAPH_CLIENT_ID=...
+DAY_CAPTAIN_GRAPH_CLIENT_SECRET=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
+DAY_CAPTAIN_GRAPH_USER_ID=...
 DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_DIGEST_LANGUAGE=en
@@ -135,6 +138,7 @@ Important hosted note:
 - the current shipped hosted path still assumes one active target mailbox at a time
 - the target architecture is evolving toward tenant-scoped multi-user operation with several configured users in one deployment
 - that future model will require a cleanup of `.env*` and hosted settings so stale single-user variables do not remain ambiguous
+- hosted Graph auth now supports an explicit `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` path for unattended environments
 
 Important:
 - never commit `.env`
@@ -161,6 +165,8 @@ The delivered digest now supports:
 
 ## Microsoft auth setup
 
+Local delegated workflow:
+
 1. Create an Entra app registration.
 2. Enable public client flows.
 3. Add delegated Microsoft Graph permissions.
@@ -186,7 +192,15 @@ If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3
 
 When `delivery_mode=graph_send`, the current local delegated flow sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.
 
-The hosted roadmap is moving toward app-only Graph auth and explicit target mailboxes inside one tenant rather than a permanent single `/me` identity.
+Hosted app-only workflow:
+- set `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
+- provide `DAY_CAPTAIN_GRAPH_CLIENT_ID`
+- provide `DAY_CAPTAIN_GRAPH_CLIENT_SECRET`
+- provide `DAY_CAPTAIN_GRAPH_TENANT_ID`
+- provide `DAY_CAPTAIN_GRAPH_USER_ID`
+- grant the corresponding Graph application permissions in Entra
+
+In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity.
 
 ## Local usage
 

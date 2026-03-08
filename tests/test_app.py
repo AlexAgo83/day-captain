@@ -185,6 +185,27 @@ class DayCaptainApplicationTest(unittest.TestCase):
         )
         fake_cache.save.assert_called_once()
 
+    def test_build_application_selects_app_only_provider_when_configured(self) -> None:
+        settings = DayCaptainSettings(
+            environment="production",
+            database_url="postgresql://user:pass@localhost:5432/day_captain",
+            job_secret="secret",
+            graph_auth_mode="app_only",
+            graph_client_id="client-id",
+            graph_client_secret="client-secret",
+            graph_user_id="alex@example.com",
+            graph_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
+        )
+
+        fake_storage = InMemoryStorage()
+        with mock.patch("day_captain.app.PostgresStorage", return_value=fake_storage), mock.patch(
+            "day_captain.app.GraphAppOnlyAuthProvider"
+        ) as app_only_provider:
+            app = build_application(settings=settings)
+
+        app_only_provider.assert_called_once()
+        self.assertEqual(app.auth_provider, app_only_provider.return_value)
+
     def test_build_application_uses_llm_provider_when_configured(self) -> None:
         settings = DayCaptainSettings(
             llm_provider="openai",

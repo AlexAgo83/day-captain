@@ -13,6 +13,7 @@ from typing import Sequence
 from urllib import error
 from urllib import parse
 from urllib import request
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
@@ -270,6 +271,41 @@ class GraphDelegatedAuthProvider:
             access_token=access_token,
             granted_scopes=tuple(scopes),
             user_id=resolved_user_id,
+            auth_mode="delegated",
+            graph_root_path="/me",
+        )
+
+
+def _user_graph_root(user_id: str) -> str:
+    normalized = str(user_id or "").strip()
+    if not normalized:
+        raise ValueError("A target Graph user id is required for app-only auth.")
+    return "/users/{0}".format(quote(normalized, safe=""))
+
+
+class GraphAppOnlyAuthProvider:
+    def __init__(
+        self,
+        authenticator,
+        user_id: str,
+        configured_scopes: Sequence[str] = (),
+    ) -> None:
+        self.authenticator = authenticator
+        self.user_id = user_id
+        self.configured_scopes = tuple(configured_scopes)
+
+    def authenticate(self, scopes: Sequence[str]) -> AuthContext:
+        bundle = self.authenticator.request_access_token()
+        target_user_id = str(self.user_id or "").strip()
+        if not target_user_id:
+            raise ValueError("DAY_CAPTAIN_GRAPH_USER_ID is required for app-only auth.")
+        granted_scopes = tuple(self.configured_scopes or scopes)
+        return AuthContext(
+            access_token=bundle.access_token,
+            granted_scopes=granted_scopes,
+            user_id=target_user_id,
+            auth_mode="app_only",
+            graph_root_path=_user_graph_root(target_user_id),
         )
 
 
@@ -303,7 +339,7 @@ class GraphMailCollector:
             )
         )
         payloads = self.api_client.list_collection(
-            "/me/mailFolders/Inbox/messages",
+            "{0}/mailFolders/Inbox/messages".format(auth_context.graph_root_path),
             access_token=auth_context.access_token,
             params={
                 "$filter": filter_value,
@@ -326,7 +362,7 @@ class GraphCalendarCollector:
         window_end: datetime,
     ) -> Sequence[MeetingRecord]:
         payloads = self.api_client.list_collection(
-            "/me/calendar/calendarView",
+            "{0}/calendar/calendarView".format(auth_context.graph_root_path),
             access_token=auth_context.access_token,
             params={
                 "startDateTime": window_start.isoformat(),
@@ -350,7 +386,7 @@ class GraphDigestDelivery:
         message_payload = dict(graph_message)
         recipients = message_payload.get("toRecipients")
         if not isinstance(recipients, list) or not recipients:
-            profile = self.api_client.get_object("/me", access_token=auth_context.access_token)
+            profile = self.api_client.get_object(auth_context.graph_root_path, access_token=auth_context.access_token)
             mailbox_address = str(profile.get("mail") or profile.get("userPrincipalName") or "").strip()
             if not mailbox_address:
                 raise ValueError("graph_send delivery could not determine a mailbox recipient from the Graph profile.")
@@ -362,7 +398,7 @@ class GraphDigestDelivery:
                 }
             ]
         self.api_client.post_object(
-            "/me/sendMail",
+            "{0}/sendMail".format(auth_context.graph_root_path),
             access_token=auth_context.access_token,
             payload={
                 "message": message_payload,

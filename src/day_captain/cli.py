@@ -77,6 +77,7 @@ def _authenticator(settings: DayCaptainSettings) -> DeviceCodeAuthenticator:
 
 
 def _graph_provider(settings: DayCaptainSettings) -> GraphDelegatedAuthProvider:
+    # Local CLI auth remains delegated even when hosted deployment uses app-only auth.
     return GraphDelegatedAuthProvider(
         api_client=GraphApiClient(
             base_url=settings.graph_base_url,
