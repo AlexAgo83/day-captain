@@ -1,8 +1,8 @@
 ## req_009_day_captain_hosted_graph_app_only_authentication - Day Captain hosted Microsoft Graph app-only authentication
 > From version: 0.7.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
-> Confidence: 99%
+> Confidence: 100%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -56,6 +56,6 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_009_day_captain_hosted_graph_app_only_authentication` - Replace the fragile hosted delegated token path with app-only Graph auth. Status: `In Progress`.
-- `task_016_day_captain_hosted_graph_app_only_authentication_implementation` - Implement hosted Graph app-only auth and `/users/{id}` route support. Status: `Delivered, pending deployed validation`.
-- `task_017_day_captain_hosted_graph_app_only_authentication_validation` - Validate the Render-hosted digest flow end to end with app-only auth. Status: `In Progress`.
+- `item_009_day_captain_hosted_graph_app_only_authentication` - Replace the fragile hosted delegated token path with app-only Graph auth. Status: `Done`.
+- `task_016_day_captain_hosted_graph_app_only_authentication_implementation` - Implement hosted Graph app-only auth and `/users/{id}` route support. Status: `Done`.
+- `task_017_day_captain_hosted_graph_app_only_authentication_validation` - Validate the Render-hosted digest flow end to end with app-only auth. Status: `Done`.

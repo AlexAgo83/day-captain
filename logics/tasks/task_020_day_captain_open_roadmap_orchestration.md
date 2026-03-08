@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 98%
-> Progress: 80%
+> Progress: 88%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -55,6 +55,6 @@ flowchart LR
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, while hosted Render proof and live LLM validation remain the main unresolved end-to-end slices, with sleeping-service fallback support now materially implemented in the repo.
+- The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, and hosted Render proof for app-only auth is now also complete.
 - Scheduler, operator docs, target-user validation, private-ops bootstrap tooling, and hosted validation helpers now align with that order, so the remaining closure path is narrower and explicit.
-- Remaining work for closure is still partly external-facing: complete `task_017` on the deployed Render service, validate the sleeping-service fallback in real hosted conditions for `task_021`, then close the live LLM wording validation in `task_010`.
+- Remaining work for closure is now concentrated in two areas: validate the sleeping-service fallback in real hosted sleeping conditions for `task_021`, then close the live LLM wording validation in `task_010`.
