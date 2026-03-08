@@ -45,7 +45,9 @@ jobs:
           PY
 
   trigger-morning-digest:
-    needs: prepare-targets
+    needs:
+      - prepare-targets
+      - warm-hosted-service
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -69,10 +71,32 @@ jobs:
           # Example only: production scheduling should live in the private day-captain-ops repo.
           PYTHONPATH=src python3 scripts/validate_hosted_service.py \
             --target-user "$TARGET_USER_ID" \
+            --timeout-seconds 90 \
+            --expect-graph-auth-mode app_only \
+            --expect-storage-backend postgres
+
+  warm-hosted-service:
+    needs: prepare-targets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Wake and verify hosted service
+        env:
+          DAY_CAPTAIN_SERVICE_URL: ${{ secrets.DAY_CAPTAIN_SERVICE_URL }}
+          DAY_CAPTAIN_JOB_SECRET: ${{ secrets.DAY_CAPTAIN_JOB_SECRET }}
+        run: |
+          # Example only: production scheduling should live in the private day-captain-ops repo.
+          PYTHONPATH=src python3 scripts/check_hosted_health.py \
             --wake-service \
             --wake-timeout-seconds 45 \
             --wake-max-attempts 6 \
             --wake-delay-seconds 10 \
-            --timeout-seconds 90 \
             --expect-graph-auth-mode app_only \
             --expect-storage-backend postgres

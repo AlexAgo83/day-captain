@@ -77,6 +77,20 @@ PYTHONPATH=src python3 -m day_captain validate-hosted-service \
 
 If the hosted service can sleep between runs, use `--wake-service` instead of assuming the first scheduler call will execute immediately.
 
+For several target users, prefer a separate readiness pass before fan-out:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=... \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain check-hosted-health \
+  --wake-service \
+  --wake-timeout-seconds 45 \
+  --wake-max-attempts 6 \
+  --wake-delay-seconds 10 \
+  --expect-graph-auth-mode app_only \
+  --expect-storage-backend postgres
+```
+
 ## Scheduling model
 
 The GitHub Actions scheduler supports two modes:
@@ -99,6 +113,7 @@ The scheduler will issue one hosted `/jobs/morning-digest` call per listed targe
 If the hosted web service is on a plan that can sleep:
 
 - use the private ops workflow to call `GET /healthz` as a warm-up step before the real trigger
+- for multi-user schedules, do that warm-up once before the per-user fan-out rather than once per user
 - allow bounded retries before `POST /jobs/morning-digest`
 - use longer timeout settings than for an always-on deployment
 - keep this as a fallback mode only; prefer a paid always-on service for routine production delivery
