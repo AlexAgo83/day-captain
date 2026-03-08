@@ -2,12 +2,14 @@
 
 from dataclasses import replace
 from datetime import date
+from datetime import timezone
 import json
 import sqlite3
 from typing import Any
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
+from zoneinfo import ZoneInfo
 
 try:
     import psycopg
@@ -51,6 +53,13 @@ def _json_loads(value: Optional[str]) -> Any:
 def _normalize_scope_value(value: str, fallback: str) -> str:
     normalized = str(value or "").strip()
     return normalized or fallback
+
+
+def _display_zone(name: str):
+    try:
+        return ZoneInfo(name)
+    except Exception:
+        return timezone.utc
 
 
 class SQLiteStorage:
@@ -754,9 +763,10 @@ class SQLiteStorage:
         target_day: date,
         tenant_id: str = "",
         user_id: str = "",
+        display_timezone: str = "UTC",
     ) -> Optional[DigestRunRecord]:
-        params = [target_day.isoformat()]
-        where_clauses = ["status = 'completed'", "substr(generated_at, 1, 10) = ?"]
+        params = []
+        where_clauses = ["status = 'completed'"]
         if tenant_id:
             scoped_tenant_id, _ = self._scope(tenant_id, "")
             where_clauses.append("tenant_id = ?")
@@ -773,13 +783,15 @@ class SQLiteStorage:
                 FROM scoped_digest_runs
                 WHERE {0}
                 ORDER BY generated_at DESC
-                LIMIT 1
                 """.format(" AND ".join(where_clauses)),
                 tuple(params),
-            ).fetchone()
-        if row is None:
-            return None
-        return self._row_to_run(row)
+            ).fetchall()
+        zone = _display_zone(display_timezone)
+        for row in rows:
+            run = self._row_to_run(row)
+            if run.generated_at.astimezone(zone).date() == target_day:
+                return run
+        return None
 
     def save_feedback(self, feedback: FeedbackRecord, tenant_id: str = "", user_id: str = "") -> None:
         scoped_tenant_id, scoped_user_id = self._scope(tenant_id or feedback.tenant_id, user_id or feedback.user_id)
@@ -1567,9 +1579,10 @@ class PostgresStorage:
         target_day: date,
         tenant_id: str = "",
         user_id: str = "",
+        display_timezone: str = "UTC",
     ) -> Optional[DigestRunRecord]:
-        params = [target_day.isoformat()]
-        where_clauses = ["status = 'completed'", "generated_at::date = %s::date"]
+        params = []
+        where_clauses = ["status = 'completed'"]
         if tenant_id:
             scoped_tenant_id, _ = self._scope(tenant_id, "")
             where_clauses.append("tenant_id = %s")
@@ -1586,13 +1599,15 @@ class PostgresStorage:
                 FROM scoped_digest_runs
                 WHERE {0}
                 ORDER BY generated_at DESC
-                LIMIT 1
                 """.format(" AND ".join(where_clauses)),
                 tuple(params),
-            ).fetchone()
-        if row is None:
-            return None
-        return self._row_to_run(row)
+            ).fetchall()
+        zone = _display_zone(display_timezone)
+        for row in rows:
+            run = self._row_to_run(row)
+            if run.generated_at.astimezone(zone).date() == target_day:
+                return run
+        return None
 
     def save_feedback(self, feedback: FeedbackRecord, tenant_id: str = "", user_id: str = "") -> None:
         scoped_tenant_id, scoped_user_id = self._scope(tenant_id or feedback.tenant_id, user_id or feedback.user_id)
