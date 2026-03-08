@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 96%
-> Progress: 80%
+> Progress: 82%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -62,6 +62,7 @@ flowchart LR
 - Added a minimal hosted HTTP surface in `src/day_captain/web.py` with `/healthz`, a protected `/jobs/morning-digest` endpoint, and a protected `/jobs/recall-digest` endpoint, then exposed it through `day-captain serve`.
 - Added `render.yaml` for a Render web service plus managed Postgres and `.github/workflows/morning-digest-scheduler.yml` as an example scheduled GitHub Actions trigger.
 - Added reusable hosted trigger tooling (`scripts/trigger_hosted_digest.py` and `day-captain trigger-hosted-job`) so the real production scheduler can live in a private `day-captain-ops` repo without duplicating HTTP trigger logic.
+- Added reusable hosted validation tooling (`scripts/validate_hosted_service.py` and `day-captain validate-hosted-service`) so the private ops repo can validate `/healthz`, morning digest, and recall without reimplementing request logic.
 - Added coverage in `tests/test_app.py`, `tests/test_settings.py`, and `tests/test_web.py`.
 - Validation results:
   - `python3 -m unittest tests.test_settings tests.test_app tests.test_web` -> `OK` (`8` tests)

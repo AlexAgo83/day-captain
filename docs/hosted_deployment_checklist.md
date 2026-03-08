@@ -36,6 +36,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 
 ## Operational checks
 - Run `python3 -m unittest discover -s tests` before deployment.
+- Run `PYTHONPATH=src python3 -m day_captain validate-config` against the final hosted env contract.
 - Run `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`.
 - Run `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`.
 - Perform one manual hosted trigger after deployment and verify:
@@ -43,4 +44,5 @@ Use this checklist before treating the Render-hosted Day Captain service as read
   - the job returns HTTP `200`
   - a digest run is persisted successfully
   - only the requested `target_user_id` receives the digest and persistence stays isolated from other configured users
+- Run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ...` from the private ops repo or equivalent environment.
 - Follow [`tenant_scoped_multi_user_operator_guide.md`](/Users/alexandreagostini/Documents/day-captain/docs/tenant_scoped_multi_user_operator_guide.md) for the bounded operator workflow.

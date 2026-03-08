@@ -9,7 +9,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.hosted_jobs import HostedJobError
 from day_captain.hosted_jobs import build_job_payload
+from day_captain.hosted_jobs import check_hosted_health
 from day_captain.hosted_jobs import trigger_hosted_job
+from day_captain.hosted_jobs import validate_hosted_service
 
 
 class FakeResponse:
@@ -37,7 +39,7 @@ class HostedJobRecorder:
         self.requests.append(
             {
                 "url": req.full_url,
-                "body": req.data.decode("utf-8"),
+                "body": req.data.decode("utf-8") if req.data else "",
                 "secret": req.headers.get("X-day-captain-secret"),
                 "content_type": req.headers.get("Content-type"),
                 "timeout": timeout,
@@ -47,6 +49,18 @@ class HostedJobRecorder:
 
 
 class HostedJobsTest(unittest.TestCase):
+    def test_check_hosted_health_reads_healthz(self) -> None:
+        recorder = HostedJobRecorder({"status": "ok"})
+
+        result = check_hosted_health(
+            "https://example.com",
+            timeout_seconds=10,
+            opener=recorder,
+        )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(recorder.requests[0]["url"], "https://example.com/healthz")
+
     def test_build_job_payload_for_morning_digest(self) -> None:
         payload = build_job_payload(
             "morning-digest",
@@ -123,6 +137,35 @@ class HostedJobsTest(unittest.TestCase):
                 payload={"force": False},
                 opener=failing_opener,
             )
+
+    def test_validate_hosted_service_runs_health_morning_and_recall(self) -> None:
+        payloads = [
+            {"status": "ok"},
+            {"status": "completed", "run_id": "run-1"},
+            {"status": "completed", "run_id": "run-1"},
+        ]
+
+        class SequenceRecorder:
+            def __init__(self):
+                self.requests = []
+
+            def __call__(self, req, timeout=0):
+                self.requests.append((req.full_url, req.data.decode("utf-8") if req.data else ""))
+                return FakeResponse(payloads.pop(0), status=200)
+
+        recorder = SequenceRecorder()
+        result = validate_hosted_service(
+            "https://example.com",
+            "secret",
+            target_user_id="alice@example.com",
+            opener=recorder,
+        )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(recorder.requests[0][0], "https://example.com/healthz")
+        self.assertEqual(recorder.requests[1][0], "https://example.com/jobs/morning-digest")
+        self.assertEqual(recorder.requests[2][0], "https://example.com/jobs/recall-digest")
+        self.assertEqual(json.loads(recorder.requests[2][1])["run_id"], "run-1")
 
 
 if __name__ == "__main__":

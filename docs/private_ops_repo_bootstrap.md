@@ -20,7 +20,7 @@ Your private ops repo should contain:
 ## Recommended workflow pattern
 
 1. Check out the Day Captain repo, or vendor the trigger script into the ops repo.
-2. Use `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`.
+2. Use `scripts/validate_hosted_service.py` for validation runs and `scripts/trigger_hosted_digest.py` for simpler trigger-only workflows.
 3. Fan out over explicit users from `DAY_CAPTAIN_TARGET_USERS_JSON`.
 4. Keep the workflow output free of digest content.
 
@@ -36,5 +36,6 @@ Your private ops repo should contain:
 ## Validation before enabling cron
 
 - run `PYTHONPATH=src python3 -m day_captain validate-config --target-user alice@example.com`
+- run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com`
 - trigger one hosted job manually for each target user
 - confirm delivery and persistence before enabling the scheduled trigger

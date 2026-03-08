@@ -59,6 +59,14 @@ curl -X POST "$DAY_CAPTAIN_SERVICE_URL/jobs/morning-digest" \
   -d '{"force":false,"target_user_id":"alice@example.com"}'
 ```
 
+Run the hosted validation flow:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=... \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com
+```
+
 ## Scheduling model
 
 The GitHub Actions scheduler supports two modes:
