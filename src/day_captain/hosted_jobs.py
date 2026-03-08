@@ -335,6 +335,9 @@ def validate_hosted_service(
     expected_storage_backend: str = "",
     timeout_seconds: int = 30,
     check_recall: bool = True,
+    check_email_command: bool = False,
+    email_command_sender: str = "",
+    email_command_text: str = "recall",
     opener: Optional[Callable[..., Any]] = None,
     wake_service: bool = False,
     wake_timeout_seconds: int = 30,
@@ -378,6 +381,7 @@ def validate_hosted_service(
         sleeper=sleeper,
     )
     recall = None
+    email_command = None
     run_id = str(((morning.get("response") or {}).get("run_id")) or "").strip()
     if check_recall and run_id:
         recall = trigger_hosted_job(
@@ -397,6 +401,33 @@ def validate_hosted_service(
         recalled_run_id = str(((recall.get("response") or {}).get("run_id")) or "").strip()
         if recalled_run_id != run_id:
             raise HostedJobError("Hosted recall validation returned a different run_id than morning-digest.")
+    if check_email_command:
+        sender_address = str(email_command_sender or target_user_id or "").strip()
+        if not sender_address:
+            raise HostedJobError("email_command_sender or target_user_id is required to validate hosted email-command recall.")
+        email_command = trigger_hosted_job(
+            service_url,
+            job_secret,
+            job_name="email-command-recall",
+            payload=build_job_payload(
+                "email-command-recall",
+                command_message_id="validate-email-command-{0}".format(
+                    str(int(time.time()))
+                ),
+                sender_address=sender_address,
+                command_text=str(email_command_text or "recall").strip(),
+            ),
+            timeout_seconds=timeout_seconds,
+            wake_service=False,
+            opener=opener,
+            sleeper=sleeper,
+        )
+        command_response = email_command.get("response") or {}
+        if str(command_response.get("job") or "").strip() != "email_command_recall":
+            raise HostedJobError("Hosted email-command validation reported an unexpected job name.")
+        resolved_target_user = str(command_response.get("target_user_id") or "").strip()
+        if target_user_id and resolved_target_user and resolved_target_user != str(target_user_id).strip():
+            raise HostedJobError("Hosted email-command validation resolved an unexpected target user.")
     return {
         "status": "ok",
         "service_url": _normalized_service_url(service_url),
@@ -406,4 +437,5 @@ def validate_hosted_service(
         "runtime": health.get("runtime"),
         "morning_digest": morning,
         "recall_digest": recall,
+        "email_command_recall": email_command,
     }
