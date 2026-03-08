@@ -826,7 +826,7 @@ class SQLiteStorage:
             where_clauses.append("user_id = ?")
             params.append(scoped_user_id)
         with self._connect() as connection:
-            row = connection.execute(
+            rows = connection.execute(
                 """
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
@@ -1742,7 +1742,7 @@ class PostgresStorage:
             where_clauses.append("user_id = %s")
             params.append(scoped_user_id)
         with self._connect() as connection:
-            row = connection.execute(
+            rows = connection.execute(
                 """
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json

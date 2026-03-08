@@ -17,6 +17,7 @@ from day_captain.adapters.auth import DeviceCodeAuthenticator
 from day_captain.adapters.auth import DatabaseTokenCache
 from day_captain.adapters.auth import FileTokenCache
 from day_captain.adapters.graph import GraphApiClient
+from day_captain.adapters.graph import GraphApiError
 from day_captain.adapters.graph import GraphAppOnlyAuthProvider
 from day_captain.adapters.graph import GraphCalendarCollector
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
@@ -121,6 +122,17 @@ def _weekend_friday_start(value: datetime, zone) -> datetime:
         return value - timedelta(hours=24)
     friday_day = local_now.date() - timedelta(days=local_now.weekday() - 4)
     return _start_of_local_day(friday_day, zone)
+
+
+def _is_pre_send_delivery_failure(exc: Exception) -> bool:
+    if isinstance(exc, ValueError):
+        return True
+    if isinstance(exc, GraphApiError):
+        message = str(exc)
+        return message.startswith("Graph request failed with ") or message.startswith(
+            "Expected Graph JSON object response."
+        )
+    return False
 
 
 def _normalized_email_command(*values: str) -> str:
@@ -690,13 +702,24 @@ class DayCaptainApplication:
             tenant_id=scoped_tenant_id,
             user_id=scoped_user_id,
         )
-        self.storage.save_run(run_record)
         if delivery_mode == "graph_send":
-            if before_delivery is not None:
-                before_delivery(payload)
             _validate_graph_send_prerequisites(self.settings, auth_context)
-            self.digest_delivery.deliver_digest(auth_context, payload)
+            self.storage.save_run(run_record)
+            if before_delivery is not None:
+                try:
+                    before_delivery(payload)
+                except Exception:
+                    self.storage.save_run(replace(run_record, status="delivery_failed"))
+                    raise
+            try:
+                self.digest_delivery.deliver_digest(auth_context, payload)
+            except Exception as exc:
+                if _is_pre_send_delivery_failure(exc):
+                    self.storage.save_run(replace(run_record, status="delivery_failed"))
+                raise
             self.storage.save_run(replace(run_record, status="completed"))
+            return payload
+        self.storage.save_run(run_record)
         return payload
 
     def run_morning_digest(
@@ -811,13 +834,14 @@ class DayCaptainApplication:
                 raise LookupError("Previously processed email-command recall run could not be loaded.")
             if run.status == "delivery_pending":
                 raise RuntimeError("This email-command recall is awaiting delivery reconciliation.")
-            return EmailCommandResult(
-                command_message_id=existing.command_message_id,
-                command_name=existing.normalized_command,
-                target_user_id=existing.user_id,
-                payload=self.recall_provider.build_recall(run),
-                deduplicated=True,
-            )
+            if run.status == "completed":
+                return EmailCommandResult(
+                    command_message_id=existing.command_message_id,
+                    command_name=existing.normalized_command,
+                    target_user_id=existing.user_id,
+                    payload=self.recall_provider.build_recall(run),
+                    deduplicated=True,
+                )
 
         normalized_command = _normalized_email_command(command_text, subject, body)
         target_user_id = self._resolve_email_command_target_user(sender_address)
