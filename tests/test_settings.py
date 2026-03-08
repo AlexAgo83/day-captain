@@ -29,6 +29,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_GRAPH_USER_ID"] = "alex@example.com"
             os.environ["DAY_CAPTAIN_GRAPH_SENDER_USER_ID"] = "daycaptain@example.com"
             os.environ["DAY_CAPTAIN_TARGET_USERS"] = "alex@example.com, bob@example.com"
+            os.environ["DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS"] = "assistant@example.com"
             os.environ["DAY_CAPTAIN_GRAPH_SEND_ENABLED"] = "true"
             os.environ["DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS"] = "45"
             os.environ["DAY_CAPTAIN_GRAPH_SCOPES"] = "Mail.Read, Calendars.Read, Mail.Send"
@@ -70,6 +71,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.graph_user_id, "alex@example.com")
         self.assertEqual(settings.graph_sender_user_id, "daycaptain@example.com")
         self.assertEqual(settings.target_users, ("alex@example.com", "bob@example.com"))
+        self.assertEqual(settings.email_command_allowed_senders, ("assistant@example.com",))
         self.assertTrue(settings.graph_send_enabled)
         self.assertEqual(settings.graph_timeout_seconds, 45)
         self.assertEqual(settings.graph_scopes, ("User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"))
@@ -154,6 +156,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(summary["configured_target_users"], ("alice@example.com", "bob@example.com"))
         self.assertEqual(summary["selected_target_user"], "alice@example.com")
         self.assertEqual(summary["configured_sender_user"], "")
+        self.assertEqual(summary["email_command_allowed_senders"], ())
 
     def test_llm_is_disabled_by_default(self) -> None:
         self.assertFalse(DayCaptainSettings().llm_is_enabled())

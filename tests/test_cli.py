@@ -81,6 +81,39 @@ class ValidateConfigCommandTest(unittest.TestCase):
         trigger.assert_called_once()
         self.assertEqual(result["status"], "ok")
 
+    def test_trigger_hosted_job_command_supports_email_command_recall(self) -> None:
+        with mock.patch("day_captain.cli.trigger_hosted_job", return_value={"status": "ok"}) as trigger:
+            result = _run_trigger_hosted_job_command(
+                type(
+                    "Args",
+                    (),
+                    {
+                        "service_url": "https://example.com",
+                        "job_secret": "secret",
+                        "job": "email-command-recall",
+                        "target_user": "",
+                        "force": False,
+                        "delivery_mode": "",
+                        "now": "2026-03-11T10:00:00+00:00",
+                        "run_id": "",
+                        "day": "",
+                        "message_id": "cmd-1",
+                        "sender_address": "alice@example.com",
+                        "command_text": "recall-week",
+                        "subject": "",
+                        "body": "",
+                        "timeout_seconds": 30,
+                        "wake_service": False,
+                        "wake_timeout_seconds": 45,
+                        "wake_max_attempts": 3,
+                        "wake_delay_seconds": 10,
+                    },
+                )()
+            )
+
+        trigger.assert_called_once()
+        self.assertEqual(result["status"], "ok")
+
     def test_check_hosted_health_command_uses_env_fallbacks(self) -> None:
         previous = dict(os.environ)
         try:

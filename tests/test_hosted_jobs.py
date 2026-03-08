@@ -190,6 +190,25 @@ class HostedJobsTest(unittest.TestCase):
             },
         )
 
+    def test_build_job_payload_for_email_command_recall(self) -> None:
+        payload = build_job_payload(
+            "email-command-recall",
+            command_message_id="cmd-1",
+            sender_address="alice@example.com",
+            command_text="recall",
+            now="2026-03-11T10:00:00+00:00",
+        )
+
+        self.assertEqual(
+            payload,
+            {
+                "command_message_id": "cmd-1",
+                "sender_address": "alice@example.com",
+                "command_text": "recall",
+                "now": "2026-03-11T10:00:00+00:00",
+            },
+        )
+
     def test_trigger_hosted_job_posts_expected_payload(self) -> None:
         recorder = HostedJobRecorder(
             {
