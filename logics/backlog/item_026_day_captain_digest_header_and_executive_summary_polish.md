@@ -1,9 +1,9 @@
 ## item_026_day_captain_digest_header_and_executive_summary_polish - Polish digest header and executive summary readability
 > From version: 1.0.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 85%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_021_day_captain_digest_email_readability_and_scannability_polish`
-- Primary task(s): `task_026_day_captain_digest_readability_and_scannability_orchestration` (`Ready`)
+- Primary task(s): `task_026_day_captain_digest_readability_and_scannability_orchestration` (`In Progress`)
 
 # Priority
 - Impact: High - the first screen of the digest defines whether the mail feels actionable or report-like.
@@ -52,3 +52,4 @@ flowchart LR
 
 # Notes
 - Derived from direct Outlook review feedback on the live digest rendering.
+- Implementation is underway: the header/context copy is now being shortened in the renderer and the executive-summary block is being tightened so it reads faster on first open.

@@ -276,7 +276,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         prioritized = engine.prioritize((), meetings, (), reference_time=now)
 
-        self.assertEqual(prioritized[0].summary, "Aujourd'hui à 10:00 avec Lead sur Teams")
+        self.assertEqual(prioritized[0].summary, "Aujourd'hui, 10:00 | Lead | Teams")
 
 
 if __name__ == "__main__":

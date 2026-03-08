@@ -1,9 +1,9 @@
 ## item_028_day_captain_digest_empty_state_and_outlook_polish_validation - Polish digest empty states and validate final Outlook readability
 > From version: 1.0.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 98%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 55%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_021_day_captain_digest_email_readability_and_scannability_polish`
-- Primary task(s): `task_026_day_captain_digest_readability_and_scannability_orchestration` (`Ready`)
+- Primary task(s): `task_026_day_captain_digest_readability_and_scannability_orchestration` (`In Progress`)
 
 # Priority
 - Impact: Medium - empty states and validation quality shape the final perceived polish.
@@ -49,3 +49,4 @@ flowchart LR
 
 # Notes
 - Derived from operator feedback that the mail is useful but not yet as pleasant to read as it should be.
+- Implementation is underway: empty-state copy/presentation is being lightened in the renderer, but the explicit real-Outlook validation step still remains before closure.

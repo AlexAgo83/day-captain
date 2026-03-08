@@ -173,7 +173,10 @@ The digest can also render a short top summary block above the detailed sections
 
 The delivered digest now supports:
 - localized product copy through `DAY_CAPTAIN_DIGEST_LANGUAGE` with English default and French support
-- assistant-style header and empty-state wording even when the LLM layer is disabled
+- a condensed header with explicit as-of/window metadata instead of verbose report phrasing
+- a highlighted `In brief` / `En bref` executive summary block above the detailed sections
+- compact meeting cards that keep time, organizer, and location easy to scan
+- lighter empty-state presentation even when the LLM layer is disabled
 - weekend meeting fallback to Monday and next-day meeting fallback when no meetings remain for the current day
 
 ## Microsoft auth setup
