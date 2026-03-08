@@ -1,9 +1,9 @@
 ## task_017_day_captain_hosted_graph_app_only_authentication_validation - Validate Render-hosted Graph app-only digest execution end to end
 > From version: 0.7.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 98%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 35%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -54,4 +54,6 @@ flowchart LR
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- Added hosted-validation support in the repo before Render proof: a `day-captain validate-config` preflight command, explicit hosted target-user checks at the HTTP boundary, and scheduler support for explicit `target_user_id` fan-out.
+- Added operator-facing docs so Render and GitHub Actions setup can be validated locally before the deployed proof step.
+- Remaining work is still the real Render-hosted proof: deploy with app-only secrets, trigger `/jobs/morning-digest`, and confirm mailbox/delivery plus hosted Postgres persistence.

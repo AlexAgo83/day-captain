@@ -1,8 +1,8 @@
 ## req_009_day_captain_hosted_graph_app_only_authentication - Day Captain hosted Microsoft Graph app-only authentication
 > From version: 0.7.0
 > Status: In Progress
-> Understanding: 100%
-> Confidence: 99%
+> Understanding: 99%
+> Confidence: 100%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.

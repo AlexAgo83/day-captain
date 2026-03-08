@@ -118,3 +118,17 @@ class DayCaptainWebAppTest(unittest.TestCase):
 
         self.assertEqual(response["status"], "500 Internal Server Error")
         self.assertEqual(response["json"]["error"], "internal_error")
+
+    def test_morning_digest_returns_400_when_target_user_is_missing_for_multi_user_setup(self) -> None:
+        settings = DayCaptainSettings(
+            job_secret="secret",
+            target_users=("alice@example.com", "bob@example.com"),
+        )
+        fake_app = FakeHostedApp()
+        app = create_web_app(settings)
+
+        with mock.patch("day_captain.web.build_application", return_value=fake_app):
+            response = self._request(app, "POST", "/jobs/morning-digest", payload={})
+
+        self.assertEqual(response["status"], "400 Bad Request")
+        self.assertIn("Multiple target users are configured", response["json"]["error"])

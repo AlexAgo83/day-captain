@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 99%
-> Confidence: 100%
+> Confidence: 99%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.

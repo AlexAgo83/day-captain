@@ -188,6 +188,13 @@ PYTHONPATH=src python3 -m day_captain auth login
 PYTHONPATH=src python3 -m day_captain auth logout
 ```
 
+Validate the current runtime configuration:
+
+```bash
+PYTHONPATH=src python3 -m day_captain validate-config
+PYTHONPATH=src python3 -m day_captain validate-config --target-user alice@example.com
+```
+
 If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
 
 When `delivery_mode=graph_send`, the current local delegated flow sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.

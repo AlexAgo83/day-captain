@@ -31,6 +31,13 @@ This guide covers the bounded operator-managed multi-user model shipped in Day C
 
 ## Manual validation
 
+Validate the hosted env contract before triggering runs:
+
+```bash
+PYTHONPATH=src python3 -m day_captain validate-config
+PYTHONPATH=src python3 -m day_captain validate-config --target-user alice@example.com
+```
+
 Run a single target through the CLI:
 
 ```bash

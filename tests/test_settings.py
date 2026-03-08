@@ -105,6 +105,53 @@ class DayCaptainSettingsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             settings.validate_hosted()
 
+    def test_validate_hosted_requires_app_only_credentials_and_targets(self) -> None:
+        with self.assertRaises(ValueError):
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                graph_auth_mode="app_only",
+                graph_client_id="client-id",
+            ).validate_hosted()
+
+        settings = DayCaptainSettings(
+            environment="production",
+            job_secret="secret",
+            delivery_mode="graph_send",
+            graph_send_enabled=True,
+            graph_auth_mode="app_only",
+            graph_client_id="client-id",
+            graph_client_secret="client-secret",
+            target_users=("alice@example.com",),
+        )
+
+        settings.validate_hosted()
+
+    def test_validate_target_user_rejects_unknown_user(self) -> None:
+        settings = DayCaptainSettings(target_users=("alice@example.com", "bob@example.com"))
+
+        with self.assertRaises(ValueError):
+            settings.validate_target_user("carol@example.com")
+
+    def test_validation_summary_reports_resolved_runtime(self) -> None:
+        settings = DayCaptainSettings(
+            environment="production",
+            job_secret="secret",
+            delivery_mode="graph_send",
+            graph_send_enabled=True,
+            graph_auth_mode="app_only",
+            graph_client_id="client-id",
+            graph_client_secret="client-secret",
+            target_users=("alice@example.com", "bob@example.com"),
+        )
+
+        summary = settings.validation_summary(target_user_id="alice@example.com")
+
+        self.assertEqual(summary["status"], "ok")
+        self.assertEqual(summary["graph_auth_mode"], "app_only")
+        self.assertEqual(summary["configured_target_users"], ("alice@example.com", "bob@example.com"))
+        self.assertEqual(summary["selected_target_user"], "alice@example.com")
+
     def test_llm_is_disabled_by_default(self) -> None:
         self.assertFalse(DayCaptainSettings().llm_is_enabled())
         self.assertEqual(DayCaptainSettings().resolved_digest_language(), "en")
