@@ -46,6 +46,7 @@ Assumptions baked into that template:
 - `DAY_CAPTAIN_TARGET_USERS_JSON` is mandatory in the ops repo so the scheduler never silently falls back to an ambiguous single-user trigger
 - the morning scheduler stays weekday-only, while the weekly scheduler is a separate Sunday-evening contract
 - the weekly scheduler gate should tolerate normal GitHub Actions cron jitter within the intended Sunday `20:30 Europe/Paris` hour instead of depending on an exact process start minute
+- the copy-ready weekly templates are expected to stay aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` helper
 
 ## Suggested repository variables
 
@@ -57,6 +58,11 @@ Assumptions baked into that template:
 - `DAY_CAPTAIN_JOB_SECRET=...`
 - `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com`
 - `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=alice@example.com`
+
+If you set `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`, also ensure:
+- the hosted service uses `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
+- `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
+- the hosted deployment serves exactly one target user for that allowlist-driven inbound command flow
 
 ## Validation before enabling cron
 

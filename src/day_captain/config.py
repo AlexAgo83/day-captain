@@ -187,6 +187,17 @@ class DayCaptainSettings:
                 raise ValueError("DAY_CAPTAIN_TARGET_USERS or DAY_CAPTAIN_GRAPH_USER_ID is required for hosted app-only auth.")
         if self.delivery_mode == "graph_send" and not self.graph_send_enabled:
             raise ValueError("DAY_CAPTAIN_GRAPH_SEND_ENABLED=true is required for hosted graph_send delivery.")
+        if self.email_command_allowed_senders:
+            if len(self.resolved_target_users()) != 1:
+                raise ValueError(
+                    "DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS requires exactly one hosted target user."
+                )
+            if self.resolved_graph_auth_mode() != "app_only":
+                raise ValueError("Hosted email-command recall requires app-only Graph auth.")
+            if not self.graph_send_enabled:
+                raise ValueError(
+                    "DAY_CAPTAIN_GRAPH_SEND_ENABLED=true is required for hosted email-command recall."
+                )
 
     def validate_target_user(self, target_user_id: str) -> None:
         candidate = str(target_user_id or "").strip()
