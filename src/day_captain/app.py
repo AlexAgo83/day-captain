@@ -11,10 +11,12 @@ from typing import Optional
 from typing import Sequence
 from zoneinfo import ZoneInfo
 
+from day_captain.adapters.auth import ClientCredentialsAuthenticator
 from day_captain.adapters.auth import DeviceCodeAuthenticator
 from day_captain.adapters.auth import DatabaseTokenCache
 from day_captain.adapters.auth import FileTokenCache
 from day_captain.adapters.graph import GraphApiClient
+from day_captain.adapters.graph import GraphAppOnlyAuthProvider
 from day_captain.adapters.graph import GraphCalendarCollector
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.adapters.graph import GraphDigestDelivery
@@ -117,6 +119,8 @@ class StubAuthProvider:
             access_token="stub-access-token",
             granted_scopes=tuple(scopes),
             user_id="stub-user",
+            auth_mode="delegated",
+            graph_root_path="/me",
         )
 
 
@@ -338,7 +342,7 @@ def _validate_graph_send_prerequisites(settings: DayCaptainSettings, auth_contex
     if not settings.graph_send_enabled:
         raise ValueError("graph_send delivery requires DAY_CAPTAIN_GRAPH_SEND_ENABLED=true.")
     if "Mail.Send" not in auth_context.granted_scopes:
-        raise ValueError("graph_send delivery requires Mail.Send in DAY_CAPTAIN_GRAPH_SCOPES and delegated auth.")
+        raise ValueError("graph_send delivery requires Mail.Send in DAY_CAPTAIN_GRAPH_SCOPES.")
 
 
 class DayCaptainApplication:
@@ -526,11 +530,12 @@ def build_application(
 ) -> DayCaptainApplication:
     resolved_settings = settings or DayCaptainSettings.from_env()
     resolved_database_url = resolved_settings.resolved_database_url()
+    resolved_graph_auth_mode = resolved_settings.resolved_graph_auth_mode()
     graph_client = GraphApiClient(
         base_url=resolved_settings.graph_base_url,
         timeout_seconds=resolved_settings.graph_timeout_seconds,
     )
-    if resolved_settings.is_hosted_environment() and resolved_database_url:
+    if resolved_graph_auth_mode == "delegated" and resolved_settings.is_hosted_environment() and resolved_database_url:
         token_cache = DatabaseTokenCache(resolved_database_url)
         _seed_token_cache_from_settings(token_cache, resolved_settings)
     else:
@@ -538,6 +543,12 @@ def build_application(
     authenticator = DeviceCodeAuthenticator(
         tenant_id=resolved_settings.graph_tenant_id,
         client_id=resolved_settings.graph_client_id,
+        timeout_seconds=resolved_settings.graph_timeout_seconds,
+    )
+    app_only_authenticator = ClientCredentialsAuthenticator(
+        tenant_id=resolved_settings.graph_tenant_id,
+        client_id=resolved_settings.graph_client_id,
+        client_secret=resolved_settings.graph_client_secret,
         timeout_seconds=resolved_settings.graph_timeout_seconds,
     )
     if storage is not None:
@@ -548,6 +559,12 @@ def build_application(
         resolved_storage = SQLiteStorage(resolved_settings.sqlite_path)
     if auth_provider is not None:
         resolved_auth_provider = auth_provider
+    elif resolved_graph_auth_mode == "app_only" and resolved_settings.graph_client_id:
+        resolved_auth_provider = GraphAppOnlyAuthProvider(
+            authenticator=app_only_authenticator,
+            user_id=resolved_settings.graph_user_id,
+            configured_scopes=resolved_settings.graph_scopes,
+        )
     elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:
         resolved_auth_provider = GraphDelegatedAuthProvider(
             api_client=graph_client,
@@ -559,16 +576,20 @@ def build_application(
     else:
         resolved_auth_provider = StubAuthProvider()
 
+    use_graph_collectors = auth_provider is not None or resolved_graph_auth_mode == "app_only"
+    if not use_graph_collectors:
+        use_graph_collectors = bool(resolved_settings.graph_access_token or resolved_settings.graph_client_id)
+
     if mail_collector is not None:
         resolved_mail_collector = mail_collector
-    elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:
+    elif use_graph_collectors:
         resolved_mail_collector = GraphMailCollector(graph_client)
     else:
         resolved_mail_collector = StaticMailCollector()
 
     if calendar_collector is not None:
         resolved_calendar_collector = calendar_collector
-    elif resolved_settings.graph_access_token or resolved_settings.graph_client_id:
+    elif use_graph_collectors:
         resolved_calendar_collector = GraphCalendarCollector(graph_client)
     else:
         resolved_calendar_collector = StaticCalendarCollector()

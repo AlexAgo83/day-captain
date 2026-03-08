@@ -18,8 +18,10 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_DATABASE_SSL_MODE"] = "require"
             os.environ["DAY_CAPTAIN_DELIVERY_MODE"] = "graph_send"
             os.environ["DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS"] = "12"
+            os.environ["DAY_CAPTAIN_GRAPH_AUTH_MODE"] = "app_only"
             os.environ["DAY_CAPTAIN_GRAPH_TENANT_ID"] = "common"
             os.environ["DAY_CAPTAIN_GRAPH_CLIENT_ID"] = "app-client-id"
+            os.environ["DAY_CAPTAIN_GRAPH_CLIENT_SECRET"] = "app-client-secret"
             os.environ["DAY_CAPTAIN_GRAPH_REFRESH_TOKEN"] = "refresh-token"
             os.environ["DAY_CAPTAIN_GRAPH_AUTH_CACHE_PATH"] = "/tmp/day-captain-auth.json"
             os.environ["DAY_CAPTAIN_GRAPH_BASE_URL"] = "https://graph.microsoft.com/v1.0"
@@ -55,8 +57,10 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.database_ssl_mode, "require")
         self.assertEqual(settings.delivery_mode, "graph_send")
         self.assertEqual(settings.default_lookback_hours, 12)
+        self.assertEqual(settings.graph_auth_mode, "app_only")
         self.assertEqual(settings.graph_tenant_id, "common")
         self.assertEqual(settings.graph_client_id, "app-client-id")
+        self.assertEqual(settings.graph_client_secret, "app-client-secret")
         self.assertEqual(settings.graph_refresh_token, "refresh-token")
         self.assertEqual(settings.graph_auth_cache_path, "/tmp/day-captain-auth.json")
         self.assertEqual(settings.graph_base_url, "https://graph.microsoft.com/v1.0")
@@ -89,6 +93,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             settings.resolved_database_url(),
             "postgresql://user:pass@localhost:5432/day_captain?sslmode=require",
         )
+        self.assertEqual(settings.resolved_graph_auth_mode(), "app_only")
 
     def test_validate_hosted_requires_job_secret(self) -> None:
         settings = DayCaptainSettings(environment="production", job_secret="")
@@ -100,6 +105,15 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertFalse(DayCaptainSettings().llm_is_enabled())
         self.assertEqual(DayCaptainSettings().resolved_digest_language(), "en")
         self.assertEqual(DayCaptainSettings().resolved_llm_language(), "en")
+
+    def test_graph_auth_mode_auto_prefers_app_only_when_secret_and_user_are_present(self) -> None:
+        settings = DayCaptainSettings(
+            graph_auth_mode="auto",
+            graph_client_secret="secret",
+            graph_user_id="alex@example.com",
+        )
+
+        self.assertEqual(settings.resolved_graph_auth_mode(), "app_only")
 
 
 if __name__ == "__main__":

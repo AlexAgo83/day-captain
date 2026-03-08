@@ -15,6 +15,8 @@ class AuthContext:
     access_token: str
     granted_scopes: Sequence[str]
     user_id: str
+    auth_mode: str = "delegated"
+    graph_root_path: str = "/me"
 
 
 @dataclass(frozen=True)
