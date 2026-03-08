@@ -166,7 +166,11 @@ class OpenAICompatibleDigestWordingProvider:
                     "content": (
                         "Write a short opening digest summary in {0}. "
                         "{1} "
-                        "Use 2 to 4 short factual sentences. "
+                        "Use 1 to 2 short factual sentences. "
+                        "Lead with the single most important action or priority. "
+                        "If meetings matter, summarize them briefly without listing every meeting or every attendee. "
+                        "Prefer readable names over raw email addresses. "
+                        "Avoid repeating the exact wording already present in the detailed sections. "
                         "Only use the provided digest sections. "
                         "Do not invent details. "
                         "Avoid greetings, sign-offs, bullet points, and markdown. "
