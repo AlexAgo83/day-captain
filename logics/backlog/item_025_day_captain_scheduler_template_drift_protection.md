@@ -1,9 +1,9 @@
 ## item_025_day_captain_scheduler_template_drift_protection - Add automated protection against scheduler template drift
 > From version: 0.12.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 100%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -43,7 +43,7 @@ flowchart LR
 
 # Links
 - Request: `req_020_day_captain_scheduler_template_and_hosted_email_command_contract_hardening`
-- Primary task(s): `task_025_day_captain_scheduler_template_and_hosted_contract_orchestration` (`Ready`)
+- Primary task(s): `task_025_day_captain_scheduler_template_and_hosted_contract_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - drift is preventable but otherwise easy to reintroduce silently.
