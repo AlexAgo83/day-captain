@@ -17,6 +17,7 @@ Your private ops repo should contain:
 - optional repository variable `DAY_CAPTAIN_TARGET_USERS_JSON`
 - optional secrets or variables for `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` and `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
 - deployment-specific notes or runbooks
+- optional Power Automate runbook if inbound email-command recall is operated outside GitHub Actions
 
 Use [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) as the starting workflow file to copy into `.github/workflows/morning-digest.yml` in the private ops repo.
 
@@ -62,6 +63,7 @@ Assumptions baked into that template:
 - trigger one hosted `email-command-recall` job manually if that surface is enabled and confirm duplicate suppression by replaying the same `command_message_id`
 - confirm delivery and persistence before enabling the scheduled trigger
 - if the hosted plan can sleep, document the warm-up path and timeout policy in the private ops workflow before enabling cron
+- if inbound email-command recall is bridged through Power Automate, keep [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md) alongside the private repo runbook and document the mailbox permission propagation caveat
 
 The hosted validation helper checks:
 
