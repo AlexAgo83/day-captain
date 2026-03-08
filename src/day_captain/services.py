@@ -206,7 +206,7 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Quick actions",
-            "hint": "Opens a draft to Day Captain with the command prefilled in the subject and body.",
+            "hint": "Opens a Day Captain draft.",
             "recall": "Recall this brief",
             "recall_today": "Recall today",
             "recall_week": "Recall week",
@@ -231,6 +231,8 @@ LANGUAGE_COPY = {
             "from_sender": "From {sender}",
             "meeting_today": "Today, {time} | {organizer}",
             "meeting_day": "{day}, {time} | {organizer}",
+            "meeting_today_self": "Today, {time}",
+            "meeting_day_self": "{day}, {time}",
             "meeting_location": " | {location}",
             "unknown_organizer": "an unknown organizer",
         },
@@ -260,7 +262,7 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Actions rapides",
-            "hint": "Ouvre un brouillon vers Day Captain avec la commande préremplie dans l'objet et le corps.",
+            "hint": "Ouvre un brouillon Day Captain.",
             "recall": "Rappeler ce brief",
             "recall_today": "Rappel aujourd'hui",
             "recall_week": "Rappel semaine",
@@ -285,6 +287,8 @@ LANGUAGE_COPY = {
             "from_sender": "De la part de {sender}",
             "meeting_today": "Aujourd'hui, {time} | {organizer}",
             "meeting_day": "{day}, {time} | {organizer}",
+            "meeting_today_self": "Aujourd'hui, {time}",
+            "meeting_day_self": "{day}, {time}",
             "meeting_location": " | {location}",
             "unknown_organizer": "un organisateur inconnu",
         },
@@ -357,6 +361,44 @@ def _humanize_identifier(value: str) -> str:
         words.append(lower.capitalize())
     rendered = " ".join(words).strip()
     return rendered or candidate
+
+
+def _normalize_display_title(value: str) -> str:
+    candidate = " ".join((value or "").strip().split())
+    if not candidate:
+        return ""
+    lowered = candidate.lower()
+    if lowered == "a imprimer":
+        return "À imprimer"
+    candidate = re.sub(r"(?<=\w)-\s+(?=\w)", " ", candidate)
+    candidate = re.sub(r"\s+", " ", candidate).strip()
+    return candidate
+
+
+def _identity_tokens(value: str) -> Sequence[str]:
+    candidate = str(value or "").strip().lower()
+    if not candidate:
+        return ()
+    tokens = {candidate}
+    if "@" in candidate:
+        local_part = candidate.split("@", 1)[0].strip()
+        if local_part:
+            tokens.add(local_part)
+    humanized = _humanize_identifier(candidate).lower()
+    if humanized:
+        tokens.add(re.sub(r"[^a-z0-9]+", " ", humanized).strip())
+    normalized = re.sub(r"[^a-z0-9]+", " ", candidate).strip()
+    if normalized:
+        tokens.add(normalized)
+    return tuple(token for token in tokens if token)
+
+
+def _same_identity(left: str, right: str) -> bool:
+    left_tokens = set(_identity_tokens(left))
+    right_tokens = set(_identity_tokens(right))
+    if not left_tokens or not right_tokens:
+        return False
+    return not left_tokens.isdisjoint(right_tokens)
 
 
 def _clamp_weight(value: float) -> float:
@@ -569,9 +611,9 @@ class DeterministicScoringEngine:
         preference_weights: Mapping[str, float],
         now: datetime,
     ) -> Optional[DigestEntry]:
-        subject = message.subject or "(no subject)"
+        subject = _normalize_display_title(message.subject or "(no subject)")
         cleaned_preview = _clean_preview(message.body_preview)
-        combined_text = _normalize_text(subject, message.body_preview)
+        combined_text = _normalize_text(message.subject, message.body_preview)
         sender = message.from_address.lower()
         reason_codes = []
         score = 0.0
@@ -690,24 +732,34 @@ class DeterministicScoringEngine:
             score += 0.25
             reason_codes.append("online_meeting")
         organizer = _humanize_identifier(meeting.organizer_address) or copy["unknown_organizer"]
+        organizer_is_target_user = _same_identity(meeting.organizer_address, meeting.user_id)
         if local_start.date() == local_now.date():
-            summary = copy["meeting_today"].format(
-                time=local_start.strftime("%H:%M"),
-                organizer=organizer,
-            )
+            if organizer_is_target_user:
+                summary = copy["meeting_today_self"].format(time=local_start.strftime("%H:%M"))
+            else:
+                summary = copy["meeting_today"].format(
+                    time=local_start.strftime("%H:%M"),
+                    organizer=organizer,
+                )
         else:
             day_label = _meeting_day_reference(local_start.date(), local_now.date(), self.digest_language)
             if day_label:
                 day_label = day_label[:1].upper() + day_label[1:]
-            summary = copy["meeting_day"].format(
-                day=day_label,
-                time=local_start.strftime("%H:%M"),
-                organizer=organizer,
-            )
+            if organizer_is_target_user:
+                summary = copy["meeting_day_self"].format(
+                    day=day_label,
+                    time=local_start.strftime("%H:%M"),
+                )
+            else:
+                summary = copy["meeting_day"].format(
+                    day=day_label,
+                    time=local_start.strftime("%H:%M"),
+                    organizer=organizer,
+                )
         if meeting.location:
             summary += copy["meeting_location"].format(location=meeting.location)
         return DigestEntry(
-            title=meeting.subject or "(untitled meeting)",
+            title=_normalize_display_title(meeting.subject or "(untitled meeting)"),
             summary=summary,
             section_name="upcoming_meetings",
             source_kind="meeting",
@@ -927,7 +979,7 @@ class StructuredDigestRenderer:
         parts = [
             "<html><body style=\"margin:0;padding:0;background:transparent;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
             "<div style=\"max-width:720px;margin:0 auto;padding:18px 18px 28px;\">",
-            "<section style=\"margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid #dbe4ee;\">",
+            "<section style=\"margin:0 0 22px;padding:0 0 14px;border-bottom:1px solid #dbe4ee;\">",
             "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
             "<p style=\"margin:0 0 8px;font-size:14px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
             "<table role=\"presentation\" style=\"margin:0;border-collapse:collapse;\"><tr>"
@@ -943,7 +995,7 @@ class StructuredDigestRenderer:
         ]
         if top_summary.strip():
             parts.append(
-                "<section style=\"margin:0 0 18px;padding:4px 0 4px 14px;border-left:3px solid #94a3b8;\">"
+                "<section style=\"margin:10px 0 24px;padding:0 0 0 14px;border-left:3px solid #94a3b8;\">"
             )
             parts.append(
                 "<p style=\"margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>".format(
@@ -951,7 +1003,7 @@ class StructuredDigestRenderer:
                 )
             )
             parts.append(
-                "<p style=\"margin:0;font-size:17px;color:#0f172a;\">{0}</p></section>".format(
+                "<p style=\"margin:0 0 2px;font-size:17px;color:#0f172a;\">{0}</p></section>".format(
                     self._html_escape(top_summary.strip())
                 )
             )
@@ -993,7 +1045,7 @@ class StructuredDigestRenderer:
     def _html_item(self, item: DigestEntry) -> str:
         if item.source_kind == "meeting":
             return (
-                "<div style=\"margin:0 0 8px;padding:10px 12px;border:1px solid #dbe4ee;border-radius:10px;\">"
+                "<div style=\"margin:0 0 8px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;\">"
                 "<p style=\"margin:0;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
                 "<p style=\"margin:4px 0 0;font-size:13px;color:#475569;\">{1}</p>"
                 "</div>"
@@ -1002,7 +1054,7 @@ class StructuredDigestRenderer:
                 self._html_escape(item.summary),
             )
         return (
-            "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #dbe4ee;border-radius:12px;\">"
+            "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;\">"
             "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
             "</div>"

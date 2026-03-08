@@ -1,8 +1,8 @@
 ## req_023_day_captain_digest_spacing_and_content_cleanup_polish - Day Captain digest spacing and content cleanup polish
 > From version: 1.2.0
 > Status: In Progress
-> Understanding: 97%
-> Confidence: 95%
+> Understanding: 98%
+> Confidence: 96%
 > Complexity: Low
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -95,3 +95,4 @@ flowchart LR
 # Notes
 - Created on Monday, March 9, 2026 after another real Outlook review showed that the remaining gaps are now mostly spacing and cleanup polish rather than structural layout issues.
 - This request intentionally treats the current digest as already strong enough to use, and focuses only on the final visible rough edges.
+- Implementation started on Monday, March 9, 2026: the top-of-mail spacing is being loosened, card borders and footer microcopy are being softened, and bounded cleanup rules are being added for rough labels plus self-reference meeting wording.
