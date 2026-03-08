@@ -1,0 +1,65 @@
+# Digest Rendering Validation
+
+Use this workflow when you want to review the current digest presentation before or alongside a real Outlook send.
+
+## Why
+
+- the renderer now has a denser Outlook-oriented layout, but local JSON output alone is still awkward to review
+- local HTML and text export lets you inspect the current contract before spending time on a live mailbox validation
+- the final closure gate for `task_026` is still a real Outlook rendering check, not only a local preview
+
+## Local preview workflow
+
+1. Load the local environment and run a digest with preview export enabled.
+2. Review the generated `.html` file in a browser and the `.txt` file in a plain-text editor.
+3. Confirm the top summary remains short, sections feel balanced, meetings are compact, and empty states stay light.
+
+Example:
+
+```bash
+set -a
+source .env
+set +a
+PYTHONPATH=src python3 -m day_captain morning-digest \
+  --force \
+  --output-html tmp/day-captain-preview.html \
+  --output-text tmp/day-captain-preview.txt
+```
+
+You can use the same `--output-html` and `--output-text` flags on:
+- `weekly-digest`
+- `recall-digest`
+- `email-command-recall`
+
+## What to check locally
+
+- header:
+  - the mail starts with a short as-of line plus a single window line
+  - the header does not read like a verbose generated report
+- executive summary:
+  - `In brief` / `En bref` stays short enough to read in a few seconds
+  - it does not restate every downstream section
+- sections:
+  - `Critical topics`, `Actions to take`, `Watch items`, and `Upcoming meetings` have a steady visual rhythm
+  - item cards remain readable without large vertical gaps
+- meetings:
+  - each meeting line emphasizes title, time, organizer, and location quickly
+  - the section does not expand into a tall report for a single meeting
+- empty states:
+  - empty sections stay explicit
+  - the copy feels lighter than a status report
+
+## Real Outlook validation
+
+The local preview is only a preflight step. Before closing the readability slice, validate one real Outlook delivery:
+
+1. Send or recall a digest into the real target mailbox.
+2. Open it in Outlook using the actual mailbox view used day to day.
+3. Confirm:
+   - the hero/header block still looks compact
+   - the executive summary remains short
+   - section spacing survives Outlook rendering
+   - meeting rows stay compact
+   - empty states remain light and readable
+
+If Outlook introduces a regression that the local preview did not reveal, treat Outlook as the source of truth and adjust the renderer accordingly.

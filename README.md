@@ -179,6 +179,8 @@ The delivered digest now supports:
 - lighter empty-state presentation even when the LLM layer is disabled
 - weekend meeting fallback to Monday and next-day meeting fallback when no meetings remain for the current day
 
+For the current local-preview and final Outlook validation workflow, see [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
+
 ## Microsoft auth setup
 
 Local delegated workflow:
@@ -307,6 +309,8 @@ PYTHONPATH=src python3 -m day_captain morning-digest \
   --output-html tmp/day-captain-preview.html \
   --output-text tmp/day-captain-preview.txt
 ```
+
+That preview flow is documented in [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
 
 Run a weekly digest directly:
 

@@ -53,6 +53,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Run `PYTHONPATH=src python3 -m day_captain validate-config` against the final hosted env contract.
 - Run `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`.
 - Run `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`.
+- If the release changes digest presentation, follow [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md) before treating the readability change as complete.
 - Perform one manual hosted trigger after deployment and verify:
   - scheduler logs do not contain digest content
   - the job returns HTTP `200`
