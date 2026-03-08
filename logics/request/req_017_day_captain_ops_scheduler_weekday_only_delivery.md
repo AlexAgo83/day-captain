@@ -1,8 +1,8 @@
 ## req_017_day_captain_ops_scheduler_weekday_only_delivery - Day Captain ops scheduler weekday-only delivery
 > From version: 0.10.0
 > Status: Ready
-> Understanding: 99%
-> Confidence: 99%
+> Understanding: 100%
+> Confidence: 100%
 > Complexity: Low
 > Theme: Operations
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -22,6 +22,7 @@
   - freeze the ops scheduling contract so Saturday and Sunday do not auto-trigger morning delivery
   - verify the `day-captain-ops` workflow expresses weekday-only behavior clearly
   - document the difference between weekend digest content semantics and weekday-only scheduled sending
+  - keep this contract explicit even if a separate Sunday-evening `weekly digest` is later added
   - add validation or operator-facing proof steps so the contract can be checked easily later
 - Out of scope for this request:
   - changing weekend digest mail-window behavior
