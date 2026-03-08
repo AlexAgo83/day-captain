@@ -1,8 +1,8 @@
 ## req_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -104,7 +104,7 @@ flowchart LR
 - `task_001_day_captain_graph_ingestion_and_storage` - Implement Graph ingestion and SQLite persistence. Status: `Delivered, pending chain closure`.
 - The repository now includes Microsoft Entra ID device-code auth and token cache handling for delegated Microsoft Graph access in local/CLI flows.
 - `task_002_day_captain_digest_scoring_recall_and_delivery` - Implement scoring, digest rendering, recall, and webhook/Graph-send delivery. Status: `Delivered, pending chain closure`.
-- `task_003_day_captain_render_deployment_and_scheduler` - Package the hosted deployment path on Render with GitHub Actions scheduling and Postgres-backed persistence. Status: `In Progress`.
+- `task_003_day_captain_render_deployment_and_scheduler` - Package the hosted deployment path on Render with GitHub Actions scheduling and Postgres-backed persistence. Status: `In Progress`, with live Render validation now proven.
 - `item_003_day_captain_graph_send_and_mailbox_delivery_validation` - Add real delegated Outlook delivery and mailbox validation for the digest send path. Status: `Done`.
 - `task_006_day_captain_graph_send_delivery_execution` - Implement real Graph `sendMail` execution for digest delivery. Status: `Done`.
 - `task_007_day_captain_mailbox_delivery_end_to_end_validation` - Validate the delegated send flow end to end against the real mailbox. Status: `Done`.
@@ -121,9 +121,9 @@ flowchart LR
 - `task_014_day_captain_digest_empty_states_and_fallback_copy_polish` - Replace technical empty states and improve deterministic assistant copy. Status: `Done`.
 - `item_008_day_captain_llm_top_summary_block` - Add a short LLM-generated overview block above the detailed digest sections. Status: `Done`.
 - `task_015_day_captain_llm_top_summary_block` - Implement bounded top-of-digest LLM synthesis with safe fallback and rendered placement. Status: `Done`.
-- `item_009_day_captain_hosted_graph_app_only_authentication` - Replace the fragile hosted delegated token path with app-only Graph auth. Status: `In Progress`.
+- `item_009_day_captain_hosted_graph_app_only_authentication` - Replace the fragile hosted delegated token path with app-only Graph auth. Status: `Done`.
 - `task_016_day_captain_hosted_graph_app_only_authentication_implementation` - Implement hosted Graph app-only auth and `/users/{id}` route support. Status: `Done`.
-- `task_017_day_captain_hosted_graph_app_only_authentication_validation` - Validate the Render-hosted digest flow end to end with app-only auth. Status: `In Progress`.
+- `task_017_day_captain_hosted_graph_app_only_authentication_validation` - Validate the Render-hosted digest flow end to end with app-only auth. Status: `Done`.
 - `item_010_day_captain_tenant_scoped_multi_user_digests` - Evolve the service from single-user to bounded tenant-scoped multi-user digest delivery. Status: `Done`.
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` - Implement tenant-scoped storage, configuration, and per-user digest execution. Status: `Done`.
 - `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Done`.

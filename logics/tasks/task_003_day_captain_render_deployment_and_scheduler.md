@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 97%
-> Progress: 88%
+> Progress: 94%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -68,6 +68,10 @@ flowchart LR
 - Validation results:
   - `python3 -m unittest tests.test_settings tests.test_app tests.test_web` -> `OK` (`8` tests)
   - `python3 -m unittest discover -s tests` -> `OK` (`34` tests)
+- Validation results:
+  - `python3 -m unittest tests.test_settings tests.test_app tests.test_web` -> `OK` (`8` tests)
+  - `python3 -m unittest discover -s tests` -> `OK` (`95` tests at latest full run)
+  - live Render proof -> `GET /healthz` returned `200`, protected runtime validation reported `graph_auth_mode=app_only` and `storage_backend=postgres`, and `validate-hosted-service` completed successfully for `alexandre.agostini@circle-mobility.com`
 - Remaining work before closure:
-  - validate the Render blueprint and hosted service against a real Render environment
   - validate the private ops scheduler path against the hosted endpoint and secrets in a non-local run
+  - validate the sleeping-service wake-up pattern against an actually sleeping hosted instance if free-tier fallback remains part of the operator path
