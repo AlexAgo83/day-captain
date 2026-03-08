@@ -64,6 +64,9 @@ def build_parser() -> argparse.ArgumentParser:
     feedback.add_argument("--recorded-at", help="ISO datetime for the feedback event.")
     feedback.add_argument("--target-user", help="Configured mailbox/user tied to the feedback.")
 
+    validate = subparsers.add_parser("validate-config", help="Validate current environment configuration.")
+    validate.add_argument("--target-user", help="Optional target user to validate against configured recipients.")
+
     return parser
 
 
@@ -130,6 +133,13 @@ def _run_auth_command(args: argparse.Namespace, settings: DayCaptainSettings) ->
         raise SystemExit(str(exc))
 
 
+def _run_validate_command(args: argparse.Namespace, settings: DayCaptainSettings) -> object:
+    try:
+        return settings.validation_summary(target_user_id=getattr(args, "target_user", "") or "")
+    except ValueError as exc:
+        raise SystemExit(str(exc))
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -137,6 +147,10 @@ def main(argv: Optional[list] = None) -> int:
 
     if args.command == "auth":
         result = _run_auth_command(args, settings)
+        print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+    if args.command == "validate-config":
+        result = _run_validate_command(args, settings)
         print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
         return 0
     if args.command == "serve":

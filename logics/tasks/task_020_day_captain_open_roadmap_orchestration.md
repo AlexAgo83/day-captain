@@ -1,9 +1,9 @@
 ## task_020_day_captain_open_roadmap_orchestration - Orchestrate the remaining hosted, multi-user, and live-quality delivery slices
 > From version: 0.8.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 0%
+> Status: In Progress
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 60%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -26,9 +26,9 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Freeze the execution order and dependency rules for the remaining open slices.
+- [x] 1. Freeze the execution order and dependency rules for the remaining open slices.
 - [ ] 2. Drive hosted readiness first: complete app-only Graph auth, then complete hosted validation.
-- [ ] 3. Drive tenant-scoped multi-user work next: foundations first, then isolation and operator validation.
+- [x] 3. Drive tenant-scoped multi-user work next: foundations first, then isolation and operator validation.
 - [ ] 4. Close the remaining live-quality validation work for bounded LLM wording once the deployment path is stable enough to validate it properly.
 - [ ] 5. Update the parent request/backlog statuses so the remaining open work has one coherent closure path instead of several disconnected partial tracks.
 - [ ] FINAL: Update related Logics docs
@@ -54,4 +54,6 @@ flowchart LR
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- Pending implementation.
+- The open-slice order is now materially enforced in the repo: multi-user foundations and operator validation are complete, while hosted Render proof and live LLM validation remain the two unresolved end-to-end slices.
+- Scheduler, operator docs, and target-user validation now align with that order, so the remaining closure path is narrower and explicit.
+- Remaining work for closure is still external-facing: complete `task_017` on the deployed Render service, then close the live LLM wording validation in `task_010`.

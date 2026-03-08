@@ -43,6 +43,7 @@ class DayCaptainWebApp:
             if path == "/jobs/morning-digest" and method == "POST":
                 self._require_secret(environ)
                 payload = self._read_json(environ)
+                self.settings.require_target_user_if_needed(str(payload.get("target_user_id") or ""))
                 app = build_application(settings=self.settings)
                 result = app.run_morning_digest(
                     now=_parse_datetime(payload.get("now")),
@@ -54,6 +55,7 @@ class DayCaptainWebApp:
             if path == "/jobs/recall-digest" and method == "POST":
                 self._require_secret(environ)
                 payload = self._read_json(environ)
+                self.settings.require_target_user_if_needed(str(payload.get("target_user_id") or ""))
                 app = build_application(settings=self.settings)
                 result = app.recall_digest(
                     run_id=payload.get("run_id"),

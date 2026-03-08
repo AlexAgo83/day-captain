@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import os
+from typing import Mapping
 from typing import Sequence
 from urllib.parse import parse_qsl
 from urllib.parse import urlencode
@@ -171,6 +172,48 @@ class DayCaptainSettings:
     def validate_hosted(self) -> None:
         if self.is_hosted_environment() and not self.job_secret:
             raise ValueError("DAY_CAPTAIN_JOB_SECRET is required in hosted environments.")
+        if not self.is_hosted_environment():
+            return
+        if self.resolved_graph_auth_mode() == "app_only":
+            if not self.graph_client_id:
+                raise ValueError("DAY_CAPTAIN_GRAPH_CLIENT_ID is required for hosted app-only auth.")
+            if not self.graph_client_secret:
+                raise ValueError("DAY_CAPTAIN_GRAPH_CLIENT_SECRET is required for hosted app-only auth.")
+            if not self.resolved_target_users():
+                raise ValueError("DAY_CAPTAIN_TARGET_USERS or DAY_CAPTAIN_GRAPH_USER_ID is required for hosted app-only auth.")
+        if self.delivery_mode == "graph_send" and not self.graph_send_enabled:
+            raise ValueError("DAY_CAPTAIN_GRAPH_SEND_ENABLED=true is required for hosted graph_send delivery.")
+
+    def validate_target_user(self, target_user_id: str) -> None:
+        candidate = str(target_user_id or "").strip()
+        if not candidate:
+            return
+        configured = self.resolved_target_users()
+        if configured and candidate not in configured:
+            raise ValueError("target_user_id must be one of DAY_CAPTAIN_TARGET_USERS.")
+
+    def require_target_user_if_needed(self, target_user_id: str) -> None:
+        candidate = str(target_user_id or "").strip()
+        configured = self.resolved_target_users()
+        if not candidate and len(configured) > 1:
+            raise ValueError("Multiple target users are configured. Provide target_user_id explicitly.")
+        self.validate_target_user(candidate)
+
+    def validation_summary(self, target_user_id: str = "") -> Mapping[str, object]:
+        self.validate_hosted()
+        self.validate_target_user(target_user_id)
+        resolved_target = str(target_user_id or "").strip()
+        return {
+            "status": "ok",
+            "environment": self.environment,
+            "delivery_mode": self.delivery_mode,
+            "graph_auth_mode": self.resolved_graph_auth_mode(),
+            "tenant_id": self.resolved_tenant_scope(),
+            "configured_target_users": self.resolved_target_users(),
+            "selected_target_user": resolved_target,
+            "graph_send_enabled": self.graph_send_enabled,
+            "hosted": self.is_hosted_environment(),
+        }
 
     def llm_is_enabled(self) -> bool:
         return self.llm_provider.strip().lower() not in {"", "disabled", "none"}

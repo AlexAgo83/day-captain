@@ -1,9 +1,9 @@
 ## item_009_day_captain_hosted_graph_app_only_authentication - Replace hosted delegated Graph refresh handling with app-only auth
 > From version: 0.7.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
-> Progress: 50%
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 70%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -65,4 +65,4 @@ flowchart LR
 - Derived from request `req_009_day_captain_hosted_graph_app_only_authentication`.
 - This slice intentionally keeps local delegated auth because it still provides the best developer ergonomics for local mailbox testing.
 - `task_016_day_captain_hosted_graph_app_only_authentication_implementation` is complete: hosted app-only auth, explicit `/users/{id}` routing, and supporting tests/docs are now in place.
-- `task_017_day_captain_hosted_graph_app_only_authentication_validation` remains open for Render-hosted proof against the deployed service.
+- `task_017_day_captain_hosted_graph_app_only_authentication_validation` is now in progress: local preflight validation, scheduler targeting support, and hosted setup docs are in place, with Render-hosted proof still pending.
