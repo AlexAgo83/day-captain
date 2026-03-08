@@ -172,6 +172,9 @@ class ValidateConfigCommandTest(unittest.TestCase):
                             "expect_storage_backend": "",
                             "timeout_seconds": 30,
                             "skip_recall": False,
+                            "check_email_command": True,
+                            "email_command_sender": "alice@example.com",
+                            "email_command_text": "recall-week",
                         },
                     )()
                 )

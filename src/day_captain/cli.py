@@ -198,6 +198,20 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip recall-digest validation after the morning-digest trigger.",
     )
+    validate_hosted.add_argument(
+        "--check-email-command",
+        action="store_true",
+        help="Also validate the hosted inbound email-command recall path.",
+    )
+    validate_hosted.add_argument(
+        "--email-command-sender",
+        help="Sender address used when validating hosted email-command recall.",
+    )
+    validate_hosted.add_argument(
+        "--email-command-text",
+        default="recall",
+        help="Command text used when validating hosted email-command recall.",
+    )
 
     return parser
 
@@ -346,6 +360,9 @@ def _run_validate_hosted_service_command(args: argparse.Namespace) -> object:
             expected_storage_backend=str(getattr(args, "expect_storage_backend", "") or "").strip(),
             timeout_seconds=int(args.timeout_seconds),
             check_recall=not bool(args.skip_recall),
+            check_email_command=bool(getattr(args, "check_email_command", False)),
+            email_command_sender=str(getattr(args, "email_command_sender", "") or "").strip(),
+            email_command_text=str(getattr(args, "email_command_text", "recall") or "recall").strip(),
             wake_service=bool(getattr(args, "wake_service", False)),
             wake_timeout_seconds=int(getattr(args, "wake_timeout_seconds", 30)),
             wake_max_attempts=int(getattr(args, "wake_max_attempts", 1)),
