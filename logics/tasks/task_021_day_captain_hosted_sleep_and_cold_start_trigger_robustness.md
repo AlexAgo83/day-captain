@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 70%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -56,5 +56,7 @@ flowchart LR
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- New task opened to make hosted trigger execution more reliable when the backend is asleep or cold-starting, especially in the private ops scheduling model.
-- Intended implementation areas are wake-up-aware `/healthz` usage, longer timeout/retry controls, and clearer operator guidance about sleeping-service tradeoffs versus always-on hosting.
+- Added wake-up-aware hosted trigger support in `src/day_captain/hosted_jobs.py` through bounded `/healthz` probing before the real job trigger or validation path, with configurable wake timeout, attempt count, and retry delay.
+- Exposed that control surface through `day-captain trigger-hosted-job` and `day-captain validate-hosted-service`, then updated the example scheduler workflow to use cold-start-tolerant defaults for sleeping-service fallback operation.
+- Added automated coverage for delayed availability and retry behavior, and updated operator docs so the private `day-captain-ops` repo has one explicit fallback pattern for sleeping services.
+- Remaining work is mainly closure and deployed proof: validate the warm-up strategy against the real hosted service behavior and then close the slice if it proves stable enough operationally.

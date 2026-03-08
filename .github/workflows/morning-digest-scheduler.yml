@@ -68,4 +68,11 @@ jobs:
         run: |
           # Example only: production scheduling should live in the private day-captain-ops repo.
           PYTHONPATH=src python3 scripts/validate_hosted_service.py \
-            --target-user "$TARGET_USER_ID"
+            --target-user "$TARGET_USER_ID" \
+            --wake-service \
+            --wake-timeout-seconds 45 \
+            --wake-max-attempts 6 \
+            --wake-delay-seconds 10 \
+            --timeout-seconds 90 \
+            --expect-graph-auth-mode app_only \
+            --expect-storage-backend postgres
