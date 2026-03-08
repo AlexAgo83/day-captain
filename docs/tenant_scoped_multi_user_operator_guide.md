@@ -70,6 +70,8 @@ PYTHONPATH=src python3 -m day_captain validate-hosted-service \
   --expect-storage-backend postgres
 ```
 
+If the hosted service can sleep between runs, warm it up before the real job trigger instead of assuming the first scheduler call will execute immediately.
+
 ## Scheduling model
 
 The GitHub Actions scheduler supports two modes:
@@ -86,6 +88,15 @@ Example repository variable:
 ```
 
 The scheduler will issue one hosted `/jobs/morning-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
+
+## Sleeping-service fallback
+
+If the hosted web service is on a plan that can sleep:
+
+- use the private ops workflow to call `GET /healthz` as a warm-up step before the real trigger
+- allow a short readiness window or bounded retries before `POST /jobs/morning-digest`
+- use longer timeout settings than for an always-on deployment
+- keep this as a fallback mode only; prefer a paid always-on service for routine production delivery
 
 Use [`private_ops_repo_bootstrap.md`](/Users/alexandreagostini/Documents/day-captain/docs/private_ops_repo_bootstrap.md) as the starting point for that private repo.
 

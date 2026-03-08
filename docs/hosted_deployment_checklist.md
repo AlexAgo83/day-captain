@@ -20,10 +20,12 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Serve the hosted app with `gunicorn`, not the standard-library WSGI server.
 - Keep the scheduler workflow calling only `/jobs/morning-digest`.
 - Treat `.github/workflows/morning-digest-scheduler.yml` in this repo as an example bootstrap, not the final production scheduler location.
+- Prefer a non-sleeping paid web service for production scheduling. Treat sleeping-service operation as a fallback mode only.
 - Include `target_user_id` in hosted job payloads when several target users are configured.
 - If GitHub Actions drives several users, set repository variable `DAY_CAPTAIN_TARGET_USERS_JSON` to a JSON array.
 - Ensure the scheduler checks the HTTP status code without printing the response body.
 - Store `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET` as GitHub Actions secrets.
+- If the hosted service may sleep, add a warm-up/readiness step before the real job trigger and give the workflow a longer timeout budget.
 
 ## HTTP surface
 - Expose only the minimal hosted endpoints:
@@ -46,4 +48,5 @@ Use this checklist before treating the Render-hosted Day Captain service as read
   - a digest run is persisted successfully
   - only the requested `target_user_id` receives the digest and persistence stays isolated from other configured users
 - Run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ... --expect-graph-auth-mode app_only --expect-storage-backend postgres` from the private ops repo or equivalent environment.
+- If the service may sleep, document the warm-up interval, readiness check, and timeout policy directly in the private ops repo runbook.
 - Follow [`tenant_scoped_multi_user_operator_guide.md`](/Users/alexandreagostini/Documents/day-captain/docs/tenant_scoped_multi_user_operator_guide.md) for the bounded operator workflow.
