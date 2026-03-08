@@ -61,6 +61,32 @@ class HostedJobsTest(unittest.TestCase):
         self.assertEqual(result["status"], "ok")
         self.assertEqual(recorder.requests[0]["url"], "https://example.com/healthz")
 
+    def test_check_hosted_health_validates_runtime_summary(self) -> None:
+        recorder = HostedJobRecorder(
+            {
+                "status": "ok",
+                "runtime": {
+                    "status": "ok",
+                    "graph_auth_mode": "app_only",
+                    "storage_backend": "postgres",
+                    "configured_target_user_count": 1,
+                    "database_configured": True,
+                },
+            }
+        )
+
+        result = check_hosted_health(
+            "https://example.com",
+            job_secret="secret",
+            include_runtime_summary=True,
+            expected_graph_auth_mode="app_only",
+            expected_storage_backend="postgres",
+            opener=recorder,
+        )
+
+        self.assertEqual(result["runtime"]["graph_auth_mode"], "app_only")
+        self.assertEqual(recorder.requests[0]["secret"], "secret")
+
     def test_build_job_payload_for_morning_digest(self) -> None:
         payload = build_job_payload(
             "morning-digest",
@@ -165,7 +191,16 @@ class HostedJobsTest(unittest.TestCase):
 
     def test_validate_hosted_service_runs_health_morning_and_recall(self) -> None:
         payloads = [
-            {"status": "ok"},
+            {
+                "status": "ok",
+                "runtime": {
+                    "status": "ok",
+                    "graph_auth_mode": "app_only",
+                    "storage_backend": "postgres",
+                    "configured_target_user_count": 1,
+                    "database_configured": True,
+                },
+            },
             {
                 "status": "completed",
                 "job": "morning_digest",
@@ -207,10 +242,13 @@ class HostedJobsTest(unittest.TestCase):
             "https://example.com",
             "secret",
             target_user_id="alice@example.com",
+            expected_graph_auth_mode="app_only",
+            expected_storage_backend="postgres",
             opener=recorder,
         )
 
         self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["runtime"]["storage_backend"], "postgres")
         self.assertEqual(recorder.requests[0][0], "https://example.com/healthz")
         self.assertEqual(recorder.requests[1][0], "https://example.com/jobs/morning-digest")
         self.assertEqual(recorder.requests[2][0], "https://example.com/jobs/recall-digest")
@@ -218,7 +256,16 @@ class HostedJobsTest(unittest.TestCase):
 
     def test_validate_hosted_service_raises_when_recall_run_id_differs(self) -> None:
         payloads = [
-            {"status": "ok"},
+            {
+                "status": "ok",
+                "runtime": {
+                    "status": "ok",
+                    "graph_auth_mode": "app_only",
+                    "storage_backend": "postgres",
+                    "configured_target_user_count": 1,
+                    "database_configured": True,
+                },
+            },
             {
                 "status": "completed",
                 "job": "morning_digest",
@@ -256,6 +303,8 @@ class HostedJobsTest(unittest.TestCase):
                 "https://example.com",
                 "secret",
                 target_user_id="alice@example.com",
+                expected_graph_auth_mode="app_only",
+                expected_storage_backend="postgres",
                 opener=SequenceRecorder(),
             )
 

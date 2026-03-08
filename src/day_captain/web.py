@@ -39,7 +39,10 @@ class DayCaptainWebApp:
 
         try:
             if path == "/healthz" and method == "GET":
-                return self._json_response(start_response, 200, {"status": "ok"})
+                health_payload: JsonDict = {"status": "ok"}
+                if self._has_valid_secret(environ):
+                    health_payload["runtime"] = dict(self.settings.validation_summary())
+                return self._json_response(start_response, 200, health_payload)
             if path == "/jobs/morning-digest" and method == "POST":
                 self._require_secret(environ)
                 payload = self._read_json(environ)
@@ -76,9 +79,14 @@ class DayCaptainWebApp:
     def _require_secret(self, environ) -> None:
         if not self.settings.job_secret:
             return
-        candidate = environ.get("HTTP_X_DAY_CAPTAIN_SECRET", "")
-        if candidate != self.settings.job_secret:
+        if not self._has_valid_secret(environ):
             raise PermissionError("unauthorized")
+
+    def _has_valid_secret(self, environ) -> bool:
+        if not self.settings.job_secret:
+            return False
+        candidate = environ.get("HTTP_X_DAY_CAPTAIN_SECRET", "")
+        return candidate == self.settings.job_secret
 
     def _read_json(self, environ) -> JsonDict:
         content_length = environ.get("CONTENT_LENGTH") or "0"

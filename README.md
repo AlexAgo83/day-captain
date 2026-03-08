@@ -200,7 +200,10 @@ Validate a deployed hosted service end to end:
 ```bash
 DAY_CAPTAIN_SERVICE_URL=https://your-render-service.example.com \
 DAY_CAPTAIN_JOB_SECRET=... \
-PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com
+PYTHONPATH=src python3 -m day_captain validate-hosted-service \
+  --target-user alice@example.com \
+  --expect-graph-auth-mode app_only \
+  --expect-storage-backend postgres
 ```
 
 If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
@@ -273,6 +276,13 @@ Healthcheck:
 
 ```bash
 curl http://127.0.0.1:8000/healthz
+```
+
+Protected runtime summary for hosted validation:
+
+```bash
+curl http://127.0.0.1:8000/healthz \
+  -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET"
 ```
 
 Trigger a digest through the HTTP endpoint:
@@ -349,6 +359,8 @@ Expected hosted secrets/config include:
 - `DAY_CAPTAIN_DATABASE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
 - Graph / Entra settings
+
+When `X-Day-Captain-Secret` is supplied to `GET /healthz`, the service also returns a runtime summary with the resolved auth mode, storage backend, target-user count, and delivery configuration. This is intended for private ops validation, not public monitoring.
 
 ## GitHub Actions
 
