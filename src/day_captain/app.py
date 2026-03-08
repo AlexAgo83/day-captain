@@ -115,6 +115,14 @@ def _start_of_local_week(value: datetime, zone) -> datetime:
     return _start_of_local_day(target_day, zone)
 
 
+def _weekend_friday_start(value: datetime, zone) -> datetime:
+    local_now = value.astimezone(zone)
+    if local_now.weekday() < 5:
+        return value - timedelta(hours=24)
+    friday_day = local_now.date() - timedelta(days=local_now.weekday() - 4)
+    return _start_of_local_day(friday_day, zone)
+
+
 def _normalized_email_command(*values: str) -> str:
     for raw_value in values:
         candidate = str(raw_value or "").strip().lower()
@@ -286,6 +294,17 @@ class InMemoryStorage:
             if run.run_id == run_id:
                 return run
         return None
+
+    def get_latest_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+        runs = [
+            run
+            for run in self._runs.values()
+            if (not tenant_id or run.tenant_id == tenant_id)
+            and (not user_id or run.user_id == user_id)
+        ]
+        if not runs:
+            return None
+        return sorted(runs, key=lambda item: item.generated_at)[-1]
 
     def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         completed = [
@@ -507,6 +526,47 @@ class DayCaptainApplication:
             return configured_users[0]
         return self.settings.resolved_default_target_user()
 
+    def _resolve_run_scope(
+        self,
+        run_id: str,
+        *,
+        target_user_id: Optional[str],
+        tenant_id: Optional[str],
+        action_name: str,
+    ) -> DigestRunRecord:
+        scoped_tenant_id = self._resolve_tenant_id(tenant_id)
+        requested_user_id = str(target_user_id or "").strip()
+        configured_users = self.settings.resolved_target_users()
+        default_user_id = self.settings.resolved_default_target_user()
+        if requested_user_id or configured_users or default_user_id:
+            try:
+                scoped_user_id = self._resolve_target_user_id(target_user_id)
+            except ValueError as exc:
+                if not requested_user_id:
+                    raise ValueError(
+                        f"target_user_id is required for {action_name} when multiple target users are configured."
+                    ) from exc
+                raise
+            run = self.storage.get_run(
+                run_id,
+                tenant_id=scoped_tenant_id,
+                user_id=scoped_user_id,
+            )
+        else:
+            run = self.storage.get_run(run_id)
+            if run is not None and run.tenant_id != scoped_tenant_id:
+                run = None
+        if run is None:
+            raise LookupError("No completed digest run found for recall.")
+        return run
+
+    def _ensure_no_pending_delivery(self, *, tenant_id: str, user_id: str, action_name: str) -> None:
+        latest_run = self.storage.get_latest_run(tenant_id=tenant_id, user_id=user_id)
+        if latest_run is not None and latest_run.status == "delivery_pending":
+            raise RuntimeError(
+                f"{action_name} is blocked because the latest digest run is awaiting delivery reconciliation."
+            )
+
     def _collect_meetings(
         self,
         auth_context: AuthContext,
@@ -567,6 +627,7 @@ class DayCaptainApplication:
         run_type: str,
         target_user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
+        before_delivery=None,
     ) -> DigestPayload:
         auth_context = self.auth_provider.authenticate(
             self.settings.graph_scopes,
@@ -617,23 +678,25 @@ class DayCaptainApplication:
                 top_summary_source=overview.source,
                 meeting_horizon=meeting_horizon,
             )
+        run_record = DigestRunRecord(
+            run_id=run_id,
+            run_type=run_type,
+            status="delivery_pending" if delivery_mode == "graph_send" else "completed",
+            generated_at=current_time,
+            window_start=window_start,
+            window_end=window_end,
+            delivery_mode=delivery_mode,
+            summary=payload,
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
+        )
+        self.storage.save_run(run_record)
         if delivery_mode == "graph_send":
+            if before_delivery is not None:
+                before_delivery(payload)
             _validate_graph_send_prerequisites(self.settings, auth_context)
             self.digest_delivery.deliver_digest(auth_context, payload)
-        self.storage.save_run(
-            DigestRunRecord(
-                run_id=run_id,
-                run_type=run_type,
-                status="completed",
-                generated_at=current_time,
-                window_start=window_start,
-                window_end=window_end,
-                delivery_mode=delivery_mode,
-                summary=payload,
-                tenant_id=scoped_tenant_id,
-                user_id=scoped_user_id,
-            )
-        )
+            self.storage.save_run(replace(run_record, status="completed"))
         return payload
 
     def run_morning_digest(
@@ -647,6 +710,11 @@ class DayCaptainApplication:
         current_time = _coerce_datetime(now)
         scoped_tenant_id = self._resolve_tenant_id(tenant_id)
         scoped_user_id = self._resolve_target_user_id(target_user_id)
+        self._ensure_no_pending_delivery(
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
+            action_name="morning-digest",
+        )
         previous_run = None if force else self.storage.get_latest_completed_run(
             tenant_id=scoped_tenant_id,
             user_id=scoped_user_id,
@@ -654,6 +722,8 @@ class DayCaptainApplication:
         window_start = (
             previous_run.window_end + timedelta(microseconds=1)
             if previous_run is not None
+            else _weekend_friday_start(current_time, _display_zone(self.settings.display_timezone))
+            if current_time.astimezone(_display_zone(self.settings.display_timezone)).weekday() >= 5
             else current_time - timedelta(hours=self.settings.default_lookback_hours)
         )
         return self._build_digest_for_window(
@@ -661,6 +731,31 @@ class DayCaptainApplication:
             window_start=window_start,
             delivery_mode=delivery_mode or self.settings.delivery_mode,
             run_type="morning_digest",
+            target_user_id=scoped_user_id,
+            tenant_id=scoped_tenant_id,
+        )
+
+    def run_weekly_digest(
+        self,
+        now: Optional[datetime] = None,
+        delivery_mode: Optional[str] = None,
+        target_user_id: Optional[str] = None,
+        tenant_id: Optional[str] = None,
+    ) -> DigestPayload:
+        current_time = _coerce_datetime(now)
+        scoped_tenant_id = self._resolve_tenant_id(tenant_id)
+        scoped_user_id = self._resolve_target_user_id(target_user_id)
+        self._ensure_no_pending_delivery(
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
+            action_name="weekly-digest",
+        )
+        window_start = _start_of_local_week(current_time, _display_zone(self.settings.display_timezone))
+        return self._build_digest_for_window(
+            current_time=current_time,
+            window_start=window_start,
+            delivery_mode=delivery_mode or self.settings.delivery_mode,
+            run_type="weekly_digest",
             target_user_id=scoped_user_id,
             tenant_id=scoped_tenant_id,
         )
@@ -674,18 +769,12 @@ class DayCaptainApplication:
     ) -> DigestPayload:
         scoped_tenant_id = self._resolve_tenant_id(tenant_id)
         if run_id:
-            requested_user_id = str(target_user_id or "").strip()
-            run = (
-                self.storage.get_run(
-                    run_id,
-                    tenant_id=scoped_tenant_id,
-                    user_id=self._resolve_target_user_id(requested_user_id),
-                )
-                if requested_user_id
-                else self.storage.get_run(run_id)
+            run = self._resolve_run_scope(
+                run_id,
+                target_user_id=target_user_id,
+                tenant_id=scoped_tenant_id,
+                action_name="recall-digest",
             )
-            if run is not None and run.tenant_id != scoped_tenant_id:
-                run = None
         else:
             scoped_user_id = self._resolve_target_user_id(target_user_id)
             zone = _display_zone(self.settings.display_timezone)
@@ -720,6 +809,8 @@ class DayCaptainApplication:
             run = self.storage.get_run(existing.response_run_id, tenant_id=existing.tenant_id, user_id=existing.user_id)
             if run is None:
                 raise LookupError("Previously processed email-command recall run could not be loaded.")
+            if run.status == "delivery_pending":
+                raise RuntimeError("This email-command recall is awaiting delivery reconciliation.")
             return EmailCommandResult(
                 command_message_id=existing.command_message_id,
                 command_name=existing.normalized_command,
@@ -736,6 +827,18 @@ class DayCaptainApplication:
             window_start = _start_of_local_day(current_time.astimezone(zone).date(), zone)
         else:
             window_start = _start_of_local_week(current_time, zone)
+        def _save_email_command_before_delivery(payload: DigestPayload) -> None:
+            record = EmailCommandRecord(
+                command_message_id=normalized_message_id,
+                normalized_command=normalized_command,
+                sender_address=str(sender_address or "").strip().lower(),
+                processed_at=current_time,
+                response_run_id=payload.run_id,
+                tenant_id=scoped_tenant_id,
+                user_id=target_user_id,
+            )
+            self.storage.save_email_command(record, tenant_id=scoped_tenant_id)
+
         payload = self._build_digest_for_window(
             current_time=current_time,
             window_start=window_start,
@@ -743,17 +846,8 @@ class DayCaptainApplication:
             run_type="email_command_recall",
             target_user_id=target_user_id,
             tenant_id=scoped_tenant_id,
+            before_delivery=_save_email_command_before_delivery,
         )
-        record = EmailCommandRecord(
-            command_message_id=normalized_message_id,
-            normalized_command=normalized_command,
-            sender_address=str(sender_address or "").strip().lower(),
-            processed_at=current_time,
-            response_run_id=payload.run_id,
-            tenant_id=scoped_tenant_id,
-            user_id=target_user_id,
-        )
-        self.storage.save_email_command(record, tenant_id=scoped_tenant_id)
         return EmailCommandResult(
             command_message_id=normalized_message_id,
             command_name=normalized_command,
@@ -773,9 +867,14 @@ class DayCaptainApplication:
         target_user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
     ) -> FeedbackRecord:
-        run = self.storage.get_run(run_id)
-        scoped_tenant_id = str(tenant_id or ("" if run is None else run.tenant_id) or self._resolve_tenant_id(None))
-        scoped_user_id = str(target_user_id or ("" if run is None else run.user_id) or self._resolve_target_user_id(None))
+        run = self._resolve_run_scope(
+            run_id,
+            target_user_id=target_user_id,
+            tenant_id=tenant_id,
+            action_name="record-feedback",
+        )
+        scoped_tenant_id = run.tenant_id
+        scoped_user_id = run.user_id
         feedback = FeedbackRecord(
             feedback_id=uuid.uuid4().hex,
             run_id=run_id,

@@ -1,0 +1,143 @@
+name: Day Captain Weekly Digest
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_user_id:
+        description: "Optional single target user override"
+        required: false
+        type: string
+  schedule:
+    - cron: "30 18 * * 0"
+    - cron: "30 19 * * 0"
+
+jobs:
+  schedule-gate:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+    steps:
+      - name: Gate Sunday 20:30 Europe/Paris
+        id: gate
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          from datetime import datetime, timezone
+          from zoneinfo import ZoneInfo
+          import os
+
+          if os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch":
+              print("should_run=true")
+          else:
+              local_now = datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Paris"))
+              should_run = local_now.weekday() == 6 and local_now.hour == 20 and local_now.minute == 30
+              print("should_run=" + ("true" if should_run else "false"))
+          PY
+
+  prepare-targets:
+    needs: schedule-gate
+    if: needs.schedule-gate.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.targets.outputs.targets }}
+    steps:
+      - name: Resolve target users
+        id: targets
+        env:
+          WORKFLOW_TARGET_USER_ID: ${{ inputs.target_user_id }}
+          DAY_CAPTAIN_TARGET_USERS_JSON: ${{ vars.DAY_CAPTAIN_TARGET_USERS_JSON }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+
+          override = (os.getenv("WORKFLOW_TARGET_USER_ID") or "").strip()
+          configured = (os.getenv("DAY_CAPTAIN_TARGET_USERS_JSON") or "").strip()
+
+          if override:
+              targets = [{"target_user_id": override}]
+          elif configured:
+              parsed = json.loads(configured)
+              if not isinstance(parsed, list) or not parsed:
+                  raise SystemExit("DAY_CAPTAIN_TARGET_USERS_JSON must be a non-empty JSON array.")
+              targets = [{"target_user_id": str(item).strip()} for item in parsed if str(item).strip()]
+              if not targets:
+                  raise SystemExit("DAY_CAPTAIN_TARGET_USERS_JSON produced no usable target users.")
+          else:
+              raise SystemExit("DAY_CAPTAIN_TARGET_USERS_JSON must be set for the ops scheduler.")
+
+          print("targets=" + json.dumps(targets))
+          PY
+
+  warm-hosted-service:
+    needs: prepare-targets
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout day-captain release branch
+        uses: actions/checkout@v4
+        with:
+          repository: example-owner/day-captain
+          ref: release
+          path: day-captain
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install day-captain
+        working-directory: day-captain
+        run: pip install -e .
+
+      - name: Wake and verify hosted service
+        working-directory: day-captain
+        env:
+          DAY_CAPTAIN_SERVICE_URL: ${{ secrets.DAY_CAPTAIN_SERVICE_URL }}
+          DAY_CAPTAIN_JOB_SECRET: ${{ secrets.DAY_CAPTAIN_JOB_SECRET }}
+        run: |
+          python3 scripts/check_hosted_health.py \
+            --wake-service \
+            --wake-timeout-seconds 90 \
+            --wake-max-attempts 6 \
+            --wake-delay-seconds 10 \
+            --expect-graph-auth-mode app_only \
+            --expect-storage-backend postgres
+
+  trigger-weekly-digest:
+    needs:
+      - prepare-targets
+      - warm-hosted-service
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare-targets.outputs.targets) }}
+    steps:
+      - name: Checkout day-captain release branch
+        uses: actions/checkout@v4
+        with:
+          repository: example-owner/day-captain
+          ref: release
+          path: day-captain
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install day-captain
+        working-directory: day-captain
+        run: pip install -e .
+
+      - name: Trigger weekly digest for target user
+        working-directory: day-captain
+        env:
+          DAY_CAPTAIN_SERVICE_URL: ${{ secrets.DAY_CAPTAIN_SERVICE_URL }}
+          DAY_CAPTAIN_JOB_SECRET: ${{ secrets.DAY_CAPTAIN_JOB_SECRET }}
+          TARGET_USER_ID: ${{ matrix.target_user_id }}
+        run: |
+          python3 scripts/trigger_hosted_digest.py \
+            --job weekly-digest \
+            --target-user "$TARGET_USER_ID" \
+            --timeout-seconds 120

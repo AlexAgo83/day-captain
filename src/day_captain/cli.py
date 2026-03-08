@@ -53,6 +53,11 @@ def build_parser() -> argparse.ArgumentParser:
     morning.add_argument("--force", action="store_true", help="Ignore the last successful run window.")
     morning.add_argument("--target-user", help="Configured mailbox/user to run.")
 
+    weekly = subparsers.add_parser("weekly-digest", help="Run the weekly digest flow.")
+    weekly.add_argument("--now", help="ISO datetime override for the run clock.")
+    weekly.add_argument("--delivery-mode", help="Override the configured delivery mode.")
+    weekly.add_argument("--target-user", help="Configured mailbox/user to run.")
+
     serve_parser = subparsers.add_parser("serve", help="Run the Day Captain HTTP service.")
     serve_parser.add_argument("--host", help="Override the configured bind host.")
     serve_parser.add_argument("--port", type=int, help="Override the configured bind port.")
@@ -135,7 +140,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     trigger.add_argument(
         "--job",
-        choices=("morning-digest", "recall-digest", "email-command-recall"),
+        choices=("morning-digest", "weekly-digest", "recall-digest", "email-command-recall"),
         default="morning-digest",
     )
     trigger.add_argument("--target-user", help="Explicit target user for the hosted run.")
@@ -408,6 +413,12 @@ def main(argv: Optional[list] = None) -> int:
             now=_parse_datetime(args.now),
             delivery_mode=args.delivery_mode,
             force=args.force,
+            target_user_id=args.target_user,
+        )
+    elif args.command == "weekly-digest":
+        result = app.run_weekly_digest(
+            now=_parse_datetime(args.now),
+            delivery_mode=args.delivery_mode,
             target_user_id=args.target_user,
         )
     elif args.command == "recall-digest":

@@ -241,7 +241,8 @@ If the hosted web service can sleep between runs, treat the first request as a w
 
 Recommended scheduler split:
 - use `check-hosted-health` for a standalone readiness step
-- use `trigger-hosted-job --job morning-digest` for the routine daily cron
+- use `trigger-hosted-job --job morning-digest` for the routine weekday cron
+- use `trigger-hosted-job --job weekly-digest` for the Sunday-evening weekly recap cron
 - reserve `validate-hosted-service` for manual checks, rollout validation, or pre-cron verification
 
 If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3 -m day_captain auth login` so the cached token is refreshed with the new consented scope set.
@@ -277,6 +278,12 @@ Run a digest for one configured hosted target:
 
 ```bash
 PYTHONPATH=src python3 -m day_captain morning-digest --force --target-user alice@example.com
+```
+
+Run a weekly digest directly:
+
+```bash
+PYTHONPATH=src python3 -m day_captain weekly-digest --target-user alice@example.com
 ```
 
 Recall the latest digest:
@@ -352,6 +359,15 @@ curl -X POST http://127.0.0.1:8000/jobs/morning-digest \
   -H "Content-Type: application/json" \
   -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
   -d '{"force": false, "target_user_id": "alice@example.com"}'
+```
+
+Trigger a weekly digest through the HTTP endpoint:
+
+```bash
+curl -X POST http://127.0.0.1:8000/jobs/weekly-digest \
+  -H "Content-Type: application/json" \
+  -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
+  -d '{"target_user_id": "alice@example.com"}'
 ```
 
 Recall through HTTP:
@@ -469,9 +485,13 @@ When `X-Day-Captain-Secret` is supplied to `GET /healthz`, the service also retu
 
 This repository currently includes two workflow categories:
 - CI checks
-- an example scheduled hosted trigger for the morning digest
+- example scheduled hosted triggers for the morning digest and weekly digest
 
-The scheduler workflow is in [`morning-digest-scheduler.yml`](./.github/workflows/morning-digest-scheduler.yml) and expects:
+The example scheduler workflows are in:
+- [`morning-digest-scheduler.yml`](./.github/workflows/morning-digest-scheduler.yml)
+- [`weekly-digest-scheduler.yml`](./.github/workflows/weekly-digest-scheduler.yml)
+
+They expect:
 - `DAY_CAPTAIN_SERVICE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
 - optional `DAY_CAPTAIN_TARGET_USERS_JSON` repository variable for scheduled multi-user fan-out
@@ -483,6 +503,7 @@ Recommended production setup:
 - keep CI here if you want public validation
 - move real scheduling and production secrets into a private `day-captain-ops` repository
 - let the private repo trigger the hosted Day Captain service over HTTPS using `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`
+- keep weekday `morning-digest` auto-send separate from the Sunday-evening `weekly-digest` scheduler contract
 
 Fallback if the hosted service sleeps:
 - add `--wake-service` in the private ops workflow before the real job trigger or validation path
