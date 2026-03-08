@@ -16,7 +16,7 @@ flowchart LR
     Delivery --> SenderMailbox[daycaptain Shared Mailbox]
     SenderMailbox --> Recipient[Target User Inbox]
     UserCommand[Email Command: recall or recall-week] --> SenderMailbox
-    SenderMailbox --> CommandTrigger[Inbound Email Command Trigger]
+    SenderMailbox --> CommandTrigger[Power Automate Shared Mailbox Trigger]
     CommandTrigger --> App
     Scheduler[GitHub Actions or manual hosted trigger] --> Web[HTTP or CLI Entry]
     Web --> App
