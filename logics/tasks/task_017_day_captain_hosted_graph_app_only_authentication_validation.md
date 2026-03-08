@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 55%
+> Progress: 60%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -54,6 +54,6 @@ flowchart LR
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
-- Added hosted-validation support in the repo before Render proof: a `day-captain validate-config` preflight command, explicit hosted target-user checks at the HTTP boundary, scheduler support for explicit `target_user_id` fan-out, and a reusable `day-captain validate-hosted-service` path that checks `/healthz`, triggers the morning digest, and can validate recall.
+- Added hosted-validation support in the repo before Render proof: a `day-captain validate-config` preflight command, explicit hosted target-user checks at the HTTP boundary, scheduler support for explicit `target_user_id` fan-out, and a reusable `day-captain validate-hosted-service` path that checks `/healthz`, validates job acknowledgement shape, triggers the morning digest, and validates recall coherence.
 - Added operator-facing docs plus reusable hosted trigger tooling so Render and private `day-captain-ops` scheduling setup can be validated locally before the deployed proof step.
 - Remaining work is still the real Render-hosted proof: deploy with app-only secrets, trigger `/jobs/morning-digest`, and confirm mailbox/delivery plus hosted Postgres persistence.
