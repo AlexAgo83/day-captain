@@ -1,9 +1,9 @@
 ## item_012_day_captain_recall_and_auth_reliability_hardening - Harden recall correctness, auth scope truthfulness, and window boundaries
 > From version: 0.9.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,7 +53,7 @@ flowchart LR
 
 # Links
 - Request: `req_012_day_captain_recall_and_auth_reliability_hardening`
-- Primary task(s): `task_022_day_captain_recall_and_delivery_evolution_orchestration` (`Ready`)
+- Primary task(s): `task_022_day_captain_recall_and_delivery_evolution_orchestration` (`Done`)
 
 # Priority
 - Impact: High - these defects affect trust in recall, send readiness, and digest continuity.
@@ -63,3 +63,4 @@ flowchart LR
 - Derived from request `req_012_day_captain_recall_and_auth_reliability_hardening`.
 - This slice comes directly from the project review and should be treated as corrective work, not roadmap expansion.
 - The most immediate risks are user-facing recall failures and misleading `Mail.Send` readiness validation when a delegated token cache is stale relative to current config.
+- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with automated regression coverage plus hosted validation on `https://day-captain.onrender.com`.
