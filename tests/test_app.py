@@ -13,6 +13,7 @@ from day_captain.app import StaticCalendarCollector
 from day_captain.app import StaticMailCollector
 from day_captain.app import StubAuthProvider
 from day_captain.app import build_application
+from day_captain.adapters.graph import GraphApiError
 from day_captain.config import DayCaptainSettings
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -25,6 +26,19 @@ class RecordingDigestDelivery:
 
     def deliver_digest(self, auth_context, payload) -> None:
         self.calls.append((auth_context, payload))
+
+
+class RaisingDigestDelivery:
+    def __init__(self, *exceptions) -> None:
+        self.calls = []
+        self._exceptions = list(exceptions)
+
+    def deliver_digest(self, auth_context, payload) -> None:
+        self.calls.append((auth_context, payload))
+        if self._exceptions:
+            exc = self._exceptions.pop(0)
+            if exc is not None:
+                raise exc
 
 
 class FailOnCompletedRunSaveStorage(InMemoryStorage):
@@ -361,6 +375,104 @@ class DayCaptainApplicationTest(unittest.TestCase):
                 now=now,
             )
         self.assertEqual(len(delivery.calls), 1)
+
+    def test_pre_send_graph_api_failure_marks_run_failed_and_allows_retry(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        delivery = RaisingDigestDelivery(GraphApiError("Graph request failed with 403: denied"), None)
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
+            ),
+            storage=storage,
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaisesRegex(GraphApiError, "403"):
+            app.run_morning_digest(now=now, force=True)
+
+        latest_run = storage.get_latest_run(user_id="stub-user")
+        self.assertIsNotNone(latest_run)
+        self.assertEqual(latest_run.status, "delivery_failed")
+
+        second = app.run_morning_digest(now=now.replace(hour=9), force=True)
+
+        self.assertEqual(second.delivery_mode, "graph_send")
+        self.assertEqual(len(delivery.calls), 2)
+
+    def test_uncertain_delivery_failure_stays_pending_and_blocks_retry(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        delivery = RaisingDigestDelivery(RuntimeError("network uncertain"))
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
+            ),
+            storage=storage,
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "network uncertain"):
+            app.run_morning_digest(now=now, force=True)
+
+        latest_run = storage.get_latest_run(user_id="stub-user")
+        self.assertIsNotNone(latest_run)
+        self.assertEqual(latest_run.status, "delivery_pending")
+
+        with self.assertRaisesRegex(RuntimeError, "awaiting delivery reconciliation"):
+            app.run_morning_digest(now=now.replace(hour=9))
+
+    def test_email_command_pre_send_failure_allows_same_command_retry(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        delivery = RaisingDigestDelivery(GraphApiError("Graph request failed with 403: denied"), None)
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
+                target_users=("alice@example.com",),
+                email_command_allowed_senders=("alice@example.com",),
+            ),
+            storage=storage,
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaisesRegex(GraphApiError, "403"):
+            app.process_email_command_recall(
+                command_message_id="cmd-retry",
+                sender_address="alice@example.com",
+                command_text="recall-week",
+                now=now,
+            )
+
+        failed_record = storage.get_email_command("cmd-retry", tenant_id="common")
+        self.assertIsNotNone(failed_record)
+        failed_run = storage.get_run(failed_record.response_run_id, tenant_id="common", user_id="alice@example.com")
+        self.assertIsNotNone(failed_run)
+        self.assertEqual(failed_run.status, "delivery_failed")
+
+        recovered = app.process_email_command_recall(
+            command_message_id="cmd-retry",
+            sender_address="alice@example.com",
+            command_text="recall-week",
+            now=now,
+        )
+
+        self.assertFalse(recovered.deduplicated)
+        self.assertEqual(len(delivery.calls), 2)
+        updated_record = storage.get_email_command("cmd-retry", tenant_id="common")
+        self.assertEqual(updated_record.response_run_id, recovered.payload.run_id)
 
     def test_build_application_uses_postgres_storage_when_database_url_is_configured(self) -> None:
         settings = DayCaptainSettings(

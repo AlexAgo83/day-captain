@@ -1,13 +1,16 @@
 from datetime import datetime
 from datetime import timezone
 from pathlib import Path
+import json
 import sqlite3
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from day_captain.adapters.storage import PostgresStorage
 from day_captain.adapters.storage import SQLiteStorage
 from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
@@ -15,6 +18,7 @@ from day_captain.models import DigestRunRecord
 from day_captain.models import FeedbackRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+from day_captain.models import to_jsonable
 
 
 class SQLiteStorageTest(unittest.TestCase):
@@ -177,6 +181,70 @@ class SQLiteStorageTest(unittest.TestCase):
 
             self.assertEqual(alice_message.subject, "Digest for Alice")
             self.assertEqual(bob_message.subject, "Digest for Bob")
+
+
+class _FakePostgresCursor:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def fetchall(self):
+        return self._rows
+
+
+class _FakePostgresConnection:
+    def __init__(self, rows):
+        self._rows = rows
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def execute(self, query, params=()):
+        return _FakePostgresCursor(self._rows)
+
+
+class PostgresStorageTest(unittest.TestCase):
+    def test_get_latest_completed_run_for_day_uses_fetched_rows(self) -> None:
+        generated_at = datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc)
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=generated_at,
+            window_start=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_end=generated_at,
+            delivery_mode="json",
+            tenant_id="common",
+            user_id="alice@example.com",
+        )
+        row = {
+            "tenant_id": "common",
+            "user_id": "alice@example.com",
+            "run_id": "run-1",
+            "run_type": "morning_digest",
+            "status": "completed",
+            "generated_at": generated_at.isoformat(),
+            "window_start": payload.window_start.isoformat(),
+            "window_end": payload.window_end.isoformat(),
+            "delivery_mode": "json",
+            "summary_json": json.dumps(to_jsonable(payload)),
+        }
+        storage = PostgresStorage.__new__(PostgresStorage)
+        storage.default_tenant_id = "common"
+        storage.default_user_id = ""
+        storage._scope = PostgresStorage._scope.__get__(storage, PostgresStorage)
+        storage._row_to_run = PostgresStorage._row_to_run.__get__(storage, PostgresStorage)
+        storage._connect = mock.Mock(return_value=_FakePostgresConnection([row]))
+
+        run = storage.get_latest_completed_run_for_day(
+            generated_at.date(),
+            tenant_id="common",
+            user_id="alice@example.com",
+            display_timezone="UTC",
+        )
+
+        self.assertIsNotNone(run)
+        self.assertEqual(run.run_id, "run-1")
 
 
 if __name__ == "__main__":
