@@ -1,9 +1,9 @@
 ## task_023_day_captain_weekend_window_and_reliability_orchestration - Orchestrate weekend digest horizon, weekday-only ops scheduling, Sunday weekly scheduling, and reliability hardening
 > From version: 0.10.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 100%
 > Confidence: 100%
-> Progress: 6%
+> Progress: 80%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -31,12 +31,12 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Fix the isolation and retry-safety defects first so `run_id` actions and partial-failure behavior are trustworthy before expanding weekend digest semantics.
-- [ ] 2. Implement the weekend first-run digest horizon so Saturday and Sunday fallback windows begin at Friday local midnight while repeated weekend runs stay incremental.
-- [ ] 3. Freeze and validate the ops scheduler contract so scheduled delivery remains weekday-only even after weekend digest behavior is clarified.
-- [ ] 4. Add and validate a separate Sunday-evening `weekly digest` scheduler contract at `20:30` without reopening weekend `morning-digest` auto-send.
-- [ ] 5. Validate the combined behavior through automated regression tests and any needed ops-level scheduler semantics checks.
-- [ ] 6. Update the README files and the relevant operator/setup docs before closing the task; do not mark this task `Done` while the scheduler semantics and weekend digest horizon remain undocumented in user-facing docs.
+- [x] 1. Fix the isolation and retry-safety defects first so `run_id` actions and partial-failure behavior are trustworthy before expanding weekend digest semantics.
+- [x] 2. Implement the weekend first-run digest horizon so Saturday and Sunday fallback windows begin at Friday local midnight while repeated weekend runs stay incremental.
+- [x] 3. Freeze and validate the ops scheduler contract so scheduled delivery remains weekday-only even after weekend digest behavior is clarified.
+- [x] 4. Add and validate a separate Sunday-evening `weekly digest` scheduler contract at `20:30` without reopening weekend `morning-digest` auto-send.
+- [x] 5. Validate the combined behavior through automated regression tests and any needed ops-level scheduler semantics checks.
+- [x] 6. Update the README files and the relevant operator/setup docs before closing the task; do not mark this task `Done` while the scheduler semantics and weekend digest horizon remain undocumented in user-facing docs.
 - [ ] FINAL: Update related Logics docs, statuses, and closure links across the linked requests and backlog items.
 
 # AC Traceability
@@ -85,3 +85,23 @@ flowchart LR
 
 # Report
 - Created on Sunday, March 8, 2026 to group the next corrective slice after the latest review plus the newly requested weekend digest behavior.
+- The first implementation tranche is now complete and regression-tested:
+  - `recall_digest(run_id=...)` no longer falls back to an unscoped cross-user lookup when multiple target users are configured; callers must provide an explicit `target_user_id`
+  - `record_feedback(run_id=...)` now uses the same explicit multi-user scoping rule, preventing cross-user preference mutation by omitted target scope
+  - digest delivery now persists a `delivery_pending` run before Graph send and only transitions to `completed` afterward, which prevents silent duplicate sends when post-delivery persistence fails
+  - `email-command-recall` now persists its inbound command receipt before delivery, and replay against a `delivery_pending` run is blocked for manual reconciliation instead of producing a second reply
+  - automated regression coverage now includes explicit multi-user `run_id` guards plus partial-failure retry safety for both `morning-digest` and `email-command-recall`
+- Automated validation executed successfully for this tranche:
+  - `python3 -m unittest tests.test_app tests.test_storage`
+  - `python3 -m unittest tests.test_web tests.test_hosted_jobs tests.test_cli`
+  - `python3 -m unittest discover -s tests`
+- The weekend and scheduling tranche is now implemented and documented:
+  - first weekend `morning-digest` fallback now starts at Friday `00:00` in `DAY_CAPTAIN_DISPLAY_TIMEZONE`, while repeated weekend runs stay incremental
+  - a new `weekly-digest` application flow now exists with CLI, hosted HTTP, and hosted trigger support
+  - the app repo now includes an example [`weekly-digest-scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/.github/workflows/weekly-digest-scheduler.yml) workflow
+  - the ops bootstrap docs now include a dedicated [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) template
+  - the private ops repo now has a separate `.github/workflows/weekly-digest.yml` scheduler, keeping weekday `morning-digest` auto-send distinct from the Sunday-evening weekly recap
+  - README and operator docs now describe the split between weekday `morning-digest`, manual weekend access, and Sunday `weekly-digest`
+- Remaining closure work:
+  - update linked request and backlog statuses once the new scheduler paths are considered operationally accepted
+  - capture any final live ops proof you want before moving the orchestration task to `Done`

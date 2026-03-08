@@ -174,6 +174,24 @@ class HostedJobsTest(unittest.TestCase):
             },
         )
 
+    def test_build_job_payload_for_weekly_digest(self) -> None:
+        payload = build_job_payload(
+            "weekly-digest",
+            target_user_id="alice@example.com",
+            delivery_mode="graph_send",
+            now="2026-03-08T19:30:00+00:00",
+        )
+
+        self.assertEqual(
+            payload,
+            {
+                "force": False,
+                "delivery_mode": "graph_send",
+                "now": "2026-03-08T19:30:00+00:00",
+                "target_user_id": "alice@example.com",
+            },
+        )
+
     def test_build_job_payload_for_recall_digest(self) -> None:
         payload = build_job_payload(
             "recall-digest",

@@ -99,6 +99,9 @@ class Storage(Protocol):
     def get_run(self, run_id: str, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         ...
 
+    def get_latest_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+        ...
+
     def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         ...
 
