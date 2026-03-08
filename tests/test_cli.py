@@ -1,16 +1,22 @@
+from datetime import datetime
+from datetime import timezone
 from pathlib import Path
 import os
 import sys
+import tempfile
 import unittest
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from day_captain.cli import _export_digest_preview
 from day_captain.cli import _run_trigger_hosted_job_command
 from day_captain.cli import _run_check_hosted_health_command
 from day_captain.cli import _run_validate_command
 from day_captain.cli import _run_validate_hosted_service_command
 from day_captain.config import DayCaptainSettings
+from day_captain.models import DigestPayload
+from day_captain.models import EmailCommandResult
 
 
 class ValidateConfigCommandTest(unittest.TestCase):
@@ -217,6 +223,54 @@ class ValidateConfigCommandTest(unittest.TestCase):
 
         validate_hosted.assert_called_once()
         self.assertEqual(result["status"], "ok")
+
+    def test_export_digest_preview_writes_html_and_text_files(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            html_path = Path(tmpdir) / "preview" / "digest.html"
+            text_path = Path(tmpdir) / "preview" / "digest.txt"
+            payload = DigestPayload(
+                run_id="run-1",
+                generated_at=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+                window_start=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+                window_end=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+                delivery_mode="json",
+                delivery_body="Plain digest body",
+                delivery_payload={"html_body": "<html>Digest</html>"},
+            )
+
+            _export_digest_preview(
+                type("Args", (), {"output_html": str(html_path), "output_text": str(text_path)})(),
+                payload,
+            )
+
+            self.assertEqual(html_path.read_text(encoding="utf-8"), "<html>Digest</html>")
+            self.assertEqual(text_path.read_text(encoding="utf-8"), "Plain digest body")
+
+    def test_export_digest_preview_supports_email_command_result(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            html_path = Path(tmpdir) / "digest.html"
+            payload = DigestPayload(
+                run_id="run-2",
+                generated_at=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+                window_start=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+                window_end=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+                delivery_mode="json",
+                delivery_body="Digest body",
+                delivery_payload={"html_body": "<html>Recall digest</html>"},
+            )
+            result = EmailCommandResult(
+                command_message_id="cmd-1",
+                command_name="recall",
+                target_user_id="alex@example.com",
+                payload=payload,
+            )
+
+            _export_digest_preview(
+                type("Args", (), {"output_html": str(html_path), "output_text": ""})(),
+                result,
+            )
+
+            self.assertEqual(html_path.read_text(encoding="utf-8"), "<html>Recall digest</html>")
 
 
 if __name__ == "__main__":

@@ -105,6 +105,30 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Point equipe", payload.delivery_payload["html_body"])
         self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_payload["html_body"])
 
+    def test_bounds_top_summary_to_brief_copy(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-4",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            top_summary=(
+                "First priority is budget review. "
+                "Second priority is confirming the launch timing. "
+                "Third note should not appear in the executive summary."
+            ),
+        )
+
+        self.assertEqual(
+            payload.top_summary,
+            "First priority is budget review. Second priority is confirming the launch timing.",
+        )
+        self.assertNotIn("Third note should not appear", payload.delivery_body)
+
 
 if __name__ == "__main__":
     unittest.main()
