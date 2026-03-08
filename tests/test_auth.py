@@ -209,6 +209,29 @@ class AuthFlowTest(unittest.TestCase):
 
             self.assertEqual(context.access_token, "fresh-access")
             self.assertEqual(context.user_id, "user-123")
+            self.assertEqual(context.granted_scopes, ("Mail.Read",))
+
+    def test_graph_provider_reports_actual_cached_scopes_when_request_is_wider(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache = FileTokenCache(str(Path(tmpdir) / "auth.json"))
+            cache.save(
+                AuthTokenBundle(
+                    access_token="cached-access",
+                    refresh_token="",
+                    expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+                    scopes=("Mail.Read",),
+                    user_id="user-123",
+                )
+            )
+            provider = GraphDelegatedAuthProvider(
+                api_client=StaticApiClient(),
+                token_cache=cache,
+            )
+
+            context = provider.authenticate(("Mail.Read", "Mail.Send"))
+
+            self.assertEqual(context.access_token, "cached-access")
+            self.assertEqual(context.granted_scopes, ("Mail.Read",))
 
     def test_auth_status_and_logout_commands_use_cache(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
