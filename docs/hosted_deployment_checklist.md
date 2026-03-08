@@ -32,6 +32,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - If the hosted service may sleep, use `--wake-service` plus bounded wake retries before the real job trigger and give the workflow a longer timeout budget.
 - If the scheduler fans out across several users, prefer one standalone readiness/wake-up step before the fan-out instead of waking the service once per target.
 - Keep the routine weekday cron path on `trigger-hosted-job --job morning-digest`, the Sunday recap path on `trigger-hosted-job --job weekly-digest`, and reserve `validate-hosted-service` for manual checks and rollout validation.
+- For the Sunday weekly recap, use a jitter-tolerant scheduler gate so GitHub schedule delays within the intended Sunday `20:30 Europe/Paris` hour do not skip the run entirely.
 
 ## HTTP surface
 - Expose only the minimal hosted endpoints:
@@ -60,4 +61,6 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - If inbound email-command recall is enabled, run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ... --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres --check-email-command --email-command-sender ... --email-command-text recall-week` and confirm only authorized senders succeed.
 - For sleeping-service fallback, run `PYTHONPATH=src python3 -m day_captain check-hosted-health --wake-service ...` once before the per-user trigger fan-out when possible.
 - If the service may sleep, document the warm-up interval, readiness check, and timeout policy directly in the private ops repo runbook.
+- If a hosted digest run is `delivery_pending`, treat it as possible post-send uncertainty and reconcile before retrying delivery.
+- If a hosted digest run is `delivery_failed`, treat it as a pre-send failure and expect a later retry to be safe.
 - Follow [`tenant_scoped_multi_user_operator_guide.md`](/Users/alexandreagostini/Documents/day-captain/docs/tenant_scoped_multi_user_operator_guide.md) for the bounded operator workflow.

@@ -45,6 +45,7 @@ Assumptions baked into that template:
 - the hosted service may sleep, so the workflow performs one readiness/wake-up pass before per-user fan-out
 - `DAY_CAPTAIN_TARGET_USERS_JSON` is mandatory in the ops repo so the scheduler never silently falls back to an ambiguous single-user trigger
 - the morning scheduler stays weekday-only, while the weekly scheduler is a separate Sunday-evening contract
+- the weekly scheduler gate should tolerate normal GitHub Actions cron jitter within the intended Sunday `20:30 Europe/Paris` hour instead of depending on an exact process start minute
 
 ## Suggested repository variables
 
@@ -70,6 +71,8 @@ Assumptions baked into that template:
 - confirm delivery and persistence before enabling the scheduled trigger
 - if the hosted plan can sleep, document the warm-up path and timeout policy in the private ops workflow before enabling cron
 - if inbound email-command recall is bridged through Power Automate, keep [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md) alongside the private repo runbook and document the mailbox permission propagation caveat
+- if a hosted run remains `delivery_pending`, treat it as possible post-send uncertainty and reconcile before retrying from ops
+- if a hosted run is `delivery_failed`, treat it as a pre-send failure and retry only after fixing the underlying Graph or configuration issue
 
 The hosted validation helper checks:
 

@@ -1,8 +1,8 @@
 ## req_019_day_captain_post_review_reliability_and_scheduler_recovery - Day Captain post-review reliability and scheduler recovery
 > From version: 0.11.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 99%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -86,8 +86,8 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_019_day_captain_postgres_day_recall_fix` - Fix hosted Postgres day-based recall loading. Status: `Ready`.
-- `item_020_day_captain_weekly_scheduler_jitter_tolerance` - Make Sunday weekly scheduling tolerant to GitHub cron jitter. Status: `Ready`.
-- `item_021_day_captain_pre_send_delivery_state_recovery` - Refine digest run states so pre-send failures remain recoverable. Status: `Ready`.
-- `item_022_day_captain_email_command_pre_send_recovery` - Refine email-command dedupe so pre-send failures do not become unrecoverable. Status: `Ready`.
-- `task_024_day_captain_post_review_reliability_orchestration` - Orchestrate the full post-review hardening slice with README/docs closure required before `Done`. Status: `Ready`.
+- `item_019_day_captain_postgres_day_recall_fix` - Fix hosted Postgres day-based recall loading. Status: `Done`.
+- `item_020_day_captain_weekly_scheduler_jitter_tolerance` - Make Sunday weekly scheduling tolerant to GitHub cron jitter. Status: `Done`.
+- `item_021_day_captain_pre_send_delivery_state_recovery` - Refine digest run states so pre-send failures remain recoverable. Status: `Done`.
+- `item_022_day_captain_email_command_pre_send_recovery` - Refine email-command dedupe so pre-send failures do not become unrecoverable. Status: `Done`.
+- `task_024_day_captain_post_review_reliability_orchestration` - Orchestrate the full post-review hardening slice with README/docs closure required before `Done`. Status: `Done`.

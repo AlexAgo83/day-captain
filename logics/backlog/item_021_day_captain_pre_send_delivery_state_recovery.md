@@ -1,9 +1,9 @@
 ## item_021_day_captain_pre_send_delivery_state_recovery - Refine digest run states so pre-send failures remain recoverable
 > From version: 0.11.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,7 +53,7 @@ flowchart LR
 
 # Links
 - Request: `req_019_day_captain_post_review_reliability_and_scheduler_recovery`
-- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: High - stale pending states can stop delivery entirely for a user.

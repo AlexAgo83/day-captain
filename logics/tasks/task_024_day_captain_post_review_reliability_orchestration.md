@@ -1,9 +1,9 @@
 ## task_024_day_captain_post_review_reliability_orchestration - Orchestrate post-review recall, scheduler, and recovery hardening
 > From version: 0.11.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
 > Confidence: 100%
-> Progress: 45%
+> Progress: 100%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -30,9 +30,9 @@ flowchart LR
 - [x] 2. Harden the Sunday `weekly-digest` scheduler gate so small GitHub schedule delays do not skip the run entirely.
 - [x] 3. Refine digest run-state handling so pre-send failures remain recoverable while post-send uncertainty still blocks duplicate sends.
 - [x] 4. Refine `email-command-recall` dedupe/recovery semantics with the same pre-send vs post-send distinction.
-- [ ] 5. Add regression tests for all four defects and rerun the full suite.
-- [ ] 6. Update README files and operator docs before closure; do not mark this task `Done` while recovery semantics or scheduler gate behavior remain undocumented.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links across the request and backlog items.
+- [x] 5. Add regression tests for all four defects and rerun the full suite.
+- [x] 6. Update README files and operator docs before closure; do not mark this task `Done` while recovery semantics or scheduler gate behavior remain undocumented.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links across the request and backlog items.
 
 # AC Traceability
 - Req019 AC1 -> Plan step 1. Proof: task explicitly fixes hosted Postgres day-based recall loading.
@@ -53,13 +53,13 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Postgres day-based recall is fixed and validated.
-- [ ] Sunday weekly scheduler gating is tolerant to GitHub scheduling jitter.
-- [ ] Digest pre-send failures remain recoverable without losing post-send reconciliation safety.
-- [ ] Email-command pre-send failures remain recoverable without duplicating replies.
-- [ ] README and operator docs are updated before closure.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Postgres day-based recall is fixed and validated.
+- [x] Sunday weekly scheduler gating is tolerant to GitHub scheduling jitter.
+- [x] Digest pre-send failures remain recoverable without losing post-send reconciliation safety.
+- [x] Email-command pre-send failures remain recoverable without duplicating replies.
+- [x] README and operator docs are updated before closure.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Sunday, March 8, 2026 after a new review of the `0.11.0` state surfaced four remaining reliability defects concentrated around hosted recall, Sunday scheduling, and pre-send recovery semantics.
@@ -73,7 +73,7 @@ flowchart LR
 - Validation executed successfully for this tranche:
   - `python3 -m unittest tests.test_app tests.test_storage tests.test_scheduler`
   - `python3 -m unittest discover -s tests`
-- Remaining work:
-  - update README/operator docs if we keep the new `delivery_failed` / scheduler gate semantics as the final public contract
-  - decide whether any extra hosted/ops proof is needed before closure
-  - close linked request and backlog items once the slice is considered complete
+- Closure tranche completed:
+  - updated README and operator docs to describe the Sunday weekly scheduler gate as jitter-tolerant instead of exact-minute
+  - documented the final `delivery_failed` vs `delivery_pending` operating model for hosted delivery and inbound email-command replay
+  - closed the linked request and backlog items after the code, tests, and docs were aligned
