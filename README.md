@@ -6,7 +6,7 @@
 
 <p align="center">
   <a href="https://github.com/example-owner/day-captain/actions/workflows/ci.yml"><img src="https://github.com/example-owner/day-captain/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-All%20rights%20reserved-lightgrey" alt="License" /></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/github/license/example-owner/day-captain" alt="License" /></a>
   <img src="https://img.shields.io/badge/version-v1.2.0-4C8BF5" alt="Version" />
   <img src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Render-ready-46E3B7?logo=render&logoColor=white" alt="Render" />
