@@ -15,6 +15,7 @@ Your private ops repo should contain:
 - the production GitHub Actions workflow
 - repository secrets such as `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET`
 - optional repository variable `DAY_CAPTAIN_TARGET_USERS_JSON`
+- optional secrets or variables for `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` and `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
 - deployment-specific notes or runbooks
 
 Use [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) as the starting workflow file to copy into `.github/workflows/morning-digest.yml` in the private ops repo.
@@ -47,13 +48,18 @@ Assumptions baked into that template:
 
 - `DAY_CAPTAIN_SERVICE_URL=https://your-render-service.example.com`
 - `DAY_CAPTAIN_JOB_SECRET=...`
+- `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com`
+- `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=alice@example.com`
 
 ## Validation before enabling cron
 
 - run `PYTHONPATH=src python3 -m day_captain validate-config --target-user alice@example.com`
 - run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain check-hosted-health --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
 - run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
+- if using a dedicated sender mailbox, confirm the hosted env also sets `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com` and verify delivery is sent from that mailbox while the selected target mailbox remains the data source
+- if using inbound email-command recall, run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres --check-email-command --email-command-sender alice@example.com --email-command-text recall-week`
 - trigger one hosted job manually for each target user with `day-captain trigger-hosted-job --job morning-digest`
+- trigger one hosted `email-command-recall` job manually if that surface is enabled and confirm duplicate suppression by replaying the same `command_message_id`
 - confirm delivery and persistence before enabling the scheduled trigger
 - if the hosted plan can sleep, document the warm-up path and timeout policy in the private ops workflow before enabling cron
 
@@ -63,9 +69,11 @@ The hosted validation helper checks:
 - protected runtime summary from `GET /healthz` using `X-Day-Captain-Secret`
 - `POST /jobs/morning-digest`
 - optional `POST /jobs/recall-digest`
+- optional `POST /jobs/email-command-recall`
 - runtime expectations such as `graph_auth_mode=app_only` and `storage_backend=postgres`
 - acknowledgement shape (`status`, `job`, `run_id`, `generated_at`, `delivery_mode`, `section_counts`)
 - `run_id` consistency between morning-digest and recall-digest
+- email-command routing and sender resolution when `--check-email-command` is enabled
 
 Recommended sleeping-service fallback:
 
