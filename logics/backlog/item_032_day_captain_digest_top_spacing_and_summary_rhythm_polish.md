@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 97%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 75%
 > Complexity: Low
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -49,4 +49,4 @@ flowchart LR
 
 # Notes
 - Derived from another live Outlook review on Monday, March 9, 2026.
-- This item isolates spacing/rhythm work so it can be implemented without reopening broader layout debates.
+- Implementation is underway: the renderer top spacing around `Périmètre`, `En bref`, and the first downstream section is now being loosened without reintroducing a heavy hero block.

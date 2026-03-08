@@ -238,6 +238,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         prioritized = engine.prioritize(messages, (), (), reference_time=now)
 
         self.assertEqual(prioritized[0].section_name, "actions_to_take")
+        self.assertEqual(prioritized[0].title, "À imprimer")
         self.assertIn("deliverable_shared", prioritized[0].reason_codes)
         self.assertEqual(prioritized[1].section_name, "actions_to_take")
 
@@ -295,6 +296,26 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         prioritized = engine.prioritize((), meetings, (), reference_time=now)
 
         self.assertEqual(prioritized[0].summary, "Tomorrow, 10:00 | Lead | Teams")
+
+    def test_avoids_self_reference_in_meeting_summary(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-self",
+                subject="Bureau- Artois",
+                start_at=datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 1, 0, tzinfo=timezone.utc),
+                organizer_address="alexandre.agostini@circle-mobility.com",
+                location="Bureau Artois",
+                user_id="alexandre.agostini@circle-mobility.com",
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(prioritized[0].title, "Bureau Artois")
+        self.assertEqual(prioritized[0].summary, "Demain, 01:00 | Bureau Artois")
 
 
 if __name__ == "__main__":
