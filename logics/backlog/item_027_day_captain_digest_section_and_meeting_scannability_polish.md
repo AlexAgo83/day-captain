@@ -1,9 +1,9 @@
 ## item_027_day_captain_digest_section_and_meeting_scannability_polish - Polish digest section rhythm and meeting scannability
 > From version: 1.0.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 80%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_021_day_captain_digest_email_readability_and_scannability_polish`
-- Primary task(s): `task_026_day_captain_digest_readability_and_scannability_orchestration` (`Ready`)
+- Primary task(s): `task_026_day_captain_digest_readability_and_scannability_orchestration` (`In Progress`)
 
 # Priority
 - Impact: High - meeting-heavy digests become visually dense and reduce scan efficiency.
@@ -52,3 +52,4 @@ flowchart LR
 
 # Notes
 - Derived from direct Outlook rendering review after live use of the digest.
+- Implementation is underway: section rendering is being tightened and meeting entries are now moving toward a more compact title-plus-context presentation.

@@ -41,8 +41,8 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("In brief", payload.delivery_body)
         self.assertIn("Budget review is the main priority this morning.", payload.delivery_body)
         self.assertIn("Critical topics", payload.delivery_body)
-        self.assertIn("Prepared for you", payload.delivery_body)
-        self.assertIn("Covering updates from", payload.delivery_body)
+        self.assertIn("As of", payload.delivery_body)
+        self.assertIn("Window:", payload.delivery_body)
         self.assertIn("Sat 07 Mar 2026 at 09:00 CET", payload.delivery_body)
         self.assertEqual(payload.delivery_subject, "Your Day Captain brief for Sat 07 Mar")
         self.assertEqual(payload.top_summary, "Budget review is the main priority this morning.")
@@ -56,7 +56,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
         self.assertIn("<html>", payload.delivery_payload["html_body"])
         self.assertIn("In brief", payload.delivery_payload["html_body"])
-        self.assertIn("No meetings are on deck for today.", payload.delivery_body)
+        self.assertIn("No meetings are lined up for today.", payload.delivery_body)
 
     def test_localizes_french_copy_and_meeting_fallback_note(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
@@ -73,10 +73,37 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
 
         self.assertIn("Votre brief Day Captain", payload.delivery_body)
-        self.assertIn("Préparé pour vous le", payload.delivery_body)
+        self.assertIn("À jour au", payload.delivery_body)
+        self.assertIn("Périmètre :", payload.delivery_body)
         self.assertIn("Points critiques", payload.delivery_body)
         self.assertIn("Aperçu des réunions de lundi.", payload.delivery_body)
         self.assertEqual(payload.delivery_subject, "Votre brief Day Captain du dim. 08 mars")
+
+    def test_compacts_meeting_entries_in_text_and_html(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-3",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Point equipe",
+                    summary="Aujourd'hui, 10:00 | Lead | Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-1",
+                    score=2.5,
+                ),
+            ),
+        )
+
+        self.assertIn("- Point equipe - Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_body)
+        self.assertIn("Point equipe", payload.delivery_payload["html_body"])
+        self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_payload["html_body"])
 
 
 if __name__ == "__main__":

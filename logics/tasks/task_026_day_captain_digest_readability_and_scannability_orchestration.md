@@ -1,9 +1,9 @@
 ## task_026_day_captain_digest_readability_and_scannability_orchestration - Orchestrate digest readability and scannability polish
 > From version: 1.0.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 75%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -24,10 +24,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Shorten and simplify the digest header/context and turn `En bref` into a true executive summary block.
-- [ ] 2. Improve section rhythm and compact meeting rendering so the digest becomes easier to scan in Outlook.
+- [x] 1. Shorten and simplify the digest header/context and turn `En bref` into a true executive summary block.
+- [x] 2. Improve section rhythm and compact meeting rendering so the digest becomes easier to scan in Outlook.
 - [ ] 3. Lighten empty-state presentation and validate the final rendering on a real Outlook mail.
-- [ ] 4. Update README and any affected docs before closure; do not mark this task `Done` while the final digest-structure contract remains undocumented.
+- [x] 4. Update README and any affected docs before closure; do not mark this task `Done` while the final digest-structure contract remains undocumented.
 - [ ] FINAL: Update linked Logics docs, statuses, and closure links across the request and backlog items.
 
 # AC Traceability
@@ -48,13 +48,24 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Header and top summary are materially easier to read.
-- [ ] Section rhythm and meeting rendering are more compact and scannable.
+- [x] Header and top summary are materially easier to read.
+- [x] Section rhythm and meeting rendering are more compact and scannable.
 - [ ] Empty states are lighter and Outlook rendering is explicitly validated.
-- [ ] README and impacted docs are updated before closure.
+- [x] README and impacted docs are updated before closure.
 - [ ] Linked request/backlog/task docs are updated consistently.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Sunday, March 8, 2026 after reviewing the live Outlook rendering of the digest and identifying that the main remaining gap is presentation quality rather than transport or data correctness.
 - This slice is intentionally scoped as a readability polish pass, not a redesign of the overall digest product contract.
+- Implementation in progress:
+  - condensed the digest header copy to a shorter as-of/window format and tightened the deterministic executive-summary fallback so `En bref` stays closer to a true brief
+  - switched section rendering to a card-like HTML rhythm with a stronger top-summary block and more compact meeting rows
+  - lightened empty-state copy and updated the README digest-presentation contract
+- Validation completed so far:
+  - `python3 -m unittest tests.test_digest_renderer`
+  - `python3 -m unittest tests.test_scoring`
+  - `python3 -m unittest tests.test_llm`
+- Remaining before closure:
+  - validate the final HTML in a real Outlook mailbox
+  - then close linked request/backlog docs and promote this task to `Done`

@@ -183,8 +183,8 @@ LANGUAGE_COPY = {
     "en": {
         "digest_title": "Your Day Captain brief",
         "subject": "Your Day Captain brief for {date}",
-        "prepared": "Prepared for you {date}",
-        "coverage": "Covering updates from {start} to {end}",
+        "prepared": "As of {date}",
+        "coverage": "Window: {start} -> {end}",
         "sections": {
             "critical_topics": "Critical topics",
             "actions_to_take": "Actions to take",
@@ -192,10 +192,10 @@ LANGUAGE_COPY = {
             "upcoming_meetings": "Upcoming meetings",
         },
         "empty": {
-            "critical_topics": "Nothing urgent is on top of the stack.",
-            "actions_to_take": "No immediate follow-up is waiting on you.",
-            "watch_items": "Nothing else looks worth flagging right now.",
-            "upcoming_meetings": "No meetings are on deck for {day}.",
+            "critical_topics": "Nothing urgent right now.",
+            "actions_to_take": "No follow-up is waiting on you.",
+            "watch_items": "Nothing else needs a flag right now.",
+            "upcoming_meetings": "No meetings are lined up for {day}.",
         },
         "meeting_notes": {
             "weekend_monday": "Looking ahead to {day}.",
@@ -219,17 +219,17 @@ LANGUAGE_COPY = {
             "file_shared": "Shared a file or document for your review.",
             "download_shared": "Shared a download link for the latest version.",
             "from_sender": "From {sender}",
-            "meeting_today": "Today at {time} with {organizer}",
-            "meeting_day": "{day} at {time} with {organizer}",
-            "meeting_location": " on {location}",
+            "meeting_today": "Today, {time} | {organizer}",
+            "meeting_day": "{day}, {time} | {organizer}",
+            "meeting_location": " | {location}",
             "unknown_organizer": "an unknown organizer",
         },
     },
     "fr": {
         "digest_title": "Votre brief Day Captain",
         "subject": "Votre brief Day Captain du {date}",
-        "prepared": "Préparé pour vous le {date}",
-        "coverage": "Couvre les nouveautés du {start} au {end}",
+        "prepared": "À jour au {date}",
+        "coverage": "Périmètre : {start} -> {end}",
         "sections": {
             "critical_topics": "Points critiques",
             "actions_to_take": "Actions à mener",
@@ -237,9 +237,9 @@ LANGUAGE_COPY = {
             "upcoming_meetings": "Réunions à venir",
         },
         "empty": {
-            "critical_topics": "Rien d'urgent ne remonte pour l'instant.",
-            "actions_to_take": "Aucun suivi immédiat ne semble vous attendre.",
-            "watch_items": "Rien d'autre ne mérite d'être signalé pour l'instant.",
+            "critical_topics": "Rien d'urgent pour l'instant.",
+            "actions_to_take": "Aucun suivi immédiat.",
+            "watch_items": "Rien d'autre à signaler.",
             "upcoming_meetings": "Aucune réunion n'est prévue pour {day}.",
         },
         "meeting_notes": {
@@ -264,9 +264,9 @@ LANGUAGE_COPY = {
             "file_shared": "Un fichier ou document a été partagé pour consultation.",
             "download_shared": "Un lien de téléchargement a été partagé pour la dernière version.",
             "from_sender": "De la part de {sender}",
-            "meeting_today": "Aujourd'hui à {time} avec {organizer}",
-            "meeting_day": "{day} à {time} avec {organizer}",
-            "meeting_location": " sur {location}",
+            "meeting_today": "Aujourd'hui, {time} | {organizer}",
+            "meeting_day": "{day}, {time} | {organizer}",
+            "meeting_location": " | {location}",
             "unknown_organizer": "un organisateur inconnu",
         },
     },
@@ -846,8 +846,7 @@ class StructuredDigestRenderer:
                 lines.append(self._empty_state(name, meeting_horizon))
             else:
                 for item in items:
-                    lines.append("- {0}".format(item.title))
-                    lines.append("  {0}".format(item.summary))
+                    lines.extend(self._body_item_lines(item))
             lines.append("")
         return "\n".join(lines).strip()
 
@@ -867,52 +866,80 @@ class StructuredDigestRenderer:
             end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
         )
         parts = [
-            "<html><body style=\"font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
-            "<div style=\"max-width:720px;margin:0 auto;padding:24px;\">",
-            "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
-            "<p style=\"margin:0 0 4px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
-            "<p style=\"margin:0 0 24px;color:#475569;\">{0}</p>".format(self._html_escape(coverage)),
+            "<html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
+            "<div style=\"max-width:720px;margin:0 auto;padding:24px 18px 32px;\">",
+            "<section style=\"margin:0 0 20px;padding:18px 20px;background:#ffffff;border:1px solid #dbe4ee;border-radius:14px;\">",
+            "<h1 style=\"margin:0 0 10px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
+            "<p style=\"margin:0 0 6px;font-size:14px;color:#334155;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
+            "<p style=\"margin:0;font-size:13px;color:#64748b;\">{0}</p>".format(self._html_escape(coverage)),
+            "</section>",
         ]
         if top_summary.strip():
             parts.append(
-                "<section style=\"margin:0 0 24px;padding:16px 18px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;\">"
+                "<section style=\"margin:0 0 18px;padding:16px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #2563eb;border-radius:12px;\">"
             )
             parts.append(
-                "<h2 style=\"margin:0 0 8px;font-size:18px;color:#0f172a;\">{0}</h2>".format(
+                "<p style=\"margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1d4ed8;\">{0}</p>".format(
                     self._html_escape(localized["overview"]["label"])
                 )
             )
             parts.append(
-                "<p style=\"margin:0;color:#334155;\">{0}</p></section>".format(
+                "<p style=\"margin:0;font-size:17px;color:#0f172a;\">{0}</p></section>".format(
                     self._html_escape(top_summary.strip())
                 )
             )
         labels = localized["sections"]
         for name in SECTION_NAMES:
             parts.append(
-                "<section style=\"margin:0 0 24px;\"><h2 style=\"margin:0 0 10px;font-size:20px;color:#0f172a;\">{0}</h2>".format(
+                "<section style=\"margin:0 0 18px;\"><h2 style=\"margin:0 0 8px;font-size:19px;color:#0f172a;\">{0}</h2>".format(
                     self._html_escape(labels[name])
                 )
             )
             meeting_note = self._meeting_note(name, meeting_horizon)
             if meeting_note:
-                parts.append("<p style=\"margin:0 0 10px;color:#475569;\">{0}</p>".format(self._html_escape(meeting_note)))
+                parts.append("<p style=\"margin:0 0 8px;font-size:13px;color:#64748b;\">{0}</p>".format(self._html_escape(meeting_note)))
             items = sections[name]
             if not items:
-                parts.append("<p style=\"margin:0;color:#64748b;\">{0}</p>".format(self._html_escape(self._empty_state(name, meeting_horizon))))
-            else:
-                parts.append("<ul style=\"margin:0;padding-left:20px;\">")
-                for item in items:
-                    parts.append(
-                        "<li style=\"margin:0 0 12px;\"><strong>{0}</strong><br><span style=\"color:#334155;\">{1}</span></li>".format(
-                            self._html_escape(item.title),
-                            self._html_escape(item.summary),
-                        )
+                parts.append(
+                    "<div style=\"margin:0;padding:10px 12px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;\">{0}</div>".format(
+                        self._html_escape(self._empty_state(name, meeting_horizon))
                     )
-                parts.append("</ul>")
+                )
+            else:
+                for item in items:
+                    parts.append(self._html_item(item))
             parts.append("</section>")
         parts.append("</div></body></html>")
         return "".join(parts)
+
+    def _body_item_lines(self, item: DigestEntry) -> Sequence[str]:
+        if item.source_kind == "meeting":
+            return ("- {0} - {1}".format(item.title, item.summary),)
+        return (
+            "- {0}".format(item.title),
+            "  {0}".format(item.summary),
+        )
+
+    def _html_item(self, item: DigestEntry) -> str:
+        if item.source_kind == "meeting":
+            return (
+                "<div style=\"margin:0 0 8px;padding:10px 12px;background:#ffffff;border:1px solid #dbe4ee;border-radius:10px;\">"
+                "<p style=\"margin:0;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
+                "<p style=\"margin:4px 0 0;font-size:13px;color:#475569;\">{1}</p>"
+                "</div>"
+            ).format(
+                self._html_escape(item.title),
+                self._html_escape(item.summary),
+            )
+        return (
+            "<div style=\"margin:0 0 10px;padding:12px 14px;background:#ffffff;border:1px solid #dbe4ee;border-radius:12px;\">"
+            "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
+            "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
+            "</div>"
+        ).format(
+            self._html_escape(item.title),
+            self._html_escape(item.summary),
+        )
 
     def _meeting_note(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
         if section_name != "upcoming_meetings":
@@ -997,7 +1024,7 @@ class DeterministicDigestOverviewEngine:
             if len(sentences) >= 2:
                 break
         meetings = sections["upcoming_meetings"]
-        if meetings and len(sentences) < 3:
+        if meetings and len(sentences) < 2:
             sentences.append(localized["meeting"].format(text=_clean_overview_fragment(meetings[0].summary)))
         if not sentences:
             sentences.append(localized["clear"])
