@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 98%
 > Confidence: 97%
-> Progress: 80%
+> Progress: 90%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -49,4 +49,4 @@ flowchart LR
 
 # Notes
 - Derived from operator feedback that the mail is useful but not yet as pleasant to read as it should be.
-- Implementation is underway: empty-state copy/presentation is being lightened in the renderer, local HTML/text preview export now exists, and the preview-plus-Outlook validation workflow is documented, but the explicit real-Outlook validation step still remains before closure.
+- Implementation is underway: empty-state copy/presentation is being lightened in the renderer, local HTML/text preview export now exists, the preview-plus-Outlook validation workflow is documented, and a local stub preview was executed successfully, but the explicit real-Outlook validation step still remains before closure.

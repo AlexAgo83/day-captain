@@ -311,6 +311,7 @@ PYTHONPATH=src python3 -m day_captain morning-digest \
 ```
 
 That preview flow is documented in [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
+In development, this can also be used as a layout-only stub preview before live Graph auth is configured.
 
 Run a weekly digest directly:
 
