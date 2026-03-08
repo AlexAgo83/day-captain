@@ -66,6 +66,19 @@ class DayCaptainWebApp:
                     target_user_id=payload.get("target_user_id"),
                 )
                 return self._json_response(start_response, 200, self._job_ack("recall_digest", result))
+            if path == "/jobs/email-command-recall" and method == "POST":
+                self._require_secret(environ)
+                payload = self._read_json(environ)
+                app = build_application(settings=self.settings)
+                result = app.process_email_command_recall(
+                    command_message_id=str(payload.get("command_message_id") or payload.get("message_id") or ""),
+                    sender_address=str(payload.get("sender_address") or ""),
+                    command_text=str(payload.get("command_text") or ""),
+                    subject=str(payload.get("subject") or ""),
+                    body=str(payload.get("body") or ""),
+                    now=_parse_datetime(payload.get("now")),
+                )
+                return self._json_response(start_response, 200, self._email_command_ack(result))
             return self._json_response(start_response, 404, {"error": "not_found"})
         except PermissionError as exc:
             return self._json_response(start_response, 401, {"error": str(exc)})
@@ -115,6 +128,26 @@ class DayCaptainWebApp:
         return {
             "status": "completed",
             "job": job_name,
+            "run_id": payload.run_id,
+            "generated_at": payload.generated_at.isoformat(),
+            "delivery_mode": payload.delivery_mode,
+            "section_counts": {
+                "critical_topics": len(payload.critical_topics),
+                "actions_to_take": len(payload.actions_to_take),
+                "watch_items": len(payload.watch_items),
+                "upcoming_meetings": len(payload.upcoming_meetings),
+            },
+        }
+
+    def _email_command_ack(self, result) -> JsonDict:
+        payload = result.payload
+        return {
+            "status": "completed",
+            "job": "email_command_recall",
+            "command_message_id": result.command_message_id,
+            "command_name": result.command_name,
+            "target_user_id": result.target_user_id,
+            "deduplicated": bool(result.deduplicated),
             "run_id": payload.run_id,
             "generated_at": payload.generated_at.isoformat(),
             "delivery_mode": payload.delivery_mode,
