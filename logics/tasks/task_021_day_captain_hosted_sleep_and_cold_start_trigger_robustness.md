@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 92%
+> Progress: 95%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -63,4 +63,5 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- Remaining work is mainly closure and deployed proof: validate the warm-up strategy against the real hosted service behavior and then close the slice if it proves stable enough operationally.
+- Real hosted proof is now partly complete: the Render service is live, `check-hosted-health` succeeded against the protected `/healthz` runtime summary, and the same deployed service completed `validate-hosted-service` successfully once app-only permissions were corrected.
+- Remaining work is narrower now: validate the wake-up strategy against an actually sleeping Render instance, then close the slice if the delayed-availability path behaves as expected operationally.
