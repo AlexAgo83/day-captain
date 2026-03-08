@@ -1,8 +1,8 @@
 ## task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness - Harden hosted trigger flow for sleeping or cold-starting services
 > From version: 0.8.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
+> Understanding: 100%
+> Confidence: 99%
 > Progress: 92%
 > Complexity: Medium
 > Theme: Reliability
@@ -25,10 +25,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Add a wake-up-aware hosted validation and trigger sequence that can probe or warm the sleeping service before the real job call.
-- [ ] 2. Add configurable timeout and bounded retry behavior for cold-start scenarios, while keeping logs and responses minimal.
-- [ ] 3. Update tests and operator docs, including the example scheduler posture and private ops guidance.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Add a wake-up-aware hosted validation and trigger sequence that can probe or warm the sleeping service before the real job call.
+- [x] 2. Add configurable timeout and bounded retry behavior for cold-start scenarios, while keeping logs and responses minimal.
+- [x] 3. Update tests and operator docs, including the example scheduler posture and private ops guidance.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - AC1 -> Plan step 1 adds explicit warm-up behavior. Proof: task explicitly requires a wake-up-aware sequence before the real job trigger.
@@ -50,13 +50,17 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
 - Added wake-up-aware hosted trigger support in `src/day_captain/hosted_jobs.py` through bounded `/healthz` probing before the real job trigger or validation path, with configurable wake timeout, attempt count, and retry delay.
 - Exposed that control surface through `day-captain trigger-hosted-job`, `day-captain validate-hosted-service`, and a new standalone `day-captain check-hosted-health` readiness command, then updated the example scheduler workflow to warm the service once before multi-user fan-out and use lightweight trigger-only calls for routine scheduled runs.
 - Added automated coverage for delayed availability and retry behavior, and updated operator docs so the private `day-captain-ops` repo has one explicit fallback pattern for sleeping services.
+- Validation executed:
+  - `python3 -m unittest discover -s tests`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
 - Remaining work is mainly closure and deployed proof: validate the warm-up strategy against the real hosted service behavior and then close the slice if it proves stable enough operationally.

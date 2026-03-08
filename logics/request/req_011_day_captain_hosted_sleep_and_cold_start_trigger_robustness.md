@@ -1,8 +1,8 @@
 ## req_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness - Day Captain hosted sleep and cold-start trigger robustness
 > From version: 0.8.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.

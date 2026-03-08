@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 98%
-> Progress: 95%
+> Progress: 99%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -59,7 +59,7 @@ flowchart LR
 - Added hosted client-credentials authentication through `ClientCredentialsAuthenticator`, plus `GraphAppOnlyAuthProvider` so hosted runs can authenticate without delegated refresh-token handling.
 - Routed hosted mailbox reads, calendar reads, and `sendMail` through explicit `/users/{id}` roots while preserving delegated `/me` behavior for local auth and local CLI workflows.
 - Updated config and operator docs so hosted app-only setup is explicit in `.env.example`, `README.md`, and the hosted deployment checklist.
-- Implementation is complete; task status remains `In Progress` only because backlog item `item_009` stays open until the deployed Render validation in `task_017` is captured.
+- Implementation is complete; status remains `In Progress` only because the remaining open work for this slice is now entirely in the deployed Render validation task `task_017_day_captain_hosted_graph_app_only_authentication_validation`.
 - Validation executed:
   - `python3 -m unittest tests.test_auth tests.test_graph_client tests.test_app tests.test_delivery_contract`
   - `python3 -m unittest discover -s tests`

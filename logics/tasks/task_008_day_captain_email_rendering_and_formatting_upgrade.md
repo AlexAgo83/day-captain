@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 95%
+> Progress: 99%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -63,4 +63,4 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
 - Real mailbox validation confirmed the delivered digest uses the upgraded HTML structure and human-friendly local timestamps.
-- Rendering and delivered mailbox validation are complete. Status remains `In Progress` only because the parent backlog item stays open until the live LLM wording slice is also validated end to end.
+- Rendering and delivered mailbox validation are complete. Status remains `In Progress` only because the parent backlog item stays open until the live LLM wording slice is resolved.

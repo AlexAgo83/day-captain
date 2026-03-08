@@ -1,9 +1,9 @@
 ## item_004_day_captain_digest_quality_and_email_polish - Improve delivered digest quality after real mailbox validation
 > From version: 0.4.0
 > Status: In Progress
-> Understanding: 100%
-> Confidence: 97%
-> Progress: 92%
+> Understanding: 99%
+> Confidence: 96%
+> Progress: 93%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -57,7 +57,7 @@ flowchart LR
 
 # Links
 - Request: `req_004_day_captain_digest_quality_and_email_polish`
-- Primary task(s): `task_008_day_captain_email_rendering_and_formatting_upgrade` (`Done`), `task_009_day_captain_digest_signal_quality_tuning` (`Done`), `task_010_day_captain_llm_digest_wording_activation_and_tuning` (`In Progress`)
+- Primary task(s): `task_008_day_captain_email_rendering_and_formatting_upgrade` (`Delivered, pending chain closure`), `task_009_day_captain_digest_signal_quality_tuning` (`Delivered, pending chain closure`), `task_010_day_captain_llm_digest_wording_activation_and_tuning` (`In Progress`)
 
 # Priority
 - Impact: High - this is now the main blocker between a working pipeline and a genuinely useful assistant experience.

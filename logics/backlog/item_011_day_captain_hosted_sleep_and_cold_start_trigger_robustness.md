@@ -1,9 +1,9 @@
 ## item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness - Make hosted triggering resilient to sleeping or cold-starting services
 > From version: 0.8.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
-> Progress: 0%
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 92%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -64,3 +64,5 @@ flowchart LR
 - Derived from request `req_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness`.
 - This slice is intentionally operational: it improves hosted trigger resilience without pretending sleeping infrastructure is equivalent to always-on hosting.
 - The likely implementation areas are `src/day_captain/hosted_jobs.py`, `src/day_captain/cli.py`, the example scheduler workflow, and the private-ops deployment docs.
+- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` is now mostly implemented: wake-up-aware health probing, bounded retry/timeouts, a standalone readiness command, scheduler warm-up before fan-out, trigger-only cron calls, and operator docs are all in place.
+- Remaining work is external-facing proof and closure: validate the sleeping-service fallback against the real hosted service behavior and then close the slice if it proves stable enough operationally.

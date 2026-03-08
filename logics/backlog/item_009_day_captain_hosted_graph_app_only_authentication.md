@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 70%
+> Progress: 82%
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -55,7 +55,7 @@ flowchart LR
 
 # Links
 - Request: `req_009_day_captain_hosted_graph_app_only_authentication`
-- Primary task(s): `task_016_day_captain_hosted_graph_app_only_authentication_implementation` (`Done`), `task_017_day_captain_hosted_graph_app_only_authentication_validation` (`Ready`)
+- Primary task(s): `task_016_day_captain_hosted_graph_app_only_authentication_implementation` (`Delivered, pending deployed validation`), `task_017_day_captain_hosted_graph_app_only_authentication_validation` (`In Progress`)
 
 # Priority
 - Impact: High - this is the cleanest path to a stable hosted deployment.
@@ -65,4 +65,4 @@ flowchart LR
 - Derived from request `req_009_day_captain_hosted_graph_app_only_authentication`.
 - This slice intentionally keeps local delegated auth because it still provides the best developer ergonomics for local mailbox testing.
 - `task_016_day_captain_hosted_graph_app_only_authentication_implementation` is complete: hosted app-only auth, explicit `/users/{id}` routing, and supporting tests/docs are now in place.
-- `task_017_day_captain_hosted_graph_app_only_authentication_validation` is now in progress: local preflight validation, scheduler targeting support, and hosted setup docs are in place, with Render-hosted proof still pending.
+- `task_017_day_captain_hosted_graph_app_only_authentication_validation` is now materially advanced: local preflight validation, runtime summary checks, scheduler targeting support, cold-start-aware readiness tooling, and hosted setup docs are in place, with Render-hosted proof still pending.

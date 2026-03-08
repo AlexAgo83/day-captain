@@ -1,9 +1,9 @@
 ## task_003_day_captain_render_deployment_and_scheduler - Deploy Day Captain on Render with GitHub Actions scheduling
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 96%
-> Progress: 82%
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 88%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -63,6 +63,7 @@ flowchart LR
 - Added `render.yaml` for a Render web service plus managed Postgres and `.github/workflows/morning-digest-scheduler.yml` as an example scheduled GitHub Actions trigger.
 - Added reusable hosted trigger tooling (`scripts/trigger_hosted_digest.py` and `day-captain trigger-hosted-job`) so the real production scheduler can live in a private `day-captain-ops` repo without duplicating HTTP trigger logic.
 - Added reusable hosted validation tooling (`scripts/validate_hosted_service.py` and `day-captain validate-hosted-service`) so the private ops repo can validate `/healthz`, morning digest, and recall without reimplementing request logic.
+- Added cold-start-aware hosted readiness tooling (`scripts/check_hosted_health.py` and `day-captain check-hosted-health`) plus an example scheduler split that warms the hosted service once before per-user trigger fan-out.
 - Added coverage in `tests/test_app.py`, `tests/test_settings.py`, and `tests/test_web.py`.
 - Validation results:
   - `python3 -m unittest tests.test_settings tests.test_app tests.test_web` -> `OK` (`8` tests)
