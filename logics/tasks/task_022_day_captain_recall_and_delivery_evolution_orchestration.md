@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 90%
+> Progress: 95%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -98,6 +98,7 @@ flowchart LR
   - duplicate suppression is now persistent through stored inbound command receipts keyed by inbound message id
   - the first shipped trigger surface is transport-neutral: the repo now exposes CLI and hosted HTTP handling for normalized inbound email-command events, which can be fed later by a Graph webhook, polling job, or external M365 automation
 - README, `.env.example`, and hosted config/docs are now aligned with the shipped behavior:
+  - `docs/private_ops_repo_bootstrap.md`, `docs/tenant_scoped_multi_user_operator_guide.md`, and `docs/hosted_deployment_checklist.md` now describe the dedicated sender mailbox and inbound email-command validation path for operators
   - the documented hosted env model now includes `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` and `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
   - local CLI usage, hosted trigger usage, HTTP examples, and hosted validation examples now cover the inbound email-command recall path
   - `render.yaml` now exposes the new hosted env variables needed for dedicated sender routing and bounded command senders
@@ -110,3 +111,4 @@ flowchart LR
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
 - The task remains open only because a realistic hosted/mailbox proof path for the dedicated sender and inbound command flow still needs to be executed, then the linked Logics chain can be closed cleanly.
+- Local proof is complete, but the current shell environment still does not carry the hosted `DAY_CAPTAIN_SERVICE_URL`, non-empty `DAY_CAPTAIN_JOB_SECRET`, or dedicated sender env values required to execute the final remote validation from this workstation without additional operator inputs.
