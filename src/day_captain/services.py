@@ -519,8 +519,30 @@ def _normalize_item_summary(title: str, summary: str, max_chars: int = 220) -> s
     cleaned = _strip_redundant_title_prefix(title, summary)
     cleaned = re.sub(r"\baction attendue\s*:", "Suivi :", cleaned, flags=re.IGNORECASE)
     cleaned = re.sub(r"\bexpected action\s*:", "Next step:", cleaned, flags=re.IGNORECASE)
+    cleaned = re.sub(r"\s*[—-]\s*(Suivi:|Next step:)", r" \1", cleaned, flags=re.IGNORECASE)
     cleaned = " ".join(cleaned.split())
+    for marker in ("Suivi :", "Next step:"):
+        if marker in cleaned and len(cleaned) > max_chars:
+            prefix, suffix = cleaned.split(marker, 1)
+            suffix = suffix.strip()
+            suffix_text = "{0} {1}".format(marker, suffix).strip()
+            reserved = min(max(40, len(suffix_text) + 1), max_chars - 20)
+            prefix_limit = max(20, max_chars - reserved)
+            prefix_text = _truncate_sentence(prefix.strip(), max_chars=prefix_limit).rstrip(".")
+            return "{0} {1}".format(prefix_text, suffix_text).strip()
     return _truncate_sentence(cleaned, max_chars=max_chars)
+
+
+def _item_summary_limit(item: DigestEntry) -> int:
+    if item.source_kind == "meeting":
+        return 110
+    if item.section_name == "critical_topics":
+        return 160
+    if item.section_name == "actions_to_take":
+        return 170
+    if item.section_name == "watch_items":
+        return 180
+    return 200
 
 
 def _normalized_place(value: str) -> str:
@@ -1240,7 +1262,7 @@ class DeterministicDigestOverviewEngine:
                 break
         meetings = sections["upcoming_meetings"]
         if meetings and len(sentences) < 2:
-            meeting_text = _normalize_item_summary(meetings[0].title, meetings[0].summary, max_chars=120)
+            meeting_text = _normalize_item_summary(meetings[0].title, meetings[0].summary, max_chars=110)
             sentences.append(localized["meeting"].format(text=_clean_overview_fragment(meeting_text)))
         if not sentences:
             sentences.append(localized["clear"])
@@ -1291,7 +1313,7 @@ class LlmDigestOverviewEngine:
         summary = str(summary or "").strip()
         if not summary:
             return self.fallback_engine.summarize(payload)
-        return DigestOverview(summary=_normalize_top_summary(summary), source="llm")
+        return DigestOverview(summary=_normalize_top_summary(summary, max_chars=200), source="llm")
 
     def _overview_sections(self, payload: DigestPayload) -> Mapping[str, Sequence[DigestEntry]]:
         return {
@@ -1354,7 +1376,7 @@ class LlmDigestWordingEngine:
             if not summary:
                 updated_items.append(item)
                 continue
-            summary = _normalize_item_summary(item.title, summary)
+            summary = _normalize_item_summary(item.title, summary, max_chars=_item_summary_limit(item))
             updated_items.append(
                 DigestEntry(
                     title=item.title,
