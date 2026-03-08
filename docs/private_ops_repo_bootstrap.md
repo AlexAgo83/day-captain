@@ -17,6 +17,8 @@ Your private ops repo should contain:
 - optional repository variable `DAY_CAPTAIN_TARGET_USERS_JSON`
 - deployment-specific notes or runbooks
 
+Use [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) as the starting workflow file to copy into `.github/workflows/morning-digest.yml` in the private ops repo.
+
 ## Recommended workflow pattern
 
 1. Check out the Day Captain repo, or vendor the trigger script into the ops repo.
@@ -24,6 +26,18 @@ Your private ops repo should contain:
 3. Fan out over explicit users from `DAY_CAPTAIN_TARGET_USERS_JSON`.
 4. If the hosted service can sleep, run one standalone readiness step with `scripts/check_hosted_health.py --wake-service` before the real trigger fan-out.
 5. Keep the workflow output free of digest content.
+
+## Copy-ready workflow
+
+Copy [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) into the private ops repo as `.github/workflows/morning-digest.yml`.
+
+Assumptions baked into that template:
+
+- the application repo is `alexandreagostini/day-captain`
+- Render deploys the `release` branch
+- the ops workflow installs the package from that `release` branch before calling the hosted helper scripts
+- the hosted service may sleep, so the workflow performs one readiness/wake-up pass before per-user fan-out
+- `DAY_CAPTAIN_TARGET_USERS_JSON` is mandatory in the ops repo so the scheduler never silently falls back to an ambiguous single-user trigger
 
 ## Suggested repository variables
 
