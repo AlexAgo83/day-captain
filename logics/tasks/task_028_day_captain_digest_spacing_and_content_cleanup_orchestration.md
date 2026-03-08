@@ -2,8 +2,8 @@
 > From version: 1.2.0
 > Status: In Progress
 > Understanding: 99%
-> Confidence: 97%
-> Progress: 82%
+> Confidence: 98%
+> Progress: 88%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -69,6 +69,7 @@ flowchart LR
   - tightened the LLM prompts for both item summaries and top summary wording
   - added bounded post-processing to strip repeated title prefixes from rewritten summaries
   - improved self-organized meeting fallback to prefer a real attendee when one is available
+  - tightened compaction rules so long rewritten summaries keep their `Suivi` / `Next step` cue instead of truncating away the action
 - Remaining before closure:
   - finish the copy-heuristic cleanup slice for overview and meeting fallbacks
   - validate the refined rendering in a real Outlook mailbox
