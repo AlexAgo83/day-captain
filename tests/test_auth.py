@@ -292,6 +292,7 @@ class AuthFlowTest(unittest.TestCase):
         provider = GraphAppOnlyAuthProvider(
             authenticator=authenticator,
             user_id="alex@example.com",
+            sender_user_id="daycaptain@example.com",
             configured_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
         )
 
@@ -301,6 +302,8 @@ class AuthFlowTest(unittest.TestCase):
         self.assertEqual(context.user_id, "alex@example.com")
         self.assertEqual(context.auth_mode, "app_only")
         self.assertEqual(context.graph_root_path, "/users/alex%40example.com")
+        self.assertEqual(context.sender_user_id, "daycaptain@example.com")
+        self.assertEqual(context.sender_graph_root_path, "/users/daycaptain%40example.com")
         self.assertEqual(context.granted_scopes, ("Mail.Read", "Calendars.Read", "Mail.Send"))
 
 
