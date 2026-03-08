@@ -111,6 +111,8 @@ The GitHub Actions scheduler supports two modes:
 
 In production, run that scheduler from a private ops repository rather than from the application repository.
 
+Use the ready-to-copy template in [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) as the base workflow for that private repo.
+
 Example repository variable:
 
 ```json
