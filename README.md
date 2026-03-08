@@ -1,5 +1,9 @@
 # Day Captain
 
+<p align="center">
+  <img src="docs/assets/day-captain-logo.svg" alt="Day Captain logo" width="132" />
+</p>
+
 Day Captain is a Python service that builds a daily Microsoft 365 digest from Outlook mail and calendar data.
 
 ```mermaid
@@ -55,6 +59,7 @@ Current operating model:
 - `logics/`: request, backlog, specs, and task tracking
 - `render.yaml`: Render deployment blueprint
 - `.github/workflows/`: CI and example hosted trigger workflows
+- `docs/assets/`: shared documentation assets such as the project logo
 
 Recommended repository split:
 - `day-captain`: application source code
