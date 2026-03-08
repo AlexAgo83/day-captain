@@ -179,7 +179,8 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertEqual(captured["body"]["max_completion_tokens"], 120)
         self.assertEqual(captured["body"]["reasoning_effort"], "minimal")
         self.assertNotIn("temperature", captured["body"])
-        self.assertIn("2 to 4 short factual sentences", captured["body"]["messages"][0]["content"])
+        self.assertIn("Use 1 to 2 short factual sentences", captured["body"]["messages"][0]["content"])
+        self.assertIn("Prefer readable names over raw email addresses", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             summary,
             "Budget review is the main priority, with roadmap follow-up next.",
@@ -368,7 +369,11 @@ class DigestOverviewEngineTest(unittest.TestCase):
         provider = type(
             "Provider",
             (),
-            {"summarize_digest": lambda self, sections, labels: "Roadmap follow-up is the main action for today."},
+            {
+                "summarize_digest": (
+                    lambda self, sections, labels, meeting_note="": "Roadmap follow-up is the main action for today."
+                )
+            },
         )()
 
         overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
@@ -434,10 +439,66 @@ class DigestOverviewEngineTest(unittest.TestCase):
         provider = type(
             "Provider",
             (),
-            {"summarize_digest": lambda self, sections, labels: (_ for _ in ()).throw(RuntimeError("boom"))},
+            {
+                "summarize_digest": (
+                    lambda self, sections, labels, meeting_note="": (_ for _ in ()).throw(RuntimeError("boom"))
+                )
+            },
         )()
 
         overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
 
         self.assertEqual(overview.source, "deterministic")
         self.assertIn("Suivi principal", overview.summary)
+
+    def test_llm_summary_limits_meeting_input_and_passes_meeting_note(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            actions_to_take=(
+                DigestEntry(
+                    title="Roadmap update",
+                    summary="Need your input for planning.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-2",
+                    score=2.0,
+                ),
+            ),
+            upcoming_meetings=(
+                DigestEntry(
+                    title="Point équipe",
+                    summary="lun. 09 mars à 10:00 avec Romain Altazin sur Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-1",
+                    score=2.0,
+                ),
+                DigestEntry(
+                    title="Daily Meeting",
+                    summary="lun. 09 mars à 11:30 avec Alexandre Agostini sur Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-2",
+                    score=1.5,
+                ),
+            ),
+        )
+        captured = {}
+
+        class Provider:
+            def summarize_digest(self, sections, labels, meeting_note=""):
+                captured["sections"] = sections
+                captured["labels"] = labels
+                captured["meeting_note"] = meeting_note
+                return "Résumé court."
+
+        overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
+
+        self.assertEqual(overview.source, "llm")
+        self.assertEqual(captured["meeting_note"], "2 réunions sont prévues. Résume-les brièvement sans toutes les lister.")
+        self.assertEqual(len(captured["sections"]["upcoming_meetings"]), 1)
