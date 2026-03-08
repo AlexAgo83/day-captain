@@ -21,6 +21,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             window_end=now,
             delivery_mode="graph_send",
             user_id="alex@example.com",
+            command_mailbox="daycaptain@example.com",
             prioritized_items=(
                 DigestEntry(
                     title="Urgent budget review",
@@ -47,6 +48,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertEqual(payload.delivery_subject, "Your Day Captain brief for Sat 07 Mar")
         self.assertEqual(payload.top_summary, "Budget review is the main priority this morning.")
         self.assertEqual(payload.delivery_payload["top_summary_source"], "llm")
+        self.assertEqual(payload.delivery_payload["command_mailbox"], "daycaptain@example.com")
         self.assertIn("graph_message", payload.delivery_payload)
         self.assertEqual(payload.delivery_payload["graph_message"]["subject"], payload.delivery_subject)
         self.assertEqual(payload.delivery_payload["graph_message"]["body"]["contentType"], "HTML")
@@ -57,6 +59,9 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("<html>", payload.delivery_payload["html_body"])
         self.assertIn("In brief", payload.delivery_payload["html_body"])
         self.assertIn("No meetings are lined up for today.", payload.delivery_body)
+        self.assertIn("Quick actions", payload.delivery_body)
+        self.assertIn("mailto:daycaptain@example.com?subject=recall", payload.delivery_payload["html_body"])
+        self.assertNotIn("background:#f8fafc", payload.delivery_payload["html_body"])
 
     def test_localizes_french_copy_and_meeting_fallback_note(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
@@ -128,6 +133,24 @@ class StructuredDigestRendererTest(unittest.TestCase):
             "First priority is budget review. Second priority is confirming the launch timing.",
         )
         self.assertNotIn("Third note should not appear", payload.delivery_body)
+
+    def test_localizes_footer_quick_actions_in_french(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-5",
+            generated_at=now,
+            window_start=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            command_mailbox="daycaptain@circle-mobility.com",
+        )
+
+        self.assertIn("Actions rapides", payload.delivery_body)
+        self.assertIn("Rappeler ce brief", payload.delivery_payload["html_body"])
+        self.assertIn("subject=recall-week", payload.delivery_payload["html_body"])
 
 
 if __name__ == "__main__":
