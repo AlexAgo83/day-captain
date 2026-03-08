@@ -69,6 +69,7 @@ class DayCaptainSettings:
     graph_user_id: str = ""
     graph_sender_user_id: str = ""
     target_users: Tuple[str, ...] = ()
+    email_command_allowed_senders: Tuple[str, ...] = ()
     graph_send_enabled: bool = False
     graph_timeout_seconds: int = 30
     graph_scopes: Tuple[str, ...] = ("User.Read", "Mail.Read", "Calendars.Read")
@@ -109,6 +110,7 @@ class DayCaptainSettings:
             graph_user_id=os.getenv("DAY_CAPTAIN_GRAPH_USER_ID", ""),
             graph_sender_user_id=os.getenv("DAY_CAPTAIN_GRAPH_SENDER_USER_ID", ""),
             target_users=_parse_csv(os.getenv("DAY_CAPTAIN_TARGET_USERS", "")),
+            email_command_allowed_senders=_parse_csv(os.getenv("DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS", "")),
             graph_send_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_GRAPH_SEND_ENABLED"), default=False),
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
             graph_scopes=_parse_scopes(os.getenv("DAY_CAPTAIN_GRAPH_SCOPES", "")),
@@ -218,6 +220,7 @@ class DayCaptainSettings:
             "configured_target_user_count": len(resolved_targets),
             "selected_target_user": resolved_target,
             "configured_sender_user": self.graph_sender_user_id.strip(),
+            "email_command_allowed_senders": self.email_command_allowed_senders,
             "graph_send_enabled": self.graph_send_enabled,
             "database_configured": bool(resolved_database_url),
             "storage_backend": "postgres" if resolved_database_url else "sqlite",

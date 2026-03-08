@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 55%
+> Progress: 80%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -30,7 +30,7 @@ flowchart LR
 # Plan
 - [x] 1. Fix the recall and auth reliability defects first so explicit run recall, day recall, delegated scope validation, and collection boundaries are trustworthy before adding new recall surfaces.
 - [x] 2. Introduce dedicated sender mailbox support so Day Captain can read from a target mailbox while sending from `daycaptain@...`, with explicit recipients and hosted app-only compatibility.
-- [ ] 3. Add inbound email-command recall on top of that foundation, supporting `recall`, `recall-today`, and `recall-week` with sender validation and duplicate suppression.
+- [x] 3. Add inbound email-command recall on top of that foundation, supporting `recall`, `recall-today`, and `recall-week` with sender validation and duplicate suppression.
 - [ ] 4. Validate the combined behavior through automated tests and at least one realistic hosted/mailbox proof path.
 - [ ] 5. Update the README and the relevant operator/setup docs before closing the task; do not mark this task `Done` while implementation details are missing from user-facing docs.
 - [ ] FINAL: Update related Logics docs, statuses, and closure links across the linked requests/backlog items.
@@ -92,10 +92,16 @@ flowchart LR
   - Day Captain can keep reading mail and calendar data from the target mailbox while routing `sendMail` through a distinct sender mailbox in hosted app-only mode
   - `graph_message` now carries an explicit recipient when the target user is an email address, preventing fallback delivery to the dedicated sender mailbox
   - runtime guardrails now reject attempts to use a dedicated sender mailbox through delegated auth, which would otherwise be misleading
+- The inbound email-command recall tranche is now implemented in a first shippable form:
+  - Day Captain can process bounded inbound commands `recall`, `recall-today`, and `recall-week`
+  - sender-to-target-user resolution is deterministic and protected by configured target users plus an optional explicit sender allowlist
+  - duplicate suppression is now persistent through stored inbound command receipts keyed by inbound message id
+  - the first shipped trigger surface is transport-neutral: the repo now exposes CLI and hosted HTTP handling for normalized inbound email-command events, which can be fed later by a Graph webhook, polling job, or external M365 automation
 - Automated validation executed successfully:
   - `python3 -m unittest tests.test_app tests.test_auth`
   - `python3 -m unittest tests.test_settings tests.test_auth tests.test_graph_client tests.test_app tests.test_digest_renderer`
+  - `python3 -m unittest tests.test_app tests.test_settings tests.test_cli tests.test_hosted_jobs tests.test_web`
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- The task remains open because inbound email-command recall and the final README/operator-doc updates are still pending.
+- The task remains open because README/setup/operator docs are not updated yet and a realistic hosted/mailbox proof path for the inbound command flow still needs to be executed.
