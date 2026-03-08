@@ -1,9 +1,9 @@
 ## task_010_day_captain_llm_digest_wording_activation_and_tuning - Activate and tune bounded LLM wording for delivered digests
 > From version: 0.4.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
-> Confidence: 99%
-> Progress: 82%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -28,7 +28,7 @@ flowchart LR
 - [x] 1. Configure the bounded LLM wording path for real delivered digest runs.
 - [x] 2. Tune the wording behavior so summaries sound more assistant-like while staying factual and concise.
 - [x] 3. Validate that fallback behavior remains safe when the LLM path is disabled or fails.
-- [ ] 4. Validate the wording quality on a real delivered digest with funded provider quota.
+- [x] 4. Validate the wording quality on a real delivered digest with funded provider quota.
 - [x] FINAL: Update related Logics docs
 
 # AC Traceability
@@ -47,16 +47,19 @@ flowchart LR
 - set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 -m day_captain auth status
 - set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force
 - set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 - <<'PY' ... direct OpenAI-compatible provider probe returning `429 insufficient_quota` for the configured key
+- python3 -m unittest tests.test_llm tests.test_app tests.test_settings
+- set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 - <<'PY' ... direct OpenAI-compatible provider probe returning successful rewritten item wording and successful top summary output
+- set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force
 - PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force
 - delivered email review in Outlook
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
+- [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - The bounded wording path is now configurable for real digest runs with provider-specific settings, enabled sections, and a style prompt. Fallback behavior remains covered by tests and still returns deterministic wording when disabled or unavailable.
@@ -67,6 +70,10 @@ flowchart LR
 - Validation executed in live mode:
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force`
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
-- Fresh verification on Sunday, March 8, 2026 still shows the live JSON digest falling back to deterministic wording: the rendered payload reports `top_summary_source=deterministic`, which means the provider path still did not produce usable output.
-- A direct provider call on Sunday, March 8, 2026 still returns `429 insufficient_quota` for both rewrite and top-summary requests, so the blocker is external to the repository rather than an application wiring issue.
-- Current blocker: the OpenAI request still returns `429 insufficient_quota`, so the live run falls back safely to deterministic wording instead of producing verifiable LLM rewrites. Final mailbox validation of wording quality remains open until provider quota or billing is enabled.
+- Fresh validation on Sunday, March 8, 2026 confirmed the provider path now works live with the funded key after adapting the OpenAI-compatible request format for the configured `gpt-5-mini` model.
+- The adapter now sends `max_completion_tokens`, omits unsupported custom `temperature` for `gpt-5` models, and sets `reasoning_effort` to `minimal` so visible output is returned instead of spending the entire token budget on reasoning.
+- A direct provider probe on Sunday, March 8, 2026 returned successful rewritten item wording and a successful top summary, proving that the remaining blocker was fully resolved.
+- Live digest validation is now complete:
+  - a sequential `json` run returned rewritten item wording and `top_summary_source=llm`
+  - a `graph_send` run also returned rewritten item wording and `top_summary_source=llm`
+- The delivered digest path now uses real LLM wording successfully while preserving deterministic fallback behavior when the provider is unavailable.

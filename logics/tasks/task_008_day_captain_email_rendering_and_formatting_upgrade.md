@@ -1,9 +1,9 @@
 ## task_008_day_captain_email_rendering_and_formatting_upgrade - Upgrade delivered digest rendering for Outlook readability
 > From version: 0.4.0
-> Status: In Progress
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -54,7 +54,7 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - `StructuredDigestRenderer` now renders a more readable digest body, formats timestamps in the configured display timezone, and produces HTML for `graph_send` while keeping `json` output aligned.
