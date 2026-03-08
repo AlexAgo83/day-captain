@@ -18,9 +18,9 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_000_day_captain_daily_assistant_for_microsoft_365`] --> Step1[Implement scoring, filtering, personalization, and guardrails]
-    Step1 --> Step2[Render digest sections and same-day recall from stored snapshots]
-    Step2 --> Step3[Expose webhook-friendly entrypoints, delivery modes, and end-to-end tests]
+    Backlog[Backlog source 000 day captain daily assistant for microsoft 365] --> Step1[Implement scoring filtering personalization and guardrails]
+    Step1 --> Step2[Render digest sections and same day recall from stored snapshots]
+    Step2 --> Step3[Expose webhook friendly entrypoints delivery modes and end to end tests]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]
 ```

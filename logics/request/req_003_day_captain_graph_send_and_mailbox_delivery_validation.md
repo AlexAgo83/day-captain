@@ -38,11 +38,11 @@
 
 ```mermaid
 flowchart LR
-    Collect[Graph read: mail and calendar] --> Score[Digest scoring and wording]
+    Collect[Graph read mail and calendar] --> Score[Digest scoring and wording]
     Score --> Render[Digest payload rendering]
     Render --> Send[Microsoft Graph sendMail]
     Send --> Mailbox[Target Outlook mailbox]
-    Config[Mail.Send scope + delivery settings] --> Send
+    Config[Mail Send scope and delivery settings] --> Send
     Manual[Real mailbox validation] --> Mailbox
 ```
 

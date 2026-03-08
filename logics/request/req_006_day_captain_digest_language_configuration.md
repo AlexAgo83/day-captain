@@ -34,7 +34,7 @@
 
 ```mermaid
 flowchart LR
-    Env[.env language setting] --> Settings[Runtime settings]
+    Env[env language setting] --> Settings[Runtime settings]
     Settings --> Render[Digest renderer]
     Settings --> Fallback[Deterministic wording]
     Settings --> LLM[LLM prompt and wording path]

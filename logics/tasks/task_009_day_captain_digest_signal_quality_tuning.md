@@ -17,8 +17,8 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_004_day_captain_digest_quality_and_email_polish`] --> Step1[Review weak delivered items and scoring reasons]
-    Step1 --> Step2[Tune filtering, thresholds, and section assignment]
+    Backlog[Backlog source 004 day captain digest quality and email polish] --> Step1[Review weak delivered items and scoring reasons]
+    Step1 --> Step2[Tune filtering thresholds and section assignment]
     Step2 --> Step3[Validate improved selectivity on real digest output]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]

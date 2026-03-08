@@ -30,9 +30,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_010_day_captain_tenant_scoped_multi_user_digests`] --> Problem[Single-user structure blocks tenant rollout]
-    Problem --> Scope[Tenant plus user scoped storage, config, and execution]
-    Scope --> Tasks[`task_018` + `task_019`]
+    Req[Request source 010 day captain tenant scoped multi user digests] --> Problem[Single user structure blocks tenant rollout]
+    Problem --> Scope[Tenant plus user scoped storage config and execution]
+    Scope --> Tasks[task 018 and task 019]
 ```
 
 # Acceptance criteria

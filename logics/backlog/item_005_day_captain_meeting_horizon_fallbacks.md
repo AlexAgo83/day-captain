@@ -29,9 +29,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_005_day_captain_meeting_horizon_fallbacks`] --> Problem[Upcoming meetings can be empty but still unhelpful]
-    Problem --> Scope[Weekend fallback + next-day fallback + explicit labeling]
-    Scope --> Tasks[`task_011`]
+    Req[Request source 005 day captain meeting horizon fallbacks] --> Problem[Upcoming meetings can be empty but still unhelpful]
+    Problem --> Scope[Weekend fallback and next day fallback and explicit labeling]
+    Scope --> Tasks[task 011]
 ```
 
 # Acceptance criteria

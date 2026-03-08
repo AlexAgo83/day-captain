@@ -17,9 +17,9 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_010_day_captain_tenant_scoped_multi_user_digests`] --> Step1[Prepare at least two configured users in one tenant]
+    Backlog[Backlog source 010 day captain tenant scoped multi user digests] --> Step1[Prepare at least two configured users in one tenant]
     Step1 --> Step2[Validate isolated runs and stored data]
-    Step2 --> Step3[Validate user-targeted delivery and operator workflow docs]
+    Step2 --> Step3[Validate user targeted delivery and operator workflow docs]
     Step3 --> Report[Report and Done]
 ```
 

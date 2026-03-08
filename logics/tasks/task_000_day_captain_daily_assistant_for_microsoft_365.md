@@ -17,9 +17,9 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_000_day_captain_daily_assistant_for_microsoft_365`] --> Step1[Freeze auth, window, digest, and storage contracts]
-    Step1 --> Step2[Bootstrap Python package, config, and service interfaces]
-    Step2 --> Step3[Add local run entrypoints, smoke tests, and linked doc updates]
+    Backlog[Backlog source 000 day captain daily assistant for microsoft 365] --> Step1[Freeze auth window digest and storage contracts]
+    Step1 --> Step2[Bootstrap Python package config and service interfaces]
+    Step2 --> Step3[Add local run entrypoints smoke tests and linked doc updates]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]
 ```

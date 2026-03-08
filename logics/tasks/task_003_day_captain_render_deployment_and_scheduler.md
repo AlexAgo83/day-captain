@@ -18,8 +18,8 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_000_day_captain_daily_assistant_for_microsoft_365`] --> Step1[Prepare hosted config, secrets, and Postgres-backed persistence]
-    Step1 --> Step2[Add Render deployment assets and HTTP-triggered service entrypoint]
+    Backlog[Backlog source 000 day captain daily assistant for microsoft 365] --> Step1[Prepare hosted config secrets and Postgres backed persistence]
+    Step1 --> Step2[Add Render deployment assets and HTTP triggered service entrypoint]
     Step2 --> Step3[Add GitHub Actions scheduler and hosted smoke checks]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]

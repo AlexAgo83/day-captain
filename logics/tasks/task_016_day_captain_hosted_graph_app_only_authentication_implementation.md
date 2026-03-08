@@ -17,9 +17,9 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_009_day_captain_hosted_graph_app_only_authentication`] --> Step1[Add app-only Graph auth mode and config]
-    Step1 --> Step2[Route hosted Graph calls through /users/{id}]
-    Step2 --> Step3[Preserve delegated local auth and add tests/docs]
+    Backlog[Backlog source 009 day captain hosted graph app only authentication] --> Step1[Add app only Graph auth mode and config]
+    Step1 --> Step2[Route hosted Graph calls through users id routes]
+    Step2 --> Step3[Preserve delegated local auth and add tests docs]
     Step3 --> Validation[Validation]
     Validation --> Report[Report and Done]
 ```

@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_007_day_captain_mailbox_tone_and_copy_polish`] --> Step1[Rewrite header and metadata copy]
+    Backlog[Backlog source 007 day captain mailbox tone and copy polish] --> Step1[Rewrite header and metadata copy]
     Step1 --> Step2[Improve inbox subject line wording]
     Step2 --> Step3[Validate delivered appearance in mailbox]
     Step3 --> Validation[Validation]

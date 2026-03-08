@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_007_day_captain_mailbox_tone_and_copy_polish`] --> Step1[Replace technical empty states]
+    Backlog[Backlog source 007 day captain mailbox tone and copy polish] --> Step1[Replace technical empty states]
     Step1 --> Step2[Improve deterministic fallback summary copy]
     Step2 --> Step3[Validate safe behavior without LLM]
     Step3 --> Validation[Validation]

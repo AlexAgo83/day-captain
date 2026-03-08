@@ -28,9 +28,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_006_day_captain_digest_language_configuration`] --> Problem[Digest language is fixed too rigidly]
-    Problem --> Scope[Env-driven EN default + FR option]
-    Scope --> Tasks[`task_012`]
+    Req[Request source 006 day captain digest language configuration] --> Problem[Digest language is fixed too rigidly]
+    Problem --> Scope[Env driven EN default and FR option]
+    Scope --> Tasks[task 012]
 ```
 
 # Acceptance criteria

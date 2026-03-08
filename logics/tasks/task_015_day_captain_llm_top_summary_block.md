@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_008_day_captain_llm_top_summary_block`] --> Step1[Build bounded summary input from final digest content]
+    Backlog[Backlog source 008 day captain llm top summary block] --> Step1[Build bounded summary input from final digest content]
     Step1 --> Step2[Generate short top summary with safe fallback]
     Step2 --> Step3[Render summary block above detailed sections]
     Step3 --> Validation[Validation]

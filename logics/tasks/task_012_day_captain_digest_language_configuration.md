@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_006_day_captain_digest_language_configuration`] --> Step1[Add env-backed language settings]
+    Backlog[Backlog source 006 day captain digest language configuration] --> Step1[Add env backed language settings]
     Step1 --> Step2[Localize renderer and deterministic fallback wording]
     Step2 --> Step3[Thread selected language into LLM prompt behavior]
     Step3 --> Validation[Validation]

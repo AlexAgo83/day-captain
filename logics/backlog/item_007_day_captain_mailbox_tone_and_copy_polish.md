@@ -32,9 +32,9 @@
 
 ```mermaid
 flowchart LR
-    Req[Request: `req_007_day_captain_mailbox_tone_and_copy_polish`] --> Problem[Digest still feels too mechanical]
-    Problem --> Scope[Header + subject + empty states + deterministic copy]
-    Scope --> Tasks[`task_013` + `task_014`]
+    Req[Request source 007 day captain mailbox tone and copy polish] --> Problem[Digest still feels too mechanical]
+    Problem --> Scope[Header and subject and empty states and deterministic copy]
+    Scope --> Tasks[task 013 and task 014]
 ```
 
 # Acceptance criteria

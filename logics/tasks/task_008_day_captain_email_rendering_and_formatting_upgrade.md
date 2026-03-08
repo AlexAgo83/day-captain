@@ -17,7 +17,7 @@
 
 ```mermaid
 flowchart LR
-    Backlog[Backlog: `item_004_day_captain_digest_quality_and_email_polish`] --> Step1[Improve digest body structure and labels]
+    Backlog[Backlog source 004 day captain digest quality and email polish] --> Step1[Improve digest body structure and labels]
     Step1 --> Step2[Format timestamps and metadata for humans]
     Step2 --> Step3[Validate rendered output in delivered email mode]
     Step3 --> Validation[Validation]
