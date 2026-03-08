@@ -130,6 +130,30 @@ class HostedJobsTest(unittest.TestCase):
 
         self.assertEqual(sleeps, [7])
 
+    def test_wait_for_hosted_health_retries_after_timeout(self) -> None:
+        calls = []
+        sleeps = []
+
+        def delayed_health(req, timeout=0):
+            calls.append(timeout)
+            if len(calls) < 3:
+                raise TimeoutError("timed out")
+            return FakeResponse({"status": "ok"}, status=200)
+
+        result = wait_for_hosted_health(
+            "https://example.com",
+            timeout_seconds=15,
+            max_attempts=3,
+            delay_seconds=4,
+            opener=delayed_health,
+            sleeper=sleeps.append,
+        )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["attempt_count"], 3)
+        self.assertEqual(calls, [15, 15, 15])
+        self.assertEqual(sleeps, [4, 4])
+
     def test_build_job_payload_for_morning_digest(self) -> None:
         payload = build_job_payload(
             "morning-digest",
