@@ -2,24 +2,78 @@ name: Morning Digest Scheduler
 
 on:
   workflow_dispatch:
+    inputs:
+      target_user_id:
+        description: "Optional single target user override"
+        required: false
+        type: string
   schedule:
     - cron: "30 6 * * 1-5"
 
 jobs:
-  trigger-morning-digest:
+  prepare-targets:
     runs-on: ubuntu-latest
+    outputs:
+      targets: ${{ steps.targets.outputs.targets }}
+    steps:
+      - name: Resolve target users
+        id: targets
+        env:
+          WORKFLOW_TARGET_USER_ID: ${{ inputs.target_user_id }}
+          DAY_CAPTAIN_TARGET_USERS_JSON: ${{ vars.DAY_CAPTAIN_TARGET_USERS_JSON }}
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json
+          import os
+
+          override = (os.getenv("WORKFLOW_TARGET_USER_ID") or "").strip()
+          configured = (os.getenv("DAY_CAPTAIN_TARGET_USERS_JSON") or "").strip()
+
+          if override:
+              targets = [{"target_user_id": override}]
+          elif configured:
+              parsed = json.loads(configured)
+              if not isinstance(parsed, list) or not parsed:
+                  raise SystemExit("DAY_CAPTAIN_TARGET_USERS_JSON must be a non-empty JSON array.")
+              targets = [{"target_user_id": str(item).strip()} for item in parsed if str(item).strip()]
+              if not targets:
+                  raise SystemExit("DAY_CAPTAIN_TARGET_USERS_JSON produced no usable target users.")
+          else:
+              targets = [{"target_user_id": ""}]
+
+          print("targets=" + json.dumps(targets))
+          PY
+
+  trigger-morning-digest:
+    needs: prepare-targets
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJson(needs.prepare-targets.outputs.targets) }}
     steps:
       - name: Trigger hosted morning digest
         env:
           DAY_CAPTAIN_SERVICE_URL: ${{ secrets.DAY_CAPTAIN_SERVICE_URL }}
           DAY_CAPTAIN_JOB_SECRET: ${{ secrets.DAY_CAPTAIN_JOB_SECRET }}
+          TARGET_USER_ID: ${{ matrix.target_user_id }}
         run: |
           test -n "$DAY_CAPTAIN_SERVICE_URL"
           test -n "$DAY_CAPTAIN_JOB_SECRET"
+          payload='{"force":false}'
+          if [ -n "$TARGET_USER_ID" ]; then
+            payload="$(python3 - <<'PY'
+import json
+import os
+
+print(json.dumps({"force": False, "target_user_id": os.environ["TARGET_USER_ID"]}))
+PY
+)"
+          fi
           status_code="$(curl --output /dev/null --write-out "%{http_code}" --show-error --silent \
             -X POST \
             -H "Content-Type: application/json" \
             -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
-            -d '{"force":false}' \
+            -d "$payload" \
             "$DAY_CAPTAIN_SERVICE_URL/jobs/morning-digest")"
           test "$status_code" = "200"

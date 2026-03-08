@@ -1,8 +1,8 @@
 ## req_010_day_captain_tenant_scoped_multi_user_digests - Day Captain tenant-scoped multi-user digests
 > From version: 0.7.0
-> Status: In Progress
-> Understanding: 100%
-> Confidence: 98%
+> Status: Done
+> Understanding: 99%
+> Confidence: 99%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -64,6 +64,6 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_010_day_captain_tenant_scoped_multi_user_digests` - Introduce tenant-scoped and user-scoped data and execution for bounded multi-user operation. Status: `In Progress`.
+- `item_010_day_captain_tenant_scoped_multi_user_digests` - Introduce tenant-scoped and user-scoped data and execution for bounded multi-user operation. Status: `Done`.
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` - Implement tenant-scoped storage, config, and per-user digest execution. Status: `Done`.
-- `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Ready`.
+- `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Done`.

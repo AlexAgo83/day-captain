@@ -20,6 +20,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Serve the hosted app with `gunicorn`, not the standard-library WSGI server.
 - Keep the scheduler workflow calling only `/jobs/morning-digest`.
 - Include `target_user_id` in hosted job payloads when several target users are configured.
+- If GitHub Actions drives several users, set repository variable `DAY_CAPTAIN_TARGET_USERS_JSON` to a JSON array.
 - Ensure the scheduler checks the HTTP status code without printing the response body.
 - Store `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET` as GitHub Actions secrets.
 
@@ -41,3 +42,4 @@ Use this checklist before treating the Render-hosted Day Captain service as read
   - the job returns HTTP `200`
   - a digest run is persisted successfully
   - only the requested `target_user_id` receives the digest and persistence stays isolated from other configured users
+- Follow [`tenant_scoped_multi_user_operator_guide.md`](/Users/alexandreagostini/Documents/day-captain/docs/tenant_scoped_multi_user_operator_guide.md) for the bounded operator workflow.

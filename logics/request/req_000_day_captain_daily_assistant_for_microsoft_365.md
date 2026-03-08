@@ -1,8 +1,8 @@
 ## req_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 100%
-> Confidence: 99%
+> Understanding: 99%
+> Confidence: 100%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -124,7 +124,7 @@ flowchart LR
 - `item_009_day_captain_hosted_graph_app_only_authentication` - Replace the fragile hosted delegated token path with app-only Graph auth. Status: `In Progress`.
 - `task_016_day_captain_hosted_graph_app_only_authentication_implementation` - Implement hosted Graph app-only auth and `/users/{id}` route support. Status: `Done`.
 - `task_017_day_captain_hosted_graph_app_only_authentication_validation` - Validate the Render-hosted digest flow end to end with app-only auth. Status: `Ready`.
-- `item_010_day_captain_tenant_scoped_multi_user_digests` - Evolve the service from single-user to bounded tenant-scoped multi-user digest delivery. Status: `In Progress`.
+- `item_010_day_captain_tenant_scoped_multi_user_digests` - Evolve the service from single-user to bounded tenant-scoped multi-user digest delivery. Status: `Done`.
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` - Implement tenant-scoped storage, configuration, and per-user digest execution. Status: `Done`.
-- `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Ready`.
+- `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Done`.
 - `task_020_day_captain_open_roadmap_orchestration` - Orchestrate the remaining hosted, multi-user, and live-quality delivery slices into one closure path. Status: `Ready`.
