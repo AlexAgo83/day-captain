@@ -20,6 +20,8 @@ This guide covers the bounded operator-managed multi-user model shipped in Day C
 - `DAY_CAPTAIN_GRAPH_CLIENT_SECRET=...`
 - `DAY_CAPTAIN_TARGET_USERS=["alice@example.com","bob@example.com"]` is not used directly by the app. Keep the app env var as CSV:
   - `DAY_CAPTAIN_TARGET_USERS=alice@example.com,bob@example.com`
+- optional `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com` when delivery should come from a dedicated shared mailbox
+- optional `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=alice@example.com` when inbound mail commands should be accepted from a bounded helper sender set in a single-target deployment
 - `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
 
 ## Add a target user
@@ -28,6 +30,23 @@ This guide covers the bounded operator-managed multi-user model shipped in Day C
 2. Add the mailbox identifier to `DAY_CAPTAIN_TARGET_USERS`.
 3. Ensure the Graph application permissions still cover the mailbox read and send operations.
 4. Trigger a single-user validation run for the new target before adding it to automated schedules.
+
+## Dedicated sender mailbox
+
+- Use `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com` when the digest should be sent from a shared mailbox such as `daycaptain@...`.
+- In that mode, Day Captain still reads Outlook mail and calendar data from the selected `target_user_id`.
+- Delivery is routed through `/users/{sender}/sendMail`, so confirm the dedicated mailbox exists and the app-only Graph permissions cover it.
+- Keep the target user explicit in hosted runs; otherwise the sender mailbox is not enough to infer which mailbox should be analyzed.
+
+## Inbound email-command recall
+
+- The shipped command surface is bounded to `recall`, `recall-today`, and `recall-week`.
+- `recall` and `recall-today` generate a digest for the current day in `DAY_CAPTAIN_DISPLAY_TIMEZONE`.
+- `recall-week` generates a digest from Monday `00:00` through now in `DAY_CAPTAIN_DISPLAY_TIMEZONE`.
+- Sender resolution is strict:
+  - multi-user deployments should use a sender address that matches one configured target user
+  - single-user deployments may also authorize helper senders through `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
+- Duplicate suppression is keyed by inbound `command_message_id`, so replaying the same inbound message should not regenerate a second digest.
 
 ## Manual validation
 
@@ -75,6 +94,25 @@ PYTHONPATH=src python3 -m day_captain validate-hosted-service \
   --expect-storage-backend postgres
 ```
 
+Run the hosted validation flow including inbound email-command recall:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=... \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain validate-hosted-service \
+  --target-user alice@example.com \
+  --wake-service \
+  --wake-timeout-seconds 45 \
+  --wake-max-attempts 6 \
+  --wake-delay-seconds 10 \
+  --timeout-seconds 90 \
+  --expect-graph-auth-mode app_only \
+  --expect-storage-backend postgres \
+  --check-email-command \
+  --email-command-sender alice@example.com \
+  --email-command-text recall-week
+```
+
 If the hosted service can sleep between runs, use `--wake-service` instead of assuming the first scheduler call will execute immediately.
 
 For several target users, prefer a separate readiness pass before fan-out:
@@ -99,6 +137,19 @@ DAY_CAPTAIN_JOB_SECRET=... \
 PYTHONPATH=src python3 -m day_captain trigger-hosted-job \
   --job morning-digest \
   --target-user alice@example.com \
+  --timeout-seconds 90
+```
+
+Trigger a bounded email-command recall manually:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=... \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain trigger-hosted-job \
+  --job email-command-recall \
+  --message-id inbound-001 \
+  --sender-address alice@example.com \
+  --command-text recall-week \
   --timeout-seconds 90
 ```
 
@@ -141,6 +192,8 @@ After adding or changing users, validate:
 - each scheduled or manual run returns `200`
 - each user receives only their own digest
 - recall for `alice@example.com` never returns `bob@example.com`'s latest run
+- if a dedicated sender mailbox is configured, delivery still arrives for the target user while the visible sender is `daycaptain@...`
+- if inbound email-command recall is enabled, only authorized senders can trigger it and replaying the same inbound `command_message_id` is deduplicated
 - feedback recorded against one user changes only that user's preferences
 - persisted rows for messages, meetings, runs, feedback, and preferences stay partitioned by `tenant_id` and `user_id`
 
