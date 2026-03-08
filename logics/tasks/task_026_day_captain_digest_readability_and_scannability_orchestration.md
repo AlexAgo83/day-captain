@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 85%
+> Progress: 90%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -63,6 +63,7 @@ flowchart LR
   - switched section rendering to a card-like HTML rhythm with a stronger top-summary block and more compact meeting rows
   - lightened empty-state copy, bounded the rendered executive summary length, and updated the README digest-presentation contract
   - added local `--output-html` / `--output-text` preview export on digest CLI commands so the final mail rendering can be reviewed outside Outlook before live validation
+  - documented the local-preview and real-Outlook validation loop in `docs/digest_rendering_validation.md` and linked it from the relevant operator docs
 - Validation completed so far:
   - `python3 -m unittest tests.test_digest_renderer`
   - `python3 -m unittest tests.test_scoring`

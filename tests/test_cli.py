@@ -14,6 +14,7 @@ from day_captain.cli import _run_trigger_hosted_job_command
 from day_captain.cli import _run_check_hosted_health_command
 from day_captain.cli import _run_validate_command
 from day_captain.cli import _run_validate_hosted_service_command
+from day_captain.cli import build_parser
 from day_captain.config import DayCaptainSettings
 from day_captain.models import DigestPayload
 from day_captain.models import EmailCommandResult
@@ -271,6 +272,41 @@ class ValidateConfigCommandTest(unittest.TestCase):
             )
 
             self.assertEqual(html_path.read_text(encoding="utf-8"), "<html>Recall digest</html>")
+
+    def test_parser_accepts_preview_export_flags_on_morning_digest(self) -> None:
+        parser = build_parser()
+
+        args = parser.parse_args(
+            [
+                "morning-digest",
+                "--force",
+                "--output-html",
+                "tmp/preview.html",
+                "--output-text",
+                "tmp/preview.txt",
+            ]
+        )
+
+        self.assertEqual(args.command, "morning-digest")
+        self.assertEqual(args.output_html, "tmp/preview.html")
+        self.assertEqual(args.output_text, "tmp/preview.txt")
+
+    def test_parser_accepts_preview_export_flags_on_recall_digest(self) -> None:
+        parser = build_parser()
+
+        args = parser.parse_args(
+            [
+                "recall-digest",
+                "--target-user",
+                "alice@example.com",
+                "--output-html",
+                "tmp/recall.html",
+            ]
+        )
+
+        self.assertEqual(args.command, "recall-digest")
+        self.assertEqual(args.target_user, "alice@example.com")
+        self.assertEqual(args.output_html, "tmp/recall.html")
 
 
 if __name__ == "__main__":
