@@ -1,9 +1,9 @@
 ## item_029_day_captain_digest_hero_background_and_metadata_polish - Day Captain digest hero background and metadata polish
 > From version: 1.1.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 97%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 75%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_022_day_captain_digest_visual_weight_and_header_polish`
-- Primary task(s): `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration` (`Ready`)
+- Primary task(s): `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration` (`In Progress`)
 
 # Priority
 - Impact: High - the top of the digest sets the tone for the whole mail and currently carries too much visual weight.
@@ -52,3 +52,4 @@ flowchart LR
 
 # Notes
 - Derived from direct review of the live Outlook rendering after the first readability pass.
+- Implementation is underway: the hero/background treatment is being reduced and the perimeter line is moving toward a lighter, more intentional top-of-mail treatment.

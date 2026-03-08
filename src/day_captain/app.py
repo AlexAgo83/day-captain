@@ -402,6 +402,7 @@ class StubDigestRenderer:
         prioritized_items: Sequence[DigestEntry],
         tenant_id: str = "",
         user_id: str = "",
+        command_mailbox: str = "",
         top_summary: str = "",
         top_summary_source: str = "none",
         meeting_horizon: Optional[Dict[str, str]] = None,
@@ -417,6 +418,7 @@ class StubDigestRenderer:
             delivery_mode=delivery_mode,
             tenant_id=tenant_id,
             user_id=user_id,
+            command_mailbox=command_mailbox,
             prioritized_items=prioritized_items,
             top_summary=top_summary,
             top_summary_source=top_summary_source,
@@ -673,6 +675,7 @@ class DayCaptainApplication:
             prioritized_items=prioritized_items,
             tenant_id=scoped_tenant_id,
             user_id=scoped_user_id,
+            command_mailbox=str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
             meeting_horizon=meeting_horizon,
         )
         overview = self.digest_overview_engine.summarize(payload)
@@ -686,6 +689,7 @@ class DayCaptainApplication:
                 prioritized_items=prioritized_items,
                 tenant_id=scoped_tenant_id,
                 user_id=scoped_user_id,
+                command_mailbox=str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
                 top_summary=overview.summary,
                 top_summary_source=overview.source,
                 meeting_horizon=meeting_horizon,
