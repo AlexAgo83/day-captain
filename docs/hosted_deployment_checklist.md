@@ -27,6 +27,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Store `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET` as GitHub Actions secrets.
 - If the hosted service may sleep, use `--wake-service` plus bounded wake retries before the real job trigger and give the workflow a longer timeout budget.
 - If the scheduler fans out across several users, prefer one standalone readiness/wake-up step before the fan-out instead of waking the service once per target.
+- Keep the routine cron path on `trigger-hosted-job --job morning-digest`; reserve `validate-hosted-service` for manual checks and rollout validation.
 
 ## HTTP surface
 - Expose only the minimal hosted endpoints:
