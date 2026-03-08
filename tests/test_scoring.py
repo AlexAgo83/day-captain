@@ -315,7 +315,27 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         prioritized = engine.prioritize((), meetings, (), reference_time=now)
 
         self.assertEqual(prioritized[0].title, "Site Horizon")
-        self.assertEqual(prioritized[0].summary, "Demain, 01:00 | Site Horizon")
+        self.assertEqual(prioritized[0].summary, "Demain, 01:00")
+
+    def test_uses_first_non_self_attendee_when_organizer_is_target_user(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-peer",
+                subject="Point boîte email partagé",
+                start_at=datetime(2026, 3, 9, 13, 30, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 9, 14, 0, tzinfo=timezone.utc),
+                organizer_address="target.user@company.com",
+                attendees=("morgan.lee@company.com", "target.user@company.com"),
+                location="Réunion Microsoft Teams",
+                user_id="target.user@company.com",
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(prioritized[0].summary, "Aujourd'hui, 14:30 | Morgan Lee | Réunion Microsoft Teams")
 
 
 if __name__ == "__main__":

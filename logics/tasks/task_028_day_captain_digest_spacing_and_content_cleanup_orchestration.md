@@ -1,9 +1,9 @@
 ## task_028_day_captain_digest_spacing_and_content_cleanup_orchestration - Day Captain digest spacing and content cleanup orchestration
 > From version: 1.2.0
 > Status: In Progress
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 70%
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 82%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -13,6 +13,7 @@
 - Related request(s): `req_023_day_captain_digest_spacing_and_content_cleanup_polish`.
 - Depends on: `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration`.
 - Delivery target: ship a final micro-polish pass that improves spacing, softens remaining visual roughness, and removes awkward self-reference wording without reopening digest architecture.
+- Latest direction: the remaining work is now mainly copy-heuristic cleanup rather than further layout work.
 
 ```mermaid
 flowchart LR
@@ -26,15 +27,15 @@ flowchart LR
 # Plan
 - [x] 1. Increase spacing around `Périmètre`, `En bref`, and the first detailed section.
 - [x] 2. Slightly soften card border weight and shorten footer helper copy.
-- [x] 3. Add bounded cleanup rules for awkward labels and self-reference meeting wording.
+- [ ] 3. Finish bounded cleanup rules for awkward labels, self-reference wording, `En bref`, and meeting-summary fallbacks.
 - [ ] 4. Validate the final rendering in Outlook and update README/docs if needed.
 - [ ] FINAL: Update related Logics docs
 
 # AC Traceability
 - Req023 AC1/AC2 -> Plan step 1. Proof: task explicitly improves top spacing around `En bref`.
 - Req023 AC3/AC4 -> Plan step 2. Proof: task explicitly softens cards and tightens footer helper copy.
-- Req023 AC5/AC6 -> Plan step 3. Proof: task explicitly adds bounded cleanup and identity-aware wording guards.
-- Req023 AC7 -> Plan step 4. Proof: task explicitly requires final validation without regressions.
+- Req023 AC5/AC6/AC7 -> Plan step 3. Proof: task explicitly adds bounded cleanup, identity-aware wording guards, and better overview/meeting fallback phrasing.
+- Req023 AC8 -> Plan step 4. Proof: task explicitly requires final validation without regressions.
 
 # Links
 - Backlog item(s): `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish`, `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish`, `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`
@@ -49,6 +50,7 @@ flowchart LR
 - [ ] Top spacing around `En bref` is improved in Outlook.
 - [ ] Card borders and footer helper copy are visibly lighter.
 - [ ] Self-reference meeting wording no longer implies the target user meets themselves.
+- [ ] `En bref` and meeting-summary fallbacks read naturally after the identity-aware cleanup.
 - [ ] Final live Outlook validation is completed.
 - [ ] Validation commands executed and results captured.
 - [ ] Linked request/backlog/task docs updated.
@@ -60,6 +62,14 @@ flowchart LR
   - increased spacing around the top summary transition so `Périmètre`, `En bref`, and the first detailed section breathe more cleanly
   - softened card border treatment slightly and shortened the footer helper copy
   - added bounded cleanup for rough labels and a first identity-aware meeting wording guard so the target user is not framed as meeting with themselves
+- Latest live review conclusion:
+  - layout is no longer the primary issue
+  - the next implementation slice should focus on `En bref`, meeting-summary fallbacks, and section-card summary heuristics
+- Current local implementation progress on that slice:
+  - tightened the LLM prompts for both item summaries and top summary wording
+  - added bounded post-processing to strip repeated title prefixes from rewritten summaries
+  - improved self-organized meeting fallback to prefer a real attendee when one is available
 - Remaining before closure:
+  - finish the copy-heuristic cleanup slice for overview and meeting fallbacks
   - validate the refined rendering in a real Outlook mailbox
   - then update closure links and promote the request/backlog/task chain to `Done`

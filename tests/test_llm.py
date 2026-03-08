@@ -92,6 +92,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertNotIn("temperature", captured["body"])
         self.assertIn("chief of staff", captured["body"]["messages"][0]["content"])
         self.assertIn("French", captured["body"]["messages"][0]["content"])
+        self.assertIn("Do not repeat the title at the start of the summary", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             rewritten["message:msg-1"],
             "Review the budget before noon because the request is urgent.",
@@ -180,6 +181,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertEqual(captured["body"]["reasoning_effort"], "minimal")
         self.assertNotIn("temperature", captured["body"])
         self.assertIn("Use 1 to 2 short factual sentences", captured["body"]["messages"][0]["content"])
+        self.assertIn("avoid vague phrasing", captured["body"]["messages"][0]["content"])
         self.assertIn("Prefer readable names over raw email addresses", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             summary,
@@ -345,6 +347,38 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
 
         self.assertEqual(rewritten, items)
 
+    def test_rewrite_cleans_redundant_title_prefix_and_long_summary(self) -> None:
+        provider = type(
+            "Provider",
+            (),
+            {
+                "rewrite_summaries": lambda self, items: {
+                    "message:msg-1": (
+                        "Candidature spontanée : diplômé d'un bachelor en design transport et d'un master en design urbain, "
+                        "actuellement designer chez Studio Meridian depuis plus de 4 ans, cherche une nouvelle opportunité. "
+                        "Action attendue : examiner la candidature ou proposer un suivi."
+                    ),
+                }
+            },
+        )()
+        engine = LlmDigestWordingEngine(provider=provider, shortlist_limit=1)
+        items = (
+            DigestEntry(
+                title="Candidature spontanée - Designer",
+                summary="Original",
+                section_name="watch_items",
+                source_kind="message",
+                source_id="msg-1",
+                score=1.0,
+            ),
+        )
+
+        rewritten = engine.rewrite(items)
+
+        self.assertNotIn("Candidature spontanée :", rewritten[0].summary)
+        self.assertIn("Suivi :", rewritten[0].summary)
+        self.assertLessEqual(len(rewritten[0].summary), 223)
+
 
 class DigestOverviewEngineTest(unittest.TestCase):
     def test_llm_summary_uses_provider_output_when_available(self) -> None:
@@ -502,6 +536,6 @@ class DigestOverviewEngineTest(unittest.TestCase):
         self.assertEqual(overview.source, "llm")
         self.assertEqual(
             captured["meeting_note"],
-            "2 réunions sont prévues. Résume-les brièvement sans toutes les lister. Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'.",
+            "2 réunions sont prévues. Résume-les brièvement sans toutes les lister. Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'. Si tu mentionnes une réunion, cite la plus proche avec un horaire concret et évite les formulations vagues.",
         )
         self.assertEqual(len(captured["sections"]["upcoming_meetings"]), 1)
