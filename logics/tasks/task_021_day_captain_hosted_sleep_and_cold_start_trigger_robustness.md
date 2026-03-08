@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 70%
+> Progress: 85%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -57,6 +57,6 @@ flowchart LR
 
 # Report
 - Added wake-up-aware hosted trigger support in `src/day_captain/hosted_jobs.py` through bounded `/healthz` probing before the real job trigger or validation path, with configurable wake timeout, attempt count, and retry delay.
-- Exposed that control surface through `day-captain trigger-hosted-job` and `day-captain validate-hosted-service`, then updated the example scheduler workflow to use cold-start-tolerant defaults for sleeping-service fallback operation.
+- Exposed that control surface through `day-captain trigger-hosted-job`, `day-captain validate-hosted-service`, and a new standalone `day-captain check-hosted-health` readiness command, then updated the example scheduler workflow to warm the service once before multi-user fan-out.
 - Added automated coverage for delayed availability and retry behavior, and updated operator docs so the private `day-captain-ops` repo has one explicit fallback pattern for sleeping services.
 - Remaining work is mainly closure and deployed proof: validate the warm-up strategy against the real hosted service behavior and then close the slice if it proves stable enough operationally.

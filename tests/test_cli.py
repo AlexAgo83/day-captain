@@ -7,6 +7,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.cli import _run_trigger_hosted_job_command
+from day_captain.cli import _run_check_hosted_health_command
 from day_captain.cli import _run_validate_command
 from day_captain.cli import _run_validate_hosted_service_command
 from day_captain.config import DayCaptainSettings
@@ -78,6 +79,39 @@ class ValidateConfigCommandTest(unittest.TestCase):
             os.environ.update(previous)
 
         trigger.assert_called_once()
+        self.assertEqual(result["status"], "ok")
+
+    def test_check_hosted_health_command_uses_env_fallbacks(self) -> None:
+        previous = dict(os.environ)
+        try:
+            os.environ["DAY_CAPTAIN_SERVICE_URL"] = "https://example.com"
+            os.environ["DAY_CAPTAIN_JOB_SECRET"] = "secret"
+            with mock.patch(
+                "day_captain.cli.wait_for_hosted_health",
+                return_value={"status": "ok"},
+            ) as warm_health:
+                result = _run_check_hosted_health_command(
+                    type(
+                        "Args",
+                        (),
+                        {
+                            "service_url": "",
+                            "job_secret": "",
+                            "timeout_seconds": 30,
+                            "wake_service": True,
+                            "wake_timeout_seconds": 45,
+                            "wake_max_attempts": 3,
+                            "wake_delay_seconds": 10,
+                            "expect_graph_auth_mode": "app_only",
+                            "expect_storage_backend": "postgres",
+                        },
+                    )()
+                )
+        finally:
+            os.environ.clear()
+            os.environ.update(previous)
+
+        warm_health.assert_called_once()
         self.assertEqual(result["status"], "ok")
 
     def test_validate_hosted_service_command_uses_env_fallbacks(self) -> None:

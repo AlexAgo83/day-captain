@@ -20,9 +20,9 @@ Your private ops repo should contain:
 ## Recommended workflow pattern
 
 1. Check out the Day Captain repo, or vendor the trigger script into the ops repo.
-2. Use `scripts/validate_hosted_service.py` for validation runs and `scripts/trigger_hosted_digest.py` for simpler trigger-only workflows.
+2. Use `scripts/check_hosted_health.py` for readiness/wake-up, `scripts/validate_hosted_service.py` for validation runs, and `scripts/trigger_hosted_digest.py` for simpler trigger-only workflows.
 3. Fan out over explicit users from `DAY_CAPTAIN_TARGET_USERS_JSON`.
-4. If the hosted service can sleep, use `--wake-service` so the tooling probes `GET /healthz` before the real trigger and waits within a bounded retry window.
+4. If the hosted service can sleep, run one standalone readiness step with `scripts/check_hosted_health.py --wake-service` before the real trigger fan-out.
 5. Keep the workflow output free of digest content.
 
 ## Suggested repository variables
@@ -37,6 +37,7 @@ Your private ops repo should contain:
 ## Validation before enabling cron
 
 - run `PYTHONPATH=src python3 -m day_captain validate-config --target-user alice@example.com`
+- run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain check-hosted-health --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
 - run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
 - trigger one hosted job manually for each target user
 - confirm delivery and persistence before enabling the scheduled trigger
@@ -54,7 +55,7 @@ The hosted validation helper checks:
 
 Recommended sleeping-service fallback:
 
-- warm the service with `--wake-service`
+- warm the service with `check-hosted-health --wake-service`
 - wait for readiness or retry within a bounded window
 - only then trigger `POST /jobs/morning-digest`
 - keep longer timeouts in the ops workflow than you would on an always-on service

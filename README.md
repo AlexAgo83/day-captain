@@ -211,8 +211,23 @@ PYTHONPATH=src python3 -m day_captain validate-hosted-service \
   --expect-storage-backend postgres
 ```
 
+Check or warm the hosted service without triggering a digest:
+
+```bash
+DAY_CAPTAIN_SERVICE_URL=https://your-render-service.example.com \
+DAY_CAPTAIN_JOB_SECRET=... \
+PYTHONPATH=src python3 -m day_captain check-hosted-health \
+  --wake-service \
+  --wake-timeout-seconds 45 \
+  --wake-max-attempts 6 \
+  --wake-delay-seconds 10 \
+  --expect-graph-auth-mode app_only \
+  --expect-storage-backend postgres
+```
+
 If the hosted web service can sleep between runs, treat the first request as a wake-up step rather than assuming the backend is already warm. In that case:
 - prefer `--wake-service` so the tooling probes `GET /healthz` before the real morning trigger
+- if you schedule several user-specific runs, prefer one standalone `check-hosted-health --wake-service` step before the fan-out
 - use longer timeouts in the private ops repo than you would on an always-on service
 - treat this as a fallback operating mode, not the preferred production posture
 

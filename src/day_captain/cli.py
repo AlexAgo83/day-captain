@@ -20,6 +20,7 @@ from day_captain.hosted_jobs import build_job_payload
 from day_captain.hosted_jobs import check_hosted_health
 from day_captain.hosted_jobs import trigger_hosted_job
 from day_captain.hosted_jobs import validate_hosted_service
+from day_captain.hosted_jobs import wait_for_hosted_health
 from day_captain.models import to_jsonable
 from day_captain.web import serve
 
@@ -72,6 +73,40 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate-config", help="Validate current environment configuration.")
     validate.add_argument("--target-user", help="Optional target user to validate against configured recipients.")
+
+    health = subparsers.add_parser(
+        "check-hosted-health",
+        help="Check or warm a hosted Day Captain service before running jobs, intended for ops automation.",
+    )
+    health.add_argument(
+        "--service-url",
+        default="",
+        help="Hosted Day Captain base URL. Falls back to DAY_CAPTAIN_SERVICE_URL.",
+    )
+    health.add_argument(
+        "--job-secret",
+        default="",
+        help="Hosted job secret. Falls back to DAY_CAPTAIN_JOB_SECRET.",
+    )
+    health.add_argument("--timeout-seconds", type=int, default=30)
+    health.add_argument(
+        "--wake-service",
+        action="store_true",
+        help="Retry /healthz to wake a sleeping hosted service before reporting readiness.",
+    )
+    health.add_argument("--wake-timeout-seconds", type=int, default=30)
+    health.add_argument("--wake-max-attempts", type=int, default=1)
+    health.add_argument("--wake-delay-seconds", type=int, default=0)
+    health.add_argument(
+        "--expect-graph-auth-mode",
+        choices=("delegated", "app_only"),
+        help="Fail if the hosted runtime summary reports a different Graph auth mode.",
+    )
+    health.add_argument(
+        "--expect-storage-backend",
+        choices=("sqlite", "postgres"),
+        help="Fail if the hosted runtime summary reports a different storage backend.",
+    )
 
     trigger = subparsers.add_parser(
         "trigger-hosted-job",
@@ -221,6 +256,33 @@ def _run_validate_command(args: argparse.Namespace, settings: DayCaptainSettings
         raise SystemExit(str(exc))
 
 
+def _run_check_hosted_health_command(args: argparse.Namespace) -> object:
+    service_url = str(args.service_url or "").strip() or str(os.getenv("DAY_CAPTAIN_SERVICE_URL") or "").strip()
+    job_secret = str(args.job_secret or "").strip() or str(os.getenv("DAY_CAPTAIN_JOB_SECRET") or "").strip()
+    try:
+        if bool(getattr(args, "wake_service", False)):
+            return wait_for_hosted_health(
+                service_url,
+                job_secret=job_secret,
+                include_runtime_summary=True,
+                expected_graph_auth_mode=str(getattr(args, "expect_graph_auth_mode", "") or "").strip(),
+                expected_storage_backend=str(getattr(args, "expect_storage_backend", "") or "").strip(),
+                timeout_seconds=int(getattr(args, "wake_timeout_seconds", 30)),
+                max_attempts=int(getattr(args, "wake_max_attempts", 1)),
+                delay_seconds=int(getattr(args, "wake_delay_seconds", 0)),
+            )
+        return check_hosted_health(
+            service_url,
+            job_secret=job_secret,
+            include_runtime_summary=True,
+            expected_graph_auth_mode=str(getattr(args, "expect_graph_auth_mode", "") or "").strip(),
+            expected_storage_backend=str(getattr(args, "expect_storage_backend", "") or "").strip(),
+            timeout_seconds=int(args.timeout_seconds),
+        )
+    except HostedJobError as exc:
+        raise SystemExit(str(exc))
+
+
 def _run_trigger_hosted_job_command(args: argparse.Namespace) -> object:
     service_url = str(args.service_url or "").strip() or str(os.getenv("DAY_CAPTAIN_SERVICE_URL") or "").strip()
     job_secret = str(args.job_secret or "").strip()
@@ -283,6 +345,10 @@ def main(argv: Optional[list] = None) -> int:
         return 0
     if args.command == "validate-config":
         result = _run_validate_command(args, settings)
+        print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
+        return 0
+    if args.command == "check-hosted-health":
+        result = _run_check_hosted_health_command(args)
         print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
         return 0
     if args.command == "trigger-hosted-job":
