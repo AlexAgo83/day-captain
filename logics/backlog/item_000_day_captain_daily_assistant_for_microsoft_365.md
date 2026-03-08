@@ -1,9 +1,9 @@
 ## item_000_day_captain_daily_assistant_for_microsoft_365 - Day Captain daily assistant for Microsoft 365
 > From version: 0.1.0
 > Status: In Progress
-> Understanding: 99%
+> Understanding: 100%
 > Confidence: 99%
-> Progress: 88%
+> Progress: 89%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -63,7 +63,7 @@ flowchart LR
 # Links
 - Request: `req_000_day_captain_daily_assistant_for_microsoft_365`
 - Spec: `spec_000_day_captain_v1_digest_contract`
-- Primary task(s): `task_000_day_captain_daily_assistant_for_microsoft_365`, `task_001_day_captain_graph_ingestion_and_storage`, `task_002_day_captain_digest_scoring_recall_and_delivery`
+- Primary task(s): `task_000_day_captain_daily_assistant_for_microsoft_365`, `task_001_day_captain_graph_ingestion_and_storage`, `task_002_day_captain_digest_scoring_recall_and_delivery`, `task_020_day_captain_open_roadmap_orchestration`
 
 # Priority
 - Impact: High - the user pain is daily, repeated, and tied directly to time lost in inbox triage.
@@ -79,3 +79,4 @@ flowchart LR
 - Delegated auth is now operable through Microsoft Entra ID device code flow, token cache storage, and refresh-token reuse for CLI-driven local runs.
 - `task_002_day_captain_digest_scoring_recall_and_delivery` is functionally implemented: deterministic ranking, anti-noise filters, digest rendering, persisted recall, feedback-driven preferences, and webhook/Graph-send delivery payload generation are all covered by automated tests.
 - `task_003_day_captain_render_deployment_and_scheduler` is the next delivery slice: hosted Render packaging, GitHub Actions scheduling, and Postgres-backed persistence for the first non-local deployment.
+- `task_020_day_captain_open_roadmap_orchestration` coordinates the remaining open slices so hosted auth, hosted validation, tenant-scoped multi-user work, and live LLM validation close in a deliberate order instead of drifting independently.

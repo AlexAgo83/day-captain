@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 97%
+> Confidence: 98%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -127,3 +127,4 @@ flowchart LR
 - `item_010_day_captain_tenant_scoped_multi_user_digests` - Evolve the service from single-user to bounded tenant-scoped multi-user digest delivery. Status: `Ready`.
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` - Implement tenant-scoped storage, configuration, and per-user digest execution. Status: `Ready`.
 - `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Ready`.
+- `task_020_day_captain_open_roadmap_orchestration` - Orchestrate the remaining hosted, multi-user, and live-quality delivery slices into one closure path. Status: `Ready`.
