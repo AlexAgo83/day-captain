@@ -59,14 +59,21 @@ class OpenAICompatibleDigestWordingProvider:
         self.style_prompt = style_prompt.strip() or "Write like a concise executive assistant."
         self._opener = opener or request.urlopen
 
+    def _supports_custom_temperature(self) -> bool:
+        return not self.model.strip().lower().startswith("gpt-5")
+
+    def _reasoning_effort(self) -> Optional[str]:
+        if self.model.strip().lower().startswith("gpt-5"):
+            return "minimal"
+        return None
+
     def rewrite_summaries(
         self,
         items: Sequence[DigestEntry],
     ) -> Mapping[str, str]:
         payload = {
             "model": self.model,
-            "temperature": self.temperature,
-            "max_tokens": self.max_output_tokens,
+            "max_completion_tokens": self.max_output_tokens,
             "response_format": {"type": "json_object"},
             "messages": (
                 {
@@ -104,6 +111,11 @@ class OpenAICompatibleDigestWordingProvider:
                 },
             ),
         }
+        reasoning_effort = self._reasoning_effort()
+        if reasoning_effort:
+            payload["reasoning_effort"] = reasoning_effort
+        if self._supports_custom_temperature():
+            payload["temperature"] = self.temperature
         raw = self._post_json("{0}/chat/completions".format(self.base_url), payload)
         response_payload = json.loads(raw or "{}")
         if not isinstance(response_payload, dict):
@@ -146,8 +158,7 @@ class OpenAICompatibleDigestWordingProvider:
     ) -> str:
         payload = {
             "model": self.model,
-            "temperature": self.temperature,
-            "max_tokens": min(self.max_output_tokens, 120),
+            "max_completion_tokens": min(self.max_output_tokens, 120),
             "response_format": {"type": "json_object"},
             "messages": (
                 {
@@ -191,6 +202,11 @@ class OpenAICompatibleDigestWordingProvider:
                 },
             ),
         }
+        reasoning_effort = self._reasoning_effort()
+        if reasoning_effort:
+            payload["reasoning_effort"] = reasoning_effort
+        if self._supports_custom_temperature():
+            payload["temperature"] = self.temperature
         raw = self._post_json("{0}/chat/completions".format(self.base_url), payload)
         response_payload = json.loads(raw or "{}")
         if not isinstance(response_payload, dict):
