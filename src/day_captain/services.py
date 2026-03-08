@@ -206,7 +206,7 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Quick actions",
-            "hint": "Opens a draft to Day Captain with the command prefilled.",
+            "hint": "Opens a draft to Day Captain with the command prefilled in the subject and body.",
             "recall": "Recall this brief",
             "recall_today": "Recall today",
             "recall_week": "Recall week",
@@ -260,7 +260,7 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Actions rapides",
-            "hint": "Ouvre un brouillon vers Day Captain avec la commande préremplie.",
+            "hint": "Ouvre un brouillon vers Day Captain avec la commande préremplie dans l'objet et le corps.",
             "recall": "Rappeler ce brief",
             "recall_today": "Rappel aujourd'hui",
             "recall_week": "Rappel semaine",
@@ -1019,9 +1019,9 @@ class StructuredDigestRenderer:
         return (
             str(footer["label"]),
             str(footer["hint"]),
-            "- {0}: {1} (subject: recall)".format(footer["recall"], mailbox),
-            "- {0}: {1} (subject: recall-today)".format(footer["recall_today"], mailbox),
-            "- {0}: {1} (subject: recall-week)".format(footer["recall_week"], mailbox),
+            "- {0}: {1} (subject/body: recall)".format(footer["recall"], mailbox),
+            "- {0}: {1} (subject/body: recall-today)".format(footer["recall_today"], mailbox),
+            "- {0}: {1} (subject/body: recall-week)".format(footer["recall_week"], mailbox),
         )
 
     def _footer_html(self, command_mailbox: str) -> str:
@@ -1045,11 +1045,11 @@ class StructuredDigestRenderer:
             "<table role=\"presentation\" style=\"margin:0;border-collapse:separate;border-spacing:0 8px;\"><tr>",
         ]
         for command, label in links:
-            href = "mailto:{0}?subject={1}".format(self._html_escape(mailbox), quote(command))
+            href = "mailto:{0}?subject={1}&body={2}".format(mailbox, quote(command), quote(command))
             parts.append(
                 "<td style=\"padding:0 8px 0 0;\">"
                 "<a href=\"{0}\" style=\"display:inline-block;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;color:#0f172a;text-decoration:none;font-size:13px;white-space:nowrap;\">{1}</a>"
-                "</td>".format(href, self._html_escape(label))
+                "</td>".format(self._html_escape(href), self._html_escape(label))
             )
         parts.append("</tr></table></section>")
         return "".join(parts)
