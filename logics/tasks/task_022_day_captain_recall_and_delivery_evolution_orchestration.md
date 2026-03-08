@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 80%
+> Progress: 90%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -32,7 +32,7 @@ flowchart LR
 - [x] 2. Introduce dedicated sender mailbox support so Day Captain can read from a target mailbox while sending from `daycaptain@...`, with explicit recipients and hosted app-only compatibility.
 - [x] 3. Add inbound email-command recall on top of that foundation, supporting `recall`, `recall-today`, and `recall-week` with sender validation and duplicate suppression.
 - [ ] 4. Validate the combined behavior through automated tests and at least one realistic hosted/mailbox proof path.
-- [ ] 5. Update the README and the relevant operator/setup docs before closing the task; do not mark this task `Done` while implementation details are missing from user-facing docs.
+- [x] 5. Update the README and the relevant operator/setup docs before closing the task; do not mark this task `Done` while implementation details are missing from user-facing docs.
 - [ ] FINAL: Update related Logics docs, statuses, and closure links across the linked requests/backlog items.
 
 # AC Traceability
@@ -97,11 +97,16 @@ flowchart LR
   - sender-to-target-user resolution is deterministic and protected by configured target users plus an optional explicit sender allowlist
   - duplicate suppression is now persistent through stored inbound command receipts keyed by inbound message id
   - the first shipped trigger surface is transport-neutral: the repo now exposes CLI and hosted HTTP handling for normalized inbound email-command events, which can be fed later by a Graph webhook, polling job, or external M365 automation
+- README, `.env.example`, and hosted config/docs are now aligned with the shipped behavior:
+  - the documented hosted env model now includes `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` and `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
+  - local CLI usage, hosted trigger usage, HTTP examples, and hosted validation examples now cover the inbound email-command recall path
+  - `render.yaml` now exposes the new hosted env variables needed for dedicated sender routing and bounded command senders
 - Automated validation executed successfully:
   - `python3 -m unittest tests.test_app tests.test_auth`
   - `python3 -m unittest tests.test_settings tests.test_auth tests.test_graph_client tests.test_app tests.test_digest_renderer`
   - `python3 -m unittest tests.test_app tests.test_settings tests.test_cli tests.test_hosted_jobs tests.test_web`
+  - `python3 -m unittest tests.test_cli tests.test_hosted_jobs tests.test_web tests.test_settings`
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- The task remains open because README/setup/operator docs are not updated yet and a realistic hosted/mailbox proof path for the inbound command flow still needs to be executed.
+- The task remains open only because a realistic hosted/mailbox proof path for the dedicated sender and inbound command flow still needs to be executed, then the linked Logics chain can be closed cleanly.
