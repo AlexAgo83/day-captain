@@ -1,6 +1,6 @@
 ## req_015_day_captain_weekend_digest_window_from_friday - Day Captain weekend digest window from Friday
 > From version: 0.10.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
 > Complexity: Medium
@@ -62,8 +62,8 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_015_day_captain_weekend_digest_window_from_friday` - Extend the first weekend digest mail window back to Friday. Status: `Ready`.
-- `task_023_day_captain_weekend_window_and_reliability_orchestration` - Orchestrate weekend digest horizon and reliability hardening, with README/docs closure required before `Done`. Status: `Ready`.
+- `item_015_day_captain_weekend_digest_window_from_friday` - Extend the first weekend digest mail window back to Friday. Status: `Done`.
+- `task_023_day_captain_weekend_window_and_reliability_orchestration` - Orchestrate weekend digest horizon and reliability hardening, with README/docs closure required before `Done`. Status: `Done`.
 - Suggested split:
   - one implementation task for weekend window selection in `morning-digest`
   - one validation/doc task for tests and operator-facing explanation
