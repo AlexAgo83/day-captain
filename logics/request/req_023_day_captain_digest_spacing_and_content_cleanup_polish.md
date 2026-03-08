@@ -1,0 +1,97 @@
+## req_023_day_captain_digest_spacing_and_content_cleanup_polish - Day Captain digest spacing and content cleanup polish
+> From version: 1.2.0
+> Status: In Progress
+> Understanding: 97%
+> Confidence: 95%
+> Complexity: Low
+> Theme: UX
+> Reminder: Update status/understanding/confidence and references when you edit this doc.
+
+# Needs
+- Apply a final micro-polish pass to the delivered Day Captain digest now that the larger readability and visual-weight passes are live.
+- Improve vertical rhythm in the top of the mail so the header, `Périmètre`, `En bref`, and the first section do not feel visually compressed.
+- Clean up a few remaining raw or awkward content details so the digest feels more intentional and less like direct source text.
+- Avoid self-reference wording mistakes where the digest can describe the target user as meeting with themselves.
+
+# Context
+- This request is a follow-up to `req_022_day_captain_digest_visual_weight_and_header_polish`, after a new real Outlook review on Monday, March 9, 2026.
+- The latest live rendering review indicates that the main remaining issues are no longer structural:
+  - the digest is now broadly clean and product-grade
+  - the footer quick actions work and look credible in Outlook
+  - the top block is much lighter than before
+- The remaining friction points are now smaller but visible:
+  - there is not enough space between `Périmètre` and `En bref`
+  - there is not enough space between the `En bref` paragraph and the next section header such as `Points critiques`
+  - section cards still feel slightly heavy because the border contrast remains strong
+  - the footer helper copy is useful but longer than necessary
+  - some raw titles or labels still read awkwardly, such as `A imprimer` or `Bureau- Artois`
+  - some source-derived summaries can still feel too literal or slightly rough when rendered directly
+  - identity handling is still too naive in some meeting or summary wording, so the digest can sometimes imply that the target user has a meeting with themselves when the same person is recognized in several roles
+- In scope for this request:
+  - tune vertical spacing between top-of-mail metadata and `En bref`
+  - tune vertical spacing between the `En bref` block and the first downstream section
+  - slightly soften card borders or card visual weight if Outlook rendering allows it
+  - shorten the quick-action helper copy without losing clarity
+  - normalize a few obvious source-derived labels or titles when the current rendering is visibly rough
+  - add lightweight identity-aware wording rules so the digest recognizes when the referenced person is the target user and avoids awkward self-reference phrasing
+  - preserve the current layout, transport, and command contract
+- Out of scope for this request:
+  - reopening the digest architecture again
+  - redesigning the footer command model
+  - changing scoring, selection, or recall semantics
+  - adding a broad content-rewriting system for all raw source text
+
+```mermaid
+flowchart LR
+    LiveDigest[Current Outlook rendering] --> TopSpacing[More breathing room around top metadata and En bref]
+    LiveDigest --> Cards[Softer card weight]
+    LiveDigest --> Copy[Cleaner source-derived labels]
+    LiveDigest --> Footer[Shorter helper copy]
+    TopSpacing --> FinalPolish[Final micro-polish pass]
+    Cards --> FinalPolish
+    Copy --> FinalPolish
+    Footer --> FinalPolish
+```
+
+# Acceptance criteria
+- AC1: The delivered digest has visibly more space between the `Périmètre` line and the `En bref` label/block in Outlook.
+- AC2: The delivered digest has visibly more space between the `En bref` body text and the next section header such as `Points critiques`.
+- AC3: Section cards remain readable but use slightly softer visual weight than the current strong white-outline treatment.
+- AC4: The footer helper copy remains clear but is shorter and less visually dominant.
+- AC5: Obvious awkward labels or raw source-derived titles are normalized when a lightweight cleanup rule can improve readability without changing product meaning.
+- AC6: Meeting and summary wording no longer describe the target user as meeting with themselves when the same identity appears in the event metadata.
+- AC7: The improvements preserve the current Outlook-compatible layout and do not regress the gains already shipped in `req_021` and `req_022`.
+
+# Backlog traceability
+- AC1 -> `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish`. Proof: this item explicitly adds breathing room around `Périmètre`, `En bref`, and the first section transition.
+- AC2 -> `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish`. Proof: this item explicitly improves the summary-to-sections spacing rhythm.
+- AC3 -> `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish`. Proof: this item explicitly softens card visual weight.
+- AC4 -> `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish`. Proof: this item explicitly shortens the footer helper copy.
+- AC5 -> `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`. Proof: this item explicitly normalizes rough labels and source-derived titles.
+- AC6 -> `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`. Proof: this item explicitly adds identity-aware wording guards.
+- AC7 -> `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`. Proof: this item explicitly keeps the cleanup bounded rather than architectural.
+
+# Task traceability
+- AC1 -> `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration`. Proof: task `028` explicitly improves spacing around `En bref`.
+- AC2 -> `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration`. Proof: task `028` explicitly improves the summary-to-sections transition.
+- AC3 -> `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration`. Proof: task `028` explicitly softens card weight.
+- AC4 -> `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration`. Proof: task `028` explicitly shortens footer helper copy.
+- AC5 -> `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration`. Proof: task `028` explicitly adds bounded cleanup rules.
+- AC6 -> `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration`. Proof: task `028` explicitly prevents self-reference meeting wording.
+- AC7 -> `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration`. Proof: task `028` explicitly requires regression-safe final validation.
+
+# Definition of Ready (DoR)
+- [x] Problem statement is explicit and user impact is clear.
+- [x] Scope boundaries (in/out) are explicit.
+- [x] Acceptance criteria are testable.
+- [x] Dependencies and known risks are listed.
+
+# Backlog
+- `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish` - Improve the spacing rhythm around `Périmètre`, `En bref`, and the first section. Status: `In Progress`.
+- `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish` - Soften card weight and shorten footer helper copy. Status: `In Progress`.
+- `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup` - Clean rough labels and prevent self-reference meeting wording. Status: `In Progress`.
+- `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration` - Orchestrate the final micro-polish follow-up. Status: `In Progress`.
+
+# Notes
+- Created on Monday, March 9, 2026 after another real Outlook review showed that the remaining gaps are now mostly spacing and cleanup polish rather than structural layout issues.
+- This request intentionally treats the current digest as already strong enough to use, and focuses only on the final visible rough edges.
