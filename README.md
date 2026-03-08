@@ -38,7 +38,7 @@ It currently supports:
 
 ## Project status
 
-Current package version: `0.11.0`
+Current package version: `0.12.0`
 
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
