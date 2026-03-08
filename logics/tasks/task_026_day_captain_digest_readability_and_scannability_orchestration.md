@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 90%
+> Progress: 95%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -69,6 +69,8 @@ flowchart LR
   - `python3 -m unittest tests.test_scoring`
   - `python3 -m unittest tests.test_llm`
   - `python3 -m unittest tests.test_cli`
+  - `python3 -m day_captain validate-config`
+  - `python3 -m day_captain morning-digest --force --output-html tmp/day-captain-preview.html --output-text tmp/day-captain-preview.txt`
 - Remaining before closure:
   - validate the final HTML in a real Outlook mailbox
   - then close linked request/backlog docs and promote this task to `Done`
