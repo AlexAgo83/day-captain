@@ -1,9 +1,9 @@
 ## task_024_day_captain_post_review_reliability_orchestration - Orchestrate post-review recall, scheduler, and recovery hardening
 > From version: 0.11.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 100%
 > Confidence: 100%
-> Progress: 0%
+> Progress: 45%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -26,10 +26,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Fix the deterministic Postgres day-recall defect first so hosted recall surfaces are trustworthy again.
-- [ ] 2. Harden the Sunday `weekly-digest` scheduler gate so small GitHub schedule delays do not skip the run entirely.
-- [ ] 3. Refine digest run-state handling so pre-send failures remain recoverable while post-send uncertainty still blocks duplicate sends.
-- [ ] 4. Refine `email-command-recall` dedupe/recovery semantics with the same pre-send vs post-send distinction.
+- [x] 1. Fix the deterministic Postgres day-recall defect first so hosted recall surfaces are trustworthy again.
+- [x] 2. Harden the Sunday `weekly-digest` scheduler gate so small GitHub schedule delays do not skip the run entirely.
+- [x] 3. Refine digest run-state handling so pre-send failures remain recoverable while post-send uncertainty still blocks duplicate sends.
+- [x] 4. Refine `email-command-recall` dedupe/recovery semantics with the same pre-send vs post-send distinction.
 - [ ] 5. Add regression tests for all four defects and rerun the full suite.
 - [ ] 6. Update README files and operator docs before closure; do not mark this task `Done` while recovery semantics or scheduler gate behavior remain undocumented.
 - [ ] FINAL: Update linked Logics docs, statuses, and closure links across the request and backlog items.
@@ -64,3 +64,16 @@ flowchart LR
 # Report
 - Created on Sunday, March 8, 2026 after a new review of the `0.11.0` state surfaced four remaining reliability defects concentrated around hosted recall, Sunday scheduling, and pre-send recovery semantics.
 - This orchestration slice intentionally stays corrective and narrow: it does not reopen the product decisions already made in `task_023`, it only hardens their recovery behavior and the production backend paths.
+- First implementation tranche completed:
+  - fixed the hosted Postgres `get_latest_completed_run_for_day()` path so day-based recall no longer crashes because of a broken local variable reference
+  - introduced a tested scheduler helper for the Sunday weekly gate and updated the `day-captain-ops` weekly workflow to accept delayed runs that still land within the intended Sunday `20:30` local hour
+  - refined digest delivery state handling so prerequisite failures and explicit Graph pre-send failures transition to `delivery_failed` instead of leaving a permanently blocking `delivery_pending`
+  - refined `email-command-recall` replay semantics so commands tied to a `delivery_failed` run can be retried safely, while `delivery_pending` still blocks duplicates when reconciliation is truly needed
+  - added regression coverage for Postgres day recall, weekly scheduler gate tolerance, digest pre-send recovery, uncertain delivery blocking, and email-command pre-send retry
+- Validation executed successfully for this tranche:
+  - `python3 -m unittest tests.test_app tests.test_storage tests.test_scheduler`
+  - `python3 -m unittest discover -s tests`
+- Remaining work:
+  - update README/operator docs if we keep the new `delivery_failed` / scheduler gate semantics as the final public contract
+  - decide whether any extra hosted/ops proof is needed before closure
+  - close linked request and backlog items once the slice is considered complete
