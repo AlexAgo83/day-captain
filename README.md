@@ -261,8 +261,14 @@ Hosted app-only workflow:
 - provide `DAY_CAPTAIN_GRAPH_TENANT_ID`
 - provide `DAY_CAPTAIN_TARGET_USERS`
 - optionally provide `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` for a dedicated sender mailbox
-- optionally provide `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` for bounded inbound command senders in a single-target deployment
+- optionally provide `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` to enable bounded inbound command senders in a single-target deployment
 - grant the corresponding Graph application permissions in Entra
+
+Hosted `email-command-recall` contract:
+- treat the feature as enabled only when `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` is configured
+- require `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
+- require `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
+- require exactly one hosted target user when using the allowlist-driven inbound command flow
 
 In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity. When several users are configured, each run must choose one explicit target user. If `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` is set, reads still target the selected mailbox but `sendMail` is routed through the dedicated sender mailbox instead.
 
@@ -510,6 +516,7 @@ Recommended production setup:
 - let the private repo trigger the hosted Day Captain service over HTTPS using `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`
 - keep weekday `morning-digest` auto-send separate from the Sunday-evening `weekly-digest` scheduler contract
 - for the Sunday weekly recap, use a jitter-tolerant gate in the private ops workflow instead of relying on an exact GitHub `schedule` minute match; the copy-ready weekly scheduler template already follows that model
+- the shipped weekly scheduler templates are expected to stay aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` gate helper
 
 Fallback if the hosted service sleeps:
 - add `--wake-service` in the private ops workflow before the real job trigger or validation path

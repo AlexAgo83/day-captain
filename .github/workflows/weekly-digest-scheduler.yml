@@ -17,21 +17,30 @@ jobs:
     outputs:
       should_run: ${{ steps.gate.outputs.should_run }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install project
+        run: python -m pip install -e .
+
       - name: Gate Sunday 20:30 Europe/Paris
         id: gate
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
-          from datetime import datetime, timezone
-          from zoneinfo import ZoneInfo
           import os
+          from day_captain.scheduler import should_run_sunday_weekly_digest
 
           if os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch":
               print("should_run=true")
           else:
-              local_now = datetime.now(timezone.utc).astimezone(ZoneInfo("Europe/Paris"))
-              should_run = local_now.weekday() == 6 and local_now.hour == 20 and local_now.minute == 30
+              should_run = should_run_sunday_weekly_digest()
               print("should_run=" + ("true" if should_run else "false"))
           PY
 

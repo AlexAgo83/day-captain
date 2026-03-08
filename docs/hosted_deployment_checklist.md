@@ -11,6 +11,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Set `DAY_CAPTAIN_TARGET_USERS` to the explicit mailbox list served by this deployment.
 - If delivery should come from a shared mailbox such as `daycaptain@...`, set `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` to that mailbox identifier.
 - If inbound email-command recall is enabled for a single-target helper flow, set `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` to the bounded allowed sender list.
+- If inbound email-command recall is enabled, keep exactly one hosted target user and require `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` plus `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`.
 - Treat `DAY_CAPTAIN_GRAPH_USER_ID` only as the single-user fallback/default target, not the primary multi-user hosted model.
 - Do not commit `.env`, token caches, database files, or mailbox-derived fixtures.
 
@@ -33,6 +34,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - If the scheduler fans out across several users, prefer one standalone readiness/wake-up step before the fan-out instead of waking the service once per target.
 - Keep the routine weekday cron path on `trigger-hosted-job --job morning-digest`, the Sunday recap path on `trigger-hosted-job --job weekly-digest`, and reserve `validate-hosted-service` for manual checks and rollout validation.
 - For the Sunday weekly recap, use a jitter-tolerant scheduler gate so GitHub schedule delays within the intended Sunday `20:30 Europe/Paris` hour do not skip the run entirely.
+- Keep the weekly scheduler templates aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` helper-backed gate.
 
 ## HTTP surface
 - Expose only the minimal hosted endpoints:
