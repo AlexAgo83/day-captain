@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 92%
+> Progress: 95%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -71,6 +71,7 @@ flowchart LR
   - improved self-organized meeting fallback to prefer a real attendee when one is available
   - tightened compaction rules so long rewritten summaries keep their `Suivi` / `Next step` cue instead of truncating away the action
   - compacted the item summaries passed into the overview LLM path so `En bref` sees cleaner, shorter source material
+  - added bounded candidate/profile compression and light phrase cleanup for vague top-summary formulations
 - Remaining before closure:
   - finish the copy-heuristic cleanup slice for overview and meeting fallbacks
   - validate the refined rendering in a real Outlook mailbox
