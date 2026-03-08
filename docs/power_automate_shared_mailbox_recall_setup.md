@@ -2,6 +2,12 @@
 
 Use this runbook to bridge inbound emails sent to `daycaptain@...` into the hosted Day Captain endpoint `POST /jobs/email-command-recall`.
 
+Hosted prerequisites for this flow:
+- `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
+- `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
+- exactly one hosted target user
+- `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` configured with the bounded sender allowlist
+
 ## Goal
 
 - Let a user send `recall`, `recall-today`, or `recall-week` to the shared mailbox.

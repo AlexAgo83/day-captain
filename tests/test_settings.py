@@ -131,6 +131,54 @@ class DayCaptainSettingsTest(unittest.TestCase):
 
         settings.validate_hosted()
 
+    def test_validate_hosted_email_command_requires_graph_send_and_app_only(self) -> None:
+        with self.assertRaisesRegex(ValueError, "hosted email-command recall"):
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                graph_auth_mode="app_only",
+                graph_client_id="client-id",
+                graph_client_secret="client-secret",
+                target_users=("alice@example.com",),
+                email_command_allowed_senders=("assistant@example.com",),
+            ).validate_hosted()
+
+        with self.assertRaisesRegex(ValueError, "app-only Graph auth"):
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                delivery_mode="json",
+                graph_send_enabled=True,
+                graph_auth_mode="delegated",
+                target_users=("alice@example.com",),
+                email_command_allowed_senders=("assistant@example.com",),
+            ).validate_hosted()
+
+        DayCaptainSettings(
+            environment="production",
+            job_secret="secret",
+            delivery_mode="json",
+            graph_send_enabled=True,
+            graph_auth_mode="app_only",
+            graph_client_id="client-id",
+            graph_client_secret="client-secret",
+            target_users=("alice@example.com",),
+            email_command_allowed_senders=("assistant@example.com",),
+        ).validate_hosted()
+
+    def test_validate_hosted_email_command_requires_single_target_user(self) -> None:
+        with self.assertRaisesRegex(ValueError, "exactly one hosted target user"):
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                graph_send_enabled=True,
+                graph_auth_mode="app_only",
+                graph_client_id="client-id",
+                graph_client_secret="client-secret",
+                target_users=("alice@example.com", "bob@example.com"),
+                email_command_allowed_senders=("assistant@example.com",),
+            ).validate_hosted()
+
     def test_validate_target_user_rejects_unknown_user(self) -> None:
         settings = DayCaptainSettings(target_users=("alice@example.com", "bob@example.com"))
 

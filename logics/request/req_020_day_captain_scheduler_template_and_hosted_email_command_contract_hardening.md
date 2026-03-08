@@ -1,8 +1,8 @@
 ## req_020_day_captain_scheduler_template_and_hosted_email_command_contract_hardening - Day Captain scheduler template and hosted email-command contract hardening
 > From version: 0.12.0
-> Status: Ready
-> Understanding: 100%
-> Confidence: 100%
+> Status: Done
+> Understanding: 99%
+> Confidence: 99%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -65,9 +65,10 @@ flowchart LR
 
 # Backlog
 - `item_023_day_captain_weekly_scheduler_template_alignment` - Align weekly scheduler templates with the supported jitter-tolerant Sunday gate. Status: `Ready`.
-- `item_024_day_captain_hosted_email_command_contract_enforcement` - Enforce hosted email-command recall prerequisites. Status: `Ready`.
-- `item_025_day_captain_scheduler_template_drift_protection` - Add automated protection against scheduler template drift. Status: `Ready`.
-- `task_025_day_captain_scheduler_template_and_hosted_contract_orchestration` - Orchestrate the full contract-alignment slice with docs closure required before `Done`. Status: `Ready`.
+- `item_023_day_captain_weekly_scheduler_template_alignment` - Align weekly scheduler templates with the supported jitter-tolerant Sunday gate. Status: `Done`.
+- `item_024_day_captain_hosted_email_command_contract_enforcement` - Enforce hosted email-command recall prerequisites. Status: `Done`.
+- `item_025_day_captain_scheduler_template_drift_protection` - Add automated protection against scheduler template drift. Status: `Done`.
+- `task_025_day_captain_scheduler_template_and_hosted_contract_orchestration` - Orchestrate the full contract-alignment slice with docs closure required before `Done`. Status: `Done`.
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.
