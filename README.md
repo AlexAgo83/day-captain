@@ -249,6 +249,11 @@ If you add `Mail.Send` or change delegated scopes, rerun `PYTHONPATH=src python3
 
 When `delivery_mode=graph_send`, the current local delegated flow sends through `POST /me/sendMail`. If the rendered message does not already include recipients, the app defaults to the authenticated mailbox address returned by the Graph profile.
 
+Hosted delivery recovery semantics:
+- `delivery_failed` means Graph prerequisites or delivery failed before acceptance was likely, so a later retry is allowed.
+- `delivery_pending` is reserved for uncertain post-send reconciliation, where delivery may already have happened and duplicate sends must still be blocked.
+- `email-command-recall` follows the same rule: pre-send failures are retryable, but uncertain post-send outcomes stay deduplicated until reconciled.
+
 Hosted app-only workflow:
 - set `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
 - provide `DAY_CAPTAIN_GRAPH_CLIENT_ID`
@@ -504,6 +509,7 @@ Recommended production setup:
 - move real scheduling and production secrets into a private `day-captain-ops` repository
 - let the private repo trigger the hosted Day Captain service over HTTPS using `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`
 - keep weekday `morning-digest` auto-send separate from the Sunday-evening `weekly-digest` scheduler contract
+- for the Sunday weekly recap, use a jitter-tolerant gate in the private ops workflow instead of relying on an exact GitHub `schedule` minute match; the copy-ready weekly scheduler template already follows that model
 
 Fallback if the hosted service sleeps:
 - add `--wake-service` in the private ops workflow before the real job trigger or validation path
