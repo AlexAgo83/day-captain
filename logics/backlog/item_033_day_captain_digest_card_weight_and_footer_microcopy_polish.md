@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 96%
 > Confidence: 94%
-> Progress: 0%
+> Progress: 65%
 > Complexity: Low
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -50,4 +50,4 @@ flowchart LR
 
 # Notes
 - Derived from the same March 9, 2026 Outlook review as `req_023`.
-- This item keeps the footer and card tweaks separate from wording-cleanup logic.
+- Implementation is underway: card borders are being softened slightly and the footer helper copy is being tightened while the draft-action meaning stays explicit.
