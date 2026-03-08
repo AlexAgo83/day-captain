@@ -5,6 +5,7 @@ from datetime import date
 from datetime import datetime
 import json
 import os
+from pathlib import Path
 import sys
 from typing import Optional
 
@@ -52,11 +53,15 @@ def build_parser() -> argparse.ArgumentParser:
     morning.add_argument("--delivery-mode", help="Override the configured delivery mode.")
     morning.add_argument("--force", action="store_true", help="Ignore the last successful run window.")
     morning.add_argument("--target-user", help="Configured mailbox/user to run.")
+    morning.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
+    morning.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
 
     weekly = subparsers.add_parser("weekly-digest", help="Run the weekly digest flow.")
     weekly.add_argument("--now", help="ISO datetime override for the run clock.")
     weekly.add_argument("--delivery-mode", help="Override the configured delivery mode.")
     weekly.add_argument("--target-user", help="Configured mailbox/user to run.")
+    weekly.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
+    weekly.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
 
     serve_parser = subparsers.add_parser("serve", help="Run the Day Captain HTTP service.")
     serve_parser.add_argument("--host", help="Override the configured bind host.")
@@ -66,6 +71,8 @@ def build_parser() -> argparse.ArgumentParser:
     recall.add_argument("--run-id", help="Specific digest run identifier.")
     recall.add_argument("--day", help="ISO date used to find the latest run for a day.")
     recall.add_argument("--target-user", help="Configured mailbox/user to recall.")
+    recall.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
+    recall.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
 
     email_command = subparsers.add_parser(
         "email-command-recall",
@@ -77,6 +84,8 @@ def build_parser() -> argparse.ArgumentParser:
     email_command.add_argument("--subject", help="Inbound email subject used for command parsing.")
     email_command.add_argument("--body", help="Inbound email body used for command parsing.")
     email_command.add_argument("--now", help="Optional ISO datetime override.")
+    email_command.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
+    email_command.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
 
     feedback = subparsers.add_parser("record-feedback", help="Record user feedback on a digest item.")
     feedback.add_argument("--run-id", required=True)
@@ -377,6 +386,27 @@ def _run_validate_hosted_service_command(args: argparse.Namespace) -> object:
         raise SystemExit(str(exc))
 
 
+def _export_digest_preview(args: argparse.Namespace, result: object) -> None:
+    output_html = str(getattr(args, "output_html", "") or "").strip()
+    output_text = str(getattr(args, "output_text", "") or "").strip()
+    if not output_html and not output_text:
+        return
+
+    payload = getattr(result, "payload", result)
+    delivery_body = str(getattr(payload, "delivery_body", "") or "")
+    delivery_payload = getattr(payload, "delivery_payload", {}) or {}
+    html_body = str(delivery_payload.get("html_body") or "")
+
+    if output_html:
+        target = Path(output_html)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(html_body, encoding="utf-8")
+    if output_text:
+        target = Path(output_text)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(delivery_body, encoding="utf-8")
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -447,5 +477,6 @@ def main(argv: Optional[list] = None) -> int:
             target_user_id=args.target_user,
         )
 
+    _export_digest_preview(args, result)
     print(json.dumps(to_jsonable(result), indent=2, sort_keys=True))
     return 0
