@@ -27,6 +27,33 @@ def _normalized_job_secret(job_secret: str) -> str:
     return normalized
 
 
+def _validate_job_ack(payload: Mapping[str, Any], expected_job_name: str) -> Mapping[str, Any]:
+    status = str(payload.get("status") or "").strip()
+    job = str(payload.get("job") or "").strip()
+    run_id = str(payload.get("run_id") or "").strip()
+    generated_at = str(payload.get("generated_at") or "").strip()
+    delivery_mode = str(payload.get("delivery_mode") or "").strip()
+    section_counts = payload.get("section_counts")
+
+    if status != "completed":
+        raise HostedJobError("Hosted job acknowledgement did not report status=completed.")
+    if job != expected_job_name.replace("-", "_"):
+        raise HostedJobError("Hosted job acknowledgement reported unexpected job name.")
+    if not run_id:
+        raise HostedJobError("Hosted job acknowledgement did not include run_id.")
+    if not generated_at:
+        raise HostedJobError("Hosted job acknowledgement did not include generated_at.")
+    if not delivery_mode:
+        raise HostedJobError("Hosted job acknowledgement did not include delivery_mode.")
+    if not isinstance(section_counts, dict):
+        raise HostedJobError("Hosted job acknowledgement did not include section_counts.")
+    required_sections = ("critical_topics", "actions_to_take", "watch_items", "upcoming_meetings")
+    for section_name in required_sections:
+        if section_name not in section_counts:
+            raise HostedJobError("Hosted job acknowledgement is missing section count `{0}`.".format(section_name))
+    return payload
+
+
 def check_hosted_health(
     service_url: str,
     *,
@@ -141,13 +168,16 @@ def trigger_hosted_job(
         response_payload = {"raw_response": raw}
     if status_code != 200:
         raise HostedJobError("Hosted job returned unexpected status {0}.".format(status_code))
+    if not isinstance(response_payload, dict):
+        raise HostedJobError("Hosted job did not return a JSON object acknowledgement.")
+    validated_payload = _validate_job_ack(response_payload, normalized_job)
     return {
         "status": "ok",
         "job": normalized_job,
         "url": url,
         "status_code": status_code,
         "request_payload": dict(payload or {}),
-        "response": response_payload,
+        "response": validated_payload,
     }
 
 
@@ -193,6 +223,9 @@ def validate_hosted_service(
             timeout_seconds=timeout_seconds,
             opener=opener,
         )
+        recalled_run_id = str(((recall.get("response") or {}).get("run_id")) or "").strip()
+        if recalled_run_id != run_id:
+            raise HostedJobError("Hosted recall validation returned a different run_id than morning-digest.")
     return {
         "status": "ok",
         "service_url": _normalized_service_url(service_url),

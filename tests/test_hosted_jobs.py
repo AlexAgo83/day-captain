@@ -98,7 +98,21 @@ class HostedJobsTest(unittest.TestCase):
         )
 
     def test_trigger_hosted_job_posts_expected_payload(self) -> None:
-        recorder = HostedJobRecorder({"status": "completed", "run_id": "run-1"})
+        recorder = HostedJobRecorder(
+            {
+                "status": "completed",
+                "job": "morning_digest",
+                "run_id": "run-1",
+                "generated_at": "2026-03-08T08:00:00+00:00",
+                "delivery_mode": "json",
+                "section_counts": {
+                    "critical_topics": 0,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            }
+        )
 
         result = trigger_hosted_job(
             "https://example.com",
@@ -138,11 +152,46 @@ class HostedJobsTest(unittest.TestCase):
                 opener=failing_opener,
             )
 
+    def test_trigger_hosted_job_raises_for_invalid_ack_shape(self) -> None:
+        recorder = HostedJobRecorder({"status": "completed", "run_id": "run-1"})
+
+        with self.assertRaises(HostedJobError):
+            trigger_hosted_job(
+                "https://example.com",
+                "secret",
+                payload={"force": False},
+                opener=recorder,
+            )
+
     def test_validate_hosted_service_runs_health_morning_and_recall(self) -> None:
         payloads = [
             {"status": "ok"},
-            {"status": "completed", "run_id": "run-1"},
-            {"status": "completed", "run_id": "run-1"},
+            {
+                "status": "completed",
+                "job": "morning_digest",
+                "run_id": "run-1",
+                "generated_at": "2026-03-08T08:00:00+00:00",
+                "delivery_mode": "json",
+                "section_counts": {
+                    "critical_topics": 1,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            },
+            {
+                "status": "completed",
+                "job": "recall_digest",
+                "run_id": "run-1",
+                "generated_at": "2026-03-08T08:01:00+00:00",
+                "delivery_mode": "json",
+                "section_counts": {
+                    "critical_topics": 1,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            },
         ]
 
         class SequenceRecorder:
@@ -166,6 +215,49 @@ class HostedJobsTest(unittest.TestCase):
         self.assertEqual(recorder.requests[1][0], "https://example.com/jobs/morning-digest")
         self.assertEqual(recorder.requests[2][0], "https://example.com/jobs/recall-digest")
         self.assertEqual(json.loads(recorder.requests[2][1])["run_id"], "run-1")
+
+    def test_validate_hosted_service_raises_when_recall_run_id_differs(self) -> None:
+        payloads = [
+            {"status": "ok"},
+            {
+                "status": "completed",
+                "job": "morning_digest",
+                "run_id": "run-1",
+                "generated_at": "2026-03-08T08:00:00+00:00",
+                "delivery_mode": "json",
+                "section_counts": {
+                    "critical_topics": 0,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            },
+            {
+                "status": "completed",
+                "job": "recall_digest",
+                "run_id": "run-2",
+                "generated_at": "2026-03-08T08:01:00+00:00",
+                "delivery_mode": "json",
+                "section_counts": {
+                    "critical_topics": 0,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            },
+        ]
+
+        class SequenceRecorder:
+            def __call__(self, req, timeout=0):
+                return FakeResponse(payloads.pop(0), status=200)
+
+        with self.assertRaises(HostedJobError):
+            validate_hosted_service(
+                "https://example.com",
+                "secret",
+                target_user_id="alice@example.com",
+                opener=SequenceRecorder(),
+            )
 
 
 if __name__ == "__main__":
