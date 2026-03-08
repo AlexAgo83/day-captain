@@ -1,9 +1,9 @@
 ## task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration - Day Captain digest visual weight and quick actions orchestration
 > From version: 1.1.0
 > Status: In Progress
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 70%
+> Understanding: 97%
+> Confidence: 95%
+> Progress: 80%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -59,7 +59,8 @@ flowchart LR
 - Implementation in progress:
   - removed the heavy hero-style background treatment in favor of a lighter top block with a styled perimeter line
   - reduced card visual weight and tightened meeting wording toward natural day references such as tomorrow or Monday
-  - added a footer quick-action prototype using `mailto:` links for `recall`, `recall-today`, and `recall-week`
+  - refined the perimeter/window copy away from the raw arrow format toward a more intentional localized range line
+  - added a footer quick-action prototype using `mailto:` links for `recall`, `recall-today`, and `recall-week`, plus helper copy clarifying that the links open a draft
 - Remaining before closure:
   - validate the final rendering in a real Outlook mailbox
   - then update closure links and promote the request/backlog/task chain to `Done`

@@ -43,7 +43,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Budget review is the main priority this morning.", payload.delivery_body)
         self.assertIn("Critical topics", payload.delivery_body)
         self.assertIn("As of", payload.delivery_body)
-        self.assertIn("Window:", payload.delivery_body)
+        self.assertIn("Window: From Fri 06 Mar 2026 at 09:00 to Sat 07 Mar 2026 at 09:00 CET", payload.delivery_body)
         self.assertIn("Sat 07 Mar 2026 at 09:00 CET", payload.delivery_body)
         self.assertEqual(payload.delivery_subject, "Your Day Captain brief for Sat 07 Mar")
         self.assertEqual(payload.top_summary, "Budget review is the main priority this morning.")
@@ -60,6 +60,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("In brief", payload.delivery_payload["html_body"])
         self.assertIn("No meetings are lined up for today.", payload.delivery_body)
         self.assertIn("Quick actions", payload.delivery_body)
+        self.assertIn("Opens a draft to Day Captain with the command prefilled.", payload.delivery_body)
         self.assertIn("mailto:daycaptain@example.com?subject=recall", payload.delivery_payload["html_body"])
         self.assertNotIn("background:#f8fafc", payload.delivery_payload["html_body"])
 
@@ -79,7 +80,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
 
         self.assertIn("Votre brief Day Captain", payload.delivery_body)
         self.assertIn("À jour au", payload.delivery_body)
-        self.assertIn("Périmètre :", payload.delivery_body)
+        self.assertIn("Périmètre : Du sam. 07 mars 2026 à 09:00 au dim. 08 mars 2026 à 09:00 CET", payload.delivery_body)
         self.assertIn("Points critiques", payload.delivery_body)
         self.assertIn("Aperçu des réunions de lundi.", payload.delivery_body)
         self.assertEqual(payload.delivery_subject, "Votre brief Day Captain du dim. 08 mars")
@@ -149,6 +150,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
 
         self.assertIn("Actions rapides", payload.delivery_body)
+        self.assertIn("Ouvre un brouillon vers Day Captain avec la commande préremplie.", payload.delivery_body)
         self.assertIn("Rappeler ce brief", payload.delivery_payload["html_body"])
         self.assertIn("subject=recall-week", payload.delivery_payload["html_body"])
 
