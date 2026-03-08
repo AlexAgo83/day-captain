@@ -1,9 +1,9 @@
 ## item_004_day_captain_digest_quality_and_email_polish - Improve delivered digest quality after real mailbox validation
 > From version: 0.4.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 96%
-> Progress: 93%
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 94%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -68,4 +68,5 @@ flowchart LR
 - This slice starts from a real received email, not a speculative design exercise.
 - Likely implementation areas include `src/day_captain/services.py`, `src/day_captain/app.py`, `.env`, `.env.example`, `README.md`, and the digest-related tests.
 - Rendering and signal quality are implemented and validated against real `graph_send` delivery.
-- Remaining work is limited to end-to-end mailbox validation of the LLM wording path once provider quota or billing is enabled; the configured key currently falls back on `429 insufficient_quota`.
+- Fresh verification on Sunday, March 8, 2026 reconfirmed that the remaining gap is still external provider quota: the live digest falls back to deterministic wording and direct provider calls still return `429 insufficient_quota`.
+- Remaining work is limited to end-to-end mailbox validation of the LLM wording path once provider quota or billing is enabled; the configured key still falls back on `429 insufficient_quota`.

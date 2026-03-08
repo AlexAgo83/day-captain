@@ -2,8 +2,8 @@
 > From version: 0.4.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 96%
-> Progress: 80%
+> Confidence: 99%
+> Progress: 82%
 > Complexity: High
 > Theme: Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -44,6 +44,9 @@ flowchart LR
 # Validation
 - python3 -m unittest tests.test_llm tests.test_app tests.test_settings
 - python3 -m unittest discover -s tests
+- set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 -m day_captain auth status
+- set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force
+- set -a; source .env >/dev/null 2>&1; set +a; PYTHONPATH=src python3 - <<'PY' ... direct OpenAI-compatible provider probe returning `429 insufficient_quota` for the configured key
 - PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force
 - delivered email review in Outlook
 - python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
@@ -64,4 +67,6 @@ flowchart LR
 - Validation executed in live mode:
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode json --force`
   - `PYTHONPATH=src python3 -m day_captain morning-digest --delivery-mode graph_send --force`
-- Current blocker: the OpenAI request returns `429 insufficient_quota`, so the live run falls back safely to deterministic wording instead of producing verifiable LLM rewrites. Final mailbox validation of wording quality remains open until provider quota or billing is enabled.
+- Fresh verification on Sunday, March 8, 2026 still shows the live JSON digest falling back to deterministic wording: the rendered payload reports `top_summary_source=deterministic`, which means the provider path still did not produce usable output.
+- A direct provider call on Sunday, March 8, 2026 still returns `429 insufficient_quota` for both rewrite and top-summary requests, so the blocker is external to the repository rather than an application wiring issue.
+- Current blocker: the OpenAI request still returns `429 insufficient_quota`, so the live run falls back safely to deterministic wording instead of producing verifiable LLM rewrites. Final mailbox validation of wording quality remains open until provider quota or billing is enabled.
