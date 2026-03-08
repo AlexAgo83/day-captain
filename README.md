@@ -4,21 +4,25 @@ Day Captain is a Python service that builds a daily Microsoft 365 digest from Ou
 
 ```mermaid
 flowchart LR
-    Outlook[Outlook Mail] --> Graph[Microsoft Graph]
-    Calendar[Outlook Calendar] --> Graph
-    Graph --> Auth[Entra Auth]
+    TargetMailbox[Target User Mailbox] --> Graph[Microsoft Graph]
+    Calendar[Target User Calendar] --> Graph
+    Graph --> Auth[Entra App-Only or Delegated Auth]
     Auth --> App[Day Captain App]
     App --> Score[Scoring and Filtering]
     Score --> LLM[Bounded LLM Layer]
     LLM --> Render[Digest Renderer]
-    Render --> Delivery[Delivery]
-    Delivery --> Json[JSON or CLI Output]
-    Delivery --> Mail[Graph sendMail]
+    Render --> Json[JSON or CLI Output]
+    Render --> Delivery[Graph Delivery]
+    Delivery --> SenderMailbox[daycaptain Shared Mailbox]
+    SenderMailbox --> Recipient[Target User Inbox]
+    UserCommand[Email Command: recall or recall-week] --> SenderMailbox
+    SenderMailbox --> CommandTrigger[Inbound Email Command Trigger]
+    CommandTrigger --> App
+    Scheduler[GitHub Actions or manual hosted trigger] --> Web[HTTP or CLI Entry]
+    Web --> App
     App --> Storage[(SQLite or Postgres)]
     Feedback[Feedback and Preferences] --> Storage
     Storage --> App
-    Scheduler[GitHub Actions or manual trigger] --> Web[HTTP or CLI Entry]
-    Web --> App
 ```
 
 It currently supports:
@@ -255,6 +259,8 @@ Hosted app-only workflow:
 - grant the corresponding Graph application permissions in Entra
 
 In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity. When several users are configured, each run must choose one explicit target user. If `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` is set, reads still target the selected mailbox but `sendMail` is routed through the dedicated sender mailbox instead.
+
+For the first inbound email-command bridge, the recommended operator path is currently Power Automate against the shared mailbox trigger rather than a custom Graph webhook. See [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md).
 
 ## Local usage
 
