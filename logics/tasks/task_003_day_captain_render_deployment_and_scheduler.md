@@ -1,9 +1,9 @@
 ## task_003_day_captain_render_deployment_and_scheduler - Deploy Day Captain on Render with GitHub Actions scheduling
 > From version: 0.1.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 99%
+> Progress: 100%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -54,7 +54,7 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Added hosted configuration seams in `src/day_captain/config.py` and `.env.example` for `DAY_CAPTAIN_DATABASE_URL`, HTTP bind settings, and a protected job secret.

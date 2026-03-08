@@ -87,7 +87,9 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertEqual(captured["timeout"], 30)
         self.assertEqual(captured["headers"]["Authorization"], "Bearer sk-test")
         self.assertEqual(captured["body"]["model"], "gpt-5-mini")
+        self.assertEqual(captured["body"]["reasoning_effort"], "minimal")
         self.assertEqual(captured["body"]["messages"][1]["role"], "user")
+        self.assertNotIn("temperature", captured["body"])
         self.assertIn("chief of staff", captured["body"]["messages"][0]["content"])
         self.assertIn("French", captured["body"]["messages"][0]["content"])
         self.assertEqual(
@@ -174,12 +176,63 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
 
         self.assertEqual(captured["url"], "https://api.openai.com/v1/chat/completions")
         self.assertEqual(captured["timeout"], 30)
-        self.assertEqual(captured["body"]["max_tokens"], 120)
+        self.assertEqual(captured["body"]["max_completion_tokens"], 120)
+        self.assertEqual(captured["body"]["reasoning_effort"], "minimal")
+        self.assertNotIn("temperature", captured["body"])
         self.assertIn("2 to 4 short factual sentences", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             summary,
             "Budget review is the main priority, with roadmap follow-up next.",
         )
+
+    def test_non_gpt5_models_keep_custom_temperature(self) -> None:
+        captured = {}
+
+        def opener(req, timeout=0):
+            captured["body"] = json.loads(req.data.decode("utf-8"))
+            return _FakeResponse(
+                {
+                    "choices": [
+                        {
+                            "message": {
+                                "content": json.dumps(
+                                    {
+                                        "items": [
+                                            {
+                                                "ref": "message:msg-1",
+                                                "summary": "Review the budget before noon because the request is urgent.",
+                                            }
+                                        ]
+                                    }
+                                )
+                            }
+                        }
+                    ]
+                }
+            )
+
+        provider = OpenAICompatibleDigestWordingProvider(
+            api_key="sk-test",
+            model="gpt-4o-mini",
+            temperature=0.2,
+            opener=opener,
+        )
+
+        provider.rewrite_summaries(
+            (
+                DigestEntry(
+                    title="Urgent budget review",
+                    summary="Critical: Please review before noon.",
+                    section_name="critical_topics",
+                    source_kind="message",
+                    source_id="msg-1",
+                    score=3.0,
+                ),
+            )
+        )
+
+        self.assertEqual(captured["body"]["temperature"], 0.2)
+        self.assertNotIn("reasoning_effort", captured["body"])
 
 
 class LlmDigestWordingEngineTest(unittest.TestCase):
