@@ -1,4 +1,4 @@
-name: Morning Digest Scheduler
+name: Example Morning Digest Scheduler
 
 on:
   workflow_dispatch:
@@ -52,28 +52,21 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.prepare-targets.outputs.targets) }}
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
       - name: Trigger hosted morning digest
         env:
           DAY_CAPTAIN_SERVICE_URL: ${{ secrets.DAY_CAPTAIN_SERVICE_URL }}
           DAY_CAPTAIN_JOB_SECRET: ${{ secrets.DAY_CAPTAIN_JOB_SECRET }}
           TARGET_USER_ID: ${{ matrix.target_user_id }}
         run: |
-          test -n "$DAY_CAPTAIN_SERVICE_URL"
-          test -n "$DAY_CAPTAIN_JOB_SECRET"
-          payload='{"force":false}'
-          if [ -n "$TARGET_USER_ID" ]; then
-            payload="$(python3 - <<'PY'
-import json
-import os
-
-print(json.dumps({"force": False, "target_user_id": os.environ["TARGET_USER_ID"]}))
-PY
-)"
-          fi
-          status_code="$(curl --output /dev/null --write-out "%{http_code}" --show-error --silent \
-            -X POST \
-            -H "Content-Type: application/json" \
-            -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
-            -d "$payload" \
-            "$DAY_CAPTAIN_SERVICE_URL/jobs/morning-digest")"
-          test "$status_code" = "200"
+          # Example only: production scheduling should live in the private day-captain-ops repo.
+          PYTHONPATH=src python3 scripts/trigger_hosted_digest.py \
+            --job morning-digest \
+            --target-user "$TARGET_USER_ID"
