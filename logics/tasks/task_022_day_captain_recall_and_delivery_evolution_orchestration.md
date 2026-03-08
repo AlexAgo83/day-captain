@@ -1,9 +1,9 @@
 ## task_022_day_captain_recall_and_delivery_evolution_orchestration - Orchestrate recall hardening, dedicated sender delivery, and email-command recall
 > From version: 0.9.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 30%
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -28,7 +28,7 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Fix the recall and auth reliability defects first so explicit run recall, day recall, delegated scope validation, and collection boundaries are trustworthy before adding new recall surfaces.
+- [x] 1. Fix the recall and auth reliability defects first so explicit run recall, day recall, delegated scope validation, and collection boundaries are trustworthy before adding new recall surfaces.
 - [ ] 2. Introduce dedicated sender mailbox support so Day Captain can read from a target mailbox while sending from `daycaptain@...`, with explicit recipients and hosted app-only compatibility.
 - [ ] 3. Add inbound email-command recall on top of that foundation, supporting `recall`, `recall-today`, and `recall-week` with sender validation and duplicate suppression.
 - [ ] 4. Validate the combined behavior through automated tests and at least one realistic hosted/mailbox proof path.
@@ -80,3 +80,17 @@ flowchart LR
 - [ ] README and the relevant setup or operator docs are updated to reflect the shipped behavior before status moves to `Done`.
 - [ ] Linked request/backlog/task docs updated.
 - [ ] Status is `Done` and progress is `100%`.
+
+# Report
+- Work has started on Sunday, March 8, 2026.
+- The first hardening tranche is now implemented and validated:
+  - explicit `run_id` recall no longer depends on an implicit default user scope
+  - day-based recall now resolves against the configured display timezone instead of raw UTC date matching
+  - delegated auth reports the scopes actually available on the active token/cache path, avoiding false `Mail.Send` positives
+  - consecutive digest windows now advance past the previous boundary by one microsecond to avoid exact-boundary duplicate ingestion
+- Automated validation executed successfully:
+  - `python3 -m unittest tests.test_app tests.test_auth`
+  - `python3 -m unittest discover -s tests`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
+- The task remains open because the dedicated sender mailbox path, inbound email-command recall, and the final README/operator-doc updates are still pending.

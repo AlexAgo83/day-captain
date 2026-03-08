@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 import sys
@@ -65,7 +66,7 @@ class MorningRunPersistenceTest(unittest.TestCase):
             first_run = app.run_morning_digest(now=first_now)
             second_run = app.run_morning_digest(now=second_now)
 
-            self.assertEqual(first_run.window_end, second_run.window_start)
+            self.assertEqual(first_run.window_end + timedelta(microseconds=1), second_run.window_start)
             self.assertEqual(len(second_run.critical_topics), 1)
             self.assertIsNotNone(storage.get_latest_completed_run())
 

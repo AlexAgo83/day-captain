@@ -243,15 +243,25 @@ class GraphDelegatedAuthProvider:
     ) -> AuthContext:
         access_token = self.access_token
         cached_bundle = self.token_cache.load() if self.token_cache is not None else None
+        active_bundle = None
         if not access_token and cached_bundle is not None:
-            if cached_bundle.expires_at > datetime.now(timezone.utc):
+            requested_scopes = {str(scope) for scope in scopes}
+            cached_scopes = {str(scope) for scope in cached_bundle.scopes}
+            if cached_bundle.expires_at > datetime.now(timezone.utc) and requested_scopes.issubset(cached_scopes):
                 access_token = cached_bundle.access_token
+                active_bundle = cached_bundle
             elif self.authenticator is not None and cached_bundle.refresh_token:
                 refreshed = self.authenticator.refresh_tokens(cached_bundle.refresh_token, scopes)
                 if self.token_cache is not None:
                     self.token_cache.save(refreshed)
                 cached_bundle = refreshed
                 access_token = refreshed.access_token
+                active_bundle = refreshed
+            else:
+                access_token = cached_bundle.access_token
+                active_bundle = cached_bundle
+        elif cached_bundle is not None:
+            active_bundle = cached_bundle
         if not access_token:
             raise ValueError(
                 "No delegated Graph access token available. Run `day-captain auth login` or set DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."
@@ -262,22 +272,23 @@ class GraphDelegatedAuthProvider:
             profile = self.api_client.get_object("/me", access_token=access_token)
             resolved_user_id = str(profile.get("id") or profile.get("userPrincipalName") or "graph-user")
             if cached_bundle is not None and self.token_cache is not None:
-                self.token_cache.save(
-                    type(cached_bundle)(
-                        access_token=access_token,
-                        refresh_token=cached_bundle.refresh_token,
-                        expires_at=cached_bundle.expires_at,
-                        scopes=cached_bundle.scopes,
-                        token_type=cached_bundle.token_type,
-                        user_id=resolved_user_id,
-                    )
+                refreshed_profile_bundle = type(cached_bundle)(
+                    access_token=access_token,
+                    refresh_token=cached_bundle.refresh_token,
+                    expires_at=cached_bundle.expires_at,
+                    scopes=cached_bundle.scopes,
+                    token_type=cached_bundle.token_type,
+                    user_id=resolved_user_id,
                 )
+                self.token_cache.save(refreshed_profile_bundle)
+                active_bundle = refreshed_profile_bundle
         requested_user_id = str(target_user_id or "").strip()
         if requested_user_id and requested_user_id != resolved_user_id:
             raise ValueError("Delegated auth can only run for the authenticated user.")
+        granted_scopes = tuple(active_bundle.scopes) if active_bundle is not None and active_bundle.scopes else tuple(scopes)
         return AuthContext(
             access_token=access_token,
-            granted_scopes=tuple(scopes),
+            granted_scopes=granted_scopes,
             user_id=resolved_user_id,
             tenant_id=str(tenant_id or "").strip(),
             auth_mode="delegated",
