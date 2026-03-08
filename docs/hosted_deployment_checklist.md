@@ -5,9 +5,11 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 ## Secrets and auth
 - Set `DAY_CAPTAIN_JOB_SECRET` in Render and in the GitHub Actions scheduler secrets.
 - Do not deploy hosted environments with an empty `DAY_CAPTAIN_JOB_SECRET`.
+- Set `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` for the Render-hosted unattended path.
 - Set `DAY_CAPTAIN_GRAPH_CLIENT_ID` and `DAY_CAPTAIN_GRAPH_TENANT_ID`.
+- Set `DAY_CAPTAIN_GRAPH_CLIENT_SECRET`.
 - Set `DAY_CAPTAIN_TARGET_USERS` to the explicit mailbox list served by this deployment.
-- Prefer `DAY_CAPTAIN_GRAPH_REFRESH_TOKEN` for hosted delegated auth bootstrap.
+- Treat `DAY_CAPTAIN_GRAPH_USER_ID` only as the single-user fallback/default target, not the primary multi-user hosted model.
 - Do not commit `.env`, token caches, database files, or mailbox-derived fixtures.
 
 ## Database and transport

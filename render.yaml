@@ -10,6 +10,8 @@ services:
         value: production
       - key: DAY_CAPTAIN_DELIVERY_MODE
         value: graph_send
+      - key: DAY_CAPTAIN_GRAPH_AUTH_MODE
+        value: app_only
       - key: DAY_CAPTAIN_GRAPH_SEND_ENABLED
         value: "true"
       - key: DAY_CAPTAIN_GRAPH_BASE_URL
@@ -20,9 +22,9 @@ services:
         sync: false
       - key: DAY_CAPTAIN_GRAPH_CLIENT_ID
         sync: false
-      - key: DAY_CAPTAIN_GRAPH_REFRESH_TOKEN
+      - key: DAY_CAPTAIN_GRAPH_CLIENT_SECRET
         sync: false
-      - key: DAY_CAPTAIN_GRAPH_USER_ID
+      - key: DAY_CAPTAIN_TARGET_USERS
         sync: false
       - key: DAY_CAPTAIN_DISPLAY_TIMEZONE
         sync: false
