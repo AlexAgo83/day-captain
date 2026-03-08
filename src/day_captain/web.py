@@ -55,6 +55,17 @@ class DayCaptainWebApp:
                     target_user_id=payload.get("target_user_id"),
                 )
                 return self._json_response(start_response, 200, self._job_ack("morning_digest", result))
+            if path == "/jobs/weekly-digest" and method == "POST":
+                self._require_secret(environ)
+                payload = self._read_json(environ)
+                self.settings.require_target_user_if_needed(str(payload.get("target_user_id") or ""))
+                app = build_application(settings=self.settings)
+                result = app.run_weekly_digest(
+                    now=_parse_datetime(payload.get("now")),
+                    delivery_mode=payload.get("delivery_mode"),
+                    target_user_id=payload.get("target_user_id"),
+                )
+                return self._json_response(start_response, 200, self._job_ack("weekly_digest", result))
             if path == "/jobs/recall-digest" and method == "POST":
                 self._require_secret(environ)
                 payload = self._read_json(environ)

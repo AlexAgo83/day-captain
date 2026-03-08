@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 import sys
@@ -16,6 +17,27 @@ from day_captain.config import DayCaptainSettings
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+
+
+class RecordingDigestDelivery:
+    def __init__(self) -> None:
+        self.calls = []
+
+    def deliver_digest(self, auth_context, payload) -> None:
+        self.calls.append((auth_context, payload))
+
+
+class FailOnCompletedRunSaveStorage(InMemoryStorage):
+    def __init__(self) -> None:
+        super().__init__()
+        self._completed_save_attempts = 0
+
+    def save_run(self, run) -> None:
+        if run.status == "completed":
+            self._completed_save_attempts += 1
+            if self._completed_save_attempts >= 1:
+                raise RuntimeError("simulated completion save failure")
+        super().save_run(run)
 
 
 class DayCaptainApplicationTest(unittest.TestCase):
@@ -156,6 +178,51 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(recalled.run_id, created.run_id)
 
+    def test_weekend_first_run_uses_friday_start_in_display_timezone(self) -> None:
+        now = datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now, force=False)
+
+        self.assertEqual(payload.window_start, datetime(2026, 3, 5, 23, 0, tzinfo=timezone.utc))
+
+    def test_weekend_repeat_run_stays_incremental(self) -> None:
+        first_now = datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc)
+        second_now = datetime(2026, 3, 8, 12, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        first_payload = app.run_morning_digest(now=first_now)
+        second_payload = app.run_morning_digest(now=second_now)
+
+        self.assertEqual(second_payload.window_start, first_payload.window_end + timedelta(microseconds=1))
+
+    def test_weekly_digest_uses_start_of_local_week(self) -> None:
+        now = datetime(2026, 3, 8, 19, 30, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_weekly_digest(now=now)
+
+        self.assertEqual(payload.window_start, datetime(2026, 3, 1, 23, 0, tzinfo=timezone.utc))
+        self.assertEqual(payload.delivery_mode, "json")
+
     def test_consecutive_runs_do_not_duplicate_boundary_message(self) -> None:
         first_now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         second_now = datetime(2026, 3, 7, 9, 0, tzinfo=timezone.utc)
@@ -200,6 +267,100 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(feedback.run_id, run.run_id)
         self.assertEqual(len(storage.list_feedback(run.run_id)), 1)
+
+    def test_recall_by_run_id_requires_explicit_target_in_multi_user_setup(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        settings = DayCaptainSettings(target_users=("alice@example.com", "bob@example.com"))
+        app = build_application(settings=settings, storage=storage)
+
+        bob_run = app.run_morning_digest(now=now, target_user_id="bob@example.com")
+
+        with self.assertRaisesRegex(ValueError, "target_user_id is required for recall-digest"):
+            app.recall_digest(run_id=bob_run.run_id)
+
+    def test_record_feedback_requires_explicit_target_in_multi_user_setup(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        settings = DayCaptainSettings(target_users=("alice@example.com", "bob@example.com"))
+        app = build_application(settings=settings, storage=storage)
+
+        bob_run = app.run_morning_digest(now=now, target_user_id="bob@example.com")
+
+        with self.assertRaisesRegex(ValueError, "target_user_id is required for record-feedback"):
+            app.record_feedback(
+                run_id=bob_run.run_id,
+                source_kind="message",
+                source_id="msg-1",
+                signal_type="useful",
+                signal_value="true",
+                recorded_at=now,
+            )
+
+    def test_pending_delivery_blocks_followup_morning_digest_retry(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        storage = FailOnCompletedRunSaveStorage()
+        delivery = RecordingDigestDelivery()
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
+            ),
+            storage=storage,
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "simulated completion save failure"):
+            app.run_morning_digest(now=now, force=True)
+
+        self.assertEqual(len(delivery.calls), 1)
+        latest_run = storage.get_latest_run(user_id="stub-user")
+        self.assertIsNotNone(latest_run)
+        self.assertEqual(latest_run.status, "delivery_pending")
+        with self.assertRaisesRegex(RuntimeError, "awaiting delivery reconciliation"):
+            app.run_morning_digest(now=now.replace(hour=9))
+        self.assertEqual(len(delivery.calls), 1)
+
+    def test_pending_email_command_replay_does_not_send_duplicate_reply(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = FailOnCompletedRunSaveStorage()
+        delivery = RecordingDigestDelivery()
+        app = build_application(
+            settings=DayCaptainSettings(
+                delivery_mode="graph_send",
+                graph_send_enabled=True,
+                graph_scopes=("Mail.Read", "Calendars.Read", "Mail.Send"),
+                target_users=("alice@example.com",),
+                email_command_allowed_senders=("alice@example.com",),
+            ),
+            storage=storage,
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        with self.assertRaisesRegex(RuntimeError, "simulated completion save failure"):
+            app.process_email_command_recall(
+                command_message_id="cmd-1",
+                sender_address="alice@example.com",
+                command_text="recall-week",
+                now=now,
+            )
+
+        self.assertEqual(len(delivery.calls), 1)
+        existing = storage.get_email_command("cmd-1", tenant_id="common")
+        self.assertIsNotNone(existing)
+        with self.assertRaisesRegex(RuntimeError, "awaiting delivery reconciliation"):
+            app.process_email_command_recall(
+                command_message_id="cmd-1",
+                sender_address="alice@example.com",
+                command_text="recall-week",
+                now=now,
+            )
+        self.assertEqual(len(delivery.calls), 1)
 
     def test_build_application_uses_postgres_storage_when_database_url_is_configured(self) -> None:
         settings = DayCaptainSettings(

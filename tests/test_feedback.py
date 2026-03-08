@@ -98,6 +98,7 @@ class FeedbackLearningTest(unittest.TestCase):
                 signal_type="useful",
                 signal_value="true",
                 recorded_at=datetime(2026, 3, 7, 8, 5, tzinfo=timezone.utc),
+                target_user_id="alice@example.com",
             )
 
             alice_preferences = app.storage.load_preferences(tenant_id="common", user_id="alice@example.com")

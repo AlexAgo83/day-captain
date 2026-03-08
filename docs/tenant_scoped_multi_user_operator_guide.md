@@ -164,6 +164,7 @@ The GitHub Actions scheduler supports two modes:
 In production, run that scheduler from a private ops repository rather than from the application repository.
 
 Use the ready-to-copy template in [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) as the base workflow for that private repo.
+Use [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) as the separate Sunday-evening weekly recap workflow.
 
 Example repository variable:
 
@@ -171,7 +172,7 @@ Example repository variable:
 ["alice@example.com", "bob@example.com"]
 ```
 
-The scheduler will issue one hosted `/jobs/morning-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
+The weekday scheduler issues one hosted `/jobs/morning-digest` call per listed target user. The Sunday scheduler issues one hosted `/jobs/weekly-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the example workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
 
 ## Sleeping-service fallback
 
@@ -179,8 +180,9 @@ If the hosted web service is on a plan that can sleep:
 
 - use the private ops workflow to call `GET /healthz` as a warm-up step before the real trigger
 - for multi-user schedules, do that warm-up once before the per-user fan-out rather than once per user
-- use trigger-only job calls for the daily schedule, and keep full `validate-hosted-service` runs for manual validation or rollout checks
+- use trigger-only job calls for the weekday and Sunday schedules, and keep full `validate-hosted-service` runs for manual validation or rollout checks
 - allow bounded retries before `POST /jobs/morning-digest`
+- allow bounded retries before `POST /jobs/weekly-digest`
 - use longer timeout settings than for an always-on deployment
 - keep this as a fallback mode only; prefer a paid always-on service for routine production delivery
 

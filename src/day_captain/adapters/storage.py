@@ -754,6 +754,33 @@ class SQLiteStorage:
             return None
         return self._row_to_run(row)
 
+    def get_latest_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+        params = []
+        where_clauses = ["1 = 1"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = ?")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = ?")
+            params.append(scoped_user_id)
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
+                ORDER BY generated_at DESC
+                LIMIT 1
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
+            ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_run(row)
+
     def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         params = []
         where_clauses = ["status = 'completed'"]
@@ -1639,6 +1666,33 @@ class PostgresStorage:
                     """,
                     (run_id,),
                 ).fetchone()
+        if row is None:
+            return None
+        return self._row_to_run(row)
+
+    def get_latest_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+        params = []
+        where_clauses = ["1 = 1"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = %s")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = %s")
+            params.append(scoped_user_id)
+        with self._connect() as connection:
+            row = connection.execute(
+                """
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
+                ORDER BY generated_at DESC
+                LIMIT 1
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
+            ).fetchone()
         if row is None:
             return None
         return self._row_to_run(row)

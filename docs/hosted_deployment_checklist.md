@@ -22,8 +22,8 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 
 ## Runtime and scheduling
 - Serve the hosted app with `gunicorn`, not the standard-library WSGI server.
-- Keep the scheduler workflow calling only `/jobs/morning-digest`.
-- Treat `.github/workflows/morning-digest-scheduler.yml` in this repo as an example bootstrap, not the final production scheduler location.
+- Keep weekday `morning-digest` scheduling separate from the Sunday-evening `weekly-digest` workflow.
+- Treat `.github/workflows/morning-digest-scheduler.yml` and `.github/workflows/weekly-digest-scheduler.yml` in this repo as example bootstraps, not the final production scheduler location.
 - Prefer a non-sleeping paid web service for production scheduling. Treat sleeping-service operation as a fallback mode only.
 - Include `target_user_id` in hosted job payloads when several target users are configured.
 - If GitHub Actions drives several users, set repository variable `DAY_CAPTAIN_TARGET_USERS_JSON` to a JSON array.
@@ -31,12 +31,13 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Store `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET` as GitHub Actions secrets.
 - If the hosted service may sleep, use `--wake-service` plus bounded wake retries before the real job trigger and give the workflow a longer timeout budget.
 - If the scheduler fans out across several users, prefer one standalone readiness/wake-up step before the fan-out instead of waking the service once per target.
-- Keep the routine cron path on `trigger-hosted-job --job morning-digest`; reserve `validate-hosted-service` for manual checks and rollout validation.
+- Keep the routine weekday cron path on `trigger-hosted-job --job morning-digest`, the Sunday recap path on `trigger-hosted-job --job weekly-digest`, and reserve `validate-hosted-service` for manual checks and rollout validation.
 
 ## HTTP surface
 - Expose only the minimal hosted endpoints:
   - `GET /healthz`
   - `POST /jobs/morning-digest`
+  - `POST /jobs/weekly-digest`
   - `POST /jobs/recall-digest`
   - `POST /jobs/email-command-recall`
 - Require `X-Day-Captain-Secret` on job endpoints.
