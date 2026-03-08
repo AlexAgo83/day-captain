@@ -2,7 +2,7 @@
 > From version: 0.1.0
 > Status: In Progress
 > Understanding: 100%
-> Confidence: 99%
+> Confidence: 100%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -104,7 +104,7 @@ flowchart LR
 - `task_001_day_captain_graph_ingestion_and_storage` - Implement Graph ingestion and SQLite persistence. Status: `Delivered, pending chain closure`.
 - The repository now includes Microsoft Entra ID device-code auth and token cache handling for delegated Microsoft Graph access in local/CLI flows.
 - `task_002_day_captain_digest_scoring_recall_and_delivery` - Implement scoring, digest rendering, recall, and webhook/Graph-send delivery. Status: `Delivered, pending chain closure`.
-- `task_003_day_captain_render_deployment_and_scheduler` - Package the hosted deployment path on Render with GitHub Actions scheduling and Postgres-backed persistence. Status: `In Progress`, with live Render validation now proven.
+- `task_003_day_captain_render_deployment_and_scheduler` - Package the hosted deployment path on Render with GitHub Actions scheduling and Postgres-backed persistence. Status: `Done`.
 - `item_003_day_captain_graph_send_and_mailbox_delivery_validation` - Add real delegated Outlook delivery and mailbox validation for the digest send path. Status: `Done`.
 - `task_006_day_captain_graph_send_delivery_execution` - Implement real Graph `sendMail` execution for digest delivery. Status: `Done`.
 - `task_007_day_captain_mailbox_delivery_end_to_end_validation` - Validate the delegated send flow end to end against the real mailbox. Status: `Done`.
@@ -128,5 +128,5 @@ flowchart LR
 - `task_018_day_captain_tenant_scoped_multi_user_foundations_and_execution` - Implement tenant-scoped storage, configuration, and per-user digest execution. Status: `Done`.
 - `task_019_day_captain_tenant_scoped_multi_user_validation_and_ops_documentation` - Validate tenant-scoped multi-user isolation and document the operator workflow. Status: `Done`.
 - `task_020_day_captain_open_roadmap_orchestration` - Orchestrate the remaining hosted, multi-user, and live-quality delivery slices into one closure path. Status: `In Progress`.
-- `item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Improve hosted trigger reliability when the backend sleeps or cold-starts before the scheduled run. Status: `In Progress`.
-- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Add wake-up-aware hosted trigger behavior, bounded retry/timeout handling, and operator guidance for sleeping-service deployments. Status: `In Progress`.
+- `item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Improve hosted trigger reliability when the backend sleeps or cold-starts before the scheduled run. Status: `Done`.
+- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Add wake-up-aware hosted trigger behavior, bounded retry/timeout handling, and operator guidance for sleeping-service deployments. Status: `Done`.

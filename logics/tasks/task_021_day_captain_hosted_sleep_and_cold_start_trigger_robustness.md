@@ -1,9 +1,9 @@
 ## task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness - Harden hosted trigger flow for sleeping or cold-starting services
 > From version: 0.8.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
-> Confidence: 99%
-> Progress: 95%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -53,7 +53,7 @@ flowchart LR
 - [x] Scope implemented and acceptance criteria covered.
 - [x] Validation commands executed and results captured.
 - [x] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Added wake-up-aware hosted trigger support in `src/day_captain/hosted_jobs.py` through bounded `/healthz` probing before the real job trigger or validation path, with configurable wake timeout, attempt count, and retry delay.
@@ -63,5 +63,9 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- Real hosted proof is now partly complete: the Render service is live, `check-hosted-health` succeeded against the protected `/healthz` runtime summary, and the same deployed service completed `validate-hosted-service` successfully once app-only permissions were corrected.
-- Remaining work is narrower now: validate the wake-up strategy against an actually sleeping Render instance, then close the slice if the delayed-availability path behaves as expected operationally.
+- Real hosted proof is now complete: the private `day-captain-ops` GitHub Actions workflow now checks out `release`, warms the Render service, and triggers the real hosted digest path successfully for `target.user@company.com`, with mailbox delivery confirmed.
+- The first cold-start validation from `day-captain-ops` exposed a real gap: `check-hosted-health` timed out on a sleeping Render instance because `TimeoutError` was not being folded into the retry loop. Commit `6309af3` fixed that by converting read timeouts into `HostedJobError`, preserving bounded retry behavior, and adding focused regression coverage.
+- Validation executed:
+  - `python3 -m unittest tests.test_hosted_jobs`
+  - private `day-captain-ops` workflow `Day Captain Morning Digest` on GitHub Actions, using the real `release` branch and real Render secrets
+  - live hosted result: the workflow warmed the hosted service, triggered `morning-digest`, received `200`, and delivered the digest email to the target mailbox
