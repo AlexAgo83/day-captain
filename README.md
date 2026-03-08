@@ -2,6 +2,25 @@
 
 Day Captain is a Python service that builds a daily Microsoft 365 digest from Outlook mail and calendar data.
 
+```mermaid
+flowchart LR
+    Outlook[Outlook Mail] --> Graph[Microsoft Graph]
+    Calendar[Outlook Calendar] --> Graph
+    Graph --> Auth[Entra Auth]
+    Auth --> App[Day Captain App]
+    App --> Score[Scoring and Filtering]
+    Score --> LLM[Bounded LLM Layer]
+    LLM --> Render[Digest Renderer]
+    Render --> Delivery[Delivery]
+    Delivery --> Json[JSON or CLI Output]
+    Delivery --> Mail[Graph sendMail]
+    App --> Storage[(SQLite or Postgres)]
+    Feedback[Feedback and Preferences] --> Storage
+    Storage --> App
+    Scheduler[GitHub Actions or manual trigger] --> Web[HTTP or CLI Entry]
+    Web --> App
+```
+
 It currently supports:
 - delegated Microsoft Graph auth through Microsoft Entra ID device code flow
 - message and meeting ingestion from Graph
