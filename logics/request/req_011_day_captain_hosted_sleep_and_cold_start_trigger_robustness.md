@@ -1,8 +1,8 @@
 ## req_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness - Day Captain hosted sleep and cold-start trigger robustness
 > From version: 0.8.0
-> Status: In Progress
-> Understanding: 100%
-> Confidence: 100%
+> Status: Done
+> Understanding: 99%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -61,5 +61,5 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Make hosted triggering more reliable when the backend is asleep or cold-starting. Status: `In Progress`.
-- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Implement wake-up-aware hosted trigger behavior, timeout/retry policy, and operator guidance. Status: `In Progress`, with live hosted validation now proven on a warm Render instance.
+- `item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Make hosted triggering more reliable when the backend is asleep or cold-starting. Status: `Done`.
+- `task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness` - Implement wake-up-aware hosted trigger behavior, timeout/retry policy, and operator guidance. Status: `Done`.
