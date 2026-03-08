@@ -1,9 +1,9 @@
 ## item_016_day_captain_isolation_and_delivery_reliability_hardening - Harden run isolation, retry safety, and scheduler time semantics
 > From version: 0.10.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -58,7 +58,7 @@ flowchart LR
 
 # Links
 - Request: `req_016_day_captain_isolation_and_delivery_reliability_hardening`
-- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: High - the open gaps touch isolation, idempotency, and operator trust in production scheduling.
@@ -68,3 +68,4 @@ flowchart LR
 - Derived from request `req_016_day_captain_isolation_and_delivery_reliability_hardening`.
 - This slice is corrective reliability work, not roadmap expansion.
 - The most sensitive risks are cross-user `run_id` access and duplicate sends after partial persistence failure.
+- Closed by `task_023_day_captain_weekend_window_and_reliability_orchestration` after implementation, regression coverage, and scheduler/docs clarification.

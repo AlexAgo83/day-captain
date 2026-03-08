@@ -1,9 +1,9 @@
 ## item_015_day_captain_weekend_digest_window_from_friday - Extend the first weekend digest mail window back to Friday
 > From version: 0.10.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -56,7 +56,7 @@ flowchart LR
 
 # Links
 - Request: `req_015_day_captain_weekend_digest_window_from_friday`
-- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - weekend digests remain usable today, but the current horizon underserves the intended Friday-to-weekend recap use case.
@@ -65,3 +65,4 @@ flowchart LR
 # Notes
 - Derived from request `req_015_day_captain_weekend_digest_window_from_friday`.
 - This slice should stay product-bounded: first weekend run gets a broader mail horizon, repeated weekend runs stay incremental.
+- Closed by `task_023_day_captain_weekend_window_and_reliability_orchestration` after implementation, regression coverage, and README/operator doc updates.

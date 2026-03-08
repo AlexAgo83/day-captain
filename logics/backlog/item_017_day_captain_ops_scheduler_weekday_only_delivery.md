@@ -1,9 +1,9 @@
 ## item_017_day_captain_ops_scheduler_weekday_only_delivery - Freeze ops auto-send to weekdays only
 > From version: 0.10.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Operations
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -47,7 +47,7 @@ flowchart LR
 
 # Links
 - Request: `req_017_day_captain_ops_scheduler_weekday_only_delivery`
-- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_023_day_captain_weekend_window_and_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - accidental weekend auto-sends would be noisy and user-visible, but the current intent is easy to preserve if it is frozen explicitly now.
@@ -56,3 +56,4 @@ flowchart LR
 # Notes
 - Derived from request `req_017_day_captain_ops_scheduler_weekday_only_delivery`.
 - This slice is intentionally operational rather than architectural.
+- Closed by `task_023_day_captain_weekend_window_and_reliability_orchestration` after weekday-only scheduler verification and operator doc updates.
