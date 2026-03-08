@@ -1,9 +1,9 @@
 ## item_019_day_captain_postgres_day_recall_fix - Fix hosted Postgres day-based recall loading
 > From version: 0.11.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 99%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -42,7 +42,7 @@ flowchart LR
 
 # Links
 - Request: `req_019_day_captain_post_review_reliability_and_scheduler_recovery`
-- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_024_day_captain_post_review_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: High - hosted recall-by-day can fail in the production backend.
