@@ -1,9 +1,9 @@
 ## task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration - Day Captain digest visual weight and quick actions orchestration
 > From version: 1.1.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 96%
 > Confidence: 94%
-> Progress: 0%
+> Progress: 70%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -24,9 +24,9 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Lighten the hero/background treatment and give the coverage/perimeter line a more intentional visual treatment.
-- [ ] 2. Reduce card visual weight and tighten meeting-summary wording without losing scan quality.
-- [ ] 3. Evaluate and, if acceptable, add footer `mailto:` quick actions for supported recall commands.
+- [x] 1. Lighten the hero/background treatment and give the coverage/perimeter line a more intentional visual treatment.
+- [x] 2. Reduce card visual weight and tighten meeting-summary wording without losing scan quality.
+- [x] 3. Evaluate and, if acceptable, add footer `mailto:` quick actions for supported recall commands.
 - [ ] 4. Validate the final rendering in a real Outlook mailbox and update README/docs if the digest footer or validation contract changes.
 - [ ] FINAL: Update related Logics docs
 
@@ -46,9 +46,9 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Hero/background and metadata treatment are materially lighter in Outlook.
-- [ ] Section cards are lighter and meeting wording is more natural.
-- [ ] Footer quick actions are either shipped with `mailto:` links or explicitly rejected with documented reasoning.
+- [x] Hero/background and metadata treatment are materially lighter in Outlook.
+- [x] Section cards are lighter and meeting wording is more natural.
+- [x] Footer quick actions are either shipped with `mailto:` links or explicitly rejected with documented reasoning.
 - [ ] Final live Outlook validation is completed.
 - [ ] Validation commands executed and results captured.
 - [ ] Linked request/backlog/task docs updated.
@@ -56,3 +56,10 @@ flowchart LR
 
 # Report
 - Created on Sunday, March 8, 2026 as a follow-up to the first readability pass after live Outlook review showed that the remaining issue is mostly visual weight rather than summary density.
+- Implementation in progress:
+  - removed the heavy hero-style background treatment in favor of a lighter top block with a styled perimeter line
+  - reduced card visual weight and tightened meeting wording toward natural day references such as tomorrow or Monday
+  - added a footer quick-action prototype using `mailto:` links for `recall`, `recall-today`, and `recall-week`
+- Remaining before closure:
+  - validate the final rendering in a real Outlook mailbox
+  - then update closure links and promote the request/backlog/task chain to `Done`

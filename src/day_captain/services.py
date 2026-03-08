@@ -9,6 +9,7 @@ from typing import Iterable
 from typing import Mapping
 from typing import Optional
 from typing import Sequence
+from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 from day_captain.models import DigestEntry
@@ -185,6 +186,7 @@ LANGUAGE_COPY = {
         "subject": "Your Day Captain brief for {date}",
         "prepared": "As of {date}",
         "coverage": "Window: {start} -> {end}",
+        "coverage_label": "Window",
         "sections": {
             "critical_topics": "Critical topics",
             "actions_to_take": "Actions to take",
@@ -200,6 +202,12 @@ LANGUAGE_COPY = {
         "meeting_notes": {
             "weekend_monday": "Looking ahead to {day}.",
             "next_day": "Nothing else is scheduled for today, so here is {day}.",
+        },
+        "footer": {
+            "label": "Quick actions",
+            "recall": "Recall this brief",
+            "recall_today": "Recall today",
+            "recall_week": "Recall week",
         },
         "overview": {
             "label": "In brief",
@@ -230,6 +238,7 @@ LANGUAGE_COPY = {
         "subject": "Votre brief Day Captain du {date}",
         "prepared": "À jour au {date}",
         "coverage": "Périmètre : {start} -> {end}",
+        "coverage_label": "Périmètre",
         "sections": {
             "critical_topics": "Points critiques",
             "actions_to_take": "Actions à mener",
@@ -245,6 +254,12 @@ LANGUAGE_COPY = {
         "meeting_notes": {
             "weekend_monday": "Aperçu des réunions de {day}.",
             "next_day": "Rien d'autre n'est prévu aujourd'hui, voici {day}.",
+        },
+        "footer": {
+            "label": "Actions rapides",
+            "recall": "Rappeler ce brief",
+            "recall_today": "Rappel aujourd'hui",
+            "recall_week": "Rappel semaine",
         },
         "overview": {
             "label": "En bref",
@@ -677,8 +692,11 @@ class DeterministicScoringEngine:
                 organizer=organizer,
             )
         else:
+            day_label = _meeting_day_reference(local_start.date(), local_now.date(), self.digest_language)
+            if day_label:
+                day_label = day_label[:1].upper() + day_label[1:]
             summary = copy["meeting_day"].format(
-                day=_format_day_label(local_start.date(), self.digest_language, short=True, include_year=False),
+                day=day_label,
                 time=local_start.strftime("%H:%M"),
                 organizer=organizer,
             )
@@ -731,6 +749,7 @@ class StructuredDigestRenderer:
         prioritized_items: Sequence[DigestEntry],
         tenant_id: str = "",
         user_id: str = "",
+        command_mailbox: str = "",
         top_summary: str = "",
         top_summary_source: str = "none",
         meeting_horizon: Optional[Mapping[str, str]] = None,
@@ -758,6 +777,7 @@ class StructuredDigestRenderer:
             window_end,
             sections,
             normalized_top_summary,
+            command_mailbox,
             meeting_horizon or {},
         )
         delivery_html = self._build_delivery_html(
@@ -766,6 +786,7 @@ class StructuredDigestRenderer:
             window_end,
             sections,
             normalized_top_summary,
+            command_mailbox,
             meeting_horizon or {},
         )
         delivery_payload = {
@@ -778,6 +799,7 @@ class StructuredDigestRenderer:
             "html_body": delivery_html,
             "top_summary": normalized_top_summary,
             "top_summary_source": top_summary_source,
+            "command_mailbox": command_mailbox,
             "meeting_horizon": dict(meeting_horizon or {}),
             "digest_language": self.digest_language,
             "sections": {
@@ -839,6 +861,7 @@ class StructuredDigestRenderer:
         window_end: datetime,
         sections: Mapping[str, Sequence[DigestEntry]],
         top_summary: str,
+        command_mailbox: str,
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
@@ -866,6 +889,10 @@ class StructuredDigestRenderer:
                 for item in items:
                     lines.extend(self._body_item_lines(item))
             lines.append("")
+        footer_lines = self._footer_body_lines(command_mailbox)
+        if footer_lines:
+            lines.extend(footer_lines)
+            lines.append("")
         return "\n".join(lines).strip()
 
     def _build_delivery_html(
@@ -875,6 +902,7 @@ class StructuredDigestRenderer:
         window_end: datetime,
         sections: Mapping[str, Sequence[DigestEntry]],
         top_summary: str,
+        command_mailbox: str,
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
@@ -883,21 +911,26 @@ class StructuredDigestRenderer:
             start=_format_localized_timestamp(window_start, self.display_timezone, self.digest_language, include_zone=False),
             end=_format_localized_timestamp(window_end, self.display_timezone, self.digest_language),
         )
+        coverage_label = str(localized.get("coverage_label") or "")
+        coverage_value = coverage.split(":", 1)[1].strip() if ":" in coverage else coverage
         parts = [
-            "<html><body style=\"margin:0;padding:0;background:#f8fafc;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
-            "<div style=\"max-width:720px;margin:0 auto;padding:24px 18px 32px;\">",
-            "<section style=\"margin:0 0 20px;padding:18px 20px;background:#ffffff;border:1px solid #dbe4ee;border-radius:14px;\">",
-            "<h1 style=\"margin:0 0 10px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
-            "<p style=\"margin:0 0 6px;font-size:14px;color:#334155;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
-            "<p style=\"margin:0;font-size:13px;color:#64748b;\">{0}</p>".format(self._html_escape(coverage)),
+            "<html><body style=\"margin:0;padding:0;background:transparent;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
+            "<div style=\"max-width:720px;margin:0 auto;padding:18px 18px 28px;\">",
+            "<section style=\"margin:0 0 18px;padding:0 0 14px;border-bottom:1px solid #dbe4ee;\">",
+            "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
+            "<p style=\"margin:0 0 8px;font-size:14px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
+            "<p style=\"margin:0;\"><span style=\"display:inline-block;margin:0 0 4px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</span><br><span style=\"font-size:13px;color:#64748b;\">{1}</span></p>".format(
+                self._html_escape(coverage_label),
+                self._html_escape(coverage_value),
+            ),
             "</section>",
         ]
         if top_summary.strip():
             parts.append(
-                "<section style=\"margin:0 0 18px;padding:16px 18px;background:#eff6ff;border:1px solid #bfdbfe;border-left:4px solid #2563eb;border-radius:12px;\">"
+                "<section style=\"margin:0 0 18px;padding:4px 0 4px 14px;border-left:3px solid #94a3b8;\">"
             )
             parts.append(
-                "<p style=\"margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#1d4ed8;\">{0}</p>".format(
+                "<p style=\"margin:0 0 6px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>".format(
                     self._html_escape(localized["overview"]["label"])
                 )
             )
@@ -909,7 +942,7 @@ class StructuredDigestRenderer:
         labels = localized["sections"]
         for name in SECTION_NAMES:
             parts.append(
-                "<section style=\"margin:0 0 18px;\"><h2 style=\"margin:0 0 8px;font-size:19px;color:#0f172a;\">{0}</h2>".format(
+                "<section style=\"margin:0 0 16px;\"><h2 style=\"margin:0 0 8px;font-size:19px;color:#0f172a;\">{0}</h2>".format(
                     self._html_escape(labels[name])
                 )
             )
@@ -919,7 +952,7 @@ class StructuredDigestRenderer:
             items = sections[name]
             if not items:
                 parts.append(
-                    "<div style=\"margin:0;padding:10px 12px;background:#f8fafc;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;\">{0}</div>".format(
+                    "<div style=\"margin:0;padding:10px 12px;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;\">{0}</div>".format(
                         self._html_escape(self._empty_state(name, meeting_horizon))
                     )
                 )
@@ -927,6 +960,9 @@ class StructuredDigestRenderer:
                 for item in items:
                     parts.append(self._html_item(item))
             parts.append("</section>")
+        footer_html = self._footer_html(command_mailbox)
+        if footer_html:
+            parts.append(footer_html)
         parts.append("</div></body></html>")
         return "".join(parts)
 
@@ -941,7 +977,7 @@ class StructuredDigestRenderer:
     def _html_item(self, item: DigestEntry) -> str:
         if item.source_kind == "meeting":
             return (
-                "<div style=\"margin:0 0 8px;padding:10px 12px;background:#ffffff;border:1px solid #dbe4ee;border-radius:10px;\">"
+                "<div style=\"margin:0 0 8px;padding:10px 12px;border:1px solid #dbe4ee;border-radius:10px;\">"
                 "<p style=\"margin:0;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
                 "<p style=\"margin:4px 0 0;font-size:13px;color:#475569;\">{1}</p>"
                 "</div>"
@@ -950,7 +986,7 @@ class StructuredDigestRenderer:
                 self._html_escape(item.summary),
             )
         return (
-            "<div style=\"margin:0 0 10px;padding:12px 14px;background:#ffffff;border:1px solid #dbe4ee;border-radius:12px;\">"
+            "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #dbe4ee;border-radius:12px;\">"
             "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
             "</div>"
@@ -958,6 +994,45 @@ class StructuredDigestRenderer:
             self._html_escape(item.title),
             self._html_escape(item.summary),
         )
+
+    def _footer_body_lines(self, command_mailbox: str) -> Sequence[str]:
+        mailbox = str(command_mailbox or "").strip()
+        if "@" not in mailbox:
+            return ()
+        footer = _language_copy(self.digest_language)["footer"]
+        return (
+            str(footer["label"]),
+            "- {0}: {1} (subject: recall)".format(footer["recall"], mailbox),
+            "- {0}: {1} (subject: recall-today)".format(footer["recall_today"], mailbox),
+            "- {0}: {1} (subject: recall-week)".format(footer["recall_week"], mailbox),
+        )
+
+    def _footer_html(self, command_mailbox: str) -> str:
+        mailbox = str(command_mailbox or "").strip()
+        if "@" not in mailbox:
+            return ""
+        footer = _language_copy(self.digest_language)["footer"]
+        links = (
+            ("recall", str(footer["recall"])),
+            ("recall-today", str(footer["recall_today"])),
+            ("recall-week", str(footer["recall_week"])),
+        )
+        parts = [
+            "<section style=\"margin:10px 0 0;padding-top:14px;border-top:1px solid #dbe4ee;\">",
+            "<p style=\"margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>".format(
+                self._html_escape(str(footer["label"]))
+            ),
+        ]
+        for command, label in links:
+            href = "mailto:{0}?subject={1}".format(self._html_escape(mailbox), quote(command))
+            parts.append(
+                "<a href=\"{0}\" style=\"display:inline-block;margin:0 8px 8px 0;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;color:#0f172a;text-decoration:none;font-size:13px;\">{1}</a>".format(
+                    href,
+                    self._html_escape(label),
+                )
+            )
+        parts.append("</section>")
+        return "".join(parts)
 
     def _meeting_note(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
         if section_name != "upcoming_meetings":
@@ -1108,8 +1183,14 @@ class LlmDigestOverviewEngine:
         if len(meetings) <= 1:
             return ""
         if language == "fr":
-            return "{0} réunions sont prévues. Résume-les brièvement sans toutes les lister.".format(len(meetings))
-        return "{0} meetings are scheduled. Summarize them briefly without listing them all.".format(len(meetings))
+            return (
+                "{0} réunions sont prévues. Résume-les brièvement sans toutes les lister. "
+                "Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'."
+            ).format(len(meetings))
+        return (
+            "{0} meetings are scheduled. Summarize them briefly without listing them all. "
+            "If they are tomorrow or Monday, say that instead of 'next week'."
+        ).format(len(meetings))
 
 
 class LlmDigestWordingEngine:
@@ -1182,6 +1263,7 @@ class SnapshotRecallProvider:
             prioritized_items=tuple(items),
             tenant_id=payload.tenant_id,
             user_id=payload.user_id,
+            command_mailbox=str(payload.delivery_payload.get("command_mailbox") or ""),
             top_summary=payload.top_summary,
             top_summary_source=str(payload.delivery_payload.get("top_summary_source") or "none"),
         )

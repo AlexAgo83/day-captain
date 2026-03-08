@@ -500,5 +500,8 @@ class DigestOverviewEngineTest(unittest.TestCase):
         overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
 
         self.assertEqual(overview.source, "llm")
-        self.assertEqual(captured["meeting_note"], "2 réunions sont prévues. Résume-les brièvement sans toutes les lister.")
+        self.assertEqual(
+            captured["meeting_note"],
+            "2 réunions sont prévues. Résume-les brièvement sans toutes les lister. Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'.",
+        )
         self.assertEqual(len(captured["sections"]["upcoming_meetings"]), 1)

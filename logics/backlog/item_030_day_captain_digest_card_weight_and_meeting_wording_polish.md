@@ -1,9 +1,9 @@
 ## item_030_day_captain_digest_card_weight_and_meeting_wording_polish - Day Captain digest card weight and meeting wording polish
 > From version: 1.1.0
-> Status: Ready
+> Status: In Progress
 > Understanding: 96%
 > Confidence: 94%
-> Progress: 0%
+> Progress: 70%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_022_day_captain_digest_visual_weight_and_header_polish`
-- Primary task(s): `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration` (`Ready`)
+- Primary task(s): `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration` (`In Progress`)
 
 # Priority
 - Impact: High - most of the mail body still inherits a heavier visual treatment than necessary.
@@ -52,3 +52,4 @@ flowchart LR
 
 # Notes
 - Derived from live Outlook review after the first card-based readability pass.
+- Implementation is underway: card contrast/weight is being reduced and meeting horizon wording is being tightened toward more natural day references.
