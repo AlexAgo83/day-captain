@@ -1,9 +1,9 @@
 ## item_046_day_captain_flagged_mail_signal_and_rendering_prominence - Promote flagged emails more clearly in scoring and rendering
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -42,7 +42,7 @@ flowchart LR
 
 # Links
 - Request: `req_027_day_captain_overview_flagged_signal_and_desktop_opening`
-- Primary task(s): `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` (`Ready`)
+- Primary task(s): `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` (`Done`)
 
 # Priority
 - Impact: High - flags encode explicit user attention and should be reflected strongly in the digest.
@@ -51,3 +51,4 @@ flowchart LR
 # Notes
 - Derived from `req_027_day_captain_overview_flagged_signal_and_desktop_opening`.
 - Preferred direction: boost plus bounded visual emphasis before introducing a whole new section.
+- Closed on Monday, March 9, 2026 after adding Graph flag collection, scoring promotion into stronger sections, and bounded flagged badges in text and HTML rendering.

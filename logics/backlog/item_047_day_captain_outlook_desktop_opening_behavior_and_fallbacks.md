@@ -1,9 +1,9 @@
 ## item_047_day_captain_outlook_desktop_opening_behavior_and_fallbacks - Define and validate Outlook desktop opening behavior with reliable fallback
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_027_day_captain_overview_flagged_signal_and_desktop_opening`
-- Primary task(s): `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` (`Ready`)
+- Primary task(s): `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - this affects convenience and platform integration, not the correctness of digest content.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_027_day_captain_overview_flagged_signal_and_desktop_opening`.
 - A fallback-first contract is preferred over a fragile desktop-only path.
+- Closed on Monday, March 9, 2026 with an explicit contract: prefer a native Outlook desktop link only when source metadata already provides one, otherwise keep the standard Outlook web fallback and document the limit.

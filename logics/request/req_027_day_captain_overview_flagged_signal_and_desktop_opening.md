@@ -1,8 +1,8 @@
 ## req_027_day_captain_overview_flagged_signal_and_desktop_opening - Day Captain overview length, flagged signal, and Outlook opening behavior
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -60,11 +60,12 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_045_day_captain_overview_length_policy_without_truncation` - Remove forced top-summary truncation and define the new overview-length contract. Status: `Ready`.
-- `item_046_day_captain_flagged_mail_signal_and_rendering_prominence` - Promote flagged emails more clearly in scoring and rendering. Status: `Ready`.
-- `item_047_day_captain_outlook_desktop_opening_behavior_and_fallbacks` - Define and validate Outlook desktop opening behavior with reliable fallback. Status: `Ready`.
-- `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` - Orchestrate the overview/flagged/opening follow-up slice. Status: `Ready`.
+- `item_045_day_captain_overview_length_policy_without_truncation` - Remove forced top-summary truncation and define the new overview-length contract. Status: `Done`.
+- `item_046_day_captain_flagged_mail_signal_and_rendering_prominence` - Promote flagged emails more clearly in scoring and rendering. Status: `Done`.
+- `item_047_day_captain_outlook_desktop_opening_behavior_and_fallbacks` - Define and validate Outlook desktop opening behavior with reliable fallback. Status: `Done`.
+- `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` - Orchestrate the overview/flagged/opening follow-up slice. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 from product feedback on the delivered digest behavior after the `1.3.x` reliability and multi-user slices.
 - This request is intentionally about digest usefulness and operator-visible behavior, not a broad visual redesign.
+- Closed on Monday, March 9, 2026 after implementing the non-truncated overview policy, flagged-message promotion, and explicit desktop-versus-web opening fallback behavior.
