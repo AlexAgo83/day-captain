@@ -1,9 +1,9 @@
 ## item_050_day_captain_web_runtime_error_logging_and_docs_alignment - Add bounded web runtime error logging and align operator docs with the new preview/runtime contract
 > From version: 1.4.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_028_day_captain_preview_safety_and_web_runtime_observability`
-- Primary task(s): `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` (`Ready`)
+- Primary task(s): `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - poor observability slows recovery and diagnosis during production incidents.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_028_day_captain_preview_safety_and_web_runtime_observability`.
 - The goal is better diagnosis, not verbose or unsafe logging.
+- Closed on Monday, March 9, 2026 after adding bounded exception logging for unexpected web 500s and aligning preview/runtime operator docs with the corrected contract.

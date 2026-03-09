@@ -1,9 +1,9 @@
 ## item_049_day_captain_hosted_http_boolean_input_hardening - Parse hosted HTTP boolean inputs deterministically instead of relying on Python truthiness
 > From version: 1.4.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Low
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_028_day_captain_preview_safety_and_web_runtime_observability`
-- Primary task(s): `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` (`Ready`)
+- Primary task(s): `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - this can silently change runtime behavior for external callers.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_028_day_captain_preview_safety_and_web_runtime_observability`.
 - Preferred direction: bounded coercion or explicit rejection, not generic Python truthiness.
+- Closed on Monday, March 9, 2026 after replacing implicit truthiness with deterministic boolean parsing for hosted `force` payloads and adding regression coverage.

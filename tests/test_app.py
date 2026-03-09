@@ -1018,6 +1018,34 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(result.target_user_id, "bob@example.com")
 
+    def test_email_command_recall_preview_mode_does_not_send(self) -> None:
+        now = datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc)
+        delivery = mock.Mock()
+        app = build_application(
+            settings=DayCaptainSettings(
+                graph_send_enabled=True,
+                graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
+                target_users=("alice@example.com",),
+                email_command_allowed_senders=("alice@example.com",),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            digest_delivery=delivery,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        result = app.process_email_command_recall(
+            command_message_id="cmd-preview",
+            sender_address="alice@example.com",
+            subject="recall-week",
+            now=now,
+            delivery_mode="json",
+        )
+
+        self.assertEqual(result.payload.delivery_mode, "json")
+        delivery.deliver_digest.assert_not_called()
+
     def test_morning_digest_ignores_weekly_run_when_resuming_cursor(self) -> None:
         friday = datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc)
         sunday = datetime(2026, 3, 8, 19, 30, tzinfo=timezone.utc)
