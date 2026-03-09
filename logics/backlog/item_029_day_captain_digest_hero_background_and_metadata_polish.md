@@ -1,9 +1,9 @@
 ## item_029_day_captain_digest_hero_background_and_metadata_polish - Day Captain digest hero background and metadata polish
 > From version: 1.1.0
-> Status: In Progress
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 85%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from direct review of the live Outlook rendering after the first readability pass.
 - Implementation is underway: the hero/background treatment has been reduced and the perimeter line is now being refined toward a lighter, more intentional localized range treatment.
+- Closed on Monday, March 9, 2026 after live Outlook validation confirmed that the top block and perimeter treatment were sufficiently lighter and more intentional.

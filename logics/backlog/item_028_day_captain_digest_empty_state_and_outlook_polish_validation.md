@@ -1,9 +1,9 @@
 ## item_028_day_captain_digest_empty_state_and_outlook_polish_validation - Polish digest empty states and validate final Outlook readability
 > From version: 1.0.0
-> Status: In Progress
-> Understanding: 98%
-> Confidence: 97%
-> Progress: 90%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from operator feedback that the mail is useful but not yet as pleasant to read as it should be.
 - Implementation is underway: empty-state copy/presentation is being lightened in the renderer, local HTML/text preview export now exists, the preview-plus-Outlook validation workflow is documented, and a local stub preview was executed successfully, but the explicit real-Outlook validation step still remains before closure.
+- Closed on Monday, March 9, 2026 after real Outlook validation was completed and the digest empty-state/readability follow-up was accepted.

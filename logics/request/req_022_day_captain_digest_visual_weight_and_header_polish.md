@@ -1,8 +1,8 @@
 ## req_022_day_captain_digest_visual_weight_and_header_polish - Day Captain digest visual weight and header polish
 > From version: 1.1.0
-> Status: In Progress
-> Understanding: 98%
-> Confidence: 96%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -79,11 +79,12 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_029_day_captain_digest_hero_background_and_metadata_polish` - Lighten the hero/background treatment and polish the top metadata line. Status: `In Progress`.
-- `item_030_day_captain_digest_card_weight_and_meeting_wording_polish` - Reduce section-card visual weight and tighten meeting wording. Status: `In Progress`.
-- `item_031_day_captain_digest_quick_actions_and_final_outlook_validation` - Evaluate footer quick actions and close the slice with real Outlook validation. Status: `In Progress`.
-- `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration` - Orchestrate the visual-weight follow-up and optional quick-action footer. Status: `In Progress`.
+- `item_029_day_captain_digest_hero_background_and_metadata_polish` - Lighten the hero/background treatment and polish the top metadata line. Status: `Done`.
+- `item_030_day_captain_digest_card_weight_and_meeting_wording_polish` - Reduce section-card visual weight and tighten meeting wording. Status: `Done`.
+- `item_031_day_captain_digest_quick_actions_and_final_outlook_validation` - Evaluate footer quick actions and close the slice with real Outlook validation. Status: `Done`.
+- `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration` - Orchestrate the visual-weight follow-up and optional quick-action footer. Status: `Done`.
 
 # Notes
 - Created on Sunday, March 8, 2026 after review of the live Outlook rendering showed that the main remaining issue is not summary length but visual weight and top-of-mail heaviness.
 - Implementation started on Sunday, March 8, 2026: the renderer is now being lightened again, meeting horizon wording is being tightened, and a footer quick-action prototype is being added before final Outlook validation.
+- Closed on Monday, March 9, 2026 after the visual-weight and quick-action goals were delivered, then validated in the later live Outlook review used to close the follow-up digest polish slices.
