@@ -1,8 +1,8 @@
 ## req_030_day_captain_digest_editorial_relevance_and_copy_quality - Day Captain digest editorial relevance and copy quality
 > From version: 1.4.1
-> Status: Ready
-> Understanding: 100%
-> Confidence: 96%
+> Status: Done
+> Understanding: 99%
+> Confidence: 98%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -72,12 +72,13 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_054_day_captain_digest_card_title_cleanup_heuristics` - Clean awkward subject-derived digest card titles while preserving useful context. Status: `Ready`.
-- `item_055_day_captain_digest_watch_item_noise_reduction` - Reduce low-signal noise in `watch_items` / `À surveiller`. Status: `Ready`.
-- `item_056_day_captain_digest_decision_oriented_summary_wording` - Make digest summaries more decision-oriented and less literal. Status: `Ready`.
-- `item_057_day_captain_digest_microcopy_and_cta_polish` - Polish labels, badges, and CTA wording without reopening layout work. Status: `Ready`.
-- `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` - Orchestrate title cleanup, watch-item filtering, summary wording, and micro-copy polish. Status: `Ready`.
+- `item_054_day_captain_digest_card_title_cleanup_heuristics` - Clean awkward subject-derived digest card titles while preserving useful context. Status: `Done`.
+- `item_055_day_captain_digest_watch_item_noise_reduction` - Reduce low-signal noise in `watch_items` / `À surveiller`. Status: `Done`.
+- `item_056_day_captain_digest_decision_oriented_summary_wording` - Make digest summaries more decision-oriented and less literal. Status: `Done`.
+- `item_057_day_captain_digest_microcopy_and_cta_polish` - Polish labels, badges, and CTA wording without reopening layout work. Status: `Done`.
+- `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` - Orchestrate title cleanup, watch-item filtering, summary wording, and micro-copy polish. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 from live Outlook review of the `1.4.x` digest rendering.
 - This request intentionally targets editorial usefulness and digest credibility rather than CSS/layout work.
+- Closed on Monday, March 9, 2026 after shipping stricter watch-item filtering, editorial title cleanup, decision-oriented summaries, and micro-copy polish in `1.4.2`.

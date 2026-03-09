@@ -146,7 +146,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             ),
         )
 
-        self.assertIn("Ouvrir la reunion", payload.delivery_body)
+        self.assertIn("Ouvrir la réunion", payload.delivery_body)
         self.assertIn("Ouvrir dans Outlook", payload.delivery_body)
         self.assertIn("href=\"https://outlook.office.com/calendar/item/mtg-1\"", payload.delivery_payload["html_body"])
         self.assertIn("href=\"https://outlook.office.com/mail/msg-1\"", payload.delivery_payload["html_body"])
@@ -283,7 +283,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             ),
         )
 
-        self.assertIn("Meteo du jour", payload.delivery_body)
+        self.assertIn("Météo du jour", payload.delivery_body)
         self.assertIn("Lille: Couvert, 9C max / 3C min. Proche d'hier.", payload.delivery_body)
 
     def test_localizes_footer_quick_actions_in_french(self) -> None:

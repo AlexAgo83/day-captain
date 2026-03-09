@@ -1,9 +1,9 @@
 ## item_055_day_captain_digest_watch_item_noise_reduction - Reduce low-signal noise in watch_items / À surveiller
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_030_day_captain_digest_editorial_relevance_and_copy_quality`
-- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Ready`)
+- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Done`)
 
 # Priority
 - Impact: High - noisy watch items materially weaken digest usefulness.
@@ -49,3 +49,4 @@ flowchart LR
 
 # Notes
 - Derived from `req_030_day_captain_digest_editorial_relevance_and_copy_quality`.
+- Closed on Monday, March 9, 2026 after tightening low-signal watch-item filtering and dropping obvious article-style noise.

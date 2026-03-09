@@ -138,6 +138,16 @@ COLD_OUTREACH_PATTERNS = (
     "commercial vehicles",
 )
 
+LOW_SIGNAL_WATCH_PATTERNS = (
+    "how to ",
+    "guide to ",
+    "practical look at",
+    "best practices",
+    "playbook",
+    "whitepaper",
+    "ebook",
+)
+
 EXECUTIVE_HINTS = (
     "ceo",
     "cfo",
@@ -164,6 +174,12 @@ TRIVIAL_PREVIEW_LINES = (
     "envoye a partir de outlook pour mac",
     "envoyé à partir de outlook pour ios",
     "envoyé à partir de outlook pour mac",
+)
+
+SUBJECT_PREFIX_PATTERN = re.compile(r"^\s*((re|fw|fwd|tr)\s*:\s*)+", flags=re.IGNORECASE)
+SUBJECT_TAG_PREFIX_PATTERN = re.compile(
+    r"^\s*\[((request\s+received)|(external)|(ext)|(ticket[^\]]*)|(notification)|(action\s+required))\]\s*",
+    flags=re.IGNORECASE,
 )
 
 QUOTE_BOUNDARY_PREFIXES = (
@@ -263,7 +279,7 @@ LANGUAGE_COPY = {
         "coverage_separator": " : ",
         "coverage_value": "Du {start} au {end}",
         "weather": {
-            "label": "Meteo du jour",
+            "label": "Météo du jour",
             "warmer": "Plus doux qu'hier.",
             "cooler": "Plus frais qu'hier.",
             "same": "Proche d'hier.",
@@ -293,9 +309,9 @@ LANGUAGE_COPY = {
         },
         "item_actions": {
             "open_mail": "Ouvrir dans Outlook",
-            "open_meeting": "Ouvrir la reunion",
+            "open_meeting": "Ouvrir la réunion",
             "open_mail_desktop": "Ouvrir dans Outlook bureau",
-            "open_meeting_desktop": "Ouvrir la reunion dans Outlook bureau",
+            "open_meeting_desktop": "Ouvrir la réunion dans Outlook bureau",
         },
         "badges": {
             "flagged": "Marqué",
@@ -314,7 +330,7 @@ LANGUAGE_COPY = {
         "summary": {
             "critical": "À surveiller de près : {text}",
             "action": "Demande probablement un suivi de votre part : {text}",
-            "watch": "À garder en tête : {text}",
+            "watch": "À noter : {text}",
             "candidate_profile": "Profil candidat : {text}",
             "candidate_follow_up": "Examiner la candidature ou proposer un suivi.",
             "file_shared": "Un fichier ou document a été partagé pour consultation.",
@@ -460,10 +476,19 @@ def _normalize_display_title(value: str) -> str:
     candidate = " ".join((value or "").strip().split())
     if not candidate:
         return ""
+    previous = None
+    while candidate and candidate != previous:
+        previous = candidate
+        candidate = SUBJECT_PREFIX_PATTERN.sub("", candidate).strip()
+        candidate = SUBJECT_TAG_PREFIX_PATTERN.sub("", candidate).strip()
+    candidate = candidate.strip(" -_")
     lowered = candidate.lower()
     if lowered == "a imprimer":
         return "À imprimer"
+    if lowered.startswith("a imprimer "):
+        return "À imprimer"
     candidate = re.sub(r"(?<=\w)-\s+(?=\w)", " ", candidate)
+    candidate = re.sub(r"\s*[-–—]\s*$", "", candidate)
     candidate = re.sub(r"\s+", " ", candidate).strip()
     return candidate
 
@@ -580,6 +605,78 @@ def _clean_preview(preview: str) -> str:
 
     cleaned = " ".join(selected_lines).strip()
     return cleaned[:280]
+
+
+def _strip_leading_salutation(sentence: str) -> str:
+    cleaned = " ".join((sentence or "").strip().split())
+    if not cleaned:
+        return ""
+    patterns = (
+        r"^(bonjour|bonsoir|hello|hi|dear)\b[^,:\-]{0,80}[,:\-]\s*",
+        r"^(madame,\s*monsieur|madame|monsieur)\b[,:\-]?\s*",
+    )
+    for pattern in patterns:
+        cleaned = re.sub(pattern, "", cleaned, flags=re.IGNORECASE).strip()
+    return cleaned
+
+
+def _is_courtesy_sentence(sentence: str) -> bool:
+    cleaned = _normalize_text(sentence)
+    if not cleaned:
+        return True
+    return cleaned.startswith(
+        (
+            "merci pour",
+            "merci beaucoup",
+            "thank you for",
+            "thanks for",
+            "best regards",
+            "kind regards",
+            "cordialement",
+            "bien a vous",
+            "bien à vous",
+            "bien a toi",
+            "bien à toi",
+        )
+    )
+
+
+def _decision_ready_preview(preview: str) -> str:
+    cleaned = " ".join((preview or "").strip().split())
+    if not cleaned:
+        return ""
+    sentences = []
+    for raw in re.split(r"(?<=[.!?])\s+", cleaned):
+        sentence = _strip_leading_salutation(raw)
+        sentence = re.sub(r"\s+", " ", sentence).strip(" -")
+        if not sentence:
+            continue
+        if _is_courtesy_sentence(sentence) and len(sentences) == 0:
+            continue
+        sentences.append(sentence)
+        if len(sentences) >= 2:
+            break
+    if not sentences:
+        fallback = _strip_leading_salutation(cleaned)
+        return fallback.strip() or cleaned
+    return " ".join(sentences).strip()
+
+
+def _is_candidate_profile_message(subject: str, preview: str) -> bool:
+    normalized = _normalize_text(subject, preview)
+    candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
+    return any(marker in normalized for marker in candidate_markers)
+
+
+def _is_low_signal_watch_message(subject: str, preview: str) -> bool:
+    normalized_subject = _normalize_text(subject)
+    normalized_preview = _normalize_text(preview)
+    if normalized_subject.startswith("how to ") or normalized_subject.startswith("guide to "):
+        return True
+    return _contains_any(normalized_subject, LOW_SIGNAL_WATCH_PATTERNS) or _contains_any(
+        normalized_preview,
+        LOW_SIGNAL_WATCH_PATTERNS,
+    )
 
 
 def _is_self_digest_message(subject: str, preview: str) -> bool:
@@ -853,7 +950,7 @@ class DeterministicScoringEngine:
     def _thread_key(self, message: MessageRecord) -> str:
         if message.thread_id:
             return message.thread_id
-        subject = re.sub(r"^(re|fw|fwd)\s*:\s*", "", (message.subject or "").strip(), flags=re.IGNORECASE)
+        subject = _normalize_display_title(message.subject or "")
         return subject.lower() or message.graph_message_id
 
     def _message_rank(self, message: MessageRecord, entry: DigestEntry) -> tuple:
@@ -894,6 +991,7 @@ class DeterministicScoringEngine:
         reason_codes = []
         score = 0.0
         guardrail = False
+        is_candidate_profile = _is_candidate_profile_message(subject, cleaned_preview)
 
         if not (message.subject or "").strip() and not cleaned_preview:
             return None
@@ -982,6 +1080,21 @@ class DeterministicScoringEngine:
         else:
             section_name = "watch_items"
 
+        if section_name == "watch_items" and not guardrail:
+            internal_domain = _domain_from_email(message.user_id)
+            internal_sender = bool(internal_domain and domain == internal_domain)
+            strong_watch_signal = (
+                "preference_signal" in reason_codes
+                or "attachment_present" in reason_codes
+                or "executive_sender" in reason_codes
+                or ("direct_recipient" in reason_codes and internal_sender)
+                or is_candidate_profile
+            )
+            if _is_low_signal_watch_message(subject, cleaned_preview) and not strong_watch_signal:
+                return None
+            if not strong_watch_signal and score < 1.75:
+                return None
+
         summary = self._summarize_message(message, cleaned_preview, reason_codes)
         return DigestEntry(
             title=subject,
@@ -1061,7 +1174,7 @@ class DeterministicScoringEngine:
         reason_codes: Sequence[str],
     ) -> str:
         copy = _language_copy(self.digest_language)["summary"]
-        preview = cleaned_preview or (message.body_preview or "").strip()
+        preview = _decision_ready_preview(cleaned_preview or (message.body_preview or "").strip())
         normalized_preview = _normalize_text(preview)
         base = preview if preview else copy["from_sender"].format(sender=message.from_address)
         candidate_summary = _deterministic_candidate_profile_summary(message.subject or "", preview, self.digest_language)
@@ -1072,10 +1185,10 @@ class DeterministicScoringEngine:
                 return copy["download_shared"]
             return copy["file_shared"]
         if "critical_keyword" in reason_codes:
-            return copy["critical"].format(text=base)
+            return _normalize_item_summary(message.subject or "", copy["critical"].format(text=base), max_chars=175)
         if "action_keyword" in reason_codes:
-            return copy["action"].format(text=base)
-        return copy["watch"].format(text=base)
+            return _normalize_item_summary(message.subject or "", copy["action"].format(text=base), max_chars=175)
+        return _normalize_item_summary(message.subject or "", copy["watch"].format(text=base), max_chars=170)
 
 
 class StructuredDigestRenderer:

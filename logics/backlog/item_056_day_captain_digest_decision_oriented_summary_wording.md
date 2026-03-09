@@ -1,9 +1,9 @@
 ## item_056_day_captain_digest_decision_oriented_summary_wording - Make digest summaries more decision-oriented and less literal
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -40,7 +40,7 @@ flowchart LR
 
 # Links
 - Request: `req_030_day_captain_digest_editorial_relevance_and_copy_quality`
-- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Ready`)
+- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Done`)
 
 # Priority
 - Impact: High - summary quality is central to whether users trust the digest as an assistant product.
@@ -48,3 +48,4 @@ flowchart LR
 
 # Notes
 - Derived from `req_030_day_captain_digest_editorial_relevance_and_copy_quality`.
+- Closed on Monday, March 9, 2026 after adding courtesy stripping, more decision-ready previews, and stricter wording guidance for LLM rewrites.

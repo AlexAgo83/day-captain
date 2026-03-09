@@ -1,9 +1,9 @@
 ## item_054_day_captain_digest_card_title_cleanup_heuristics - Clean awkward subject-derived digest card titles while preserving useful context
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -40,7 +40,7 @@ flowchart LR
 
 # Links
 - Request: `req_030_day_captain_digest_editorial_relevance_and_copy_quality`
-- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Ready`)
+- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Done`)
 
 # Priority
 - Impact: High - titles are the first thing users scan and strongly affect perceived digest quality.
@@ -48,3 +48,4 @@ flowchart LR
 
 # Notes
 - Derived from `req_030_day_captain_digest_editorial_relevance_and_copy_quality`.
+- Closed on Monday, March 9, 2026 after adding bounded subject-prefix cleanup and editorial title normalization for digest cards.

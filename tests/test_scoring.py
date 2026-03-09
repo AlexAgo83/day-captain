@@ -188,7 +188,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].source_id, "msg-clean")
         self.assertEqual(
             prioritized[0].summary,
-            "Likely needs your follow-up: Bonjour, Voici la piece jointe.",
+            "Likely needs your follow-up: Voici la piece jointe.",
         )
 
     def test_marks_feedback_requests_as_actions(self) -> None:
@@ -343,6 +343,66 @@ class DeterministicScoringEngineTest(unittest.TestCase):
             prioritized[0].summary,
             "Profil candidat : designer chez Studio Meridian. Examiner la candidature ou proposer un suivi.",
         )
+
+    def test_cleans_reply_and_request_prefixes_from_message_titles(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-title",
+                thread_id="thread-title",
+                subject="RE: [Request received] A imprimer",
+                from_address="agency@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 9, 7, 50, tzinfo=timezone.utc),
+                body_preview="Votre badge est disponible.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].title, "À imprimer")
+
+    def test_filters_low_signal_editorial_watch_items(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-article",
+                thread_id="thread-article",
+                subject="How to build SEO authority from scratch",
+                from_address="founder@newsletter.example",
+                to_addresses=("alex@example.com",),
+                user_id="alex@example.com",
+                received_at=datetime(2026, 3, 9, 7, 30, tzinfo=timezone.utc),
+                body_preview="A practical look at directory backlinks and why they still matter in early SEO.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized, ())
+
+    def test_drops_courtesy_lead_in_action_summary(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-courtesy",
+                thread_id="thread-courtesy",
+                subject="RE: A imprimer",
+                from_address="agency@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 9, 7, 50, tzinfo=timezone.utc),
+                body_preview="Merci pour votre retour. Je vous confirme que votre badge sera disponible demain matin à l'agence.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].title, "À imprimer")
+        self.assertNotIn("Merci pour votre retour", prioritized[0].summary)
+        self.assertIn("badge sera disponible demain matin", prioritized[0].summary)
 
     def test_propagates_message_weblink_when_available(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

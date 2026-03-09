@@ -1,9 +1,9 @@
 ## item_057_day_captain_digest_microcopy_and_cta_polish - Polish labels, badges, and CTA wording without reopening layout work
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 94%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -39,7 +39,7 @@ flowchart LR
 
 # Links
 - Request: `req_030_day_captain_digest_editorial_relevance_and_copy_quality`
-- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Ready`)
+- Primary task(s): `task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - these issues are smaller than scoring/writing quality, but they still affect the product feel.
@@ -47,3 +47,4 @@ flowchart LR
 
 # Notes
 - Derived from `req_030_day_captain_digest_editorial_relevance_and_copy_quality`.
+- Closed on Monday, March 9, 2026 after polishing French weather and meeting CTA labels without changing the underlying interaction model.
