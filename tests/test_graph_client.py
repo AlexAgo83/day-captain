@@ -1,11 +1,13 @@
 from datetime import datetime
 from datetime import timezone
+import json
 from pathlib import Path
 import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from day_captain.adapters.graph import GraphApiError
 from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.adapters.graph import GraphApiClient
 from day_captain.adapters.graph import GraphDigestDelivery
@@ -55,6 +57,21 @@ class DeliveryRecorderApiClient:
     def post_object(self, path, access_token, payload, headers=None, expected_statuses=(200, 201, 202, 204)):
         self.calls.append(("POST", path, access_token, payload, headers, expected_statuses))
         return {}
+
+
+class FakeUrlopenResponse:
+    def __init__(self, payload, status=200) -> None:
+        self.payload = payload
+        self.status = status
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
+    def read(self):
+        return json.dumps(self.payload).encode("utf-8")
 
 
 class GraphAdapterTest(unittest.TestCase):
@@ -150,6 +167,60 @@ class GraphAdapterTest(unittest.TestCase):
         items = client.list_collection("/me/calendar/calendarView", access_token="token")
 
         self.assertEqual(items, ())
+
+    def test_list_collection_accepts_same_origin_absolute_nextlink(self) -> None:
+        seen_urls = []
+
+        def opener(req, timeout=0):
+            seen_urls.append(req.full_url)
+            if len(seen_urls) == 1:
+                return FakeUrlopenResponse(
+                    {
+                        "value": [{"id": "msg-1"}],
+                        "@odata.nextLink": "https://graph.microsoft.com/v1.0/me/messages?$skiptoken=abc",
+                    }
+                )
+            return FakeUrlopenResponse({"value": [{"id": "msg-2"}]})
+
+        client = GraphApiClient(
+            base_url="https://graph.microsoft.com/v1.0",
+            opener=opener,
+        )
+
+        items = client.list_collection("/me/messages", access_token="token")
+
+        self.assertEqual(len(items), 2)
+        self.assertEqual(items[0]["id"], "msg-1")
+        self.assertEqual(items[1]["id"], "msg-2")
+        self.assertEqual(
+            seen_urls,
+            [
+                "https://graph.microsoft.com/v1.0/me/messages",
+                "https://graph.microsoft.com/v1.0/me/messages?$skiptoken=abc",
+            ],
+        )
+
+    def test_list_collection_rejects_cross_origin_absolute_nextlink(self) -> None:
+        seen_urls = []
+
+        def opener(req, timeout=0):
+            seen_urls.append(req.full_url)
+            return FakeUrlopenResponse(
+                {
+                    "value": [{"id": "msg-1"}],
+                    "@odata.nextLink": "https://evil.example.com/v1.0/me/messages?$skiptoken=abc",
+                }
+            )
+
+        client = GraphApiClient(
+            base_url="https://graph.microsoft.com/v1.0",
+            opener=opener,
+        )
+
+        with self.assertRaisesRegex(GraphApiError, "outside the configured Graph origin"):
+            client.list_collection("/me/messages", access_token="token")
+
+        self.assertEqual(seen_urls, ["https://graph.microsoft.com/v1.0/me/messages"])
 
     def test_mail_collector_reads_from_inbox_only(self) -> None:
         api_client = CollectionRecorderApiClient()
