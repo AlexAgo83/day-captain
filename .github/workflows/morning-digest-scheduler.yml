@@ -7,8 +7,6 @@ on:
         description: "Optional single target user override"
         required: false
         type: string
-  schedule:
-    - cron: "30 6 * * 1-5"
 
 jobs:
   prepare-targets:
