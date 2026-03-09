@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.models import DigestEntry
+from day_captain.models import WeatherSnapshot
 from day_captain.services import StructuredDigestRenderer
 
 
@@ -173,6 +174,59 @@ class StructuredDigestRendererTest(unittest.TestCase):
             "First priority is budget review. Second priority is confirming the launch timing.",
         )
         self.assertNotIn("Third note should not appear", payload.delivery_body)
+
+    def test_renders_weather_capsule_before_overview(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-weather",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            top_summary="Review the open priorities first.",
+            weather=WeatherSnapshot(
+                forecast_date=datetime(2026, 3, 9, tzinfo=timezone.utc).date(),
+                weather_code=61,
+                temperature_max_c=13.4,
+                temperature_min_c=6.1,
+                location_name="Paris",
+                previous_temperature_max_c=11.0,
+            ),
+        )
+
+        self.assertIn("Today's weather", payload.delivery_body)
+        self.assertIn("Paris: Rain, 13C max / 6C min. Warmer than yesterday.", payload.delivery_body)
+        self.assertLess(payload.delivery_body.index("Today's weather"), payload.delivery_body.index("In brief"))
+        self.assertIn("Today's weather", payload.delivery_payload["html_body"])
+        self.assertIn("Paris: Rain, 13C max / 6C min. Warmer than yesterday.", payload.delivery_payload["html_body"])
+        self.assertEqual(payload.delivery_payload["weather"]["location_name"], "Paris")
+
+    def test_localizes_weather_capsule_in_french(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-weather-fr",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            weather=WeatherSnapshot(
+                forecast_date=datetime(2026, 3, 9, tzinfo=timezone.utc).date(),
+                weather_code=3,
+                temperature_max_c=9.2,
+                temperature_min_c=3.3,
+                location_name="Lille",
+                previous_temperature_max_c=9.0,
+            ),
+        )
+
+        self.assertIn("Meteo du jour", payload.delivery_body)
+        self.assertIn("Lille: Couvert, 9C max / 3C min. Proche d'hier.", payload.delivery_body)
 
     def test_localizes_footer_quick_actions_in_french(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")

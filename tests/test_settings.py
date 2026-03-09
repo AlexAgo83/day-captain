@@ -46,6 +46,11 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_LLM_TEMPERATURE"] = "0.1"
             os.environ["DAY_CAPTAIN_LLM_ENABLED_SECTIONS"] = "critical_topics,actions_to_take"
             os.environ["DAY_CAPTAIN_LLM_STYLE_PROMPT"] = "Write like my chief of staff."
+            os.environ["DAY_CAPTAIN_WEATHER_LATITUDE"] = "48.8566"
+            os.environ["DAY_CAPTAIN_WEATHER_LONGITUDE"] = "2.3522"
+            os.environ["DAY_CAPTAIN_WEATHER_LOCATION_NAME"] = "Paris"
+            os.environ["DAY_CAPTAIN_WEATHER_BASE_URL"] = "https://api.open-meteo.com/v1/forecast"
+            os.environ["DAY_CAPTAIN_WEATHER_TIMEOUT_SECONDS"] = "12"
             settings = DayCaptainSettings.from_env()
         finally:
             os.environ.clear()
@@ -88,9 +93,16 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.llm_temperature, 0.1)
         self.assertEqual(settings.llm_enabled_sections, ("critical_topics", "actions_to_take"))
         self.assertEqual(settings.llm_style_prompt, "Write like my chief of staff.")
+        self.assertEqual(settings.weather_latitude, 48.8566)
+        self.assertEqual(settings.weather_longitude, 2.3522)
+        self.assertEqual(settings.weather_location_name, "Paris")
+        self.assertEqual(settings.weather_base_url, "https://api.open-meteo.com/v1/forecast")
+        self.assertEqual(settings.weather_timeout_seconds, 12)
         self.assertTrue(settings.llm_is_enabled())
+        self.assertTrue(settings.weather_is_enabled())
         self.assertEqual(settings.resolved_digest_language(), "fr")
         self.assertEqual(settings.resolved_llm_language(), "fr")
+        self.assertEqual(settings.resolved_weather_location_name(), "Paris")
         self.assertEqual(
             settings.graph_login_scopes(),
             ("openid", "profile", "offline_access", "User.Read", "Mail.Read", "Calendars.Read", "Mail.Send"),
@@ -205,6 +217,8 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(summary["selected_target_user"], "alice@example.com")
         self.assertEqual(summary["configured_sender_user"], "")
         self.assertEqual(summary["email_command_allowed_senders"], ())
+        self.assertFalse(summary["weather_enabled"])
+        self.assertEqual(summary["weather_location_name"], "")
 
     def test_llm_is_disabled_by_default(self) -> None:
         self.assertFalse(DayCaptainSettings().llm_is_enabled())

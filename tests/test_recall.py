@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
+from day_captain.models import WeatherSnapshot
 from day_captain.services import SnapshotRecallProvider
 
 
@@ -21,6 +22,14 @@ class SnapshotRecallProviderTest(unittest.TestCase):
             window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
             window_end=now,
             delivery_mode="json",
+            weather=WeatherSnapshot(
+                forecast_date=now.date(),
+                weather_code=61,
+                temperature_max_c=13.4,
+                temperature_min_c=6.1,
+                location_name="Paris",
+                previous_temperature_max_c=11.0,
+            ),
             critical_topics=(
                 DigestEntry(
                     title="Urgent budget review",
@@ -48,6 +57,7 @@ class SnapshotRecallProviderTest(unittest.TestCase):
         recalled = SnapshotRecallProvider().build_recall(run)
 
         self.assertIn("Critical topics", recalled.delivery_body)
+        self.assertIn("Today's weather", recalled.delivery_body)
         self.assertEqual(recalled.critical_topics[0].source_id, "msg-1")
 
 

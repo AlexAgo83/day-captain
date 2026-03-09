@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/AlexAgo83/day-captain/actions/workflows/ci.yml"><img src="https://github.com/AlexAgo83/day-captain/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/AlexAgo83/day-captain" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v1.2.0-4C8BF5" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v1.3.0-4C8BF5" alt="Version" />
   <img src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Render-ready-46E3B7?logo=render&logoColor=white" alt="Render" />
   <img src="https://img.shields.io/badge/Microsoft%20365-Graph%20digest-0078D4?logo=microsoftoutlook&logoColor=white" alt="Microsoft 365" />
@@ -51,7 +51,7 @@ It currently supports:
 
 ## Project status
 
-Current package version: `1.2.0`
+Current package version: `1.3.0`
 
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
@@ -128,6 +128,9 @@ DAY_CAPTAIN_GRAPH_SCOPES=User.Read,Mail.Read,Calendars.Read,Mail.Send
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_DIGEST_LANGUAGE=en
 DAY_CAPTAIN_LLM_LANGUAGE=
+DAY_CAPTAIN_WEATHER_LATITUDE=
+DAY_CAPTAIN_WEATHER_LONGITUDE=
+DAY_CAPTAIN_WEATHER_LOCATION_NAME=
 DAY_CAPTAIN_LLM_PROVIDER=disabled
 DAY_CAPTAIN_LLM_MODEL=
 DAY_CAPTAIN_LLM_API_KEY=
@@ -151,6 +154,9 @@ DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_DIGEST_LANGUAGE=en
 DAY_CAPTAIN_LLM_LANGUAGE=en
+DAY_CAPTAIN_WEATHER_LATITUDE=48.8566
+DAY_CAPTAIN_WEATHER_LONGITUDE=2.3522
+DAY_CAPTAIN_WEATHER_LOCATION_NAME=Paris
 DAY_CAPTAIN_LLM_PROVIDER=openai
 DAY_CAPTAIN_LLM_MODEL=gpt-5-mini
 DAY_CAPTAIN_LLM_API_KEY=...
@@ -163,6 +169,7 @@ Important hosted note:
 - `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can allow a bounded helper sender set for inbound email-command recall in single-target setups
 - `DAY_CAPTAIN_GRAPH_USER_ID` remains supported as a single-user fallback and default target
 - hosted Graph auth now supports an explicit `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` path for unattended environments
+- weather is optional and enabled only when both `DAY_CAPTAIN_WEATHER_LATITUDE` and `DAY_CAPTAIN_WEATHER_LONGITUDE` are configured; `DAY_CAPTAIN_WEATHER_LOCATION_NAME` controls the capsule label shown in the digest
 
 Important:
 - never commit `.env`
@@ -186,6 +193,7 @@ The delivered digest now supports:
 - localized product copy through `DAY_CAPTAIN_DIGEST_LANGUAGE` with English default and French support
 - a condensed header with explicit as-of/window metadata and a more polished coverage line instead of verbose report phrasing
 - a highlighted `In brief` / `En bref` executive summary block above the detailed sections
+- an optional weather capsule before `In brief` / `En bref`, including a simple warmer/cooler-than-yesterday signal when weather data is configured
 - compact meeting cards that keep time, organizer, and location easy to scan with more natural day-horizon wording
 - lighter empty-state presentation even when the LLM layer is disabled
 - lighter hero/card visual treatment than the first readability pass

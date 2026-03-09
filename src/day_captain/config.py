@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import os
 from typing import Mapping
+from typing import Optional
 from typing import Sequence
 from urllib.parse import parse_qsl
 from urllib.parse import urlencode
@@ -31,6 +32,15 @@ def _parse_csv(value: str) -> Tuple[str, ...]:
     if not value:
         return ()
     return tuple(part.strip() for part in value.split(",") if part.strip())
+
+
+def _parse_float(value: Optional[str]) -> Optional[float]:
+    if value is None:
+        return None
+    candidate = value.strip()
+    if not candidate:
+        return None
+    return float(candidate)
 
 
 def _normalize_graph_auth_mode(value: str, default: str = "delegated") -> str:
@@ -86,6 +96,11 @@ class DayCaptainSettings:
     llm_temperature: float = 0.2
     llm_enabled_sections: Tuple[str, ...] = ("critical_topics", "actions_to_take", "watch_items")
     llm_style_prompt: str = "Write like a concise executive assistant."
+    weather_latitude: Optional[float] = None
+    weather_longitude: Optional[float] = None
+    weather_location_name: str = ""
+    weather_base_url: str = "https://api.open-meteo.com/v1/forecast"
+    weather_timeout_seconds: int = 10
 
     @classmethod
     def from_env(cls) -> "DayCaptainSettings":
@@ -135,6 +150,11 @@ class DayCaptainSettings:
                 "DAY_CAPTAIN_LLM_STYLE_PROMPT",
                 "Write like a concise executive assistant.",
             ),
+            weather_latitude=_parse_float(os.getenv("DAY_CAPTAIN_WEATHER_LATITUDE")),
+            weather_longitude=_parse_float(os.getenv("DAY_CAPTAIN_WEATHER_LONGITUDE")),
+            weather_location_name=os.getenv("DAY_CAPTAIN_WEATHER_LOCATION_NAME", ""),
+            weather_base_url=os.getenv("DAY_CAPTAIN_WEATHER_BASE_URL", "https://api.open-meteo.com/v1/forecast"),
+            weather_timeout_seconds=int(os.getenv("DAY_CAPTAIN_WEATHER_TIMEOUT_SECONDS", "10")),
         )
 
     def graph_login_scopes(self) -> Tuple[str, ...]:
@@ -233,6 +253,8 @@ class DayCaptainSettings:
             "configured_sender_user": self.graph_sender_user_id.strip(),
             "email_command_allowed_senders": self.email_command_allowed_senders,
             "graph_send_enabled": self.graph_send_enabled,
+            "weather_enabled": self.weather_is_enabled(),
+            "weather_location_name": self.resolved_weather_location_name(),
             "database_configured": bool(resolved_database_url),
             "storage_backend": "postgres" if resolved_database_url else "sqlite",
         }
@@ -257,3 +279,9 @@ class DayCaptainSettings:
         if sslmode:
             query["sslmode"] = sslmode
         return urlunparse(parsed._replace(query=urlencode(query)))
+
+    def weather_is_enabled(self) -> bool:
+        return self.weather_latitude is not None and self.weather_longitude is not None
+
+    def resolved_weather_location_name(self) -> str:
+        return self.weather_location_name.strip()
