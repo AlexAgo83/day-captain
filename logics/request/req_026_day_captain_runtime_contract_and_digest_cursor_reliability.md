@@ -1,8 +1,8 @@
 ## req_026_day_captain_runtime_contract_and_digest_cursor_reliability - Day Captain runtime contract and digest cursor reliability
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -65,11 +65,12 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_042_day_captain_email_command_enablement_contract_alignment` - Align hosted email-command enablement with the documented contract. Status: `Ready`.
-- `item_043_day_captain_morning_digest_cursor_run_type_isolation` - Isolate the morning-digest incremental cursor from unrelated run types. Status: `Ready`.
-- `item_044_day_captain_llm_source_open_control_preservation` - Preserve source-open controls through LLM rewriting. Status: `Ready`.
-- `task_031_day_captain_runtime_contract_and_digest_cursor_reliability_orchestration` - Orchestrate runtime contract and digest cursor reliability fixes. Status: `Ready`.
+- `item_042_day_captain_email_command_enablement_contract_alignment` - Align hosted email-command enablement with the documented contract. Status: `Done`.
+- `item_043_day_captain_morning_digest_cursor_run_type_isolation` - Isolate the morning-digest incremental cursor from unrelated run types. Status: `Done`.
+- `item_044_day_captain_llm_source_open_control_preservation` - Preserve source-open controls through LLM rewriting. Status: `Done`.
+- `task_031_day_captain_runtime_contract_and_digest_cursor_reliability_orchestration` - Orchestrate runtime contract and digest cursor reliability fixes. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 from the project-wide review findings after the `1.3.1` multi-user recall slice landed.
 - This request is intentionally about correctness and operator trust, not about new product surface.
+- Closed on Monday, March 9, 2026 after aligning the hosted email-command contract, isolating the morning-digest cursor by run type, and locking source-open metadata preservation with regression coverage.

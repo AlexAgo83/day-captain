@@ -304,8 +304,8 @@ Hosted `email-command-recall` contract:
 - require `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
 - require `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
 - sender validation is deterministic:
-  - if the sender matches one configured target user, that user is recalled
-  - in a single-target deployment, bare helper senders such as `assistant@company.com` still map to that only target user
+  - there is no implicit self-sender fallback when the env var is empty
+  - in a single-target deployment, list the allowed sender explicitly, for example `alice@company.com` or `assistant@company.com`
   - in a multi-user deployment, helper senders must use explicit `sender=target` mappings such as `assistant@company.com=alice@example.com`
   - ambiguous helper mappings are rejected explicitly rather than guessed
 
@@ -464,8 +464,8 @@ Behavior:
 - `recall-week` generates a digest from Monday `00:00` through now in `DAY_CAPTAIN_DISPLAY_TIMEZONE`.
 - duplicate inbound events are suppressed by `command_message_id`.
 - sender validation is deterministic:
-  - if the sender matches one configured target user, that user is recalled
-  - in a single-target deployment, `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can authorize a helper sender such as `assistant@company.com`
+  - the feature is disabled unless `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` is configured
+  - in a single-target deployment, `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` must explicitly list the allowed sender such as `alice@company.com` or `assistant@company.com`
   - in a multi-user deployment, helper senders must be declared as explicit mappings such as `assistant@company.com=alice@example.com`
 
 Hosted trigger tooling also supports this path:

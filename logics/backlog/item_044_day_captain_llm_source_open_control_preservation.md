@@ -1,9 +1,9 @@
 ## item_044_day_captain_llm_source_open_control_preservation - Preserve source-open controls through LLM rewriting
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Low
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_026_day_captain_runtime_contract_and_digest_cursor_reliability`
-- Primary task(s): `task_031_day_captain_runtime_contract_and_digest_cursor_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_031_day_captain_runtime_contract_and_digest_cursor_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - the feature remains present in the renderer but becomes unreliable in LLM-enabled runs.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_026_day_captain_runtime_contract_and_digest_cursor_reliability`.
 - This slice should stay narrowly focused on metadata preservation, not wording quality.
+- Closed on Monday, March 9, 2026 after preserving `source_url` and `desktop_source_url` through overview/wording rewrites and adding regression coverage for the rendered open controls.

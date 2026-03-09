@@ -326,13 +326,19 @@ class InMemoryStorage:
             return None
         return sorted(runs, key=lambda item: item.generated_at)[-1]
 
-    def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+    def get_latest_completed_run(
+        self,
+        tenant_id: str = "",
+        user_id: str = "",
+        run_type: str = "",
+    ) -> Optional[DigestRunRecord]:
         completed = [
             run
             for run in self._runs.values()
             if run.status == "completed"
             and (not tenant_id or run.tenant_id == tenant_id)
             and (not user_id or run.user_id == user_id)
+            and (not run_type or run.run_type == run_type)
         ]
         if not completed:
             return None
@@ -766,6 +772,7 @@ class DayCaptainApplication:
         previous_run = None if force else self.storage.get_latest_completed_run(
             tenant_id=scoped_tenant_id,
             user_id=scoped_user_id,
+            run_type="morning_digest",
         )
         window_start = (
             previous_run.window_end + timedelta(microseconds=1)

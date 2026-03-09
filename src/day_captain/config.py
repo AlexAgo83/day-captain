@@ -299,8 +299,10 @@ class DayCaptainSettings:
         return self.weather_location_name.strip()
 
     def resolved_email_command_sender_routes(self) -> Tuple[Tuple[str, str], ...]:
+        if not self.email_command_allowed_senders:
+            return ()
         configured_targets = tuple(_normalize_email(item) for item in self.resolved_target_users())
-        routes = {target: target for target in configured_targets if target}
+        routes = {}
         for raw_value in self.email_command_allowed_senders:
             sender, target = _parse_email_command_sender_route(raw_value)
             if not sender:
