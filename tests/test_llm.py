@@ -93,6 +93,8 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("chief of staff", captured["body"]["messages"][0]["content"])
         self.assertIn("French", captured["body"]["messages"][0]["content"])
         self.assertIn("Do not repeat the title at the start of the summary", captured["body"]["messages"][0]["content"])
+        self.assertIn("decision-oriented wording", captured["body"]["messages"][0]["content"])
+        self.assertIn("Drop greetings, thank-you lead-ins, and sign-offs", captured["body"]["messages"][0]["content"])
         self.assertIn("under 160 characters", captured["body"]["messages"][0]["content"])
         self.assertIn("candidate or profile-style messages", captured["body"]["messages"][0]["content"])
         self.assertEqual(
@@ -184,6 +186,8 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertNotIn("temperature", captured["body"])
         self.assertIn("Use 1 to 2 short factual sentences", captured["body"]["messages"][0]["content"])
         self.assertIn("avoid vague phrasing", captured["body"]["messages"][0]["content"])
+        self.assertIn("decision-oriented wording", captured["body"]["messages"][0]["content"])
+        self.assertIn("Drop greetings, thank-you lead-ins, and sign-offs", captured["body"]["messages"][0]["content"])
         self.assertIn("Avoid unfinished endings", captured["body"]["messages"][0]["content"])
         self.assertIn("candidate or profile-style items", captured["body"]["messages"][0]["content"])
         self.assertIn("Prefer readable names over raw email addresses", captured["body"]["messages"][0]["content"])

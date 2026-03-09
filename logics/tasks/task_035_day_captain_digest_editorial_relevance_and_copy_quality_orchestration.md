@@ -1,9 +1,9 @@
 ## task_035_day_captain_digest_editorial_relevance_and_copy_quality_orchestration - Orchestrate title cleanup, watch-item filtering, summary wording, and micro-copy polish
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -23,11 +23,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Tighten digest card title cleanup heuristics for subject-derived titles.
-- [ ] 2. Reduce low-signal watch-item noise with bounded scoring/filtering changes.
-- [ ] 3. Improve summary wording so cards read more decisionally and less literally.
-- [ ] 4. Apply bounded micro-copy and CTA polish.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Tighten digest card title cleanup heuristics for subject-derived titles.
+- [x] 2. Reduce low-signal watch-item noise with bounded scoring/filtering changes.
+- [x] 3. Improve summary wording so cards read more decisionally and less literally.
+- [x] 4. Apply bounded micro-copy and CTA polish.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req030 AC1 -> Plan step 1. Proof: task explicitly includes title cleanup heuristics.
@@ -46,13 +46,14 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Digest titles avoid obvious raw-email awkwardness where safe cleanup is possible.
-- [ ] `watch_items` is visibly less noisy in representative samples.
-- [ ] Summaries are more assistant-style and less literal while staying grounded.
-- [ ] User-visible copy polish is aligned and stable in Outlook-safe rendering.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Digest titles avoid obvious raw-email awkwardness where safe cleanup is possible.
+- [x] `watch_items` is visibly less noisy in representative samples.
+- [x] Summaries are more assistant-style and less literal while staying grounded.
+- [x] User-visible copy polish is aligned and stable in Outlook-safe rendering.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 9, 2026 from live Outlook review after the `1.4.x` digest polish slices.
 - This task intentionally focuses on editorial usefulness and credibility rather than CSS/layout changes.
+- Closed on Monday, March 9, 2026 after shipping editorial title cleanup, stricter watch-item filtering, decision-oriented preview cleanup, and bounded French copy polish.
