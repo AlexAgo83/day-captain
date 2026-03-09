@@ -5,8 +5,8 @@ Use this runbook to bridge inbound emails sent to `daycaptain@...` into the host
 Hosted prerequisites for this flow:
 - `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
 - `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
-- exactly one hosted target user
 - `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` configured with the bounded sender allowlist
+- if several hosted target users are configured, helper senders must use explicit `sender=target` mappings such as `assistant@example.com=alice@example.com`
 
 ## Goal
 
