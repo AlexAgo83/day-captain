@@ -61,6 +61,7 @@ class SQLiteStorageTest(unittest.TestCase):
                         section_name="critical_topics",
                         source_kind="message",
                         source_id="msg-1",
+                        source_url="https://outlook.office.com/mail/msg-1",
                         score=2.0,
                         reason_codes=("critical_keyword",),
                         guardrail_applied=True,
@@ -83,6 +84,7 @@ class SQLiteStorageTest(unittest.TestCase):
 
             self.assertIsNotNone(loaded)
             self.assertEqual(loaded.summary.critical_topics[0].source_id, "msg-1")
+            self.assertEqual(loaded.summary.critical_topics[0].source_url, "https://outlook.office.com/mail/msg-1")
             with sqlite3.connect(path) as connection:
                 item_count = connection.execute("SELECT COUNT(*) FROM scoped_digest_items").fetchone()[0]
 

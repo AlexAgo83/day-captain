@@ -113,6 +113,43 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Point equipe", payload.delivery_payload["html_body"])
         self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_payload["html_body"])
 
+    def test_renders_item_open_controls_when_source_links_exist(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-3b",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Point equipe",
+                    summary="Aujourd'hui, 10:00 | Lead | Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-1",
+                    source_url="https://outlook.office.com/calendar/item/mtg-1",
+                    score=2.5,
+                ),
+                DigestEntry(
+                    title="Urgent budget review",
+                    summary="Critical: Please review before noon.",
+                    section_name="critical_topics",
+                    source_kind="message",
+                    source_id="msg-1",
+                    source_url="https://outlook.office.com/mail/msg-1",
+                    score=3.0,
+                ),
+            ),
+        )
+
+        self.assertIn("Ouvrir la reunion", payload.delivery_body)
+        self.assertIn("Ouvrir dans Outlook", payload.delivery_body)
+        self.assertIn("href=\"https://outlook.office.com/calendar/item/mtg-1\"", payload.delivery_payload["html_body"])
+        self.assertIn("href=\"https://outlook.office.com/mail/msg-1\"", payload.delivery_payload["html_body"])
+
     def test_bounds_top_summary_to_brief_copy(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
