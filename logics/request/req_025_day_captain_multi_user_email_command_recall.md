@@ -1,8 +1,8 @@
 ## req_025_day_captain_multi_user_email_command_recall - Day Captain multi-user email-command recall
 > From version: 1.3.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Operations
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -86,11 +86,12 @@ flowchart LR
 - [x] Safety and ambiguity risks are listed.
 
 # Backlog
-- `item_039_day_captain_multi_user_email_command_mapping_contract` - Define the sender-to-target mapping contract for hosted multi-user email-command recall. Status: `Ready`.
-- `item_040_day_captain_multi_user_email_command_validation_and_runtime` - Enable valid hosted multi-user email-command recall at validation/runtime without regressing single-user behavior. Status: `Ready`.
-- `item_041_day_captain_multi_user_email_command_ops_docs_and_validation` - Update docs and validate the hosted multi-user email-command operator flow. Status: `Ready`.
-- `task_030_day_captain_multi_user_email_command_recall_orchestration` - Orchestrate the hosted multi-user email-command recall slice end to end. Status: `Ready`.
+- `item_039_day_captain_multi_user_email_command_mapping_contract` - Define the sender-to-target mapping contract for hosted multi-user email-command recall. Status: `Done`.
+- `item_040_day_captain_multi_user_email_command_validation_and_runtime` - Enable valid hosted multi-user email-command recall at validation/runtime without regressing single-user behavior. Status: `Done`.
+- `item_041_day_captain_multi_user_email_command_ops_docs_and_validation` - Update docs and validate the hosted multi-user email-command operator flow. Status: `Done`.
+- `task_030_day_captain_multi_user_email_command_recall_orchestration` - Orchestrate the hosted multi-user email-command recall slice end to end. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 after a live hosted failure exposed the current incompatibility between multi-user hosted delivery and `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`.
 - This request is intentionally about hosted contract/safety and should reuse the existing multi-user delivery model where possible.
+- Closed on Monday, March 9, 2026 after the hosted contract was extended to support explicit `sender=target` helper mappings, self-sender resolution for configured target users, and updated operator docs.
