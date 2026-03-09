@@ -1,8 +1,8 @@
 ## req_023_day_captain_digest_spacing_and_content_cleanup_polish - Day Captain digest spacing and content cleanup polish
 > From version: 1.2.0
-> Status: In Progress
+> Status: Done
 > Understanding: 100%
-> Confidence: 99%
+> Confidence: 100%
 > Complexity: Low
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -106,11 +106,11 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish` - Improve the spacing rhythm around `Périmètre`, `En bref`, and the first section. Status: `In Progress`.
-- `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish` - Soften card weight and shorten footer helper copy. Status: `In Progress`.
-- `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup` - Clean rough labels, improve overview/meeting fallback copy, and prevent self-reference meeting wording. Status: `In Progress`.
-- `item_035_day_captain_digest_source_open_controls` - Evaluate lightweight controls to open the underlying Outlook mail or calendar context from digest cards. Status: `Todo`.
-- `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration` - Orchestrate the final micro-polish follow-up. Status: `In Progress`.
+- `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish` - Improve the spacing rhythm around `Périmètre`, `En bref`, and the first section. Status: `Done`.
+- `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish` - Soften card weight and shorten footer helper copy. Status: `Done`.
+- `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup` - Clean rough labels, improve overview/meeting fallback copy, and prevent self-reference meeting wording. Status: `Done`.
+- `item_035_day_captain_digest_source_open_controls` - Evaluate lightweight controls to open the underlying Outlook mail or calendar context from digest cards. Status: `Done`.
+- `task_028_day_captain_digest_spacing_and_content_cleanup_orchestration` - Orchestrate the final micro-polish follow-up. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 after another real Outlook review showed that the remaining gaps are now mostly spacing and cleanup polish rather than structural layout issues.
@@ -119,3 +119,4 @@ flowchart LR
 - The latest live Outlook review confirms that the next development slice should focus primarily on copy heuristics: `En bref`, meeting-summary fallbacks, and card-summary compression are now the main issues.
 - That copy-heuristic slice is now underway locally: the LLM prompts are being tightened, redundant title prefixes are being stripped from rewritten summaries, and meeting fallbacks are starting to prefer a real counterparty when the organizer is the target user.
 - The request now also captures a new UX follow-up: once a digest card is useful enough to act on, it should ideally offer a bounded “open in Outlook” style control for the underlying mail or meeting when the source link is already known and Outlook compatibility remains acceptable.
+- Final validation completed on Monday, March 9, 2026: the live `1.2.2` digest on Render was reviewed in Outlook, the final polish pass was accepted, and the new source-opening controls were confirmed acceptable for closure.
