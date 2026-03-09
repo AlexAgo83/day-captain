@@ -85,6 +85,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
                 end_at=datetime(2026, 3, 7, 9, 30, tzinfo=timezone.utc),
                 organizer_address="ceo@example.com",
                 location="Teams",
+                raw_payload={"webLink": "https://outlook.office.com/calendar/item/mtg-1"},
             ),
         )
 
@@ -92,6 +93,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         self.assertEqual(prioritized[0].section_name, "upcoming_meetings")
         self.assertIn("meeting_soon", prioritized[0].reason_codes)
+        self.assertEqual(prioritized[0].source_url, "https://outlook.office.com/calendar/item/mtg-1")
 
     def test_filters_dmarc_aggregate_reports_and_cold_outreach(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
@@ -341,6 +343,26 @@ class DeterministicScoringEngineTest(unittest.TestCase):
             prioritized[0].summary,
             "Profil candidat : designer chez Studio Meridian. Examiner la candidature ou proposer un suivi.",
         )
+
+    def test_propagates_message_weblink_when_available(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-linked",
+                thread_id="thread-linked",
+                subject="Action needed on roadmap",
+                from_address="pm@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 9, 7, 50, tzinfo=timezone.utc),
+                body_preview="Need your input for planning.",
+                raw_payload={"webLink": "https://outlook.office.com/mail/msg-linked"},
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].source_url, "https://outlook.office.com/mail/msg-linked")
 
     def test_uses_first_non_self_attendee_when_organizer_is_target_user(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
