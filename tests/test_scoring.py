@@ -317,6 +317,31 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].title, "Bureau Artois")
         self.assertEqual(prioritized[0].summary, "Demain, 01:00")
 
+    def test_compacts_candidate_profile_message_summary(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-candidate",
+                thread_id="thread-candidate",
+                subject="Candidature spontanée - Designer",
+                from_address="candidate@example.com",
+                received_at=datetime(2026, 3, 9, 7, 30, tzinfo=timezone.utc),
+                body_preview=(
+                    "Madame, Monsieur, issu d'un bachelor en design transport et d'un master en design urbain, "
+                    "je suis désormais designer chez Dassault Aviation depuis plus de 4 ans et cherche une nouvelle opportunité."
+                ),
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].section_name, "watch_items")
+        self.assertEqual(
+            prioritized[0].summary,
+            "Profil candidat : designer chez Dassault Aviation. Examiner la candidature ou proposer un suivi.",
+        )
+
     def test_uses_first_non_self_attendee_when_organizer_is_target_user(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
