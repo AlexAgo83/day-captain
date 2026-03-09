@@ -191,6 +191,7 @@ The delivered digest now supports:
 - lighter hero/card visual treatment than the first readability pass
 - optional footer quick actions using `mailto:` links that open a prefilled draft for recall commands, with the command repeated in subject and body when a command mailbox is known
 - weekend meeting fallback to Monday and next-day meeting fallback when no meetings remain for the current day
+- first-run `morning-digest` mail fallback to Friday `00:00` in `DAY_CAPTAIN_DISPLAY_TIMEZONE` on Saturday, Sunday, and Monday; repeated runs stay incremental
 
 For the current local-preview and final Outlook validation workflow, see [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
 
