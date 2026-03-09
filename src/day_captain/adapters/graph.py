@@ -367,6 +367,7 @@ class GraphMailCollector:
                 "receivedDateTime",
                 "bodyPreview",
                 "categories",
+                "flag",
                 "isRead",
                 "hasAttachments",
                 "webLink",
