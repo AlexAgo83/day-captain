@@ -21,7 +21,7 @@ This guide covers the bounded operator-managed multi-user model shipped in Day C
 - `DAY_CAPTAIN_TARGET_USERS=["alice@example.com","bob@example.com"]` is not used directly by the app. Keep the app env var as CSV:
   - `DAY_CAPTAIN_TARGET_USERS=alice@example.com,bob@example.com`
 - optional `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com` when delivery should come from a dedicated shared mailbox
-- optional `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=alice@example.com` when inbound mail commands should be accepted from a bounded helper sender set in a single-target deployment
+- optional `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=assistant@example.com=alice@example.com` when inbound mail commands should be accepted from a bounded helper sender set
 - `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
 
 ## Add a target user
@@ -45,7 +45,8 @@ This guide covers the bounded operator-managed multi-user model shipped in Day C
 - `recall-week` generates a digest from Monday `00:00` through now in `DAY_CAPTAIN_DISPLAY_TIMEZONE`.
 - Sender resolution is strict:
   - multi-user deployments should use a sender address that matches one configured target user
-  - single-user deployments may also authorize helper senders through `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
+  - single-user deployments may also authorize bare helper senders through `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
+  - multi-user deployments may authorize helper senders only through explicit `sender=target` mappings in `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
 - Duplicate suppression is keyed by inbound `command_message_id`, so replaying the same inbound message should not regenerate a second digest.
 - The first recommended transport bridge is Power Automate on top of the shared mailbox trigger. See [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md).
 
@@ -199,7 +200,7 @@ After adding or changing users, validate:
 - recall for `alice@example.com` never returns `bob@example.com`'s latest run
 - if a dedicated sender mailbox is configured, delivery still arrives for the target user while the visible sender is `daycaptain@...`
 - if inbound email-command recall is enabled, only authorized senders can trigger it and replaying the same inbound `command_message_id` is deduplicated
-- if inbound email-command recall is enabled through `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`, the hosted deployment should stay single-target and use `app_only` plus `graph_send`
+- if inbound email-command recall uses helper senders in multi-user mode, each helper sender must map to exactly one target user and ambiguous mappings must fail explicitly
 - a run left in `delivery_pending` still means delivery may already have happened and requires reconciliation before another send
 - a run marked `delivery_failed` means Graph prerequisites or delivery failed before acceptance was likely, so a later retry is expected to be safe
 - feedback recorded against one user changes only that user's preferences

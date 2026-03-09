@@ -178,8 +178,8 @@ class DayCaptainSettingsTest(unittest.TestCase):
             email_command_allowed_senders=("assistant@example.com",),
         ).validate_hosted()
 
-    def test_validate_hosted_email_command_requires_single_target_user(self) -> None:
-        with self.assertRaisesRegex(ValueError, "exactly one hosted target user"):
+    def test_validate_hosted_email_command_requires_explicit_mapping_in_multi_user_mode(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must use sender=target mappings"):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
@@ -189,6 +189,32 @@ class DayCaptainSettingsTest(unittest.TestCase):
                 graph_client_secret="client-secret",
                 target_users=("alice@example.com", "bob@example.com"),
                 email_command_allowed_senders=("assistant@example.com",),
+            ).validate_hosted()
+
+    def test_validate_hosted_email_command_allows_multi_user_explicit_mapping(self) -> None:
+        DayCaptainSettings(
+            environment="production",
+            job_secret="secret",
+            delivery_mode="json",
+            graph_send_enabled=True,
+            graph_auth_mode="app_only",
+            graph_client_id="client-id",
+            graph_client_secret="client-secret",
+            target_users=("alice@example.com", "bob@example.com"),
+            email_command_allowed_senders=("assistant@example.com=bob@example.com",),
+        ).validate_hosted()
+
+    def test_validate_hosted_email_command_rejects_unknown_mapping_target(self) -> None:
+        with self.assertRaisesRegex(ValueError, "must be one of DAY_CAPTAIN_TARGET_USERS"):
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                graph_send_enabled=True,
+                graph_auth_mode="app_only",
+                graph_client_id="client-id",
+                graph_client_secret="client-secret",
+                target_users=("alice@example.com", "bob@example.com"),
+                email_command_allowed_senders=("assistant@example.com=carol@example.com",),
             ).validate_hosted()
 
     def test_validate_target_user_rejects_unknown_user(self) -> None:
@@ -217,6 +243,10 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(summary["selected_target_user"], "alice@example.com")
         self.assertEqual(summary["configured_sender_user"], "")
         self.assertEqual(summary["email_command_allowed_senders"], ())
+        self.assertEqual(
+            summary["email_command_sender_routes"],
+            {"alice@example.com": "alice@example.com", "bob@example.com": "bob@example.com"},
+        )
         self.assertFalse(summary["weather_enabled"])
         self.assertEqual(summary["weather_location_name"], "")
 

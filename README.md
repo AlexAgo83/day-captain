@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/AlexAgo83/day-captain/actions/workflows/ci.yml"><img src="https://github.com/AlexAgo83/day-captain/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/AlexAgo83/day-captain" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v1.3.0-4C8BF5" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v1.3.1-4C8BF5" alt="Version" />
   <img src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Render-ready-46E3B7?logo=render&logoColor=white" alt="Render" />
   <img src="https://img.shields.io/badge/Microsoft%20365-Graph%20digest-0078D4?logo=microsoftoutlook&logoColor=white" alt="Microsoft 365" />
@@ -51,7 +51,7 @@ It currently supports:
 
 ## Project status
 
-Current package version: `1.3.0`
+Current package version: `1.3.1`
 
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
@@ -149,7 +149,7 @@ DAY_CAPTAIN_GRAPH_CLIENT_SECRET=...
 DAY_CAPTAIN_GRAPH_TENANT_ID=...
 DAY_CAPTAIN_TARGET_USERS=alice@example.com,bob@example.com
 DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com
-DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=alice@example.com
+DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=assistant@example.com=alice@example.com
 DAY_CAPTAIN_GRAPH_SEND_ENABLED=true
 DAY_CAPTAIN_DISPLAY_TIMEZONE=Europe/Paris
 DAY_CAPTAIN_DIGEST_LANGUAGE=en
@@ -166,7 +166,7 @@ Important hosted note:
 - hosted runs are now tenant-scoped and user-scoped, with one explicit target user per execution
 - configure explicit recipients with `DAY_CAPTAIN_TARGET_USERS`
 - `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` can send mail from a dedicated mailbox such as `daycaptain@company.com` while reads stay scoped to the selected target mailbox
-- `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can allow a bounded helper sender set for inbound email-command recall in single-target setups
+- `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can allow a bounded helper sender set for inbound email-command recall; in single-target setups bare senders still work, while multi-user setups must use explicit `sender=target` mappings
 - `DAY_CAPTAIN_GRAPH_USER_ID` remains supported as a single-user fallback and default target
 - hosted Graph auth now supports an explicit `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` path for unattended environments
 - weather is optional and enabled only when both `DAY_CAPTAIN_WEATHER_LATITUDE` and `DAY_CAPTAIN_WEATHER_LONGITUDE` are configured; `DAY_CAPTAIN_WEATHER_LOCATION_NAME` controls the capsule label shown in the digest
@@ -293,14 +293,18 @@ Hosted app-only workflow:
 - provide `DAY_CAPTAIN_GRAPH_TENANT_ID`
 - provide `DAY_CAPTAIN_TARGET_USERS`
 - optionally provide `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` for a dedicated sender mailbox
-- optionally provide `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` to enable bounded inbound command senders in a single-target deployment
+- optionally provide `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` to enable bounded inbound command senders
 - grant the corresponding Graph application permissions in Entra
 
 Hosted `email-command-recall` contract:
 - treat the feature as enabled only when `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` is configured
 - require `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
 - require `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
-- require exactly one hosted target user when using the allowlist-driven inbound command flow
+- sender validation is deterministic:
+  - if the sender matches one configured target user, that user is recalled
+  - in a single-target deployment, bare helper senders such as `assistant@company.com` still map to that only target user
+  - in a multi-user deployment, helper senders must use explicit `sender=target` mappings such as `assistant@company.com=alice@example.com`
+  - ambiguous helper mappings are rejected explicitly rather than guessed
 
 In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity. When several users are configured, each run must choose one explicit target user. If `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` is set, reads still target the selected mailbox but `sendMail` is routed through the dedicated sender mailbox instead.
 
@@ -459,6 +463,7 @@ Behavior:
 - sender validation is deterministic:
   - if the sender matches one configured target user, that user is recalled
   - in a single-target deployment, `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can authorize a helper sender such as `assistant@company.com`
+  - in a multi-user deployment, helper senders must be declared as explicit mappings such as `assistant@company.com=alice@example.com`
 
 Hosted trigger tooling also supports this path:
 

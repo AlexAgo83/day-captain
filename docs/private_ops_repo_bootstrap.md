@@ -57,12 +57,13 @@ Assumptions baked into that template:
 - `DAY_CAPTAIN_SERVICE_URL=https://your-render-service.example.com`
 - `DAY_CAPTAIN_JOB_SECRET=...`
 - `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com`
-- `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=alice@example.com`
+- `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS=assistant@example.com=alice@example.com`
 
 If you set `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`, also ensure:
 - the hosted service uses `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only`
 - `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`
-- the hosted deployment serves exactly one target user for that allowlist-driven inbound command flow
+- single-target deployments may use bare helper senders such as `assistant@example.com`
+- multi-user deployments must use explicit `sender=target` mappings such as `assistant@example.com=alice@example.com`
 
 ## Validation before enabling cron
 
