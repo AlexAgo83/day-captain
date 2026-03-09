@@ -1,9 +1,9 @@
 ## item_052_day_captain_hosted_job_secret_constant_time_validation - Harden hosted X-Day-Captain-Secret validation with a constant-time comparison primitive
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Security
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_029_day_captain_hosted_graph_boundary_and_job_secret_hardening`
-- Primary task(s): `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` (`Ready`)
+- Primary task(s): `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - the surface is small but production-facing and worth hardening.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_029_day_captain_hosted_graph_boundary_and_job_secret_hardening`.
 - This item intentionally improves the primitive only; it does not replace broader secret-management hygiene.
+- Closed on Monday, March 9, 2026 after replacing raw secret equality with a constant-time comparison path and locking the hosted auth behavior with regression tests.

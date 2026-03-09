@@ -1,9 +1,9 @@
 ## item_053_day_captain_hosted_security_docs_and_validation_alignment - Align operator docs and tests with the hosted Graph boundary and secret-hardening contract
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 94%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Security
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_029_day_captain_hosted_graph_boundary_and_job_secret_hardening`
-- Primary task(s): `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` (`Ready`)
+- Primary task(s): `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - the code change is security-sensitive and should not land without clear operator guidance.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_029_day_captain_hosted_graph_boundary_and_job_secret_hardening`.
 - This item should close only after tests and docs both reflect the final production contract.
+- Closed on Monday, March 9, 2026 after aligning hosted operator docs and regression coverage with the same-origin Graph boundary and hardened shared-secret validation model.

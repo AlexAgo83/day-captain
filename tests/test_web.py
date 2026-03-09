@@ -121,6 +121,20 @@ class DayCaptainWebAppTest(unittest.TestCase):
         self.assertEqual(response["json"]["runtime"]["graph_auth_mode"], "app_only")
         self.assertEqual(response["json"]["runtime"]["storage_backend"], "postgres")
 
+    def test_healthz_uses_constant_time_secret_comparison(self) -> None:
+        app = create_web_app(
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+            )
+        )
+
+        with mock.patch("day_captain.web.compare_digest", return_value=True) as mocked_compare:
+            response = self._request(app, "GET", "/healthz", secret="secret")
+
+        self.assertEqual(response["status"], "200 OK")
+        mocked_compare.assert_called_once_with("secret", "secret")
+
     def test_morning_digest_requires_secret(self) -> None:
         app = create_web_app(DayCaptainSettings(job_secret="secret"))
 

@@ -1,9 +1,9 @@
 ## item_051_day_captain_graph_nextlink_trust_boundary_enforcement - Prevent Graph pagination from forwarding bearer tokens to unexpected absolute hosts
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Security
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -43,7 +43,7 @@ flowchart LR
 
 # Links
 - Request: `req_029_day_captain_hosted_graph_boundary_and_job_secret_hardening`
-- Primary task(s): `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` (`Ready`)
+- Primary task(s): `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` (`Done`)
 
 # Priority
 - Impact: High - this is a bearer-token boundary issue in production collection paths.
@@ -52,3 +52,4 @@ flowchart LR
 # Notes
 - Derived from `req_029_day_captain_hosted_graph_boundary_and_job_secret_hardening`.
 - The implementation should normalize against `DAY_CAPTAIN_GRAPH_BASE_URL`, including sovereign or custom Graph hosts when configured.
+- Closed on Monday, March 9, 2026 after restricting absolute Graph pagination links to the configured same-origin Graph base URL and adding allow/reject regression coverage.
