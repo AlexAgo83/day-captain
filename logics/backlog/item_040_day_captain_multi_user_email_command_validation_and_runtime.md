@@ -1,9 +1,9 @@
 ## item_040_day_captain_multi_user_email_command_validation_and_runtime - Enable valid hosted multi-user email-command recall at validation/runtime
 > From version: 1.3.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Operations
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_025_day_captain_multi_user_email_command_recall`
-- Primary task(s): `task_030_day_captain_multi_user_email_command_recall_orchestration` (`Ready`)
+- Primary task(s): `task_030_day_captain_multi_user_email_command_recall_orchestration` (`Done`)
 
 # Priority
 - Impact: High - this is the actual code/runtime change that removes the current hosted failure.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from `req_025_day_captain_multi_user_email_command_recall`.
 - This slice should stay narrow: allow safe multi-user recall, not broaden the email-command feature set unnecessarily.
+- Completed by removing the single-target startup restriction, validating explicit multi-user helper mappings, and routing runtime recall requests through the resolved sender-to-target map without guessing.
