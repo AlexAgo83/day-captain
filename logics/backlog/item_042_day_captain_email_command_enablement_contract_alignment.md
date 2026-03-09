@@ -1,9 +1,9 @@
 ## item_042_day_captain_email_command_enablement_contract_alignment - Align hosted email-command enablement with the documented contract
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -42,7 +42,7 @@ flowchart LR
 
 # Links
 - Request: `req_026_day_captain_runtime_contract_and_digest_cursor_reliability`
-- Primary task(s): `task_031_day_captain_runtime_contract_and_digest_cursor_reliability_orchestration` (`Ready`)
+- Primary task(s): `task_031_day_captain_runtime_contract_and_digest_cursor_reliability_orchestration` (`Done`)
 
 # Priority
 - Impact: High - operators cannot safely trust hosted recall enablement until the contract is consistent.
@@ -51,3 +51,4 @@ flowchart LR
 # Notes
 - Derived from `req_026_day_captain_runtime_contract_and_digest_cursor_reliability`.
 - Preferred outcome: one explicit enablement rule with no hidden self-route fallback when the feature is documented as off.
+- Closed on Monday, March 9, 2026 after removing implicit self-routes when `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` is empty and aligning operator docs/tests with the explicit enablement contract.
