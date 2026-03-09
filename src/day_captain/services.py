@@ -211,6 +211,10 @@ LANGUAGE_COPY = {
             "recall_today": "Recall today",
             "recall_week": "Recall week",
         },
+        "item_actions": {
+            "open_mail": "Open in Outlook",
+            "open_meeting": "Open meeting",
+        },
         "overview": {
             "label": "In brief",
             "clear": "Nothing urgent stands out right now.",
@@ -268,6 +272,10 @@ LANGUAGE_COPY = {
             "recall": "Rappeler ce brief",
             "recall_today": "Rappel aujourd'hui",
             "recall_week": "Rappel semaine",
+        },
+        "item_actions": {
+            "open_mail": "Ouvrir dans Outlook",
+            "open_meeting": "Ouvrir la reunion",
         },
         "overview": {
             "label": "En bref",
@@ -377,6 +385,24 @@ def _normalize_display_title(value: str) -> str:
     candidate = re.sub(r"(?<=\w)-\s+(?=\w)", " ", candidate)
     candidate = re.sub(r"\s+", " ", candidate).strip()
     return candidate
+
+
+def _safe_source_url(value: str) -> str:
+    candidate = str(value or "").strip()
+    if candidate.startswith("https://") or candidate.startswith("http://"):
+        return candidate
+    return ""
+
+
+def _message_source_url(message: MessageRecord) -> str:
+    return _safe_source_url(str(message.raw_payload.get("webLink") or ""))
+
+
+def _meeting_source_url(meeting: MeetingRecord) -> str:
+    web_link = _safe_source_url(str(meeting.raw_payload.get("webLink") or ""))
+    if web_link:
+        return web_link
+    return _safe_source_url(meeting.join_url)
 
 
 def _identity_tokens(value: str) -> Sequence[str]:
@@ -615,6 +641,8 @@ def _deterministic_candidate_profile_summary(title: str, preview: str, language:
     else:
         role_text = _normalize_display_title(title)
     profile = str(copy["candidate_profile"]).format(text=role_text).strip()
+    if profile and profile[-1] not in ".!?":
+        profile += "."
     follow_up = str(copy["candidate_follow_up"]).strip()
     return "{0} {1}".format(profile, follow_up).strip()
 
@@ -855,6 +883,7 @@ class DeterministicScoringEngine:
             source_kind="message",
             source_id=message.graph_message_id,
             score=round(score, 2),
+            source_url=_message_source_url(message),
             reason_codes=tuple(reason_codes),
             guardrail_applied=guardrail,
         )
@@ -911,6 +940,7 @@ class DeterministicScoringEngine:
             source_kind="meeting",
             source_id=meeting.graph_event_id,
             score=round(score, 2),
+            source_url=_meeting_source_url(meeting),
             reason_codes=tuple(reason_codes),
             guardrail_applied=False,
         )
@@ -1184,32 +1214,66 @@ class StructuredDigestRenderer:
         return "".join(parts)
 
     def _body_item_lines(self, item: DigestEntry) -> Sequence[str]:
+        action_label, action_url = self._item_action(item)
         if item.source_kind == "meeting":
-            return ("- {0} - {1}".format(item.title, item.summary),)
-        return (
+            lines = ["- {0} - {1}".format(item.title, item.summary)]
+            if action_url:
+                lines.append("  {0}: {1}".format(action_label, action_url))
+            return tuple(lines)
+        lines = [
             "- {0}".format(item.title),
             "  {0}".format(item.summary),
-        )
+        ]
+        if action_url:
+            lines.append("  {0}: {1}".format(action_label, action_url))
+        return tuple(lines)
 
     def _html_item(self, item: DigestEntry) -> str:
+        action_html = self._item_action_html(item)
         if item.source_kind == "meeting":
             return (
                 "<div style=\"margin:0 0 8px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;\">"
                 "<p style=\"margin:0;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
                 "<p style=\"margin:4px 0 0;font-size:13px;color:#475569;\">{1}</p>"
+                "{2}"
                 "</div>"
             ).format(
                 self._html_escape(item.title),
                 self._html_escape(item.summary),
+                action_html,
             )
         return (
             "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;\">"
             "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
+            "{2}"
             "</div>"
         ).format(
             self._html_escape(item.title),
             self._html_escape(item.summary),
+            action_html,
+        )
+
+    def _item_action(self, item: DigestEntry) -> tuple[str, str]:
+        source_url = _safe_source_url(item.source_url)
+        if not source_url:
+            return ("", "")
+        actions = _language_copy(self.digest_language)["item_actions"]
+        if item.source_kind == "meeting":
+            return (str(actions["open_meeting"]), source_url)
+        return (str(actions["open_mail"]), source_url)
+
+    def _item_action_html(self, item: DigestEntry) -> str:
+        action_label, action_url = self._item_action(item)
+        if not action_url:
+            return ""
+        return (
+            "<p style=\"margin:8px 0 0;\">"
+            "<a href=\"{0}\" style=\"font-size:12px;font-weight:600;color:#334155;text-decoration:none;\">{1}</a>"
+            "</p>"
+        ).format(
+            self._html_escape(action_url),
+            self._html_escape(action_label),
         )
 
     def _footer_body_lines(self, command_mailbox: str) -> Sequence[str]:
@@ -1305,6 +1369,7 @@ class StructuredDigestRenderer:
             value.replace("&", "&amp;")
             .replace("<", "&lt;")
             .replace(">", "&gt;")
+            .replace("\"", "&quot;")
         )
 
 

@@ -1,9 +1,9 @@
 ## item_035_day_captain_digest_source_open_controls - Day Captain digest source open controls
 > From version: 1.2.1
 > Status: In progress
-> Understanding: 94%
-> Confidence: 91%
-> Progress: 0%
+> Understanding: 98%
+> Confidence: 95%
+> Progress: 55%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,3 +53,8 @@ flowchart LR
 # Notes
 - Derived from direct operator feedback on Monday, March 9, 2026 after live Outlook usage.
 - The likely first step is to expose meeting links, because the ingestion layer already normalizes `join_url` / `webLink`; mail-link support may require separate discovery or a documented limitation.
+- Implementation is now underway locally:
+  - `DigestEntry` can carry a bounded `source_url`
+  - meeting cards now prefer a Graph `webLink` when available and otherwise fall back to `join_url`
+  - message cards can expose an Outlook open control when Graph returns `webLink`
+  - the renderer shows these controls as small secondary links rather than heavy new buttons

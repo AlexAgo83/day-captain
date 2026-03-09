@@ -3,7 +3,7 @@
 > Status: In Progress
 > Understanding: 100%
 > Confidence: 99%
-> Progress: 96%
+> Progress: 97%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -29,7 +29,7 @@ flowchart LR
 - [x] 1. Increase spacing around `Périmètre`, `En bref`, and the first detailed section.
 - [x] 2. Slightly soften card border weight and shorten footer helper copy.
 - [ ] 3. Finish bounded cleanup rules for awkward labels, self-reference wording, `En bref`, and meeting-summary fallbacks.
-- [ ] 4. Evaluate lightweight source-opening controls for meeting and mail cards where stable links are available.
+- [x] 4. Evaluate lightweight source-opening controls for meeting and mail cards where stable links are available.
 - [ ] 5. Validate the final rendering in Outlook and update README/docs if needed.
 - [ ] FINAL: Update related Logics docs
 
@@ -54,7 +54,7 @@ flowchart LR
 - [ ] Card borders and footer helper copy are visibly lighter.
 - [ ] Self-reference meeting wording no longer implies the target user meets themselves.
 - [ ] `En bref` and meeting-summary fallbacks read naturally after the identity-aware cleanup.
-- [ ] Source-opening controls are either implemented cleanly where links are stable or explicitly documented as limited.
+- [x] Source-opening controls are either implemented cleanly where links are stable or explicitly documented as limited.
 - [ ] Final live Outlook validation is completed.
 - [ ] Validation commands executed and results captured.
 - [ ] Linked request/backlog/task docs updated.
@@ -79,8 +79,12 @@ flowchart LR
 - Newly added scope:
   - evaluate whether meeting cards can expose existing normalized `join_url` / `webLink` data as lightweight open controls
   - determine whether message cards can expose a stable Outlook open link or must remain read-only for now
+- Current local implementation on that scope:
+  - `DigestEntry` now carries a bounded `source_url`
+  - Graph mail collection now requests `webLink` so message cards can expose an Outlook open control when Graph provides one
+  - meeting cards now prefer an Outlook `webLink` and otherwise fall back to the normalized meeting link already present in the ingestion layer
+  - renderer output stays intentionally light by using small secondary links instead of adding another heavy action row
 - Remaining before closure:
   - finish the copy-heuristic cleanup slice for overview and meeting fallbacks
-  - evaluate and, if possible, implement bounded source-opening controls without making the digest visually busy
-  - validate the refined rendering in a real Outlook mailbox
+  - validate the refined rendering in a real Outlook mailbox, including the new open controls
   - then update closure links and promote the request/backlog/task chain to `Done`

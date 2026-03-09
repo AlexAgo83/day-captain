@@ -171,6 +171,7 @@ class GraphAdapterTest(unittest.TestCase):
         self.assertEqual(path, "/me/mailFolders/Inbox/messages")
         self.assertEqual(access_token, "delegated-token")
         self.assertEqual(params["$top"], 100)
+        self.assertIn("webLink", params["$select"])
 
     def test_mail_collector_uses_users_route_for_app_only_context(self) -> None:
         api_client = CollectionRecorderApiClient()
