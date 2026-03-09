@@ -1,9 +1,9 @@
 ## item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish - Day Captain digest top spacing and summary rhythm polish
 > From version: 1.2.0
-> Status: In Progress
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 75%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Low
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from another live Outlook review on Monday, March 9, 2026.
 - Implementation is underway: the renderer top spacing around `Périmètre`, `En bref`, and the first downstream section is now being loosened without reintroducing a heavy hero block.
+- Closed on Monday, March 9, 2026 after live Outlook validation confirmed the top summary transition now breathes correctly without reintroducing a heavy header block.

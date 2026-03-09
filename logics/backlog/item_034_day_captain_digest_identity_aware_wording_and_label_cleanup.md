@@ -1,9 +1,9 @@
 ## item_034_day_captain_digest_identity_aware_wording_and_label_cleanup - Day Captain digest identity-aware wording and label cleanup
 > From version: 1.2.0
-> Status: In Progress
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 97%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -63,3 +63,4 @@ flowchart LR
 - The latest local slice also keeps `Suivi` / `Next step` cues when long rewritten summaries are compacted, so the wording cleanup stays concise without losing the actionable tail.
 - `En bref` input is now being compacted before the LLM overview call as well, so verbose candidate/profile summaries are less likely to leak long machine-like detail into the top block.
 - The newest local pass also applies bounded candidate/profile compression and light top-summary phrase cleanup, so outputs such as “la prochaine a lieu” or long profile recaps are pushed toward shorter assistant-style phrasing.
+- Closed on Monday, March 9, 2026 after live Outlook validation confirmed that the identity-aware wording guardrails and bounded summary cleanup are acceptable for production use.

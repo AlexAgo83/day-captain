@@ -1,9 +1,9 @@
 ## item_035_day_captain_digest_source_open_controls - Day Captain digest source open controls
 > From version: 1.2.1
-> Status: In progress
-> Understanding: 98%
-> Confidence: 95%
-> Progress: 55%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -58,3 +58,4 @@ flowchart LR
   - meeting cards now prefer a Graph `webLink` when available and otherwise fall back to `join_url`
   - message cards can expose an Outlook open control when Graph returns `webLink`
   - the renderer shows these controls as small secondary links rather than heavy new buttons
+- Closed on Monday, March 9, 2026 after the live `1.2.2` Outlook validation accepted these lightweight controls as the right bounded behavior for meetings and link-capable messages.
