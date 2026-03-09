@@ -1,9 +1,9 @@
 ## task_026_day_captain_digest_readability_and_scannability_orchestration - Orchestrate digest readability and scannability polish
 > From version: 1.0.0
-> Status: In Progress
+> Status: Done
 > Understanding: 99%
-> Confidence: 98%
-> Progress: 95%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -26,9 +26,9 @@ flowchart LR
 # Plan
 - [x] 1. Shorten and simplify the digest header/context and turn `En bref` into a true executive summary block.
 - [x] 2. Improve section rhythm and compact meeting rendering so the digest becomes easier to scan in Outlook.
-- [ ] 3. Lighten empty-state presentation and validate the final rendering on a real Outlook mail.
+- [x] 3. Lighten empty-state presentation and validate the final rendering on a real Outlook mail.
 - [x] 4. Update README and any affected docs before closure; do not mark this task `Done` while the final digest-structure contract remains undocumented.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links across the request and backlog items.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links across the request and backlog items.
 
 # AC Traceability
 - Req021 AC1 -> Plan step 1. Proof: task explicitly shortens and simplifies the digest header/context.
@@ -50,10 +50,10 @@ flowchart LR
 # Definition of Done (DoD)
 - [x] Header and top summary are materially easier to read.
 - [x] Section rhythm and meeting rendering are more compact and scannable.
-- [ ] Empty states are lighter and Outlook rendering is explicitly validated.
+- [x] Empty states are lighter and Outlook rendering is explicitly validated.
 - [x] README and impacted docs are updated before closure.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Sunday, March 8, 2026 after reviewing the live Outlook rendering of the digest and identifying that the main remaining gap is presentation quality rather than transport or data correctness.
@@ -72,5 +72,5 @@ flowchart LR
   - `python3 -m day_captain validate-config`
   - `python3 -m day_captain morning-digest --force --output-html tmp/day-captain-preview.html --output-text tmp/day-captain-preview.txt`
 - Remaining before closure:
-  - validate the final HTML in a real Outlook mailbox
-  - then close linked request/backlog docs and promote this task to `Done`
+  - none
+- Closed on Monday, March 9, 2026 after the later live Outlook validations confirmed this slice and its follow-up polish chain as complete.
