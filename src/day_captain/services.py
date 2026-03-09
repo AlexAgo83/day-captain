@@ -20,6 +20,7 @@ from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+from day_captain.models import WeatherSnapshot
 from day_captain.ports import Storage
 
 
@@ -188,6 +189,12 @@ LANGUAGE_COPY = {
         "coverage_label": "Window",
         "coverage_separator": ": ",
         "coverage_value": "From {start} to {end}",
+        "weather": {
+            "label": "Today's weather",
+            "warmer": "Warmer than yesterday.",
+            "cooler": "Cooler than yesterday.",
+            "same": "Close to yesterday.",
+        },
         "sections": {
             "critical_topics": "Critical topics",
             "actions_to_take": "Actions to take",
@@ -250,6 +257,12 @@ LANGUAGE_COPY = {
         "coverage_label": "Périmètre",
         "coverage_separator": " : ",
         "coverage_value": "Du {start} au {end}",
+        "weather": {
+            "label": "Meteo du jour",
+            "warmer": "Plus doux qu'hier.",
+            "cooler": "Plus frais qu'hier.",
+            "same": "Proche d'hier.",
+        },
         "sections": {
             "critical_topics": "Points critiques",
             "actions_to_take": "Actions à mener",
@@ -329,9 +342,67 @@ MONTH_NAMES = {
     },
 }
 
+WEATHER_LABELS = {
+    "en": {
+        "clear": "Clear",
+        "partly_cloudy": "Partly cloudy",
+        "cloudy": "Cloudy",
+        "fog": "Fog",
+        "drizzle": "Drizzle",
+        "rain": "Rain",
+        "snow": "Snow",
+        "showers": "Showers",
+        "storm": "Thunderstorms",
+        "mixed": "Mixed conditions",
+    },
+    "fr": {
+        "clear": "Eclaircies",
+        "partly_cloudy": "Partiellement nuageux",
+        "cloudy": "Couvert",
+        "fog": "Brouillard",
+        "drizzle": "Bruine",
+        "rain": "Pluie",
+        "snow": "Neige",
+        "showers": "Averses",
+        "storm": "Orages",
+        "mixed": "Temps variable",
+    },
+}
+
 
 def _normalize_text(*parts: str) -> str:
     return " ".join(part.strip().lower() for part in parts if part).strip()
+
+
+def _weather_kind(weather_code: int) -> str:
+    if weather_code == 0:
+        return "clear"
+    if weather_code in {1, 2}:
+        return "partly_cloudy"
+    if weather_code == 3:
+        return "cloudy"
+    if weather_code in {45, 48}:
+        return "fog"
+    if weather_code in {51, 53, 55, 56, 57}:
+        return "drizzle"
+    if weather_code in {61, 63, 65, 66, 67}:
+        return "rain"
+    if weather_code in {71, 73, 75, 77, 85, 86}:
+        return "snow"
+    if weather_code in {80, 81, 82}:
+        return "showers"
+    if weather_code in {95, 96, 99}:
+        return "storm"
+    return "mixed"
+
+
+def _weather_label(weather_code: int, language: str) -> str:
+    localized = WEATHER_LABELS.get(_normalize_language(language), WEATHER_LABELS["en"])
+    return str(localized.get(_weather_kind(weather_code)) or localized["mixed"])
+
+
+def _format_temperature(value: float) -> str:
+    return "{0}C".format(int(round(value)))
 
 
 def _contains_any(text: str, patterns: Iterable[str]) -> bool:
@@ -987,6 +1058,7 @@ class StructuredDigestRenderer:
         command_mailbox: str = "",
         top_summary: str = "",
         top_summary_source: str = "none",
+        weather: Optional[WeatherSnapshot] = None,
         meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         sections = {name: [] for name in SECTION_NAMES}
@@ -1013,6 +1085,7 @@ class StructuredDigestRenderer:
             sections,
             normalized_top_summary,
             command_mailbox,
+            weather,
             meeting_horizon or {},
         )
         delivery_html = self._build_delivery_html(
@@ -1022,6 +1095,7 @@ class StructuredDigestRenderer:
             sections,
             normalized_top_summary,
             command_mailbox,
+            weather,
             meeting_horizon or {},
         )
         delivery_payload = {
@@ -1034,6 +1108,16 @@ class StructuredDigestRenderer:
             "html_body": delivery_html,
             "top_summary": normalized_top_summary,
             "top_summary_source": top_summary_source,
+            "weather": {
+                "forecast_date": weather.forecast_date.isoformat(),
+                "weather_code": weather.weather_code,
+                "temperature_max_c": weather.temperature_max_c,
+                "temperature_min_c": weather.temperature_min_c,
+                "location_name": weather.location_name,
+                "previous_temperature_max_c": weather.previous_temperature_max_c,
+            }
+            if weather is not None
+            else None,
             "command_mailbox": command_mailbox,
             "meeting_horizon": dict(meeting_horizon or {}),
             "digest_language": self.digest_language,
@@ -1071,6 +1155,7 @@ class StructuredDigestRenderer:
             delivery_subject=delivery_subject,
             delivery_body=delivery_body,
             top_summary=normalized_top_summary,
+            weather=weather,
             delivery_payload=delivery_payload,
             critical_topics=tuple(sections["critical_topics"]),
             actions_to_take=tuple(sections["actions_to_take"]),
@@ -1097,6 +1182,7 @@ class StructuredDigestRenderer:
         sections: Mapping[str, Sequence[DigestEntry]],
         top_summary: str,
         command_mailbox: str,
+        weather: Optional[WeatherSnapshot],
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
@@ -1115,6 +1201,10 @@ class StructuredDigestRenderer:
             ),
             "",
         ]
+        weather_lines = self._weather_body_lines(weather)
+        if weather_lines:
+            lines.extend(weather_lines)
+            lines.append("")
         if top_summary.strip():
             lines.append(localized["overview"]["label"])
             lines.append(top_summary.strip())
@@ -1146,6 +1236,7 @@ class StructuredDigestRenderer:
         sections: Mapping[str, Sequence[DigestEntry]],
         top_summary: str,
         command_mailbox: str,
+        weather: Optional[WeatherSnapshot],
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
@@ -1172,6 +1263,9 @@ class StructuredDigestRenderer:
             ),
             "</section>",
         ]
+        weather_html = self._weather_html(weather)
+        if weather_html:
+            parts.append(weather_html)
         if top_summary.strip():
             parts.append(
                 "<section style=\"margin:10px 0 24px;padding:0 0 0 14px;border-left:3px solid #94a3b8;\">"
@@ -1275,6 +1369,55 @@ class StructuredDigestRenderer:
             self._html_escape(action_url),
             self._html_escape(action_label),
         )
+
+    def _weather_body_lines(self, weather: Optional[WeatherSnapshot]) -> Sequence[str]:
+        if weather is None:
+            return ()
+        localized = _language_copy(self.digest_language)["weather"]
+        return (
+            str(localized["label"]),
+            self._weather_summary(weather),
+        )
+
+    def _weather_html(self, weather: Optional[WeatherSnapshot]) -> str:
+        if weather is None:
+            return ""
+        localized = _language_copy(self.digest_language)["weather"]
+        return (
+            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #dbe4ee;border-radius:12px;\">"
+            "<p style=\"margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>"
+            "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
+            "</section>"
+        ).format(
+            self._html_escape(str(localized["label"])),
+            self._html_escape(self._weather_summary(weather)),
+        )
+
+    def _weather_summary(self, weather: WeatherSnapshot) -> str:
+        localized = _language_copy(self.digest_language)["weather"]
+        condition = _weather_label(weather.weather_code, self.digest_language)
+        headline = "{0}, {1} max / {2} min".format(
+            condition,
+            _format_temperature(weather.temperature_max_c),
+            _format_temperature(weather.temperature_min_c),
+        )
+        if weather.location_name.strip():
+            headline = "{0}: {1}".format(weather.location_name.strip(), headline)
+        trend = self._weather_trend_text(weather, localized)
+        if trend:
+            return "{0}. {1}".format(headline, trend)
+        return headline
+
+    def _weather_trend_text(self, weather: WeatherSnapshot, localized: Mapping[str, str]) -> str:
+        previous_temperature = weather.previous_temperature_max_c
+        if previous_temperature is None:
+            return ""
+        delta = weather.temperature_max_c - previous_temperature
+        if delta >= 1.0:
+            return str(localized["warmer"])
+        if delta <= -1.0:
+            return str(localized["cooler"])
+        return str(localized["same"])
 
     def _footer_body_lines(self, command_mailbox: str) -> Sequence[str]:
         mailbox = str(command_mailbox or "").strip()
@@ -1584,6 +1727,7 @@ class SnapshotRecallProvider:
             command_mailbox=str(payload.delivery_payload.get("command_mailbox") or ""),
             top_summary=payload.top_summary,
             top_summary_source=str(payload.delivery_payload.get("top_summary_source") or "none"),
+            weather=payload.weather,
         )
 
 

@@ -18,6 +18,7 @@ from day_captain.config import DayCaptainSettings
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+from day_captain.models import WeatherSnapshot
 
 
 class RecordingDigestDelivery:
@@ -52,6 +53,19 @@ class FailOnCompletedRunSaveStorage(InMemoryStorage):
             if self._completed_save_attempts >= 1:
                 raise RuntimeError("simulated completion save failure")
         super().save_run(run)
+
+
+class StubWeatherProvider:
+    def __init__(self, snapshot=None, error=None) -> None:
+        self.snapshot = snapshot
+        self.error = error
+        self.calls = []
+
+    def get_weather(self, current_time, display_timezone):
+        self.calls.append((current_time, display_timezone))
+        if self.error is not None:
+            raise self.error
+        return self.snapshot
 
 
 class DayCaptainApplicationTest(unittest.TestCase):
@@ -233,6 +247,48 @@ class DayCaptainApplicationTest(unittest.TestCase):
         payload = app.run_morning_digest(now=now, force=False)
 
         self.assertEqual(payload.window_start, now - timedelta(hours=24))
+
+    def test_morning_digest_includes_weather_capsule_when_provider_returns_snapshot(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        weather_provider = StubWeatherProvider(
+            snapshot=WeatherSnapshot(
+                forecast_date=now.date(),
+                weather_code=61,
+                temperature_max_c=13.4,
+                temperature_min_c=6.1,
+                location_name="Paris",
+                previous_temperature_max_c=11.0,
+            )
+        )
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+            weather_provider=weather_provider,
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertIsNotNone(payload.weather)
+        self.assertIn("Today's weather", payload.delivery_body)
+        self.assertEqual(weather_provider.calls[0][1], "Europe/Paris")
+
+    def test_morning_digest_ignores_weather_provider_failures(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=InMemoryStorage(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+            weather_provider=StubWeatherProvider(error=ValueError("bad weather")),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertIsNone(payload.weather)
+        self.assertNotIn("Today's weather", payload.delivery_body)
 
     def test_weekend_repeat_run_stays_incremental(self) -> None:
         first_now = datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc)

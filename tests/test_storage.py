@@ -18,6 +18,7 @@ from day_captain.models import DigestRunRecord
 from day_captain.models import FeedbackRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+from day_captain.models import WeatherSnapshot
 from day_captain.models import to_jsonable
 
 
@@ -54,6 +55,14 @@ class SQLiteStorageTest(unittest.TestCase):
                 window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
                 window_end=now,
                 delivery_mode="json",
+                weather=WeatherSnapshot(
+                    forecast_date=now.date(),
+                    weather_code=61,
+                    temperature_max_c=13.4,
+                    temperature_min_c=6.1,
+                    location_name="Paris",
+                    previous_temperature_max_c=11.0,
+                ),
                 critical_topics=(
                     DigestEntry(
                         title="Urgent budget review",
@@ -83,6 +92,7 @@ class SQLiteStorageTest(unittest.TestCase):
             loaded = storage.get_run("run-1")
 
             self.assertIsNotNone(loaded)
+            self.assertEqual(loaded.summary.weather.location_name, "Paris")
             self.assertEqual(loaded.summary.critical_topics[0].source_id, "msg-1")
             self.assertEqual(loaded.summary.critical_topics[0].source_url, "https://outlook.office.com/mail/msg-1")
             with sqlite3.connect(path) as connection:

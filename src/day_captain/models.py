@@ -7,6 +7,7 @@ from datetime import date
 from datetime import datetime
 from typing import Any
 from typing import Mapping
+from typing import Optional
 from typing import Sequence
 
 
@@ -103,6 +104,16 @@ class DigestEntry:
 
 
 @dataclass(frozen=True)
+class WeatherSnapshot:
+    forecast_date: date
+    weather_code: int
+    temperature_max_c: float
+    temperature_min_c: float
+    location_name: str = ""
+    previous_temperature_max_c: Optional[float] = None
+
+
+@dataclass(frozen=True)
 class DigestPayload:
     run_id: str
     generated_at: datetime
@@ -114,6 +125,7 @@ class DigestPayload:
     delivery_subject: str = ""
     delivery_body: str = ""
     top_summary: str = ""
+    weather: Optional[WeatherSnapshot] = None
     delivery_payload: Mapping[str, Any] = field(default_factory=dict)
     critical_topics: Sequence[DigestEntry] = field(default_factory=tuple)
     actions_to_take: Sequence[DigestEntry] = field(default_factory=tuple)
@@ -215,6 +227,19 @@ def digest_entry_from_dict(payload: Mapping[str, Any]) -> DigestEntry:
     )
 
 
+def weather_snapshot_from_dict(payload: Mapping[str, Any]) -> WeatherSnapshot:
+    previous_temperature_raw = payload.get("previous_temperature_max_c")
+    previous_temperature = None if previous_temperature_raw in (None, "") else float(previous_temperature_raw)
+    return WeatherSnapshot(
+        forecast_date=date.fromisoformat(str(payload.get("forecast_date"))),
+        weather_code=int(payload.get("weather_code") or 0),
+        temperature_max_c=float(payload.get("temperature_max_c") or 0.0),
+        temperature_min_c=float(payload.get("temperature_min_c") or 0.0),
+        location_name=str(payload.get("location_name") or ""),
+        previous_temperature_max_c=previous_temperature,
+    )
+
+
 def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
     return DigestPayload(
         run_id=str(payload.get("run_id") or ""),
@@ -227,6 +252,7 @@ def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
         delivery_subject=str(payload.get("delivery_subject") or ""),
         delivery_body=str(payload.get("delivery_body") or ""),
         top_summary=str(payload.get("top_summary") or ""),
+        weather=weather_snapshot_from_dict(payload["weather"]) if payload.get("weather") else None,
         delivery_payload=dict(payload.get("delivery_payload") or {}),
         critical_topics=tuple(
             digest_entry_from_dict(item) for item in payload.get("critical_topics") or ()
