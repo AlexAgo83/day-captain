@@ -22,6 +22,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Set `DAY_CAPTAIN_DATABASE_SSL_MODE=require` for hosted Postgres connections.
 - Keep `DAY_CAPTAIN_SQLITE_PATH` for local development only.
 - Confirm the Render Postgres instance enforces TLS and the app resolves `sslmode=require`.
+- Keep `DAY_CAPTAIN_GRAPH_BASE_URL` on the intended Microsoft Graph origin for the deployment; hosted pagination now rejects absolute `@odata.nextLink` URLs that cross that origin.
 
 ## Runtime and scheduling
 - Serve the hosted app with `gunicorn`, not the standard-library WSGI server.
@@ -47,6 +48,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - `POST /jobs/email-command-recall`
 - Use real JSON booleans such as `"force": true` or `"force": false`; do not send quoted boolean strings.
 - Require `X-Day-Captain-Secret` on job endpoints.
+- Treat `X-Day-Captain-Secret` as the stable hosted auth contract; the current hardening tightens comparison behavior without changing the header shape.
 - Verify `GET /healthz` returns only `{"status":"ok"}` for unauthenticated probes and includes runtime summary metadata only when `X-Day-Captain-Secret` is supplied.
 - Verify successful job responses contain only acknowledgement metadata and section counts.
 - Verify unhandled server errors return `{"error":"internal_error"}` without internal details.

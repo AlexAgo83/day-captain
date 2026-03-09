@@ -1,9 +1,9 @@
 ## task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration - Orchestrate hosted Graph trust-boundary enforcement, job-secret hardening, and validation closure
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Security
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Enforce a trusted-origin policy for Graph absolute pagination links.
-- [ ] 2. Replace raw hosted job-secret equality with a constant-time comparison primitive.
-- [ ] 3. Align tests and operator docs with the hardened hosted security contract.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Enforce a trusted-origin policy for Graph absolute pagination links.
+- [x] 2. Replace raw hosted job-secret equality with a constant-time comparison primitive.
+- [x] 3. Align tests and operator docs with the hardened hosted security contract.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req029 AC1 -> Plan step 1. Proof: task explicitly constrains bearer-token forwarding to trusted Graph origins only.
@@ -44,12 +44,13 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Graph pagination never forwards the bearer token to an unexpected host.
-- [ ] Hosted job-secret validation uses a constant-time comparison primitive.
-- [ ] Tests and operator docs match the implemented hosted hardening contract.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Graph pagination never forwards the bearer token to an unexpected host.
+- [x] Hosted job-secret validation uses a constant-time comparison primitive.
+- [x] Tests and operator docs match the implemented hosted hardening contract.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 9, 2026 from a production-priority security review.
 - This task intentionally focuses on hosted runtime boundary hardening rather than local developer token-cache storage.
+- Closed on Monday, March 9, 2026 after enforcing same-origin Graph pagination, hardening hosted secret comparison, and aligning operator docs/tests.

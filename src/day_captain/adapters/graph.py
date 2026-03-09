@@ -14,6 +14,7 @@ from urllib import error
 from urllib import parse
 from urllib import request
 from urllib.parse import quote
+from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
@@ -113,10 +114,28 @@ class GraphApiClient:
         self.base_url = base_url.rstrip("/")
         self.timeout_seconds = timeout_seconds
         self._opener = opener or request.urlopen
+        parsed_base_url = urlparse(self.base_url)
+        self._trusted_scheme = str(parsed_base_url.scheme or "").lower()
+        self._trusted_netloc = str(parsed_base_url.netloc or "").lower()
+
+    def _validate_absolute_graph_url(self, candidate_url: str) -> str:
+        parsed = urlparse(candidate_url)
+        candidate_scheme = str(parsed.scheme or "").lower()
+        candidate_netloc = str(parsed.netloc or "").lower()
+        if not candidate_scheme or not candidate_netloc:
+            raise GraphApiError("Expected an absolute Graph URL.")
+        if (
+            candidate_scheme != self._trusted_scheme
+            or candidate_netloc != self._trusted_netloc
+        ):
+            raise GraphApiError(
+                "Graph absolute URL points outside the configured Graph origin."
+            )
+        return candidate_url
 
     def _build_url(self, path: str, params: Optional[Mapping[str, Any]] = None) -> str:
         if path.startswith("http://") or path.startswith("https://"):
-            base = path
+            base = self._validate_absolute_graph_url(path)
         else:
             base = "{0}/{1}".format(self.base_url, path.lstrip("/"))
         if not params:

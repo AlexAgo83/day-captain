@@ -2,6 +2,7 @@
 
 from datetime import date
 from datetime import datetime
+from hmac import compare_digest
 import json
 import logging
 from typing import Callable
@@ -128,8 +129,8 @@ class DayCaptainWebApp:
     def _has_valid_secret(self, environ) -> bool:
         if not self.settings.job_secret:
             return False
-        candidate = environ.get("HTTP_X_DAY_CAPTAIN_SECRET", "")
-        return candidate == self.settings.job_secret
+        candidate = str(environ.get("HTTP_X_DAY_CAPTAIN_SECRET", "") or "")
+        return compare_digest(candidate, self.settings.job_secret)
 
     def _read_json(self, environ) -> JsonDict:
         content_length = environ.get("CONTENT_LENGTH") or "0"
