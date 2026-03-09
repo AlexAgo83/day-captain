@@ -10,8 +10,9 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Set `DAY_CAPTAIN_GRAPH_CLIENT_SECRET`.
 - Set `DAY_CAPTAIN_TARGET_USERS` to the explicit mailbox list served by this deployment.
 - If delivery should come from a shared mailbox such as `daycaptain@...`, set `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` to that mailbox identifier.
-- If inbound email-command recall is enabled for a single-target helper flow, set `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` to the bounded allowed sender list.
-- If inbound email-command recall is enabled, keep exactly one hosted target user and require `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` plus `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`.
+- If inbound email-command recall is enabled, require `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` plus `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`.
+- In a single-target deployment, `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` may contain bare helper senders such as `assistant@example.com`.
+- In a multi-user deployment, any helper sender in `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` must use explicit `sender=target` mappings such as `assistant@example.com=alice@example.com`.
 - Treat `DAY_CAPTAIN_GRAPH_USER_ID` only as the single-user fallback/default target, not the primary multi-user hosted model.
 - Do not commit `.env`, token caches, database files, or mailbox-derived fixtures.
 
@@ -61,7 +62,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
   - only the requested `target_user_id` receives the digest and persistence stays isolated from other configured users
 - If `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` is set, confirm the target mailbox remains the read scope while the delivered message visibly comes from the dedicated sender mailbox.
 - Run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ... --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres` from the private ops repo or equivalent environment.
-- If inbound email-command recall is enabled, run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ... --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres --check-email-command --email-command-sender ... --email-command-text recall-week` and confirm only authorized senders succeed.
+- If inbound email-command recall is enabled, run `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user ... --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres --check-email-command --email-command-sender ... --email-command-text recall-week` and confirm only authorized senders succeed and ambiguous helper mappings fail explicitly.
 - For sleeping-service fallback, run `PYTHONPATH=src python3 -m day_captain check-hosted-health --wake-service ...` once before the per-user trigger fan-out when possible.
 - If the service may sleep, document the warm-up interval, readiness check, and timeout policy directly in the private ops repo runbook.
 - If a hosted digest run is `delivery_pending`, treat it as possible post-send uncertainty and reconcile before retrying delivery.

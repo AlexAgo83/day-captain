@@ -645,15 +645,9 @@ class DayCaptainApplication:
         normalized_sender = str(sender_address or "").strip().lower()
         if not normalized_sender:
             raise ValueError("sender_address is required for email-command recall.")
-        configured_users = tuple(user.lower() for user in self.settings.resolved_target_users())
-        if normalized_sender in configured_users:
-            return normalized_sender
-        allowed_senders = tuple(sender.lower() for sender in self.settings.email_command_allowed_senders)
-        if len(configured_users) == 1 and (
-            normalized_sender == configured_users[0]
-            or normalized_sender in allowed_senders
-        ):
-            return configured_users[0]
+        routes = dict(self.settings.resolved_email_command_sender_routes())
+        if normalized_sender in routes:
+            return routes[normalized_sender]
         raise ValueError("sender_address is not allowed to trigger email-command recall.")
 
     def _build_digest_for_window(

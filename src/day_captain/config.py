@@ -34,6 +34,20 @@ def _parse_csv(value: str) -> Tuple[str, ...]:
     return tuple(part.strip() for part in value.split(",") if part.strip())
 
 
+def _normalize_email(value: str) -> str:
+    return str(value or "").strip().lower()
+
+
+def _parse_email_command_sender_route(value: str) -> Tuple[str, str]:
+    candidate = str(value or "").strip()
+    if not candidate:
+        return ("", "")
+    if "=" not in candidate:
+        return (_normalize_email(candidate), "")
+    sender, target = candidate.split("=", 1)
+    return (_normalize_email(sender), _normalize_email(target))
+
+
 def _parse_float(value: Optional[str]) -> Optional[float]:
     if value is None:
         return None
@@ -208,16 +222,13 @@ class DayCaptainSettings:
         if self.delivery_mode == "graph_send" and not self.graph_send_enabled:
             raise ValueError("DAY_CAPTAIN_GRAPH_SEND_ENABLED=true is required for hosted graph_send delivery.")
         if self.email_command_allowed_senders:
-            if len(self.resolved_target_users()) != 1:
-                raise ValueError(
-                    "DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS requires exactly one hosted target user."
-                )
             if self.resolved_graph_auth_mode() != "app_only":
                 raise ValueError("Hosted email-command recall requires app-only Graph auth.")
             if not self.graph_send_enabled:
                 raise ValueError(
                     "DAY_CAPTAIN_GRAPH_SEND_ENABLED=true is required for hosted email-command recall."
                 )
+            self.resolved_email_command_sender_routes()
 
     def validate_target_user(self, target_user_id: str) -> None:
         candidate = str(target_user_id or "").strip()
@@ -252,6 +263,7 @@ class DayCaptainSettings:
             "selected_target_user": resolved_target,
             "configured_sender_user": self.graph_sender_user_id.strip(),
             "email_command_allowed_senders": self.email_command_allowed_senders,
+            "email_command_sender_routes": dict(self.resolved_email_command_sender_routes()),
             "graph_send_enabled": self.graph_send_enabled,
             "weather_enabled": self.weather_is_enabled(),
             "weather_location_name": self.resolved_weather_location_name(),
@@ -285,3 +297,28 @@ class DayCaptainSettings:
 
     def resolved_weather_location_name(self) -> str:
         return self.weather_location_name.strip()
+
+    def resolved_email_command_sender_routes(self) -> Tuple[Tuple[str, str], ...]:
+        configured_targets = tuple(_normalize_email(item) for item in self.resolved_target_users())
+        routes = {target: target for target in configured_targets if target}
+        for raw_value in self.email_command_allowed_senders:
+            sender, target = _parse_email_command_sender_route(raw_value)
+            if not sender:
+                continue
+            if not target:
+                if len(configured_targets) != 1:
+                    raise ValueError(
+                        "DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS must use sender=target mappings when multiple hosted target users are configured."
+                    )
+                target = configured_targets[0]
+            if target not in configured_targets:
+                raise ValueError(
+                    "DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS targets must be one of DAY_CAPTAIN_TARGET_USERS."
+                )
+            existing = routes.get(sender)
+            if existing and existing != target:
+                raise ValueError(
+                    "DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS cannot map one sender to multiple target users."
+                )
+            routes[sender] = target
+        return tuple(routes.items())
