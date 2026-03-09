@@ -1,8 +1,8 @@
 ## req_024_day_captain_digest_daily_weather_capsule - Day Captain digest daily weather capsule
 > From version: 1.3.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 96%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -96,12 +96,13 @@ flowchart LR
 - [x] Known risks and dependency questions are listed.
 
 # Backlog
-- `item_036_day_captain_digest_weather_source_and_location_contract` - Define the weather provider/location contract for digest runs. Status: `Ready`.
-- `item_037_day_captain_digest_weather_capsule_rendering_and_copy` - Render the weather capsule before `En bref` with short copy and warmer/cooler delta. Status: `Ready`.
-- `item_038_day_captain_digest_weather_fallback_and_docs_validation` - Keep the digest clean when weather data is missing and close docs/validation. Status: `Ready`.
-- `task_029_day_captain_digest_weather_capsule_orchestration` - Orchestrate the weather capsule slice end to end. Status: `Ready`.
+- `item_036_day_captain_digest_weather_source_and_location_contract` - Define the weather provider/location contract for digest runs. Status: `Done`.
+- `item_037_day_captain_digest_weather_capsule_rendering_and_copy` - Render the weather capsule before `En bref` with short copy and warmer/cooler delta. Status: `Done`.
+- `item_038_day_captain_digest_weather_fallback_and_docs_validation` - Keep the digest clean when weather data is missing and close docs/validation. Status: `Done`.
+- `task_029_day_captain_digest_weather_capsule_orchestration` - Orchestrate the weather capsule slice end to end. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 from direct product feedback after the digest top block reached an acceptable polish level.
 - This request intentionally treats weather as a bounded contextual enhancement, not as a new core decision section.
 - Decomposed on Monday, March 9, 2026 into provider/location contract, capsule rendering/copy, and fallback/docs closure slices.
+- Closed on Monday, March 9, 2026 after live Render deployment and Outlook validation of the weather capsule before `En bref`.

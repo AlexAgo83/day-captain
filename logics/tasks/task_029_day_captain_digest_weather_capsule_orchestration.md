@@ -1,9 +1,9 @@
 ## task_029_day_captain_digest_weather_capsule_orchestration - Orchestrate the digest weather capsule slice
 > From version: 1.3.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -23,10 +23,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Define the bounded weather source and location contract needed by one digest run.
-- [ ] 2. Render a compact weather capsule before `En bref` with short copy and a warmer/cooler delta versus yesterday.
-- [ ] 3. Keep the digest top layout clean when weather data is missing and document any new config/provider contract.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Define the bounded weather source and location contract needed by one digest run.
+- [x] 2. Render a compact weather capsule before `En bref` with short copy and a warmer/cooler delta versus yesterday.
+- [x] 3. Keep the digest top layout clean when weather data is missing and document any new config/provider contract.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req024 AC1 -> Plan step 2. Proof: task explicitly adds the capsule before `En bref`.
@@ -46,14 +46,16 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] The weather source/location contract is explicit.
-- [ ] The digest renders a compact weather capsule before `En bref`.
-- [ ] The capsule includes a bounded warmer/cooler comparison when weather data is available.
-- [ ] Missing weather data does not break the top layout.
-- [ ] Any new config/provider contract is documented.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] The weather source/location contract is explicit.
+- [x] The digest renders a compact weather capsule before `En bref`.
+- [x] The capsule includes a bounded warmer/cooler comparison when weather data is available.
+- [x] Missing weather data does not break the top layout.
+- [x] Any new config/provider contract is documented.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 9, 2026 from direct product feedback requesting a weather capsule before `En bref`.
 - This slice is intentionally bounded to one small top-of-mail context block with graceful degradation, not a broad weather feature expansion.
+- Implemented in the `1.3.0` line with an optional Open-Meteo provider, explicit location config, deterministic rendering before `En bref`, and persisted recall-safe weather snapshots.
+- Closed on Monday, March 9, 2026 after full test-suite validation plus a live Render/Outlook weather-mail check.

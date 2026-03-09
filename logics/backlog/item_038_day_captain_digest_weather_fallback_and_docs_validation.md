@@ -1,9 +1,9 @@
 ## item_038_day_captain_digest_weather_fallback_and_docs_validation - Keep the weather capsule fallback-safe and document it
 > From version: 1.3.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Low
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -43,7 +43,7 @@ flowchart LR
 
 # Links
 - Request: `req_024_day_captain_digest_daily_weather_capsule`
-- Primary task(s): `task_029_day_captain_digest_weather_capsule_orchestration` (`Ready`)
+- Primary task(s): `task_029_day_captain_digest_weather_capsule_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - fallback safety and docs quality determine whether the weather slice is safe to ship.
@@ -52,3 +52,4 @@ flowchart LR
 # Notes
 - Derived from `req_024_day_captain_digest_daily_weather_capsule`.
 - This slice is explicitly about graceful degradation, not about building a richer weather feature set.
+- Completed with no-op rendering when weather config/data is unavailable, updated config/docs, and a live Outlook validation on the Render deployment.
