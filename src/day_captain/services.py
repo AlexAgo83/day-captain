@@ -221,6 +221,11 @@ LANGUAGE_COPY = {
         "item_actions": {
             "open_mail": "Open in Outlook",
             "open_meeting": "Open meeting",
+            "open_mail_desktop": "Open in Outlook desktop",
+            "open_meeting_desktop": "Open meeting in Outlook desktop",
+        },
+        "badges": {
+            "flagged": "Flagged",
         },
         "overview": {
             "label": "In brief",
@@ -289,6 +294,11 @@ LANGUAGE_COPY = {
         "item_actions": {
             "open_mail": "Ouvrir dans Outlook",
             "open_meeting": "Ouvrir la reunion",
+            "open_mail_desktop": "Ouvrir dans Outlook bureau",
+            "open_meeting_desktop": "Ouvrir la reunion dans Outlook bureau",
+        },
+        "badges": {
+            "flagged": "Marqué",
         },
         "overview": {
             "label": "En bref",
@@ -465,8 +475,21 @@ def _safe_source_url(value: str) -> str:
     return ""
 
 
+def _safe_desktop_source_url(value: str) -> str:
+    candidate = str(value or "").strip()
+    if candidate.startswith("ms-outlook://") or candidate.startswith("outlook://") or candidate.startswith("olk://"):
+        return candidate
+    return ""
+
+
 def _message_source_url(message: MessageRecord) -> str:
     return _safe_source_url(str(message.raw_payload.get("webLink") or ""))
+
+
+def _message_desktop_source_url(message: MessageRecord) -> str:
+    return _safe_desktop_source_url(
+        str(message.raw_payload.get("outlookDesktopLink") or message.raw_payload.get("desktopLink") or "")
+    )
 
 
 def _meeting_source_url(meeting: MeetingRecord) -> str:
@@ -474,6 +497,19 @@ def _meeting_source_url(meeting: MeetingRecord) -> str:
     if web_link:
         return web_link
     return _safe_source_url(meeting.join_url)
+
+
+def _meeting_desktop_source_url(meeting: MeetingRecord) -> str:
+    return _safe_desktop_source_url(
+        str(meeting.raw_payload.get("outlookDesktopLink") or meeting.raw_payload.get("desktopLink") or "")
+    )
+
+
+def _message_is_flagged(message: MessageRecord) -> bool:
+    flag_payload = message.raw_payload.get("flag") or {}
+    if not isinstance(flag_payload, Mapping):
+        return False
+    return str(flag_payload.get("flagStatus") or "").strip().lower() == "flagged"
 
 
 def _identity_tokens(value: str) -> Sequence[str]:
@@ -587,17 +623,12 @@ def _polish_top_summary_phrase(value: str) -> str:
     return cleaned
 
 
-def _normalize_top_summary(value: str, max_sentences: int = 2, max_chars: int = 220) -> str:
+def _normalize_top_summary(value: str) -> str:
     cleaned = " ".join((value or "").strip().split())
     if not cleaned:
         return ""
-    if max_sentences > 0:
-        sentence_candidates = re.split(r"(?<=[.!?])\s+", cleaned)
-        selected = [sentence.strip() for sentence in sentence_candidates if sentence.strip()][:max_sentences]
-        if selected:
-            cleaned = " ".join(selected).strip()
     cleaned = _polish_top_summary_phrase(cleaned)
-    return _truncate_sentence(cleaned, max_chars=max_chars)
+    return cleaned
 
 
 def _strip_redundant_title_prefix(title: str, summary: str) -> str:
@@ -844,6 +875,8 @@ class DeterministicScoringEngine:
             source_kind=entry.source_kind,
             source_id=entry.source_id,
             score=entry.score,
+            source_url=entry.source_url,
+            desktop_source_url=entry.desktop_source_url,
             reason_codes=tuple(entry.reason_codes) + ("thread_collapsed",),
             guardrail_applied=entry.guardrail_applied,
         )
@@ -885,6 +918,9 @@ class DeterministicScoringEngine:
         if message.is_unread:
             score += 0.4
             reason_codes.append("unread")
+        if _message_is_flagged(message):
+            score += 1.75
+            reason_codes.append("flagged")
         if message.has_attachments:
             score += 0.25
             reason_codes.append("attachment_present")
@@ -941,7 +977,7 @@ class DeterministicScoringEngine:
 
         if guardrail:
             section_name = "critical_topics"
-        elif "action_keyword" in reason_codes:
+        elif "action_keyword" in reason_codes or "flagged" in reason_codes:
             section_name = "actions_to_take"
         else:
             section_name = "watch_items"
@@ -955,6 +991,7 @@ class DeterministicScoringEngine:
             source_id=message.graph_message_id,
             score=round(score, 2),
             source_url=_message_source_url(message),
+            desktop_source_url=_message_desktop_source_url(message),
             reason_codes=tuple(reason_codes),
             guardrail_applied=guardrail,
         )
@@ -1012,6 +1049,7 @@ class DeterministicScoringEngine:
             source_id=meeting.graph_event_id,
             score=round(score, 2),
             source_url=_meeting_source_url(meeting),
+            desktop_source_url=_meeting_desktop_source_url(meeting),
             reason_codes=tuple(reason_codes),
             guardrail_applied=False,
         )
@@ -1170,6 +1208,8 @@ class StructuredDigestRenderer:
             "source_kind": item.source_kind,
             "source_id": item.source_id,
             "score": item.score,
+            "source_url": item.source_url,
+            "desktop_source_url": item.desktop_source_url,
             "reason_codes": list(item.reason_codes),
             "guardrail_applied": item.guardrail_applied,
         }
@@ -1310,12 +1350,12 @@ class StructuredDigestRenderer:
     def _body_item_lines(self, item: DigestEntry) -> Sequence[str]:
         action_label, action_url = self._item_action(item)
         if item.source_kind == "meeting":
-            lines = ["- {0} - {1}".format(item.title, item.summary)]
+            lines = ["- {0}{1} - {2}".format(self._body_badge_prefix(item), item.title, item.summary)]
             if action_url:
                 lines.append("  {0}: {1}".format(action_label, action_url))
             return tuple(lines)
         lines = [
-            "- {0}".format(item.title),
+            "- {0}{1}".format(self._body_badge_prefix(item), item.title),
             "  {0}".format(item.summary),
         ]
         if action_url:
@@ -1327,32 +1367,39 @@ class StructuredDigestRenderer:
         if item.source_kind == "meeting":
             return (
                 "<div style=\"margin:0 0 8px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;\">"
-                "<p style=\"margin:0;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
-                "<p style=\"margin:4px 0 0;font-size:13px;color:#475569;\">{1}</p>"
-                "{2}"
+                "<p style=\"margin:0;font-size:15px;font-weight:600;color:#0f172a;\">{0}{1}</p>"
+                "<p style=\"margin:4px 0 0;font-size:13px;color:#475569;\">{2}</p>"
+                "{3}"
                 "</div>"
             ).format(
+                self._item_badges_html(item),
                 self._html_escape(item.title),
                 self._html_escape(item.summary),
                 action_html,
             )
         return (
             "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;\">"
-            "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}</p>"
-            "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
-            "{2}"
+            "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}{1}</p>"
+            "<p style=\"margin:0;font-size:14px;color:#334155;\">{2}</p>"
+            "{3}"
             "</div>"
         ).format(
+            self._item_badges_html(item),
             self._html_escape(item.title),
             self._html_escape(item.summary),
             action_html,
         )
 
     def _item_action(self, item: DigestEntry) -> tuple[str, str]:
+        desktop_source_url = _safe_desktop_source_url(item.desktop_source_url)
         source_url = _safe_source_url(item.source_url)
-        if not source_url:
+        if not desktop_source_url and not source_url:
             return ("", "")
         actions = _language_copy(self.digest_language)["item_actions"]
+        if desktop_source_url:
+            if item.source_kind == "meeting":
+                return (str(actions["open_meeting_desktop"]), desktop_source_url)
+            return (str(actions["open_mail_desktop"]), desktop_source_url)
         if item.source_kind == "meeting":
             return (str(actions["open_meeting"]), source_url)
         return (str(actions["open_mail"]), source_url)
@@ -1369,6 +1416,22 @@ class StructuredDigestRenderer:
             self._html_escape(action_url),
             self._html_escape(action_label),
         )
+
+    def _body_badge_prefix(self, item: DigestEntry) -> str:
+        if "flagged" not in item.reason_codes:
+            return ""
+        badge = str(_language_copy(self.digest_language)["badges"]["flagged"])
+        return "[{0}] ".format(badge)
+
+    def _item_badges_html(self, item: DigestEntry) -> str:
+        if "flagged" not in item.reason_codes:
+            return ""
+        badge = str(_language_copy(self.digest_language)["badges"]["flagged"])
+        return (
+            "<span style=\"display:inline-block;margin:0 8px 0 0;padding:2px 7px;border-radius:999px;"
+            "background:#fff3cd;border:1px solid #facc15;color:#854d0e;font-size:11px;font-weight:700;"
+            "letter-spacing:0.04em;text-transform:uppercase;vertical-align:middle;\">{0}</span>"
+        ).format(self._html_escape(badge))
 
     def _weather_body_lines(self, weather: Optional[WeatherSnapshot]) -> Sequence[str]:
         if weather is None:
@@ -1598,7 +1661,7 @@ class LlmDigestOverviewEngine:
         summary = str(summary or "").strip()
         if not summary:
             return self.fallback_engine.summarize(payload)
-        return DigestOverview(summary=_normalize_top_summary(summary, max_chars=200), source="llm")
+        return DigestOverview(summary=_normalize_top_summary(summary), source="llm")
 
     def _overview_sections(self, payload: DigestPayload) -> Mapping[str, Sequence[DigestEntry]]:
         return {
@@ -1619,6 +1682,8 @@ class LlmDigestOverviewEngine:
                     source_kind=item.source_kind,
                     source_id=item.source_id,
                     score=item.score,
+                    source_url=item.source_url,
+                    desktop_source_url=item.desktop_source_url,
                     reason_codes=item.reason_codes,
                     guardrail_applied=item.guardrail_applied,
                 )
@@ -1698,6 +1763,8 @@ class LlmDigestWordingEngine:
                     source_kind=item.source_kind,
                     source_id=item.source_id,
                     score=item.score,
+                    source_url=item.source_url,
+                    desktop_source_url=item.desktop_source_url,
                     reason_codes=item.reason_codes,
                     guardrail_applied=item.guardrail_applied,
                 )

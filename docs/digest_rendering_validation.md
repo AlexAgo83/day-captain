@@ -12,7 +12,7 @@ Use this workflow when you want to review the current digest presentation before
 
 1. Load the local environment and run a digest with preview export enabled.
 2. Review the generated `.html` file in a browser and the `.txt` file in a plain-text editor.
-3. Confirm the top summary remains short, sections feel balanced, meetings are compact, and empty states stay light.
+3. Confirm the top summary remains complete and readable, sections feel balanced, meetings are compact, and empty states stay light.
 
 Example:
 
@@ -51,7 +51,7 @@ python3 -m day_captain morning-digest --force \
 
 That run produced a stub preview with:
 - the compact header enabled
-- the bounded `In brief` summary enabled
+- the `In brief` summary block enabled
 - light empty states enabled
 - the weekend Monday meeting fallback visible in both text and HTML output
 
@@ -61,16 +61,21 @@ That run produced a stub preview with:
   - the mail starts with a short as-of line plus a single window line
   - the header does not read like a verbose generated report
 - executive summary:
-  - `In brief` / `En bref` stays short enough to read in a few seconds
+  - `In brief` / `En bref` remains faithful to the generated recap and is not forcibly truncated by the app
   - it does not restate every downstream section
 - sections:
   - `Critical topics`, `Actions to take`, `Watch items`, and `Upcoming meetings` have a steady visual rhythm
   - item cards remain readable without large vertical gaps
+  - flagged items remain more visible than ordinary messages without overwhelming the full digest
 - footer:
   - if quick actions are present, the `mailto:` links point to the intended Day Captain mailbox
   - the command subjects are prefilled as `recall`, `recall-today`, or `recall-week`
   - the draft body also starts with the same command for client-side robustness
   - the helper copy makes it clear that clicking opens a draft rather than auto-sending a command
+- source-open controls:
+  - Outlook web links remain the reliable baseline
+  - if a native Outlook desktop protocol link is explicitly available in the source metadata, the renderer may prefer it instead of the web link
+  - if no native desktop link is available, the renderer falls back to the standard web link
 - meetings:
   - each meeting line emphasizes title, time, organizer, and location quickly
   - the section does not expand into a tall report for a single meeting
@@ -86,9 +91,11 @@ The local preview is only a preflight step. Before closing the readability slice
 2. Open it in Outlook using the actual mailbox view used day to day.
 3. Confirm:
    - the hero/header block still looks compact
-   - the executive summary remains short
+   - the executive summary remains readable even when it is longer than previous bounded versions
    - section spacing survives Outlook rendering
    - meeting rows stay compact
+   - flagged items still stand out appropriately
+   - source-open controls use the expected desktop/web fallback behavior on the actual Outlook client
    - empty states remain light and readable
 
 If Outlook introduces a regression that the local preview did not reveal, treat Outlook as the source of truth and adjust the renderer accordingly.
