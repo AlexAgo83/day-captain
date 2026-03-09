@@ -122,6 +122,57 @@ class SQLiteStorageTest(unittest.TestCase):
             self.assertEqual(len(saved), 1)
             self.assertEqual(saved[0].feedback_id, "feedback-1")
 
+    def test_get_latest_completed_run_can_filter_by_run_type(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "day_captain.sqlite3")
+            storage = SQLiteStorage(path)
+            weekly_time = datetime(2026, 3, 8, 19, 30, tzinfo=timezone.utc)
+            morning_time = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+            weekly_payload = DigestPayload(
+                run_id="run-weekly",
+                generated_at=weekly_time,
+                window_start=datetime(2026, 3, 2, 0, 0, tzinfo=timezone.utc),
+                window_end=weekly_time,
+                delivery_mode="json",
+            )
+            morning_payload = DigestPayload(
+                run_id="run-morning",
+                generated_at=morning_time,
+                window_start=datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc),
+                window_end=morning_time,
+                delivery_mode="json",
+            )
+            storage.save_run(
+                DigestRunRecord(
+                    run_id="run-morning",
+                    run_type="morning_digest",
+                    status="completed",
+                    generated_at=morning_time,
+                    window_start=morning_payload.window_start,
+                    window_end=morning_payload.window_end,
+                    delivery_mode="json",
+                    summary=morning_payload,
+                )
+            )
+            storage.save_run(
+                DigestRunRecord(
+                    run_id="run-weekly",
+                    run_type="weekly_digest",
+                    status="completed",
+                    generated_at=weekly_time,
+                    window_start=weekly_payload.window_start,
+                    window_end=weekly_payload.window_end,
+                    delivery_mode="json",
+                    summary=weekly_payload,
+                )
+            )
+
+            latest_any = storage.get_latest_completed_run()
+            latest_morning = storage.get_latest_completed_run(run_type="morning_digest")
+
+            self.assertEqual(latest_any.run_id, "run-weekly")
+            self.assertEqual(latest_morning.run_id, "run-morning")
+
     def test_upsert_preferences_updates_existing_weight(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             path = str(Path(tmpdir) / "day_captain.sqlite3")

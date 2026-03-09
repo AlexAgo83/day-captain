@@ -1,9 +1,9 @@
 ## task_031_day_captain_runtime_contract_and_digest_cursor_reliability_orchestration - Orchestrate runtime contract and digest cursor reliability fixes
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Align hosted email-command enablement behavior across runtime, validation, and docs.
-- [ ] 2. Isolate the `morning-digest` incremental cursor from unrelated run types.
-- [ ] 3. Preserve source-open metadata through LLM rewrite paths and verify renderer behavior.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Align hosted email-command enablement behavior across runtime, validation, and docs.
+- [x] 2. Isolate the `morning-digest` incremental cursor from unrelated run types.
+- [x] 3. Preserve source-open metadata through LLM rewrite paths and verify renderer behavior.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req026 AC1 -> Plan step 1. Proof: task explicitly fixes runtime enablement behavior when recall is meant to be off.
@@ -44,13 +44,14 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Hosted email-command enablement behavior matches the documented contract.
-- [ ] `morning-digest` uses the correct incremental cursor semantics.
-- [ ] Rewritten digest items preserve Outlook source-open controls.
-- [ ] Regression tests cover the fixed runtime paths.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Hosted email-command enablement behavior matches the documented contract.
+- [x] `morning-digest` uses the correct incremental cursor semantics.
+- [x] Rewritten digest items preserve Outlook source-open controls.
+- [x] Regression tests cover the fixed runtime paths.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 9, 2026 from the runtime review findings after the `1.3.1` multi-user recall work and the `1.3.0` weather/digest presentation slices.
 - This task is intentionally a bounded reliability follow-up, not a new product expansion slice.
+- Closed on Monday, March 9, 2026 after fixing the hosted email-command gating contract, isolating the morning cursor from weekly/recall runs, and preserving source-open metadata through LLM rewrite paths.
