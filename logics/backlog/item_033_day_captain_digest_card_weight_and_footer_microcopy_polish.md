@@ -1,9 +1,9 @@
 ## item_033_day_captain_digest_card_weight_and_footer_microcopy_polish - Day Captain digest card weight and footer microcopy polish
 > From version: 1.2.0
-> Status: In Progress
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 70%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Low
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -52,3 +52,4 @@ flowchart LR
 - Derived from the same March 9, 2026 Outlook review as `req_023`.
 - Implementation is underway: card borders are being softened slightly and the footer helper copy is being tightened while the draft-action meaning stays explicit.
 - A later live review confirmed that these visual details are now secondary to wording quality; they remain worth polishing, but they are no longer the main blocker.
+- Closed on Monday, March 9, 2026 after live Outlook validation confirmed that the softer card treatment and tighter footer microcopy are acceptable in the shipped digest.
