@@ -1,9 +1,9 @@
 ## item_045_day_captain_overview_length_policy_without_truncation - Remove forced top-summary truncation and define the new overview-length contract
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_027_day_captain_overview_flagged_signal_and_desktop_opening`
-- Primary task(s): `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` (`Ready`)
+- Primary task(s): `task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - users lose trust in the executive recap when it is visibly cut off.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_027_day_captain_overview_flagged_signal_and_desktop_opening`.
 - The intended change is policy-level: long summaries are acceptable if they remain useful.
+- Closed on Monday, March 9, 2026 after removing forced top-summary truncation, preserving full summary text in delivery, and aligning tests/docs with the new contract.
