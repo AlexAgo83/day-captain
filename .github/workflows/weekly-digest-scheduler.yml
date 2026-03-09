@@ -7,9 +7,6 @@ on:
         description: "Optional single target user override"
         required: false
         type: string
-  schedule:
-    - cron: "30 18 * * 0"
-    - cron: "30 19 * * 0"
 
 jobs:
   schedule-gate:
