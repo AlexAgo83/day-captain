@@ -151,7 +151,35 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("href=\"https://outlook.office.com/calendar/item/mtg-1\"", payload.delivery_payload["html_body"])
         self.assertIn("href=\"https://outlook.office.com/mail/msg-1\"", payload.delivery_payload["html_body"])
 
-    def test_bounds_top_summary_to_brief_copy(self) -> None:
+    def test_prefers_desktop_open_controls_when_native_link_is_available(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-3c",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Leadership sync",
+                    summary="Today, 10:00 | Lead | Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-1",
+                    source_url="https://outlook.office.com/calendar/item/mtg-1",
+                    desktop_source_url="ms-outlook://events/mtg-1",
+                    score=2.5,
+                ),
+            ),
+        )
+
+        self.assertIn("Open meeting in Outlook desktop", payload.delivery_body)
+        self.assertIn("href=\"ms-outlook://events/mtg-1\"", payload.delivery_payload["html_body"])
+        self.assertNotIn("href=\"https://outlook.office.com/calendar/item/mtg-1\"", payload.delivery_payload["html_body"])
+
+    def test_preserves_full_top_summary_copy(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
 
@@ -171,9 +199,39 @@ class StructuredDigestRendererTest(unittest.TestCase):
 
         self.assertEqual(
             payload.top_summary,
-            "First priority is budget review. Second priority is confirming the launch timing.",
+            (
+                "First priority is budget review. "
+                "Second priority is confirming the launch timing. "
+                "Third note should not appear in the executive summary."
+            ),
         )
-        self.assertNotIn("Third note should not appear", payload.delivery_body)
+        self.assertIn("Third note should not appear", payload.delivery_body)
+
+    def test_renders_flagged_badge_in_text_and_html(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-4b",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Budget note",
+                    summary="Please keep this in view.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-flagged",
+                    score=2.0,
+                    reason_codes=("flagged",),
+                ),
+            ),
+        )
+
+        self.assertIn("[Flagged] Budget note", payload.delivery_body)
+        self.assertIn(">Flagged<", payload.delivery_payload["html_body"])
 
     def test_renders_weather_capsule_before_overview(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
