@@ -97,6 +97,7 @@ class DigestEntry:
     source_kind: str
     source_id: str
     score: float
+    source_url: str = ""
     reason_codes: Sequence[str] = field(default_factory=tuple)
     guardrail_applied: bool = False
 
@@ -208,6 +209,7 @@ def digest_entry_from_dict(payload: Mapping[str, Any]) -> DigestEntry:
         source_kind=str(payload.get("source_kind") or ""),
         source_id=str(payload.get("source_id") or ""),
         score=float(payload.get("score") or 0.0),
+        source_url=str(payload.get("source_url") or ""),
         reason_codes=tuple(str(item) for item in payload.get("reason_codes") or ()),
         guardrail_applied=bool(payload.get("guardrail_applied")),
     )

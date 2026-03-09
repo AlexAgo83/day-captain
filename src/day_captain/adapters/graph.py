@@ -369,6 +369,7 @@ class GraphMailCollector:
                 "categories",
                 "isRead",
                 "hasAttachments",
+                "webLink",
             )
         )
         payloads = self.api_client.list_collection(
