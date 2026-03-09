@@ -1,9 +1,9 @@
 ## item_036_day_captain_digest_weather_source_and_location_contract - Define the digest weather source and location contract
 > From version: 1.3.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -39,7 +39,7 @@ flowchart LR
 
 # Links
 - Request: `req_024_day_captain_digest_daily_weather_capsule`
-- Primary task(s): `task_029_day_captain_digest_weather_capsule_orchestration` (`Ready`)
+- Primary task(s): `task_029_day_captain_digest_weather_capsule_orchestration` (`Done`)
 
 # Priority
 - Impact: High - the capsule cannot be trustworthy without a clear source/location contract.
@@ -48,3 +48,4 @@ flowchart LR
 # Notes
 - Derived from `req_024_day_captain_digest_daily_weather_capsule`.
 - This slice should stay bounded: one digest-ready location contract, not a generalized weather platform.
+- Completed with an explicit optional config contract based on `DAY_CAPTAIN_WEATHER_LATITUDE`, `DAY_CAPTAIN_WEATHER_LONGITUDE`, and `DAY_CAPTAIN_WEATHER_LOCATION_NAME`, backed by an Open-Meteo provider.
