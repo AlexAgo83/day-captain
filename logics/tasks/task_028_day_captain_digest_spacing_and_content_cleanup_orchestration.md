@@ -1,18 +1,18 @@
 ## task_028_day_captain_digest_spacing_and_content_cleanup_orchestration - Day Captain digest spacing and content cleanup orchestration
 > From version: 1.2.0
 > Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
-> Progress: 95%
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 96%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
 
 # Context
-- Derived from backlog items `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish`, `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish`, and `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`.
+- Derived from backlog items `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish`, `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish`, `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`, and `item_035_day_captain_digest_source_open_controls`.
 - Related request(s): `req_023_day_captain_digest_spacing_and_content_cleanup_polish`.
 - Depends on: `task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration`.
-- Delivery target: ship a final micro-polish pass that improves spacing, softens remaining visual roughness, and removes awkward self-reference wording without reopening digest architecture.
+- Delivery target: ship a final micro-polish pass that improves spacing, softens remaining visual roughness, removes awkward self-reference wording, and evaluates bounded source-opening controls without reopening digest architecture.
 - Latest direction: the remaining work is now mainly copy-heuristic cleanup rather than further layout work.
 
 ```mermaid
@@ -20,7 +20,8 @@ flowchart LR
     Start[Current live digest after req 022] --> Top[Adjust top spacing rhythm]
     Top --> Cards[Soften cards and footer microcopy]
     Cards --> Wording[Clean labels and self-reference wording]
-    Wording --> Validation[Validate final rendering]
+    Wording --> OpenLinks[Evaluate source open controls]
+    OpenLinks --> Validation[Validate final rendering]
     Validation --> Close[Update docs and close]
 ```
 
@@ -28,17 +29,19 @@ flowchart LR
 - [x] 1. Increase spacing around `Périmètre`, `En bref`, and the first detailed section.
 - [x] 2. Slightly soften card border weight and shorten footer helper copy.
 - [ ] 3. Finish bounded cleanup rules for awkward labels, self-reference wording, `En bref`, and meeting-summary fallbacks.
-- [ ] 4. Validate the final rendering in Outlook and update README/docs if needed.
+- [ ] 4. Evaluate lightweight source-opening controls for meeting and mail cards where stable links are available.
+- [ ] 5. Validate the final rendering in Outlook and update README/docs if needed.
 - [ ] FINAL: Update related Logics docs
 
 # AC Traceability
 - Req023 AC1/AC2 -> Plan step 1. Proof: task explicitly improves top spacing around `En bref`.
 - Req023 AC3/AC4 -> Plan step 2. Proof: task explicitly softens cards and tightens footer helper copy.
 - Req023 AC5/AC6/AC7 -> Plan step 3. Proof: task explicitly adds bounded cleanup, identity-aware wording guards, and better overview/meeting fallback phrasing.
-- Req023 AC8 -> Plan step 4. Proof: task explicitly requires final validation without regressions.
+- Req023 AC9 -> Plan step 4. Proof: task explicitly evaluates bounded open-source controls for mail and meeting cards.
+- Req023 AC8 -> Plan step 5. Proof: task explicitly requires final validation without regressions.
 
 # Links
-- Backlog item(s): `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish`, `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish`, `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`
+- Backlog item(s): `item_032_day_captain_digest_top_spacing_and_summary_rhythm_polish`, `item_033_day_captain_digest_card_weight_and_footer_microcopy_polish`, `item_034_day_captain_digest_identity_aware_wording_and_label_cleanup`, `item_035_day_captain_digest_source_open_controls`
 - Request(s): `req_023_day_captain_digest_spacing_and_content_cleanup_polish`
 
 # Validation
@@ -51,6 +54,7 @@ flowchart LR
 - [ ] Card borders and footer helper copy are visibly lighter.
 - [ ] Self-reference meeting wording no longer implies the target user meets themselves.
 - [ ] `En bref` and meeting-summary fallbacks read naturally after the identity-aware cleanup.
+- [ ] Source-opening controls are either implemented cleanly where links are stable or explicitly documented as limited.
 - [ ] Final live Outlook validation is completed.
 - [ ] Validation commands executed and results captured.
 - [ ] Linked request/backlog/task docs updated.
@@ -72,7 +76,11 @@ flowchart LR
   - tightened compaction rules so long rewritten summaries keep their `Suivi` / `Next step` cue instead of truncating away the action
   - compacted the item summaries passed into the overview LLM path so `En bref` sees cleaner, shorter source material
   - added bounded candidate/profile compression and light phrase cleanup for vague top-summary formulations
+- Newly added scope:
+  - evaluate whether meeting cards can expose existing normalized `join_url` / `webLink` data as lightweight open controls
+  - determine whether message cards can expose a stable Outlook open link or must remain read-only for now
 - Remaining before closure:
   - finish the copy-heuristic cleanup slice for overview and meeting fallbacks
+  - evaluate and, if possible, implement bounded source-opening controls without making the digest visually busy
   - validate the refined rendering in a real Outlook mailbox
   - then update closure links and promote the request/backlog/task chain to `Done`

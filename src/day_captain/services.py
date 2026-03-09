@@ -226,6 +226,8 @@ LANGUAGE_COPY = {
             "critical": "Needs attention: {text}",
             "action": "Likely needs your follow-up: {text}",
             "watch": "Worth noting: {text}",
+            "candidate_profile": "Candidate profile: {text}",
+            "candidate_follow_up": "Review the candidate or decide on follow-up.",
             "file_shared": "Shared a file or document for your review.",
             "download_shared": "Shared a download link for the latest version.",
             "from_sender": "From {sender}",
@@ -282,6 +284,8 @@ LANGUAGE_COPY = {
             "critical": "À surveiller de près : {text}",
             "action": "Demande probablement un suivi de votre part : {text}",
             "watch": "À garder en tête : {text}",
+            "candidate_profile": "Profil candidat : {text}",
+            "candidate_follow_up": "Examiner la candidature ou proposer un suivi.",
             "file_shared": "Un fichier ou document a été partagé pour consultation.",
             "download_shared": "Un lien de téléchargement a été partagé pour la dernière version.",
             "from_sender": "De la part de {sender}",
@@ -587,6 +591,32 @@ def _compact_candidate_profile_summary(title: str, summary: str) -> str:
     if follow_up:
         return "{0} {1}".format(base, follow_up).strip()
     return base
+
+
+def _deterministic_candidate_profile_summary(title: str, preview: str, language: str) -> str:
+    normalized = _normalize_text(title, preview)
+    candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
+    if not any(marker in normalized for marker in candidate_markers):
+        return ""
+    copy = _language_copy(language)["summary"]
+    preview_text = " ".join((preview or "").strip().split())
+    company_match = re.search(r"\bchez\s+([A-Z][A-Za-z0-9&' -]+)", preview_text)
+    if not company_match:
+        company_match = re.search(r"\bat\s+([A-Z][A-Za-z0-9&' -]+)", preview_text)
+    company = company_match.group(1).strip() if company_match else ""
+    if company:
+        company = re.split(r"\b(depuis|for)\b|,", company, maxsplit=1)[0].strip()
+    role_text = ""
+    title_lower = title.lower()
+    if "designer" in title_lower or "designer" in normalized:
+        role_text = "designer chez {0}".format(company).strip() if company else "designer"
+    elif company:
+        role_text = company
+    else:
+        role_text = _normalize_display_title(title)
+    profile = str(copy["candidate_profile"]).format(text=role_text).strip()
+    follow_up = str(copy["candidate_follow_up"]).strip()
+    return "{0} {1}".format(profile, follow_up).strip()
 
 
 def _normalized_place(value: str) -> str:
@@ -895,6 +925,9 @@ class DeterministicScoringEngine:
         preview = cleaned_preview or (message.body_preview or "").strip()
         normalized_preview = _normalize_text(preview)
         base = preview if preview else copy["from_sender"].format(sender=message.from_address)
+        candidate_summary = _deterministic_candidate_profile_summary(message.subject or "", preview, self.digest_language)
+        if candidate_summary and "critical_keyword" not in reason_codes and "action_keyword" not in reason_codes:
+            return candidate_summary
         if "deliverable_shared" in reason_codes:
             if "download" in normalized_preview or "telechargement" in normalized_preview or "téléchargement" in normalized_preview:
                 return copy["download_shared"]
