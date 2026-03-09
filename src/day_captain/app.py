@@ -854,6 +854,7 @@ class DayCaptainApplication:
         body: str = "",
         now: Optional[datetime] = None,
         tenant_id: Optional[str] = None,
+        delivery_mode: str = "graph_send",
     ) -> EmailCommandResult:
         scoped_tenant_id = self._resolve_tenant_id(tenant_id)
         normalized_message_id = str(command_message_id or "").strip()
@@ -898,7 +899,7 @@ class DayCaptainApplication:
         payload = self._build_digest_for_window(
             current_time=current_time,
             window_start=window_start,
-            delivery_mode="graph_send",
+            delivery_mode=str(delivery_mode or "graph_send"),
             run_type="email_command_recall",
             target_user_id=target_user_id,
             tenant_id=scoped_tenant_id,

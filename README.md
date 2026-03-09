@@ -334,6 +334,7 @@ Export the rendered digest locally for manual review:
 
 ```bash
 PYTHONPATH=src python3 -m day_captain morning-digest \
+  --preview \
   --force \
   --output-html tmp/day-captain-preview.html \
   --output-text tmp/day-captain-preview.txt
@@ -341,6 +342,7 @@ PYTHONPATH=src python3 -m day_captain morning-digest \
 
 That preview flow is documented in [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
 In development, this can also be used as a layout-only stub preview before live Graph auth is configured.
+Use `--preview` when you want a guaranteed no-send local render; `--output-html` and `--output-text` only control file export.
 
 Run a weekly digest directly:
 
@@ -413,6 +415,8 @@ curl -X POST http://127.0.0.1:8000/jobs/morning-digest \
   -H "X-Day-Captain-Secret: $DAY_CAPTAIN_JOB_SECRET" \
   -d '{"force": true}'
 ```
+
+Hosted job payloads should use real JSON booleans for fields such as `force`; do not send quoted strings like `"false"`.
 
 Trigger one configured target user explicitly:
 
