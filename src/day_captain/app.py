@@ -116,11 +116,15 @@ def _start_of_local_week(value: datetime, zone) -> datetime:
     return _start_of_local_day(target_day, zone)
 
 
-def _weekend_friday_start(value: datetime, zone) -> datetime:
+def _friday_backlog_start(value: datetime, zone) -> datetime:
     local_now = value.astimezone(zone)
-    if local_now.weekday() < 5:
+    weekday = local_now.weekday()
+    if weekday not in {0, 5, 6}:
         return value - timedelta(hours=24)
-    friday_day = local_now.date() - timedelta(days=local_now.weekday() - 4)
+    if weekday == 0:
+        friday_day = local_now.date() - timedelta(days=3)
+    else:
+        friday_day = local_now.date() - timedelta(days=weekday - 4)
     return _start_of_local_day(friday_day, zone)
 
 
@@ -749,8 +753,8 @@ class DayCaptainApplication:
         window_start = (
             previous_run.window_end + timedelta(microseconds=1)
             if previous_run is not None
-            else _weekend_friday_start(current_time, _display_zone(self.settings.display_timezone))
-            if current_time.astimezone(_display_zone(self.settings.display_timezone)).weekday() >= 5
+            else _friday_backlog_start(current_time, _display_zone(self.settings.display_timezone))
+            if current_time.astimezone(_display_zone(self.settings.display_timezone)).weekday() in {0, 5, 6}
             else current_time - timedelta(hours=self.settings.default_lookback_hours)
         )
         return self._build_digest_for_window(
