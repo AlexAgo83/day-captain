@@ -185,7 +185,7 @@ If `DAY_CAPTAIN_LLM_PROVIDER` is enabled, Day Captain sends only a bounded short
 
 You can constrain that wording pass with `DAY_CAPTAIN_LLM_ENABLED_SECTIONS`, steer the tone with `DAY_CAPTAIN_LLM_STYLE_PROMPT`, and force the wording language with `DAY_CAPTAIN_LLM_LANGUAGE`. If `DAY_CAPTAIN_LLM_LANGUAGE` is unset, it falls back to `DAY_CAPTAIN_DIGEST_LANGUAGE`.
 
-The digest can also render a short top summary block above the detailed sections. That summary is built only from the final digest content, stays bounded, and falls back to a deterministic overview if the LLM path is disabled or fails.
+The digest can also render a top summary block above the detailed sections. That summary is built only from the final digest content, is no longer forcibly truncated by app policy, and falls back to a deterministic overview if the LLM path is disabled or fails.
 
 ## Digest presentation
 
@@ -193,11 +193,14 @@ The delivered digest now supports:
 - localized product copy through `DAY_CAPTAIN_DIGEST_LANGUAGE` with English default and French support
 - a condensed header with explicit as-of/window metadata and a more polished coverage line instead of verbose report phrasing
 - a highlighted `In brief` / `En bref` executive summary block above the detailed sections
+- a full `In brief` / `En bref` block that is no longer forcibly shortened by the application when the summary remains useful but long
 - an optional weather capsule before `In brief` / `En bref`, including a simple warmer/cooler-than-yesterday signal when weather data is configured
+- stronger prominence for flagged messages through scoring promotion and a dedicated badge in text and HTML rendering
 - compact meeting cards that keep time, organizer, and location easy to scan with more natural day-horizon wording
 - lighter empty-state presentation even when the LLM layer is disabled
 - lighter hero/card visual treatment than the first readability pass
 - optional footer quick actions using `mailto:` links that open a prefilled draft for recall commands, with the command repeated in subject and body when a command mailbox is known
+- source-open controls that keep Outlook web links as the reliable baseline and prefer an explicit desktop protocol link only when a native Outlook link is already available in the source metadata
 - weekend meeting fallback to Monday and next-day meeting fallback when no meetings remain for the current day
 - first-run `morning-digest` mail fallback to Friday `00:00` in `DAY_CAPTAIN_DISPLAY_TIMEZONE` on Saturday, Sunday, and Monday; repeated runs stay incremental
 

@@ -327,6 +327,36 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
         self.assertEqual(rewritten[0].summary, "Polished summary one.")
         self.assertEqual(rewritten[1].summary, "Original two")
 
+    def test_rewrite_preserves_source_open_links(self) -> None:
+        provider = type(
+            "Provider",
+            (),
+            {
+                "rewrite_summaries": lambda self, items: {
+                    "message:msg-1": "Polished summary one.",
+                }
+            },
+        )()
+        engine = LlmDigestWordingEngine(provider=provider, shortlist_limit=1)
+        items = (
+            DigestEntry(
+                title="First",
+                summary="Original one",
+                section_name="critical_topics",
+                source_kind="message",
+                source_id="msg-1",
+                source_url="https://outlook.office.com/mail/msg-1",
+                desktop_source_url="ms-outlook://mail/msg-1",
+                score=3.0,
+            ),
+        )
+
+        rewritten = engine.rewrite(items)
+
+        self.assertEqual(rewritten[0].summary, "Polished summary one.")
+        self.assertEqual(rewritten[0].source_url, "https://outlook.office.com/mail/msg-1")
+        self.assertEqual(rewritten[0].desktop_source_url, "ms-outlook://mail/msg-1")
+
     def test_rewrite_falls_back_when_provider_fails(self) -> None:
         provider = type(
             "Provider",
@@ -563,6 +593,8 @@ class DigestOverviewEngineTest(unittest.TestCase):
                     section_name="watch_items",
                     source_kind="message",
                     source_id="msg-1",
+                    source_url="https://outlook.office.com/mail/msg-1",
+                    desktop_source_url="ms-outlook://mail/msg-1",
                     score=1.0,
                 ),
             ),
@@ -581,6 +613,8 @@ class DigestOverviewEngineTest(unittest.TestCase):
         self.assertIn("Profil designer chez Studio Meridian.", captured["sections"]["watch_items"][0].summary)
         self.assertIn("Suivi :", captured["sections"]["watch_items"][0].summary)
         self.assertLessEqual(len(captured["sections"]["watch_items"][0].summary), 123)
+        self.assertEqual(captured["sections"]["watch_items"][0].source_url, "https://outlook.office.com/mail/msg-1")
+        self.assertEqual(captured["sections"]["watch_items"][0].desktop_source_url, "ms-outlook://mail/msg-1")
 
     def test_llm_summary_polishes_vague_next_meeting_phrase(self) -> None:
         payload = DigestPayload(

@@ -364,6 +364,32 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         self.assertEqual(prioritized[0].source_url, "https://outlook.office.com/mail/msg-linked")
 
+    def test_promotes_flagged_messages_into_actions(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-flagged",
+                thread_id="thread-flagged",
+                subject="Budget note",
+                from_address="pm@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 9, 7, 45, tzinfo=timezone.utc),
+                body_preview="Please keep this in view.",
+                raw_payload={
+                    "flag": {"flagStatus": "flagged"},
+                    "webLink": "https://outlook.office.com/mail/msg-flagged",
+                },
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].section_name, "actions_to_take")
+        self.assertIn("flagged", prioritized[0].reason_codes)
+        self.assertEqual(prioritized[0].source_url, "https://outlook.office.com/mail/msg-flagged")
+
     def test_uses_first_non_self_attendee_when_organizer_is_target_user(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
