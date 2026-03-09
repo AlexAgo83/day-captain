@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/AlexAgo83/day-captain/actions/workflows/ci.yml"><img src="https://github.com/AlexAgo83/day-captain/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/AlexAgo83/day-captain" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v1.4.0-4C8BF5" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v1.4.1-4C8BF5" alt="Version" />
   <img src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Render-ready-46E3B7?logo=render&logoColor=white" alt="Render" />
   <img src="https://img.shields.io/badge/Microsoft%20365-Graph%20digest-0078D4?logo=microsoftoutlook&logoColor=white" alt="Microsoft 365" />
@@ -51,7 +51,7 @@ It currently supports:
 
 ## Project status
 
-Current package version: `1.4.0`
+Current package version: `1.4.1`
 
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
