@@ -1,8 +1,8 @@
 ## req_024_day_captain_digest_daily_weather_capsule - Day Captain digest daily weather capsule
 > From version: 1.3.0
-> Status: Draft
-> Understanding: 97%
-> Confidence: 94%
+> Status: Ready
+> Understanding: 99%
+> Confidence: 96%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -57,6 +57,22 @@ flowchart LR
 - AC5: The capsule remains visually light and does not reintroduce the heavy header feel removed in earlier digest-polish slices.
 - AC6: Any new weather dependency or location-setting contract is documented before closure.
 
+# Backlog traceability
+- AC1 -> `item_037_day_captain_digest_weather_capsule_rendering_and_copy`. Proof: this item explicitly places the weather capsule before `En bref` in the delivered digest.
+- AC2 -> `item_037_day_captain_digest_weather_capsule_rendering_and_copy`. Proof: this item explicitly keeps the weather wording short and assistant-like.
+- AC3 -> `item_037_day_captain_digest_weather_capsule_rendering_and_copy`. Proof: this item explicitly adds a bounded warmer/cooler comparison versus the previous day.
+- AC4 -> `item_038_day_captain_digest_weather_fallback_and_docs_validation`. Proof: this item explicitly keeps the digest layout clean when weather data is missing.
+- AC5 -> `item_037_day_captain_digest_weather_capsule_rendering_and_copy`. Proof: this item explicitly keeps the capsule visually light in the top block.
+- AC6 -> `item_036_day_captain_digest_weather_source_and_location_contract`. Proof: this item explicitly defines the source/location contract and `item_038` closes the docs path.
+
+# Task traceability
+- AC1 -> `task_029_day_captain_digest_weather_capsule_orchestration`. Proof: task `029` explicitly adds the weather capsule ahead of `En bref`.
+- AC2 -> `task_029_day_captain_digest_weather_capsule_orchestration`. Proof: task `029` explicitly keeps the weather wording brief and product-like.
+- AC3 -> `task_029_day_captain_digest_weather_capsule_orchestration`. Proof: task `029` explicitly adds the bounded warmer/cooler comparison.
+- AC4 -> `task_029_day_captain_digest_weather_capsule_orchestration`. Proof: task `029` explicitly requires fallback-safe rendering when weather data is missing.
+- AC5 -> `task_029_day_captain_digest_weather_capsule_orchestration`. Proof: task `029` explicitly preserves the lighter top-of-mail presentation.
+- AC6 -> `task_029_day_captain_digest_weather_capsule_orchestration`. Proof: task `029` explicitly blocks closure until config/docs are updated.
+
 # Delivery notes
 - Preferred placement: between the as-of/perimeter metadata and `En bref`.
 - Preferred tone:
@@ -80,8 +96,12 @@ flowchart LR
 - [x] Known risks and dependency questions are listed.
 
 # Backlog
-- Pending decomposition into backlog items and an orchestration task.
+- `item_036_day_captain_digest_weather_source_and_location_contract` - Define the weather provider/location contract for digest runs. Status: `Ready`.
+- `item_037_day_captain_digest_weather_capsule_rendering_and_copy` - Render the weather capsule before `En bref` with short copy and warmer/cooler delta. Status: `Ready`.
+- `item_038_day_captain_digest_weather_fallback_and_docs_validation` - Keep the digest clean when weather data is missing and close docs/validation. Status: `Ready`.
+- `task_029_day_captain_digest_weather_capsule_orchestration` - Orchestrate the weather capsule slice end to end. Status: `Ready`.
 
 # Notes
 - Created on Monday, March 9, 2026 from direct product feedback after the digest top block reached an acceptable polish level.
 - This request intentionally treats weather as a bounded contextual enhancement, not as a new core decision section.
+- Decomposed on Monday, March 9, 2026 into provider/location contract, capsule rendering/copy, and fallback/docs closure slices.
