@@ -1,9 +1,9 @@
 ## item_031_day_captain_digest_quick_actions_and_final_outlook_validation - Day Captain digest quick actions and final Outlook validation
 > From version: 1.1.0
-> Status: In Progress
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 72%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from follow-up UX review and the idea of exposing email-native recall commands directly from the digest footer.
 - Implementation is underway: a footer `mailto:` quick-action prototype is in place with the same command prefilled in both subject and body, plus helper copy clarifying that the links open a draft, but the final live Outlook validation gate still remains before closure.
+- Closed on Monday, March 9, 2026 after live Outlook validation confirmed that the footer quick actions and the final visual-polish pass were acceptable.

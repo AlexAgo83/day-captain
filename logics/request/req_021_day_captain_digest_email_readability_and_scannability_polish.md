@@ -1,8 +1,8 @@
 ## req_021_day_captain_digest_email_readability_and_scannability_polish - Day Captain digest email readability and scannability polish
 > From version: 1.0.0
-> Status: In Progress
+> Status: Done
 > Understanding: 99%
-> Confidence: 98%
+> Confidence: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -83,11 +83,12 @@ flowchart LR
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_026_day_captain_digest_header_and_executive_summary_polish` - Shorten the digest header and make `En bref` truly executive. Status: `In Progress`.
-- `item_027_day_captain_digest_section_and_meeting_scannability_polish` - Improve section rhythm and compact meeting rendering. Status: `In Progress`.
-- `item_028_day_captain_digest_empty_state_and_outlook_polish_validation` - Lighten empty states, validate Outlook rendering, and close docs. Status: `In Progress`.
-- `task_026_day_captain_digest_readability_and_scannability_orchestration` - Orchestrate digest readability polish with README/docs closure required before `Done`. Status: `In Progress`.
+- `item_026_day_captain_digest_header_and_executive_summary_polish` - Shorten the digest header and make `En bref` truly executive. Status: `Done`.
+- `item_027_day_captain_digest_section_and_meeting_scannability_polish` - Improve section rhythm and compact meeting rendering. Status: `Done`.
+- `item_028_day_captain_digest_empty_state_and_outlook_polish_validation` - Lighten empty states, validate Outlook rendering, and close docs. Status: `Done`.
+- `task_026_day_captain_digest_readability_and_scannability_orchestration` - Orchestrate digest readability polish with README/docs closure required before `Done`. Status: `Done`.
 
 # Notes
 - Derived from direct review of the live Outlook rendering after the Power Automate inbound recall path was made operational.
 - Implementation started on Sunday, March 8, 2026: renderer copy/layout, meeting compactness, and README contract updates are in progress; real Outlook validation remains the main closure gate.
+- Closed on Monday, March 9, 2026. The readability/scannability goals were delivered across the later digest polish slices and validated in live Outlook, so this original request is now fully absorbed and complete.

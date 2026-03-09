@@ -1,9 +1,9 @@
 ## task_027_day_captain_digest_visual_weight_and_quick_actions_orchestration - Day Captain digest visual weight and quick actions orchestration
 > From version: 1.1.0
-> Status: In Progress
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 85%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -27,8 +27,8 @@ flowchart LR
 - [x] 1. Lighten the hero/background treatment and give the coverage/perimeter line a more intentional visual treatment.
 - [x] 2. Reduce card visual weight and tighten meeting-summary wording without losing scan quality.
 - [x] 3. Evaluate and, if acceptable, add footer `mailto:` quick actions for supported recall commands.
-- [ ] 4. Validate the final rendering in a real Outlook mailbox and update README/docs if the digest footer or validation contract changes.
-- [ ] FINAL: Update related Logics docs
+- [x] 4. Validate the final rendering in a real Outlook mailbox and update README/docs if the digest footer or validation contract changes.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - Req022 AC1/AC3 -> Plan step 1. Proof: task explicitly lightens the hero area and restyles the perimeter line.
@@ -49,10 +49,10 @@ flowchart LR
 - [x] Hero/background and metadata treatment are materially lighter in Outlook.
 - [x] Section cards are lighter and meeting wording is more natural.
 - [x] Footer quick actions are either shipped with `mailto:` links or explicitly rejected with documented reasoning.
-- [ ] Final live Outlook validation is completed.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Final live Outlook validation is completed.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Sunday, March 8, 2026 as a follow-up to the first readability pass after live Outlook review showed that the remaining issue is mostly visual weight rather than summary density.
@@ -62,5 +62,5 @@ flowchart LR
   - refined the perimeter/window copy away from the raw arrow format toward a more intentional localized range line
   - hardened the footer quick-action prototype so the same command is prefilled in both subject and body, plus helper copy clarifying that the links open a draft
 - Remaining before closure:
-  - validate the final rendering in a real Outlook mailbox
-  - then update closure links and promote the request/backlog/task chain to `Done`
+  - none
+- Closed on Monday, March 9, 2026 after the later live Outlook validation accepted the lighter hero, calmer cards, and `mailto:` quick actions.

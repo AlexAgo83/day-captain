@@ -1,9 +1,9 @@
 ## item_030_day_captain_digest_card_weight_and_meeting_wording_polish - Day Captain digest card weight and meeting wording polish
 > From version: 1.1.0
-> Status: In Progress
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 70%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from live Outlook review after the first card-based readability pass.
 - Implementation is underway: card contrast/weight is being reduced and meeting horizon wording is being tightened toward more natural day references.
+- Closed on Monday, March 9, 2026 after live Outlook validation confirmed that the lighter card treatment and improved meeting wording were acceptable.

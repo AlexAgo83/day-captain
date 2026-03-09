@@ -1,9 +1,9 @@
 ## item_027_day_captain_digest_section_and_meeting_scannability_polish - Polish digest section rhythm and meeting scannability
 > From version: 1.0.0
-> Status: In Progress
-> Understanding: 99%
-> Confidence: 98%
-> Progress: 80%
+> Status: Done
+> Understanding: 100%
+> Confidence: 100%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from direct Outlook rendering review after live use of the digest.
 - Implementation is underway: section rendering is being tightened and meeting entries are now moving toward a more compact title-plus-context presentation.
+- Closed on Monday, March 9, 2026 after the shipped digest and live Outlook review confirmed the improved section rhythm and compact meeting rendering.
