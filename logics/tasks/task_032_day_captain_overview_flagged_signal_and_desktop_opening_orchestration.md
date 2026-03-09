@@ -1,9 +1,9 @@
 ## task_032_day_captain_overview_flagged_signal_and_desktop_opening_orchestration - Orchestrate overview, flagged-signal, and Outlook-opening follow-up
 > From version: 1.3.1
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Remove forced top-summary truncation and lock the new overview-length policy.
-- [ ] 2. Promote flagged emails more clearly in scoring and rendering.
-- [ ] 3. Define and validate the supported Outlook desktop opening behavior with fallback.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Remove forced top-summary truncation and lock the new overview-length policy.
+- [x] 2. Promote flagged emails more clearly in scoring and rendering.
+- [x] 3. Define and validate the supported Outlook desktop opening behavior with fallback.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req027 AC1 -> Plan step 1. Proof: task explicitly changes the top-summary length contract.
@@ -43,13 +43,14 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] `En bref` / `In brief` is no longer forcibly truncated by app policy.
-- [ ] Flagged mail is promoted clearly and remains bounded.
-- [ ] The supported Outlook opening behavior is explicit and has a reliable fallback path.
-- [ ] Tests and docs match the implemented product behavior.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] `En bref` / `In brief` is no longer forcibly truncated by app policy.
+- [x] Flagged mail is promoted clearly and remains bounded.
+- [x] The supported Outlook opening behavior is explicit and has a reliable fallback path.
+- [x] Tests and docs match the implemented product behavior.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 9, 2026 from product feedback on digest completeness, flagged-message prominence, and Outlook opening behavior.
 - This task is intentionally a focused product-utility follow-up rather than a broad redesign slice.
+- Closed on Monday, March 9, 2026 after shipping the non-truncated overview policy, flagged-message prominence, explicit desktop/web opening fallback, and aligned docs/tests.
