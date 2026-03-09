@@ -26,6 +26,8 @@ from day_captain.adapters.graph import GraphMailCollector
 from day_captain.adapters.llm import OpenAICompatibleDigestWordingProvider
 from day_captain.adapters.storage import PostgresStorage
 from day_captain.adapters.storage import SQLiteStorage
+from day_captain.adapters.weather import OpenMeteoWeatherProvider
+from day_captain.adapters.weather import WeatherApiError
 from day_captain.config import DayCaptainSettings
 from day_captain.models import AuthContext
 from day_captain.models import AuthTokenBundle
@@ -38,6 +40,7 @@ from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+from day_captain.models import WeatherSnapshot
 from day_captain.ports import AuthProvider
 from day_captain.ports import CalendarCollector
 from day_captain.ports import DigestDelivery
@@ -49,6 +52,7 @@ from day_captain.ports import MailCollector
 from day_captain.ports import RecallProvider
 from day_captain.ports import ScoringEngine
 from day_captain.ports import Storage
+from day_captain.ports import WeatherProvider
 from day_captain.services import DeterministicScoringEngine
 from day_captain.services import DeterministicDigestOverviewEngine
 from day_captain.services import IdentityDigestWordingEngine
@@ -409,6 +413,7 @@ class StubDigestRenderer:
         command_mailbox: str = "",
         top_summary: str = "",
         top_summary_source: str = "none",
+        weather: Optional[WeatherSnapshot] = None,
         meeting_horizon: Optional[Dict[str, str]] = None,
     ) -> DigestPayload:
         return StructuredDigestRenderer(
@@ -426,6 +431,7 @@ class StubDigestRenderer:
             prioritized_items=prioritized_items,
             top_summary=top_summary,
             top_summary_source=top_summary_source,
+            weather=weather,
             meeting_horizon=meeting_horizon,
         )
 
@@ -443,6 +449,18 @@ class DefaultFeedbackProcessor:
 class NoopDigestDelivery:
     def deliver_digest(self, auth_context: AuthContext, payload: DigestPayload) -> None:
         return None
+
+
+def _build_weather_provider(settings: DayCaptainSettings) -> Optional[WeatherProvider]:
+    if not settings.weather_is_enabled():
+        return None
+    return OpenMeteoWeatherProvider(
+        latitude=float(settings.weather_latitude),
+        longitude=float(settings.weather_longitude),
+        location_name=settings.resolved_weather_location_name(),
+        base_url=settings.weather_base_url,
+        timeout_seconds=settings.weather_timeout_seconds,
+    )
 
 
 def _build_llm_provider(settings: DayCaptainSettings):
@@ -514,6 +532,7 @@ class DayCaptainApplication:
         digest_delivery: DigestDelivery,
         recall_provider: RecallProvider,
         feedback_processor: FeedbackProcessor,
+        weather_provider: Optional[WeatherProvider],
     ) -> None:
         self.settings = settings
         self.auth_provider = auth_provider
@@ -527,6 +546,7 @@ class DayCaptainApplication:
         self.digest_delivery = digest_delivery
         self.recall_provider = recall_provider
         self.feedback_processor = feedback_processor
+        self.weather_provider = weather_provider
 
     def _resolve_tenant_id(self, tenant_id: Optional[str]) -> str:
         return str(tenant_id or self.settings.resolved_tenant_scope()).strip()
@@ -657,6 +677,7 @@ class DayCaptainApplication:
         window_end = current_time
         messages = self.mail_collector.collect_messages(auth_context, window_start, window_end)
         meetings, meeting_horizon = self._collect_meetings(auth_context, current_time)
+        weather = self._get_weather(current_time)
         messages = _scoped_messages(messages, scoped_tenant_id, scoped_user_id)
         meetings = _scoped_meetings(meetings, scoped_tenant_id, scoped_user_id)
         self.storage.upsert_messages(messages, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
@@ -680,6 +701,7 @@ class DayCaptainApplication:
             tenant_id=scoped_tenant_id,
             user_id=scoped_user_id,
             command_mailbox=str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
+            weather=weather,
             meeting_horizon=meeting_horizon,
         )
         overview = self.digest_overview_engine.summarize(payload)
@@ -696,6 +718,7 @@ class DayCaptainApplication:
                 command_mailbox=str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
                 top_summary=overview.summary,
                 top_summary_source=overview.source,
+                weather=weather,
                 meeting_horizon=meeting_horizon,
             )
         run_record = DigestRunRecord(
@@ -921,6 +944,17 @@ class DayCaptainApplication:
         self.feedback_processor.process_feedback(self.storage, feedback)
         return feedback
 
+    def _get_weather(self, current_time: datetime) -> Optional[WeatherSnapshot]:
+        if self.weather_provider is None:
+            return None
+        try:
+            return self.weather_provider.get_weather(
+                current_time=current_time,
+                display_timezone=self.settings.display_timezone,
+            )
+        except (ValueError, WeatherApiError):
+            return None
+
 
 def build_application(
     settings: Optional[DayCaptainSettings] = None,
@@ -935,6 +969,7 @@ def build_application(
     digest_delivery: Optional[DigestDelivery] = None,
     recall_provider: Optional[RecallProvider] = None,
     feedback_processor: Optional[FeedbackProcessor] = None,
+    weather_provider: Optional[WeatherProvider] = None,
 ) -> DayCaptainApplication:
     resolved_settings = settings or DayCaptainSettings.from_env()
     resolved_database_url = resolved_settings.resolved_database_url()
@@ -1034,4 +1069,5 @@ def build_application(
         digest_delivery=digest_delivery or GraphDigestDelivery(graph_client),
         recall_provider=recall_provider or SnapshotRecallProvider(),
         feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),
+        weather_provider=weather_provider if weather_provider is not None else _build_weather_provider(resolved_settings),
     )

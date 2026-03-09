@@ -17,6 +17,7 @@ from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+from day_captain.models import WeatherSnapshot
 
 
 class AuthProvider(Protocol):
@@ -46,6 +47,15 @@ class CalendarCollector(Protocol):
         window_start: datetime,
         window_end: datetime,
     ) -> Sequence[MeetingRecord]:
+        ...
+
+
+class WeatherProvider(Protocol):
+    def get_weather(
+        self,
+        current_time: datetime,
+        display_timezone: str,
+    ) -> Optional[WeatherSnapshot]:
         ...
 
 
@@ -149,6 +159,7 @@ class DigestRenderer(Protocol):
         command_mailbox: str = "",
         top_summary: str = "",
         top_summary_source: str = "none",
+        weather: Optional[WeatherSnapshot] = None,
         meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         ...
