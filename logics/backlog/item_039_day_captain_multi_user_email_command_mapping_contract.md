@@ -1,9 +1,9 @@
 ## item_039_day_captain_multi_user_email_command_mapping_contract - Define the sender-to-target mapping contract for hosted multi-user email-command recall
 > From version: 1.3.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Operations
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_025_day_captain_multi_user_email_command_recall`
-- Primary task(s): `task_030_day_captain_multi_user_email_command_recall_orchestration` (`Ready`)
+- Primary task(s): `task_030_day_captain_multi_user_email_command_recall_orchestration` (`Done`)
 
 # Priority
 - Impact: High - multi-user recall is unsafe without a precise routing contract.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_025_day_captain_multi_user_email_command_recall`.
 - Preferred direction: reuse sender identity first, then allow helper senders only when they can be bound unambiguously to one target user.
+- Implemented by resolving every configured target user as an implicit self-route and allowing helper senders in multi-user mode only through explicit `sender=target` mappings.

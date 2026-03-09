@@ -1,9 +1,9 @@
 ## item_041_day_captain_multi_user_email_command_ops_docs_and_validation - Document and validate hosted multi-user email-command recall
 > From version: 1.3.0
-> Status: Ready
+> Status: Done
 > Understanding: 97%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Operations
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_025_day_captain_multi_user_email_command_recall`
-- Primary task(s): `task_030_day_captain_multi_user_email_command_recall_orchestration` (`Ready`)
+- Primary task(s): `task_030_day_captain_multi_user_email_command_recall_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - docs and validation determine whether the new multi-user contract is operable in production.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_025_day_captain_multi_user_email_command_recall`.
 - This slice is explicitly about making the new hosted contract operable and understandable, not about expanding the feature further.
+- Closed after updating README and operator runbooks with the multi-user `sender=target` contract and verifying the Logics workflow checks against the final documented shape.

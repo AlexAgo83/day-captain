@@ -1,9 +1,9 @@
 ## task_030_day_captain_multi_user_email_command_recall_orchestration - Orchestrate hosted multi-user email-command recall
 > From version: 1.3.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Operations
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Define the explicit sender-to-target mapping contract for hosted multi-user email-command recall.
-- [ ] 2. Implement safe hosted validation and runtime resolution for the new contract while preserving single-user behavior.
-- [ ] 3. Update operator docs and validate the new multi-user recall flow.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Define the explicit sender-to-target mapping contract for hosted multi-user email-command recall.
+- [x] 2. Implement safe hosted validation and runtime resolution for the new contract while preserving single-user behavior.
+- [x] 3. Update operator docs and validate the new multi-user recall flow.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req025 AC1 -> Plan step 2. Proof: task explicitly enables valid hosted multi-user boot/runtime behavior.
@@ -44,14 +44,15 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] The sender-to-target mapping contract is explicit.
-- [ ] Hosted validation accepts safe multi-user recall config.
-- [ ] Runtime sender resolution targets exactly one user or fails explicitly.
-- [ ] Existing single-user hosted recall behavior remains supported.
-- [ ] Operator docs explain the new config and its failure modes.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] The sender-to-target mapping contract is explicit.
+- [x] Hosted validation accepts safe multi-user recall config.
+- [x] Runtime sender resolution targets exactly one user or fails explicitly.
+- [x] Existing single-user hosted recall behavior remains supported.
+- [x] Operator docs explain the new config and its failure modes.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 9, 2026 after a live hosted failure exposed the incompatibility between multi-user target configuration and `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`.
 - This slice is intentionally bounded to hosted contract/safety and should reuse the existing multi-user delivery model wherever possible.
+- Closed on Monday, March 9, 2026 after implementing explicit sender routing, preserving the single-user path, and updating hosted operator documentation for the final contract.
