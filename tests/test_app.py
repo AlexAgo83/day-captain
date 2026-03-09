@@ -206,6 +206,34 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(payload.window_start, datetime(2026, 3, 5, 23, 0, tzinfo=timezone.utc))
 
+    def test_monday_first_run_uses_friday_start_in_display_timezone(self) -> None:
+        now = datetime(2026, 3, 9, 10, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now, force=False)
+
+        self.assertEqual(payload.window_start, datetime(2026, 3, 5, 23, 0, tzinfo=timezone.utc))
+
+    def test_non_monday_weekday_first_run_keeps_default_lookback(self) -> None:
+        now = datetime(2026, 3, 10, 10, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now, force=False)
+
+        self.assertEqual(payload.window_start, now - timedelta(hours=24))
+
     def test_weekend_repeat_run_stays_incremental(self) -> None:
         first_now = datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc)
         second_now = datetime(2026, 3, 8, 12, 0, tzinfo=timezone.utc)
