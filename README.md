@@ -531,7 +531,7 @@ When `X-Day-Captain-Secret` is supplied to `GET /healthz`, the service also retu
 
 This repository currently includes two workflow categories:
 - CI checks
-- example scheduled hosted triggers for the morning digest and weekly digest
+- manual example hosted triggers for the morning digest and weekly digest
 
 The example scheduler workflows are in:
 - [`morning-digest-scheduler.yml`](./.github/workflows/morning-digest-scheduler.yml)
@@ -540,7 +540,7 @@ The example scheduler workflows are in:
 They expect:
 - `DAY_CAPTAIN_SERVICE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
-- optional `DAY_CAPTAIN_TARGET_USERS_JSON` repository variable for scheduled multi-user fan-out
+- optional `DAY_CAPTAIN_TARGET_USERS_JSON` repository variable for manual multi-user fan-out
 
 For the operator workflow used by the bounded multi-user model, see [`tenant_scoped_multi_user_operator_guide.md`](./docs/tenant_scoped_multi_user_operator_guide.md).
 For the private production scheduling repo shape, see [`private_ops_repo_bootstrap.md`](./docs/private_ops_repo_bootstrap.md).
@@ -548,6 +548,7 @@ For the private production scheduling repo shape, see [`private_ops_repo_bootstr
 Recommended production setup:
 - keep CI here if you want public validation
 - move real scheduling and production secrets into a private `day-captain-ops` repository
+- keep the public example workflows manual-only in this repo
 - let the private repo trigger the hosted Day Captain service over HTTPS using `scripts/trigger_hosted_digest.py` or `day-captain trigger-hosted-job`
 - keep weekday `morning-digest` auto-send separate from the Sunday-evening `weekly-digest` scheduler contract
 - for the Sunday weekly recap, use a jitter-tolerant gate in the private ops workflow instead of relying on an exact GitHub `schedule` minute match; the copy-ready weekly scheduler template already follows that model
