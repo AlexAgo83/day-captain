@@ -1,9 +1,9 @@
 ## item_037_day_captain_digest_weather_capsule_rendering_and_copy - Render the weather capsule before En bref
 > From version: 1.3.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_024_day_captain_digest_daily_weather_capsule`
-- Primary task(s): `task_029_day_captain_digest_weather_capsule_orchestration` (`Ready`)
+- Primary task(s): `task_029_day_captain_digest_weather_capsule_orchestration` (`Done`)
 
 # Priority
 - Impact: High - this is the visible user-facing outcome of the weather slice.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from `req_024_day_captain_digest_daily_weather_capsule`.
 - The warmer/cooler comparison should stay intentionally simple rather than pretending to be precise planning intelligence.
+- Completed with a compact capsule rendered before `En bref`, using deterministic copy and a bounded warmer/cooler-than-yesterday signal.
