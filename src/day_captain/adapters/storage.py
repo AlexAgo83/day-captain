@@ -781,7 +781,12 @@ class SQLiteStorage:
             return None
         return self._row_to_run(row)
 
-    def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+    def get_latest_completed_run(
+        self,
+        tenant_id: str = "",
+        user_id: str = "",
+        run_type: str = "",
+    ) -> Optional[DigestRunRecord]:
         params = []
         where_clauses = ["status = 'completed'"]
         if tenant_id:
@@ -792,6 +797,9 @@ class SQLiteStorage:
             _, scoped_user_id = self._scope("", user_id)
             where_clauses.append("user_id = ?")
             params.append(scoped_user_id)
+        if run_type:
+            where_clauses.append("run_type = ?")
+            params.append(run_type)
         with self._connect() as connection:
             row = connection.execute(
                 """
@@ -1697,7 +1705,12 @@ class PostgresStorage:
             return None
         return self._row_to_run(row)
 
-    def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+    def get_latest_completed_run(
+        self,
+        tenant_id: str = "",
+        user_id: str = "",
+        run_type: str = "",
+    ) -> Optional[DigestRunRecord]:
         params = []
         where_clauses = ["status = 'completed'"]
         if tenant_id:
@@ -1708,6 +1721,9 @@ class PostgresStorage:
             _, scoped_user_id = self._scope("", user_id)
             where_clauses.append("user_id = %s")
             params.append(scoped_user_id)
+        if run_type:
+            where_clauses.append("run_type = %s")
+            params.append(run_type)
         with self._connect() as connection:
             row = connection.execute(
                 """

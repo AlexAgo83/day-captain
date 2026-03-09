@@ -112,7 +112,12 @@ class Storage(Protocol):
     def get_latest_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
         ...
 
-    def get_latest_completed_run(self, tenant_id: str = "", user_id: str = "") -> Optional[DigestRunRecord]:
+    def get_latest_completed_run(
+        self,
+        tenant_id: str = "",
+        user_id: str = "",
+        run_type: str = "",
+    ) -> Optional[DigestRunRecord]:
         ...
 
     def get_latest_completed_run_for_day(

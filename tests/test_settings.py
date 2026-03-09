@@ -243,10 +243,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(summary["selected_target_user"], "alice@example.com")
         self.assertEqual(summary["configured_sender_user"], "")
         self.assertEqual(summary["email_command_allowed_senders"], ())
-        self.assertEqual(
-            summary["email_command_sender_routes"],
-            {"alice@example.com": "alice@example.com", "bob@example.com": "bob@example.com"},
-        )
+        self.assertEqual(summary["email_command_sender_routes"], {})
         self.assertFalse(summary["weather_enabled"])
         self.assertEqual(summary["weather_location_name"], "")
 

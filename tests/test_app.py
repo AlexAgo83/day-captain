@@ -874,6 +874,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
                 graph_send_enabled=True,
                 graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
                 target_users=("alice@example.com",),
+                email_command_allowed_senders=("alice@example.com",),
             ),
             storage=InMemoryStorage(),
             auth_provider=StubAuthProvider(),
@@ -920,6 +921,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
                 graph_send_enabled=True,
                 graph_scopes=("User.Read", "Mail.Read", "Mail.Send"),
                 target_users=("alice@example.com",),
+                email_command_allowed_senders=("alice@example.com",),
             ),
             storage=InMemoryStorage(),
             auth_provider=StubAuthProvider(),
@@ -964,7 +966,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(result.target_user_id, "alice@example.com")
 
-    def test_email_command_recall_allows_multi_user_self_sender_match(self) -> None:
+    def test_email_command_recall_requires_explicit_enablement(self) -> None:
         now = datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc)
         delivery = mock.Mock()
         app = build_application(
@@ -980,14 +982,15 @@ class DayCaptainApplicationTest(unittest.TestCase):
             calendar_collector=StaticCalendarCollector(()),
         )
 
-        result = app.process_email_command_recall(
-            command_message_id="cmd-multi-self",
-            sender_address="bob@example.com",
-            subject="recall-week",
-            now=now,
-        )
+        with self.assertRaisesRegex(ValueError, "not allowed"):
+            app.process_email_command_recall(
+                command_message_id="cmd-multi-self",
+                sender_address="bob@example.com",
+                subject="recall-week",
+                now=now,
+            )
 
-        self.assertEqual(result.target_user_id, "bob@example.com")
+        delivery.deliver_digest.assert_not_called()
 
     def test_email_command_recall_allows_multi_user_helper_mapping(self) -> None:
         now = datetime(2026, 3, 11, 10, 0, tzinfo=timezone.utc)
@@ -1014,6 +1017,42 @@ class DayCaptainApplicationTest(unittest.TestCase):
         )
 
         self.assertEqual(result.target_user_id, "bob@example.com")
+
+    def test_morning_digest_ignores_weekly_run_when_resuming_cursor(self) -> None:
+        friday = datetime(2026, 3, 6, 8, 0, tzinfo=timezone.utc)
+        sunday = datetime(2026, 3, 8, 19, 30, tzinfo=timezone.utc)
+        monday = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        friday_run = app.run_morning_digest(now=friday, force=True)
+        app.run_weekly_digest(now=sunday)
+        monday_run = app.run_morning_digest(now=monday)
+
+        self.assertEqual(monday_run.window_start, friday_run.window_end + timedelta(microseconds=1))
+
+    def test_monday_morning_without_prior_morning_run_keeps_friday_backlog_after_weekly(self) -> None:
+        sunday = datetime(2026, 3, 8, 19, 30, tzinfo=timezone.utc)
+        monday = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=storage,
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        app.run_weekly_digest(now=sunday)
+        monday_run = app.run_morning_digest(now=monday)
+
+        self.assertEqual(monday_run.window_start, datetime(2026, 3, 5, 23, 0, tzinfo=timezone.utc))
 
 
 if __name__ == "__main__":

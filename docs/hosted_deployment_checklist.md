@@ -11,7 +11,8 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Set `DAY_CAPTAIN_TARGET_USERS` to the explicit mailbox list served by this deployment.
 - If delivery should come from a shared mailbox such as `daycaptain@...`, set `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` to that mailbox identifier.
 - If inbound email-command recall is enabled, require `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` plus `DAY_CAPTAIN_GRAPH_SEND_ENABLED=true`.
-- In a single-target deployment, `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` may contain bare helper senders such as `assistant@example.com`.
+- If `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` is empty, treat inbound email-command recall as disabled.
+- In a single-target deployment, `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` must explicitly list allowed senders such as `alice@example.com` or `assistant@example.com`.
 - In a multi-user deployment, any helper sender in `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` must use explicit `sender=target` mappings such as `assistant@example.com=alice@example.com`.
 - Treat `DAY_CAPTAIN_GRAPH_USER_ID` only as the single-user fallback/default target, not the primary multi-user hosted model.
 - Do not commit `.env`, token caches, database files, or mailbox-derived fixtures.
