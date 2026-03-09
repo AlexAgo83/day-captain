@@ -3,6 +3,7 @@
 from datetime import date
 from datetime import datetime
 import json
+import logging
 from typing import Callable
 from typing import Iterable
 from typing import Optional
@@ -15,6 +16,7 @@ from day_captain.models import to_jsonable
 
 JsonDict = dict
 StartResponse = Callable[[str, Iterable[tuple]], None]
+logger = logging.getLogger(__name__)
 
 
 def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -27,6 +29,22 @@ def _parse_date(value: Optional[str]) -> Optional[date]:
     if not value:
         return None
     return date.fromisoformat(value)
+
+
+def _parse_bool(value, *, field_name: str) -> bool:
+    if isinstance(value, bool):
+        return value
+    if value is None:
+        return False
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        candidate = value.strip().lower()
+        if candidate in {"", "0", "false", "no", "off"}:
+            return False
+        if candidate in {"1", "true", "yes", "on"}:
+            return True
+    raise ValueError(f"{field_name} must be a boolean value.")
 
 
 class DayCaptainWebApp:
@@ -51,7 +69,7 @@ class DayCaptainWebApp:
                 result = app.run_morning_digest(
                     now=_parse_datetime(payload.get("now")),
                     delivery_mode=payload.get("delivery_mode"),
-                    force=bool(payload.get("force", False)),
+                    force=_parse_bool(payload.get("force", False), field_name="force"),
                     target_user_id=payload.get("target_user_id"),
                 )
                 return self._json_response(start_response, 200, self._job_ack("morning_digest", result))
@@ -98,6 +116,7 @@ class DayCaptainWebApp:
         except ValueError as exc:
             return self._json_response(start_response, 400, {"error": str(exc)})
         except Exception as exc:  # pragma: no cover - defensive fallback
+            logger.exception("Unhandled Day Captain web error for %s %s", method, path)
             return self._json_response(start_response, 500, {"error": "internal_error"})
 
     def _require_secret(self, environ) -> None:

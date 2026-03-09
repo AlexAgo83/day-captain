@@ -1,9 +1,9 @@
 ## task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration - Orchestrate preview safety, hosted input hardening, and web observability fixes
 > From version: 1.4.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Implement and document a preview-safe rendering path that does not send mail.
-- [ ] 2. Harden hosted boolean input parsing for job payloads such as `force`.
-- [ ] 3. Add bounded web runtime error logging and align docs with the corrected contracts.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Implement and document a preview-safe rendering path that does not send mail.
+- [x] 2. Harden hosted boolean input parsing for job payloads such as `force`.
+- [x] 3. Add bounded web runtime error logging and align docs with the corrected contracts.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req028 AC1 -> Plan step 1. Proof: task explicitly creates a no-send preview path.
@@ -44,13 +44,14 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] A preview-safe render path exists and does not trigger Graph send.
-- [ ] Hosted boolean inputs such as `force` are parsed deterministically.
-- [ ] Unexpected web runtime failures emit actionable logs while keeping bounded HTTP responses.
-- [ ] Tests and docs match the implemented preview/runtime contracts.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] A preview-safe render path exists and does not trigger Graph send.
+- [x] Hosted boolean inputs such as `force` are parsed deterministically.
+- [x] Unexpected web runtime failures emit actionable logs while keeping bounded HTTP responses.
+- [x] Tests and docs match the implemented preview/runtime contracts.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 9, 2026 from review findings on preview safety, hosted input parsing, and runtime observability.
 - This task is intentionally a bounded reliability follow-up rather than a product-surface expansion.
+- Closed on Monday, March 9, 2026 after shipping the `--preview` no-send path, deterministic hosted boolean parsing, bounded web 500 logging, and aligned docs/tests.

@@ -1,9 +1,9 @@
 ## item_048_day_captain_preview_safe_rendering_contract - Introduce a true preview-safe rendering path without unintended Graph send
 > From version: 1.4.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_028_day_captain_preview_safety_and_web_runtime_observability`
-- Primary task(s): `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` (`Ready`)
+- Primary task(s): `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` (`Done`)
 
 # Priority
 - Impact: High - a preview path that can still send mail is an operator safety problem.
@@ -50,3 +50,4 @@ flowchart LR
 # Notes
 - Derived from `req_028_day_captain_preview_safety_and_web_runtime_observability`.
 - Preferred outcome: preview safety is explicit and impossible to confuse with normal delivery behavior.
+- Closed on Monday, March 9, 2026 after introducing an explicit `--preview` path that renders/export digests without triggering Graph send, and updating local preview docs accordingly.

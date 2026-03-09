@@ -157,6 +157,38 @@ class DayCaptainWebAppTest(unittest.TestCase):
         self.assertEqual(response["json"]["section_counts"]["watch_items"], 0)
         self.assertNotIn("delivery_body", response["json"])
 
+    def test_morning_digest_parses_string_false_force_as_false(self) -> None:
+        settings = DayCaptainSettings(job_secret="secret")
+        fake_app = FakeHostedApp()
+        app = create_web_app(settings)
+
+        with mock.patch("day_captain.web.build_application", return_value=fake_app):
+            response = self._request(
+                app,
+                "POST",
+                "/jobs/morning-digest",
+                payload={"force": "false"},
+            )
+
+        self.assertEqual(response["status"], "200 OK")
+        self.assertFalse(fake_app.calls[0][3])
+
+    def test_morning_digest_rejects_invalid_force_value(self) -> None:
+        settings = DayCaptainSettings(job_secret="secret")
+        fake_app = FakeHostedApp()
+        app = create_web_app(settings)
+
+        with mock.patch("day_captain.web.build_application", return_value=fake_app):
+            response = self._request(
+                app,
+                "POST",
+                "/jobs/morning-digest",
+                payload={"force": "maybe"},
+            )
+
+        self.assertEqual(response["status"], "400 Bad Request")
+        self.assertIn("force must be a boolean value", response["json"]["error"])
+
     def test_weekly_digest_executes_hosted_app(self) -> None:
         settings = DayCaptainSettings(job_secret="secret")
         fake_app = FakeHostedApp()
@@ -189,11 +221,14 @@ class DayCaptainWebAppTest(unittest.TestCase):
         settings = DayCaptainSettings(job_secret="secret")
         app = create_web_app(settings)
 
-        with mock.patch("day_captain.web.build_application", side_effect=RuntimeError("db password leaked")):
+        with mock.patch("day_captain.web.build_application", side_effect=RuntimeError("db password leaked")), mock.patch(
+            "day_captain.web.logger"
+        ) as logger:
             response = self._request(app, "POST", "/jobs/morning-digest", payload={})
 
         self.assertEqual(response["status"], "500 Internal Server Error")
         self.assertEqual(response["json"]["error"], "internal_error")
+        logger.exception.assert_called_once()
 
     def test_email_command_recall_executes_hosted_app(self) -> None:
         settings = DayCaptainSettings(job_secret="secret")

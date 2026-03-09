@@ -10,6 +10,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.cli import _export_digest_preview
+from day_captain.cli import _resolved_delivery_mode
 from day_captain.cli import _run_trigger_hosted_job_command
 from day_captain.cli import _run_check_hosted_health_command
 from day_captain.cli import _run_validate_command
@@ -280,6 +281,7 @@ class ValidateConfigCommandTest(unittest.TestCase):
             [
                 "morning-digest",
                 "--force",
+                "--preview",
                 "--output-html",
                 "tmp/preview.html",
                 "--output-text",
@@ -288,8 +290,23 @@ class ValidateConfigCommandTest(unittest.TestCase):
         )
 
         self.assertEqual(args.command, "morning-digest")
+        self.assertTrue(args.preview)
         self.assertEqual(args.output_html, "tmp/preview.html")
         self.assertEqual(args.output_text, "tmp/preview.txt")
+
+    def test_preview_mode_forces_json_delivery(self) -> None:
+        args = type("Args", (), {"preview": True})()
+
+        resolved = _resolved_delivery_mode(args, explicit_delivery_mode="graph_send")
+
+        self.assertEqual(resolved, "json")
+
+    def test_non_preview_mode_preserves_explicit_delivery(self) -> None:
+        args = type("Args", (), {"preview": False})()
+
+        resolved = _resolved_delivery_mode(args, explicit_delivery_mode="graph_send")
+
+        self.assertEqual(resolved, "graph_send")
 
     def test_parser_accepts_preview_export_flags_on_recall_digest(self) -> None:
         parser = build_parser()
@@ -307,6 +324,23 @@ class ValidateConfigCommandTest(unittest.TestCase):
         self.assertEqual(args.command, "recall-digest")
         self.assertEqual(args.target_user, "alice@example.com")
         self.assertEqual(args.output_html, "tmp/recall.html")
+
+    def test_parser_accepts_preview_on_email_command_recall(self) -> None:
+        parser = build_parser()
+
+        args = parser.parse_args(
+            [
+                "email-command-recall",
+                "--message-id",
+                "inbound-1",
+                "--sender-address",
+                "alice@example.com",
+                "--preview",
+            ]
+        )
+
+        self.assertEqual(args.command, "email-command-recall")
+        self.assertTrue(args.preview)
 
 
 if __name__ == "__main__":
