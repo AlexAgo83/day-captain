@@ -59,7 +59,8 @@ Current operating model:
 - local runs still default to one mailbox at a time
 - the roadmap now explicitly targets one company tenant with multiple users, each receiving a separate digest
 - tenant-scoped storage and explicit per-user execution are implemented for operator-managed multi-user hosting
-- the remaining Logics work is now mainly hosted validation and operational proof for that model
+- the remaining Logics work is now mainly production hardening and hosted operational proof for that model
+- the current open hardening track includes hosted Graph trust-boundary enforcement and shared-secret validation tightening
 
 ## Repository layout
 
