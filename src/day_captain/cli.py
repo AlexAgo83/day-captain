@@ -52,6 +52,7 @@ def build_parser() -> argparse.ArgumentParser:
     morning.add_argument("--now", help="ISO datetime override for the run clock.")
     morning.add_argument("--delivery-mode", help="Override the configured delivery mode.")
     morning.add_argument("--force", action="store_true", help="Ignore the last successful run window.")
+    morning.add_argument("--preview", action="store_true", help="Render/export locally without sending mail.")
     morning.add_argument("--target-user", help="Configured mailbox/user to run.")
     morning.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
     morning.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
@@ -59,6 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
     weekly = subparsers.add_parser("weekly-digest", help="Run the weekly digest flow.")
     weekly.add_argument("--now", help="ISO datetime override for the run clock.")
     weekly.add_argument("--delivery-mode", help="Override the configured delivery mode.")
+    weekly.add_argument("--preview", action="store_true", help="Render/export locally without sending mail.")
     weekly.add_argument("--target-user", help="Configured mailbox/user to run.")
     weekly.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
     weekly.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
@@ -70,6 +72,7 @@ def build_parser() -> argparse.ArgumentParser:
     recall = subparsers.add_parser("recall-digest", help="Recall the latest completed digest.")
     recall.add_argument("--run-id", help="Specific digest run identifier.")
     recall.add_argument("--day", help="ISO date used to find the latest run for a day.")
+    recall.add_argument("--preview", action="store_true", help="Render/export locally without sending mail.")
     recall.add_argument("--target-user", help="Configured mailbox/user to recall.")
     recall.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
     recall.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
@@ -84,6 +87,7 @@ def build_parser() -> argparse.ArgumentParser:
     email_command.add_argument("--subject", help="Inbound email subject used for command parsing.")
     email_command.add_argument("--body", help="Inbound email body used for command parsing.")
     email_command.add_argument("--now", help="Optional ISO datetime override.")
+    email_command.add_argument("--preview", action="store_true", help="Render/export locally without sending mail.")
     email_command.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
     email_command.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
 
@@ -407,6 +411,19 @@ def _export_digest_preview(args: argparse.Namespace, result: object) -> None:
         target.write_text(delivery_body, encoding="utf-8")
 
 
+def _resolved_delivery_mode(
+    args: argparse.Namespace,
+    *,
+    explicit_delivery_mode: Optional[str] = None,
+) -> Optional[str]:
+    if bool(getattr(args, "preview", False)):
+        return "json"
+    if explicit_delivery_mode is None:
+        return None
+    candidate = str(explicit_delivery_mode or "").strip()
+    return candidate or None
+
+
 def main(argv: Optional[list] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -441,14 +458,14 @@ def main(argv: Optional[list] = None) -> int:
     if args.command == "morning-digest":
         result = app.run_morning_digest(
             now=_parse_datetime(args.now),
-            delivery_mode=args.delivery_mode,
+            delivery_mode=_resolved_delivery_mode(args, explicit_delivery_mode=args.delivery_mode),
             force=args.force,
             target_user_id=args.target_user,
         )
     elif args.command == "weekly-digest":
         result = app.run_weekly_digest(
             now=_parse_datetime(args.now),
-            delivery_mode=args.delivery_mode,
+            delivery_mode=_resolved_delivery_mode(args, explicit_delivery_mode=args.delivery_mode),
             target_user_id=args.target_user,
         )
     elif args.command == "recall-digest":
@@ -465,6 +482,7 @@ def main(argv: Optional[list] = None) -> int:
             subject=args.subject or "",
             body=args.body or "",
             now=_parse_datetime(args.now),
+            delivery_mode=_resolved_delivery_mode(args, explicit_delivery_mode="graph_send"),
         )
     else:
         result = app.record_feedback(

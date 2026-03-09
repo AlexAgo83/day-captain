@@ -41,10 +41,11 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 ## HTTP surface
 - Expose only the minimal hosted endpoints:
   - `GET /healthz`
-  - `POST /jobs/morning-digest`
-  - `POST /jobs/weekly-digest`
-  - `POST /jobs/recall-digest`
-  - `POST /jobs/email-command-recall`
+- `POST /jobs/morning-digest`
+- `POST /jobs/weekly-digest`
+- `POST /jobs/recall-digest`
+- `POST /jobs/email-command-recall`
+- Use real JSON booleans such as `"force": true` or `"force": false`; do not send quoted boolean strings.
 - Require `X-Day-Captain-Secret` on job endpoints.
 - Verify `GET /healthz` returns only `{"status":"ok"}` for unauthenticated probes and includes runtime summary metadata only when `X-Day-Captain-Secret` is supplied.
 - Verify successful job responses contain only acknowledgement metadata and section counts.

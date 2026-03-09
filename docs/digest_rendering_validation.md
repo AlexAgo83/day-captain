@@ -21,10 +21,15 @@ set -a
 source .env
 set +a
 PYTHONPATH=src python3 -m day_captain morning-digest \
+  --preview \
   --force \
   --output-html tmp/day-captain-preview.html \
   --output-text tmp/day-captain-preview.txt
 ```
+
+Important:
+- `--preview` is the no-send lever for local rendering
+- `--output-html` and `--output-text` only control file export and do not suppress delivery by themselves
 
 You can use the same `--output-html` and `--output-text` flags on:
 - `weekly-digest`
@@ -44,7 +49,7 @@ On Sunday, March 8, 2026, this repository was validated locally with:
 
 ```bash
 python3 -m day_captain validate-config
-python3 -m day_captain morning-digest --force \
+python3 -m day_captain morning-digest --preview --force \
   --output-html tmp/day-captain-preview.html \
   --output-text tmp/day-captain-preview.txt
 ```

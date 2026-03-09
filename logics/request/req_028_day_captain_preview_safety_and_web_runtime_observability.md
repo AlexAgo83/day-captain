@@ -1,8 +1,8 @@
 ## req_028_day_captain_preview_safety_and_web_runtime_observability - Day Captain preview safety and web runtime observability
 > From version: 1.4.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
+> Status: Done
+> Understanding: 100%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -60,11 +60,12 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_048_day_captain_preview_safe_rendering_contract` - Introduce a true preview-safe rendering path without unintended Graph send. Status: `Ready`.
-- `item_049_day_captain_hosted_http_boolean_input_hardening` - Parse hosted HTTP boolean inputs deterministically instead of relying on Python truthiness. Status: `Ready`.
-- `item_050_day_captain_web_runtime_error_logging_and_docs_alignment` - Add bounded web runtime error logging and align operator docs with the new preview/runtime contract. Status: `Ready`.
-- `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` - Orchestrate preview safety, hosted input hardening, and web observability fixes. Status: `Ready`.
+- `item_048_day_captain_preview_safe_rendering_contract` - Introduce a true preview-safe rendering path without unintended Graph send. Status: `Done`.
+- `item_049_day_captain_hosted_http_boolean_input_hardening` - Parse hosted HTTP boolean inputs deterministically instead of relying on Python truthiness. Status: `Done`.
+- `item_050_day_captain_web_runtime_error_logging_and_docs_alignment` - Add bounded web runtime error logging and align operator docs with the new preview/runtime contract. Status: `Done`.
+- `task_033_day_captain_preview_safety_and_web_runtime_observability_orchestration` - Orchestrate preview safety, hosted input hardening, and web observability fixes. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 from a project review covering preview safety, hosted payload parsing, and runtime observability.
 - This request is intentionally focused on operator safety and production diagnosability rather than new end-user features.
+- Closed on Monday, March 9, 2026 after adding an explicit no-send preview path, deterministic hosted boolean parsing, bounded web error logging, and aligned docs/tests.
