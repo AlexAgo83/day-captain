@@ -1,8 +1,8 @@
 ## req_029_day_captain_hosted_graph_boundary_and_job_secret_hardening - Day Captain hosted Graph boundary and job secret hardening
 > From version: 1.4.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
-> Confidence: 95%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Security
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -68,11 +68,12 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_051_day_captain_graph_nextlink_trust_boundary_enforcement` - Prevent Graph pagination from forwarding bearer tokens to unexpected absolute hosts. Status: `Ready`.
-- `item_052_day_captain_hosted_job_secret_constant_time_validation` - Harden hosted `X-Day-Captain-Secret` validation with a constant-time comparison primitive. Status: `Ready`.
-- `item_053_day_captain_hosted_security_docs_and_validation_alignment` - Align operator docs and tests with the new hosted Graph boundary and secret-hardening contract. Status: `Ready`.
-- `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` - Orchestrate hosted Graph trust-boundary enforcement, job-secret hardening, and validation closure. Status: `Ready`.
+- `item_051_day_captain_graph_nextlink_trust_boundary_enforcement` - Prevent Graph pagination from forwarding bearer tokens to unexpected absolute hosts. Status: `Done`.
+- `item_052_day_captain_hosted_job_secret_constant_time_validation` - Harden hosted `X-Day-Captain-Secret` validation with a constant-time comparison primitive. Status: `Done`.
+- `item_053_day_captain_hosted_security_docs_and_validation_alignment` - Align operator docs and tests with the new hosted Graph boundary and secret-hardening contract. Status: `Done`.
+- `task_034_day_captain_hosted_graph_boundary_and_job_secret_hardening_orchestration` - Orchestrate hosted Graph trust-boundary enforcement, job-secret hardening, and validation closure. Status: `Done`.
 
 # Notes
 - Created on Monday, March 9, 2026 from a production-priority security review.
 - This request intentionally excludes local delegated token cache encryption because the immediate priority is the hosted runtime boundary.
+- Closed on Monday, March 9, 2026 after enforcing same-origin Graph pagination, switching hosted secret checks to a constant-time comparison, and aligning docs/tests with the hardened production contract.

@@ -170,6 +170,7 @@ Important hosted note:
 - `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS` can allow a bounded helper sender set for inbound email-command recall; in single-target setups bare senders still work, while multi-user setups must use explicit `sender=target` mappings
 - `DAY_CAPTAIN_GRAPH_USER_ID` remains supported as a single-user fallback and default target
 - hosted Graph auth now supports an explicit `DAY_CAPTAIN_GRAPH_AUTH_MODE=app_only` path for unattended environments
+- absolute Graph pagination links are trusted only when they stay on the same origin as `DAY_CAPTAIN_GRAPH_BASE_URL`; unexpected hosts fail boundedly instead of receiving the bearer token
 - weather is optional and enabled only when both `DAY_CAPTAIN_WEATHER_LATITUDE` and `DAY_CAPTAIN_WEATHER_LONGITUDE` are configured; `DAY_CAPTAIN_WEATHER_LOCATION_NAME` controls the capsule label shown in the digest
 
 Important:
@@ -548,6 +549,7 @@ Expected hosted secrets/config include:
 - optional `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
 
 When `X-Day-Captain-Secret` is supplied to `GET /healthz`, the service also returns a runtime summary with the resolved auth mode, storage backend, target-user count, and delivery configuration. This is intended for private ops validation, not public monitoring.
+The hosted API contract still uses the same `X-Day-Captain-Secret` header over TLS; recent hardening only tightens server-side comparison and Graph pagination trust boundaries without changing the operator-facing request shape.
 
 ## GitHub Actions
 
