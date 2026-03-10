@@ -234,6 +234,47 @@ class AuthFlowTest(unittest.TestCase):
             self.assertEqual(context.access_token, "cached-access")
             self.assertEqual(context.granted_scopes, ("Mail.Read",))
 
+    def test_graph_provider_rejects_expired_cached_token_without_refresh(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache = FileTokenCache(str(Path(tmpdir) / "auth.json"))
+            cache.save(
+                AuthTokenBundle(
+                    access_token="expired-access",
+                    refresh_token="",
+                    expires_at=datetime.now(timezone.utc) - timedelta(minutes=5),
+                    scopes=("Mail.Read",),
+                    user_id="user-123",
+                )
+            )
+            provider = GraphDelegatedAuthProvider(
+                api_client=StaticApiClient(),
+                token_cache=cache,
+            )
+
+            with self.assertRaisesRegex(ValueError, "expired"):
+                provider.authenticate(("Mail.Read",))
+
+    def test_graph_provider_accepts_case_only_target_user_difference(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache = FileTokenCache(str(Path(tmpdir) / "auth.json"))
+            cache.save(
+                AuthTokenBundle(
+                    access_token="cached-access",
+                    refresh_token="",
+                    expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+                    scopes=("Mail.Read",),
+                    user_id="Alice@example.com",
+                )
+            )
+            provider = GraphDelegatedAuthProvider(
+                api_client=StaticApiClient(),
+                token_cache=cache,
+            )
+
+            context = provider.authenticate(("Mail.Read",), target_user_id="alice@example.com")
+
+            self.assertEqual(context.user_id, "alice@example.com")
+
     def test_auth_status_and_logout_commands_use_cache(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_path = str(Path(tmpdir) / "auth.json")

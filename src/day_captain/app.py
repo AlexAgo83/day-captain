@@ -574,11 +574,9 @@ class DayCaptainApplication:
         return str(tenant_id or self.settings.resolved_tenant_scope()).strip()
 
     def _resolve_target_user_id(self, target_user_id: Optional[str]) -> str:
-        requested_user_id = str(target_user_id or "").strip()
+        requested_user_id = self.settings.resolve_target_user(str(target_user_id or ""))
         configured_users = self.settings.resolved_target_users()
         if requested_user_id:
-            if configured_users and requested_user_id not in configured_users:
-                raise ValueError("target_user_id must be one of DAY_CAPTAIN_TARGET_USERS.")
             return requested_user_id
         if len(configured_users) > 1:
             raise ValueError("Multiple target users are configured. Provide target_user_id explicitly.")
@@ -595,7 +593,7 @@ class DayCaptainApplication:
         action_name: str,
     ) -> DigestRunRecord:
         scoped_tenant_id = self._resolve_tenant_id(tenant_id)
-        requested_user_id = str(target_user_id or "").strip()
+        requested_user_id = self.settings.resolve_target_user(str(target_user_id or ""))
         configured_users = self.settings.resolved_target_users()
         default_user_id = self.settings.resolved_default_target_user()
         if requested_user_id or configured_users or default_user_id:
@@ -1025,6 +1023,8 @@ def build_application(
     weather_provider: Optional[WeatherProvider] = None,
 ) -> DayCaptainApplication:
     resolved_settings = settings or DayCaptainSettings.from_env()
+    if resolved_settings.is_hosted_environment():
+        resolved_settings.validate_hosted()
     resolved_database_url = resolved_settings.resolved_database_url()
     resolved_graph_auth_mode = resolved_settings.resolved_graph_auth_mode()
     graph_client = GraphApiClient(

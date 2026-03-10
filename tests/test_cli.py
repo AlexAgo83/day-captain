@@ -15,6 +15,7 @@ from day_captain.cli import _run_trigger_hosted_job_command
 from day_captain.cli import _run_check_hosted_health_command
 from day_captain.cli import _run_validate_command
 from day_captain.cli import _run_validate_hosted_service_command
+from day_captain.cli import _parse_datetime
 from day_captain.cli import build_parser
 from day_captain.config import DayCaptainSettings
 from day_captain.models import DigestPayload
@@ -26,6 +27,7 @@ class ValidateConfigCommandTest(unittest.TestCase):
         settings = DayCaptainSettings(
             environment="production",
             job_secret="secret",
+            database_url="postgresql://db.example/day_captain",
             delivery_mode="graph_send",
             graph_send_enabled=True,
             graph_auth_mode="app_only",
@@ -43,6 +45,7 @@ class ValidateConfigCommandTest(unittest.TestCase):
         settings = DayCaptainSettings(
             environment="production",
             job_secret="secret",
+            database_url="postgresql://db.example/day_captain",
             delivery_mode="graph_send",
             graph_send_enabled=True,
             graph_auth_mode="app_only",
@@ -225,6 +228,11 @@ class ValidateConfigCommandTest(unittest.TestCase):
 
         validate_hosted.assert_called_once()
         self.assertEqual(result["status"], "ok")
+
+    def test_cli_parse_datetime_accepts_z_suffix(self) -> None:
+        parsed = _parse_datetime("2026-03-10T08:00:00Z")
+
+        self.assertEqual(parsed, datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc))
 
     def test_export_digest_preview_writes_html_and_text_files(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

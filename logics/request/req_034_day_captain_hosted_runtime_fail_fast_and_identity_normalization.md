@@ -1,8 +1,8 @@
 ## req_034_day_captain_hosted_runtime_fail_fast_and_identity_normalization - Day Captain hosted runtime fail-fast, durable execution, and identity normalization
 > From version: 1.5.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -78,6 +78,7 @@ flowchart TD
 - Created on Tuesday, March 10, 2026 from a project-wide review focused on runtime trust, operational safety, and cross-entrypoint consistency.
 - This request is intentionally reliability-oriented: the goal is to make failures explicit, configuration safer, and behavior consistent across hosted, CLI, and multi-user paths.
 - The expected implementation slice should stay bounded and pragmatic: tighten contracts, remove misleading fallback behavior, normalize identity parsing, and add regression coverage rather than redesigning the product surface.
+- Completed on Tuesday, March 10, 2026 after shipping hosted fail-fast validation, durable hosted-storage enforcement, explicit delegated-auth expiry failures, case-normalized target-user handling, and shared `Z`-safe datetime parsing across CLI and web entrypoints.
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.
@@ -86,7 +87,7 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_069_day_captain_hosted_fail_fast_and_durable_runtime_contract` - Make hosted runtime fail fast and tighten durable execution prerequisites. Status: `Ready`.
-- `item_070_day_captain_delegated_token_freshness_and_explicit_auth_failures` - Prevent expired delegated token reuse and keep auth failures explicit. Status: `Ready`.
-- `item_071_day_captain_target_user_normalization_and_entrypoint_datetime_alignment` - Normalize target-user identity and align datetime parsing across entrypoints. Status: `Ready`.
-- `task_039_day_captain_hosted_runtime_reliability_and_normalization_orchestration` - Orchestrate hosted runtime fail-fast behavior, auth freshness, identity normalization, and parser alignment. Status: `Ready`.
+- `item_069_day_captain_hosted_fail_fast_and_durable_runtime_contract` - Make hosted runtime fail fast and tighten durable execution prerequisites. Status: `Done`.
+- `item_070_day_captain_delegated_token_freshness_and_explicit_auth_failures` - Prevent expired delegated token reuse and keep auth failures explicit. Status: `Done`.
+- `item_071_day_captain_target_user_normalization_and_entrypoint_datetime_alignment` - Normalize target-user identity and align datetime parsing across entrypoints. Status: `Done`.
+- `task_039_day_captain_hosted_runtime_reliability_and_normalization_orchestration` - Orchestrate hosted runtime fail-fast behavior, auth freshness, identity normalization, and parser alignment. Status: `Done`.

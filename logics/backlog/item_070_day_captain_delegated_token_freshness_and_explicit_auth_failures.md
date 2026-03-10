@@ -1,9 +1,9 @@
 ## item_070_day_captain_delegated_token_freshness_and_explicit_auth_failures - Prevent expired delegated token reuse and keep auth failures explicit
 > From version: 1.5.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -40,3 +40,4 @@
 
 # Notes
 - Derived from the project review of delegated auth error handling and cache freshness.
+- Closed on Tuesday, March 10, 2026 after preventing expired delegated-token reuse without refresh and surfacing explicit re-authentication/configuration failures for stale hosted auth state.

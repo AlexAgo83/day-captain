@@ -596,6 +596,16 @@ class DayCaptainApplicationTest(unittest.TestCase):
         )
         fake_cache.save.assert_called_once()
 
+    def test_build_application_rejects_hosted_runtime_without_durable_database(self) -> None:
+        settings = DayCaptainSettings(
+            environment="production",
+            job_secret="secret",
+            graph_client_id="client-id",
+        )
+
+        with self.assertRaisesRegex(ValueError, "DAY_CAPTAIN_DATABASE_URL is required"):
+            build_application(settings=settings)
+
     def test_build_application_selects_app_only_provider_when_configured(self) -> None:
         settings = DayCaptainSettings(
             environment="production",
@@ -632,6 +642,22 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             app.run_morning_digest(now=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc))
+
+    def test_morning_digest_normalizes_target_user_case(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(
+                target_users=("Alice@example.com",),
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now, target_user_id="ALICE@example.com")
+
+        self.assertEqual(payload.user_id, "alice@example.com")
 
     def test_morning_digest_is_isolated_per_target_user(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

@@ -11,6 +11,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.config import DayCaptainSettings
 from day_captain.models import DigestPayload
+from day_captain.web import _parse_datetime
 from day_captain.web import create_web_app
 
 
@@ -126,6 +127,8 @@ class DayCaptainWebAppTest(unittest.TestCase):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
+                graph_client_id="client-id",
             )
         )
 
@@ -281,3 +284,8 @@ class DayCaptainWebAppTest(unittest.TestCase):
 
         self.assertEqual(response["status"], "400 Bad Request")
         self.assertIn("Multiple target users are configured", response["json"]["error"])
+
+    def test_web_parse_datetime_accepts_z_suffix(self) -> None:
+        parsed = _parse_datetime("2026-03-10T08:00:00Z")
+
+        self.assertEqual(parsed, datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc))

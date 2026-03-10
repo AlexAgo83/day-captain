@@ -197,14 +197,14 @@ class DayCaptainSettings:
 
     def resolved_target_users(self) -> Tuple[str, ...]:
         if self.target_users:
-            return tuple(dict.fromkeys(self.target_users))
+            return tuple(dict.fromkeys(_normalize_email(item) for item in self.target_users if _normalize_email(item)))
         if self.graph_user_id.strip():
-            return (self.graph_user_id.strip(),)
+            return (_normalize_email(self.graph_user_id),)
         return ()
 
     def resolved_default_target_user(self) -> str:
         if self.graph_user_id.strip():
-            return self.graph_user_id.strip()
+            return _normalize_email(self.graph_user_id)
         targets = self.resolved_target_users()
         if len(targets) == 1:
             return targets[0]
@@ -218,6 +218,14 @@ class DayCaptainSettings:
             raise ValueError("DAY_CAPTAIN_JOB_SECRET is required in hosted environments.")
         if not self.is_hosted_environment():
             return
+        if not self.resolved_database_url():
+            raise ValueError("DAY_CAPTAIN_DATABASE_URL is required in hosted environments for durable storage.")
+        if self.resolved_graph_auth_mode() == "delegated" and not (
+            self.graph_client_id or self.graph_access_token
+        ):
+            raise ValueError(
+                "Hosted delegated Graph execution requires DAY_CAPTAIN_GRAPH_CLIENT_ID or DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."
+            )
         if self.resolved_graph_auth_mode() == "app_only":
             if not self.graph_client_id:
                 raise ValueError("DAY_CAPTAIN_GRAPH_CLIENT_ID is required for hosted app-only auth.")
@@ -237,15 +245,22 @@ class DayCaptainSettings:
             self.resolved_email_command_sender_routes()
 
     def validate_target_user(self, target_user_id: str) -> None:
-        candidate = str(target_user_id or "").strip()
+        candidate = _normalize_email(target_user_id)
         if not candidate:
             return
         configured = self.resolved_target_users()
         if configured and candidate not in configured:
             raise ValueError("target_user_id must be one of DAY_CAPTAIN_TARGET_USERS.")
 
+    def resolve_target_user(self, target_user_id: str) -> str:
+        candidate = _normalize_email(target_user_id)
+        if not candidate:
+            return ""
+        self.validate_target_user(candidate)
+        return candidate
+
     def require_target_user_if_needed(self, target_user_id: str) -> None:
-        candidate = str(target_user_id or "").strip()
+        candidate = self.resolve_target_user(target_user_id)
         configured = self.resolved_target_users()
         if not candidate and len(configured) > 1:
             raise ValueError("Multiple target users are configured. Provide target_user_id explicitly.")
@@ -254,7 +269,7 @@ class DayCaptainSettings:
     def validation_summary(self, target_user_id: str = "") -> Mapping[str, object]:
         self.validate_hosted()
         self.validate_target_user(target_user_id)
-        resolved_target = str(target_user_id or "").strip()
+        resolved_target = self.resolve_target_user(target_user_id)
         resolved_targets = self.resolved_target_users()
         resolved_database_url = self.resolved_database_url()
         return {

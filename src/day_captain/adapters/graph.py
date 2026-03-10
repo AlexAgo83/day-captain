@@ -17,6 +17,7 @@ from urllib.parse import quote
 from urllib.parse import urlparse
 from zoneinfo import ZoneInfo
 
+from day_captain.adapters.auth import EntraAuthError
 from day_captain.adapters.auth import DeviceCodeAuthenticator
 from day_captain.adapters.auth import TokenCache
 from day_captain.models import AuthContext
@@ -27,6 +28,13 @@ from day_captain.models import parse_datetime
 
 class GraphApiError(RuntimeError):
     """Raised when Microsoft Graph returns an unexpected response."""
+
+
+def _normalize_identity(value: str) -> str:
+    candidate = str(value or "").strip()
+    if "@" in candidate:
+        return candidate.lower()
+    return candidate
 
 
 def _normalize_address_list(items: Iterable[Mapping[str, Any]]) -> Sequence[str]:
@@ -266,19 +274,30 @@ class GraphDelegatedAuthProvider:
         if not access_token and cached_bundle is not None:
             requested_scopes = {str(scope) for scope in scopes}
             cached_scopes = {str(scope) for scope in cached_bundle.scopes}
-            if cached_bundle.expires_at > datetime.now(timezone.utc) and requested_scopes.issubset(cached_scopes):
+            cached_is_fresh = cached_bundle.expires_at > datetime.now(timezone.utc)
+            if cached_is_fresh and requested_scopes.issubset(cached_scopes):
+                access_token = cached_bundle.access_token
+                active_bundle = cached_bundle
+            elif cached_is_fresh:
                 access_token = cached_bundle.access_token
                 active_bundle = cached_bundle
             elif self.authenticator is not None and cached_bundle.refresh_token:
-                refreshed = self.authenticator.refresh_tokens(cached_bundle.refresh_token, scopes)
+                try:
+                    refreshed = self.authenticator.refresh_tokens(cached_bundle.refresh_token, scopes)
+                except EntraAuthError as exc:
+                    raise ValueError(
+                        "Delegated Graph token refresh failed. Re-authenticate or repair the hosted auth configuration."
+                    ) from exc
                 if self.token_cache is not None:
                     self.token_cache.save(refreshed)
                 cached_bundle = refreshed
                 access_token = refreshed.access_token
                 active_bundle = refreshed
             else:
-                access_token = cached_bundle.access_token
-                active_bundle = cached_bundle
+                raise ValueError(
+                    "Cached delegated Graph access token has expired and no usable refresh path is configured. "
+                    "Re-authenticate or set DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."
+                )
         elif cached_bundle is not None:
             active_bundle = cached_bundle
         if not access_token:
@@ -286,10 +305,12 @@ class GraphDelegatedAuthProvider:
                 "No delegated Graph access token available. Run `day-captain auth login` or set DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."
             )
 
-        resolved_user_id = self.user_id or (cached_bundle.user_id if cached_bundle is not None else "")
+        resolved_user_id = _normalize_identity(self.user_id or (cached_bundle.user_id if cached_bundle is not None else ""))
         if not resolved_user_id:
             profile = self.api_client.get_object("/me", access_token=access_token)
-            resolved_user_id = str(profile.get("id") or profile.get("userPrincipalName") or "graph-user")
+            resolved_user_id = _normalize_identity(
+                str(profile.get("id") or profile.get("userPrincipalName") or "graph-user")
+            )
             if cached_bundle is not None and self.token_cache is not None:
                 refreshed_profile_bundle = type(cached_bundle)(
                     access_token=access_token,
@@ -301,9 +322,11 @@ class GraphDelegatedAuthProvider:
                 )
                 self.token_cache.save(refreshed_profile_bundle)
                 active_bundle = refreshed_profile_bundle
-        requested_user_id = str(target_user_id or "").strip()
+        requested_user_id = _normalize_identity(target_user_id)
         if requested_user_id and requested_user_id != resolved_user_id:
             raise ValueError("Delegated auth can only run for the authenticated user.")
+        if requested_user_id:
+            resolved_user_id = requested_user_id
         granted_scopes = tuple(active_bundle.scopes) if active_bundle is not None and active_bundle.scopes else tuple(scopes)
         return AuthContext(
             access_token=access_token,
