@@ -146,6 +146,7 @@ class ScoringEngine(Protocol):
         meetings: Sequence[MeetingRecord],
         preferences: Sequence[UserPreference],
         reference_time: Optional[datetime] = None,
+        window_start: Optional[datetime] = None,
     ) -> Sequence[DigestEntry]:
         ...
 

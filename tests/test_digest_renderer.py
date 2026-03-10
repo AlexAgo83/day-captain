@@ -114,6 +114,67 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Point equipe", payload.delivery_payload["html_body"])
         self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_payload["html_body"])
 
+    def test_orders_upcoming_meetings_chronologically(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-3-order",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Réunion de 11h",
+                    summary="Aujourd'hui, 11:00 | Lead | Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-11",
+                    score=4.0,
+                    sort_at=datetime(2026, 3, 10, 10, 0, tzinfo=timezone.utc),
+                ),
+                DigestEntry(
+                    title="Réunion de 10h",
+                    summary="Aujourd'hui, 10:00 | Lead | Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-10",
+                    score=2.0,
+                    sort_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                ),
+            ),
+        )
+
+        self.assertLess(payload.delivery_body.index("Réunion de 10h"), payload.delivery_body.index("Réunion de 11h"))
+
+    def test_renders_meeting_change_prefixes(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-3-status",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Equipe projet Hardware",
+                    summary="Annulé : Aujourd'hui, 10:30 | Engineering | Réunion Microsoft Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-cancelled",
+                    score=4.0,
+                    sort_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                    reason_codes=("meeting_cancelled",),
+                ),
+            ),
+        )
+
+        self.assertIn("Annulé : Equipe projet Hardware", payload.delivery_body)
+        self.assertIn("Annulé : Equipe projet Hardware", payload.delivery_payload["html_body"])
+
     def test_renders_item_open_controls_when_source_links_exist(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

@@ -389,6 +389,7 @@ class StubScoringEngine:
         meetings: Sequence[MeetingRecord],
         preferences: Sequence[UserPreference],
         reference_time: Optional[datetime] = None,
+        window_start: Optional[datetime] = None,
     ) -> Sequence[DigestEntry]:
         return DeterministicScoringEngine(
             digest_language=self.digest_language,
@@ -398,6 +399,7 @@ class StubScoringEngine:
             meetings,
             preferences,
             reference_time=reference_time,
+            window_start=window_start,
         )
 
 
@@ -495,7 +497,7 @@ def _default_digest_wording_engine(
 ) -> DigestWordingEngine:
     provider = provider if provider is not None else _build_llm_provider(settings)
     if provider is None:
-        return IdentityDigestWordingEngine()
+        return IdentityDigestWordingEngine(digest_language=settings.resolved_digest_language())
     return LlmDigestWordingEngine(
         provider=provider,
         shortlist_limit=settings.llm_shortlist_limit,
@@ -688,6 +690,7 @@ class DayCaptainApplication:
             meetings,
             preferences,
             reference_time=current_time,
+            window_start=window_start,
         )
         prioritized_items = self.digest_wording_engine.rewrite(prioritized_items)
         run_id = uuid.uuid4().hex

@@ -212,6 +212,39 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].section_name, "actions_to_take")
         self.assertIn("action_keyword", prioritized[0].reason_codes)
 
+    def test_promotes_messages_directly_addressed_to_target_user(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-romaric",
+                thread_id="thread-romaric",
+                subject="Payment discussion-feedback",
+                from_address="finance@example.com",
+                to_addresses=("casey.morgan@company.com",),
+                user_id="casey.morgan@company.com",
+                received_at=datetime(2026, 3, 10, 7, 35, tzinfo=timezone.utc),
+                body_preview="IM only edit the bank account and keep the same invoice No (B2334).",
+                raw_payload={
+                    "toRecipients": (
+                        {
+                            "emailAddress": {
+                                "address": "casey.morgan@company.com",
+                                "name": "Casey Morgan",
+                            }
+                        },
+                    )
+                },
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].section_name, "actions_to_take")
+        self.assertIn("direct_target_recipient", prioritized[0].reason_codes)
+        self.assertTrue(prioritized[0].summary.startswith("Vous êtes directement destinataire :"))
+
     def test_marks_print_and_download_deliverables_as_actions(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine()
@@ -469,6 +502,33 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         prioritized = engine.prioritize((), meetings, (), reference_time=now)
 
         self.assertEqual(prioritized[0].summary, "Aujourd'hui, 14:30 | Morgan Lee | Réunion Microsoft Teams")
+
+    def test_detects_recently_cancelled_meeting_changes(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        window_start = datetime(2026, 3, 9, 22, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-cancelled",
+                subject="Equipe projet Hardware",
+                start_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 10, 0, tzinfo=timezone.utc),
+                organizer_address="engineering@example.com",
+                location="Réunion Microsoft Teams",
+                raw_payload={
+                    "isCancelled": True,
+                    "createdDateTime": "2026-03-01T08:00:00Z",
+                    "lastModifiedDateTime": "2026-03-10T06:45:00Z",
+                },
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now, window_start=window_start)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertIn("meeting_cancelled", prioritized[0].reason_codes)
+        self.assertIn("meeting_updated", prioritized[0].reason_codes)
+        self.assertTrue(prioritized[0].summary.startswith("Annulé :"))
 
 
 if __name__ == "__main__":
