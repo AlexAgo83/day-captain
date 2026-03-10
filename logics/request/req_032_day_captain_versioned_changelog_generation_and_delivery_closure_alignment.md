@@ -1,8 +1,8 @@
 ## req_032_day_captain_versioned_changelog_generation_and_delivery_closure_alignment - Day Captain versioned changelog generation and delivery closure alignment
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 94%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
 > Complexity: Medium
 > Theme: Delivery Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -62,10 +62,11 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_062_day_captain_versioned_changelog_artifact_contract` - Define the `changelogs/` artifact contract and versioned filename strategy. Status: `Draft`.
-- `item_063_day_captain_changelog_generation_delivery_closure_process_alignment` - Align delivery closure workflow and docs with changelog generation. Status: `Draft`.
-- `task_037_day_captain_versioned_changelog_generation_and_delivery_alignment` - Orchestrate changelog artifact conventions and delivery-closure alignment. Status: `Draft`.
+- `item_062_day_captain_versioned_changelog_artifact_contract` - Define the `changelogs/` artifact contract and versioned filename strategy. Status: `Done`.
+- `item_063_day_captain_changelog_generation_delivery_closure_process_alignment` - Align delivery closure workflow and docs with changelog generation. Status: `Done`.
+- `task_037_day_captain_versioned_changelog_generation_and_delivery_alignment` - Orchestrate changelog artifact conventions and delivery-closure alignment. Status: `Done`.
 
 # Notes
 - Created on Tuesday, March 10, 2026 from product/process direction to add versioned changelog generation to Day Captain.
 - This request intentionally mirrors the useful parts of the `electrical-plan-editor` pattern without assuming a changelog UI surface in Day Captain.
+- Completed on Tuesday, March 10, 2026 after shipping the repository changelog contract, closure-time generation workflow, validation coverage, and the first versioned artifact at `changelogs/CHANGELOGS_1_5_0.md`.

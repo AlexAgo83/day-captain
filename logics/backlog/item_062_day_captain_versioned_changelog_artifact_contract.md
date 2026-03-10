@@ -1,9 +1,9 @@
 ## item_062_day_captain_versioned_changelog_artifact_contract - Define the changelogs artifact contract and versioned filename strategy
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 99%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Delivery Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_032_day_captain_versioned_changelog_generation_and_delivery_closure_alignment`
-- Primary task(s): `task_037_day_captain_versioned_changelog_generation_and_delivery_alignment` (`Draft`)
+- Primary task(s): `task_037_day_captain_versioned_changelog_generation_and_delivery_alignment` (`Done`)
 
 # Priority
 - Impact: Medium - release artifacts become clearer and easier to track once the contract exists.
@@ -49,3 +49,4 @@ flowchart LR
 
 # Notes
 - Derived from the Day Captain decision to adopt a versioned `changelogs/` pattern similar to `electrical-plan-editor`.
+- Completed on Tuesday, March 10, 2026 after shipping the `changelogs/` folder contract, helper utilities, generation script, README guidance, and the first release artifact for `1.5.0`.
