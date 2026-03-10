@@ -1,8 +1,8 @@
 ## req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology - Day Captain recipient-aware digest identity, mail summaries, language coherence, and meeting chronology
 > From version: 1.4.2
 > Status: Done
-> Understanding: 99%
-> Confidence: 97%
+> Understanding: 100%
+> Confidence: 98%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -14,8 +14,8 @@
 - Restore trustworthy chronological ordering and clearer change visibility for upcoming meetings.
 
 # Context
-- Fresh user feedback from Casey Morgan shows that the digest still mixes product polish issues with correctness issues in the assistant layer.
-- The delivered export demonstrates a gap between the mailbox owner identity and the wording surfaced in the digest: the brief mentions `Casey` inside content, but the system still does not reliably behave as if it knows it is writing to Casey Morgan from the existing target-user context alone.
+- Fresh user feedback from a target digest user shows that the digest still mixes product polish issues with correctness issues in the assistant layer.
+- The delivered export demonstrates a gap between the mailbox owner identity and the wording surfaced in the digest: the brief can still mention the recipient inside content, but the system does not reliably behave as if it knows it is writing to the target digest user from the existing target-user context alone.
 - The current French rendering can translate or paraphrase English mail content in a way that makes the original meaning harder to understand, especially in `En bref`.
 - The user expects stronger anchors in the digest cards, such as the supplier name or internal topic title, plus a short assistant-style summary for each email.
 - The upcoming meetings section currently breaks a core trust signal because the list is not strictly chronological; the sample shows a 10:00 meeting rendered after an 11:00 meeting.
@@ -23,7 +23,7 @@
 
 ```mermaid
 flowchart TD
-    A[Live digest delivered to Casey] --> B[Recipient and wording issues observed]
+    A[Live digest delivered to target user] --> B[Recipient and wording issues observed]
     B --> C[Recipient-aware mail prioritization]
     B --> D[Per-mail assistant summaries]
     B --> E[More coherent bilingual wording]
@@ -35,7 +35,7 @@ flowchart TD
 ```
 
 # In scope
-- recipient-aware identity resolution for the target digest user from the existing digest target context, including display name awareness such as `Casey Morgan`
+- recipient-aware identity resolution for the target digest user from the existing digest target context, including display-name awareness where available
 - bounded prioritization or wording improvements for emails clearly addressed to the target user
 - per-mail brief summaries that stay grounded in the source message and can use the LLM layer when configured
 - language-policy adjustments so English-source meaning remains understandable in French digests, including deliberate FR-English terminology when safer than forced translation
@@ -82,7 +82,7 @@ flowchart TD
 - `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` - Orchestrate recipient-aware digest identity, per-mail summaries, bilingual wording, and meeting correctness. Status: `Done`.
 
 # Notes
-- Created on Tuesday, March 10, 2026 from direct user feedback on the delivered morning digest for Casey Morgan.
+- Created on Tuesday, March 10, 2026 from direct user feedback on the delivered morning digest for the target digest user.
 - The main product issue is no longer raw rendering quality; it is trust in the assistant wording and the correctness of who the digest is for.
 - This request intentionally keeps the scope on digest logic and editorial behavior rather than email layout redesign.
 - Synchronization note: the newer `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring` now carries the primary execution path for replacing the mechanical summary system, including thread-centric mail briefings, richer meeting briefings, confidence signals, `En bref` regeneration, and all-day presence-event handling.

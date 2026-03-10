@@ -1,8 +1,8 @@
 ## req_013_day_captain_dedicated_sender_mailbox_for_digest_delivery - Day Captain dedicated sender mailbox for digest delivery
 > From version: 0.9.0
 > Status: Done
-> Understanding: 100%
-> Confidence: 100%
+> Understanding: 99%
+> Confidence: 99%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.

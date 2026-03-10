@@ -814,6 +814,94 @@ class DayCaptainApplicationTest(unittest.TestCase):
         self.assertEqual(payload.delivery_payload["meeting_horizon"]["mode"], "next_day")
         self.assertIn("here is tomorrow", payload.delivery_body.lower())
 
+    def test_sparse_same_day_extends_meetings_to_tomorrow(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(
+                (
+                    MeetingRecord(
+                        graph_event_id="mtg-today",
+                        subject="Today sync",
+                        start_at=datetime(2026, 3, 9, 10, 0, tzinfo=timezone.utc),
+                        end_at=datetime(2026, 3, 9, 10, 30, tzinfo=timezone.utc),
+                        organizer_address="lead@example.com",
+                    ),
+                    MeetingRecord(
+                        graph_event_id="mtg-tomorrow",
+                        subject="Tomorrow sync",
+                        start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                        end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                        organizer_address="lead@example.com",
+                    ),
+                )
+            ),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertEqual(len(payload.upcoming_meetings), 2)
+        self.assertEqual(payload.delivery_payload["meeting_horizon"]["mode"], "two_day_span")
+        self.assertIn("also includes tomorrow", payload.delivery_body.lower())
+
+    def test_empty_same_day_can_extend_to_two_future_days_when_tomorrow_is_sparse(self) -> None:
+        now = datetime(2026, 3, 9, 16, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(
+                (
+                    MeetingRecord(
+                        graph_event_id="mtg-tomorrow",
+                        subject="Tomorrow sync",
+                        start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                        end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                        organizer_address="lead@example.com",
+                    ),
+                    MeetingRecord(
+                        graph_event_id="mtg-day-after",
+                        subject="Day after review",
+                        start_at=datetime(2026, 3, 11, 9, 0, tzinfo=timezone.utc),
+                        end_at=datetime(2026, 3, 11, 9, 30, tzinfo=timezone.utc),
+                        organizer_address="lead@example.com",
+                    ),
+                )
+            ),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertEqual(len(payload.upcoming_meetings), 2)
+        self.assertEqual(payload.delivery_payload["meeting_horizon"]["mode"], "next_two_days")
+        self.assertIn("tomorrow and wednesday", payload.delivery_body.lower())
+
+    def test_sparse_meeting_extension_deduplicates_repeated_events(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        repeated = MeetingRecord(
+            graph_event_id="mtg-repeat",
+            subject="All-day presence",
+            start_at=datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc),
+            end_at=datetime(2026, 3, 10, 23, 59, tzinfo=timezone.utc),
+            organizer_address="lead@example.com",
+        )
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector((repeated, repeated)),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        ids = [item.source_id for item in payload.daily_presence] + [item.source_id for item in payload.upcoming_meetings]
+        self.assertEqual(ids.count("mtg-repeat"), 1)
+
     def test_graph_send_requires_graph_send_enabled(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         app = build_application(

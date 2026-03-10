@@ -218,18 +218,18 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         messages = (
             MessageRecord(
                 graph_message_id="msg-romaric",
-                thread_id="thread-romaric",
+                thread_id="thread-target",
                 subject="Payment discussion-feedback",
                 from_address="finance@example.com",
-                to_addresses=("casey.morgan@company.com",),
-                user_id="casey.morgan@company.com",
+                to_addresses=("casey.morgan@example.com",),
+                user_id="casey.morgan@example.com",
                 received_at=datetime(2026, 3, 10, 7, 35, tzinfo=timezone.utc),
                 body_preview="IM only edit the bank account and keep the same invoice No (B2334).",
                 raw_payload={
                     "toRecipients": (
                         {
                             "emailAddress": {
-                                "address": "casey.morgan@company.com",
+                                "address": "casey.morgan@example.com",
                                 "name": "Casey Morgan",
                             }
                         },
@@ -243,7 +243,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(len(prioritized), 1)
         self.assertEqual(prioritized[0].section_name, "actions_to_take")
         self.assertIn("direct_target_recipient", prioritized[0].reason_codes)
-        self.assertTrue(prioritized[0].summary.startswith("Directement adressé à Casey Morgan :"))
+        self.assertTrue(prioritized[0].summary.startswith("Vous êtes attendu sur ce point :"))
         self.assertIn("bank account", prioritized[0].summary)
         self.assertEqual(prioritized[0].context_metadata["target_recipient_display_name"], "Casey Morgan")
 
@@ -364,9 +364,9 @@ class DeterministicScoringEngineTest(unittest.TestCase):
                 subject="Site- Horizon",
                 start_at=datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc),
                 end_at=datetime(2026, 3, 10, 1, 0, tzinfo=timezone.utc),
-                organizer_address="target.user@company.com",
+                organizer_address="target.user@example.com",
                 location="Site Horizon",
-                user_id="target.user@company.com",
+                user_id="target.user@example.com",
             ),
         )
 
@@ -399,6 +399,29 @@ class DeterministicScoringEngineTest(unittest.TestCase):
             prioritized[0].summary,
             "Profil candidat : designer chez Studio Meridian. Examiner la candidature ou proposer un suivi.",
         )
+
+    def test_does_not_label_business_event_brief_as_candidate_profile(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-salon",
+                thread_id="thread-salon",
+                subject="Forum MotiveX | Organisation de la journée & brief",
+                from_address="sara@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 10, 7, 30, tzinfo=timezone.utc),
+                body_preview=(
+                    "Le forum se tiendra le 12 mars au centre expo, un événement dédié à la mobilité "
+                    "et aux solutions terrain. Objectif pour Northstar Mobility : identifier de nouvelles opportunités."
+                ),
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].section_name, "watch_items")
+        self.assertNotIn("Profil candidat", prioritized[0].summary)
 
     def test_cleans_reply_and_request_prefixes_from_message_titles(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
@@ -515,10 +538,10 @@ class DeterministicScoringEngineTest(unittest.TestCase):
                 subject="Point boîte email partagé",
                 start_at=datetime(2026, 3, 9, 13, 30, tzinfo=timezone.utc),
                 end_at=datetime(2026, 3, 9, 14, 0, tzinfo=timezone.utc),
-                organizer_address="target.user@company.com",
-                attendees=("morgan.lee@company.com", "target.user@company.com"),
+                organizer_address="target.user@example.com",
+                attendees=("morgan.lee@example.com", "target.user@example.com"),
                 location="Réunion Microsoft Teams",
-                user_id="target.user@company.com",
+                user_id="target.user@example.com",
             ),
         )
 
@@ -562,10 +585,10 @@ class DeterministicScoringEngineTest(unittest.TestCase):
                 subject="Télétravail",
                 start_at=datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc),
                 end_at=datetime(2026, 3, 10, 23, 59, tzinfo=timezone.utc),
-                organizer_address="target.user@company.com",
+                organizer_address="target.user@example.com",
                 location="Télétravail",
                 raw_payload={"isAllDay": True},
-                user_id="target.user@company.com",
+                user_id="target.user@example.com",
             ),
         )
 

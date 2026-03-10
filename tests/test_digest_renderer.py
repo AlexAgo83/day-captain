@@ -116,6 +116,32 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Point equipe", payload.delivery_payload["html_body"])
         self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_payload["html_body"])
 
+    def test_renders_message_sender_meta_in_text_and_html(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-sender",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Point partenaire",
+                    summary="Vous êtes attendu sur ce point : On reporte après le salon ?",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-1",
+                    score=2.0,
+                    context_metadata={"latest_sender_display_name": "Jordan Blake"},
+                ),
+            ),
+        )
+
+        self.assertIn("Expéditeur: Jordan Blake", payload.delivery_body)
+        self.assertIn("<strong>Expéditeur:</strong> Jordan Blake", payload.delivery_payload["html_body"])
+
     def test_orders_upcoming_meetings_chronologically(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
@@ -360,7 +386,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             window_end=now,
             delivery_mode="json",
             prioritized_items=(),
-            command_mailbox="daycaptain@company.com",
+            command_mailbox="daycaptain@example.com",
         )
 
         self.assertIn("Actions rapides", payload.delivery_body)
@@ -402,6 +428,42 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Présence du jour", payload.delivery_payload["html_body"])
         self.assertIn("<strong>À faire:</strong>", payload.delivery_payload["html_body"])
         self.assertIn("<strong>Confiance:</strong>", payload.delivery_payload["html_body"])
+
+    def test_daily_presence_section_keeps_only_source_day_items(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-presence-filter",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            meeting_horizon={"mode": "two_day_span", "source_date": "2026-03-10", "target_date": "2026-03-11"},
+            prioritized_items=(
+                DigestEntry(
+                    title="Site Horizon",
+                    summary="Signal de présence pour la journée : Site Horizon",
+                    section_name="daily_presence",
+                    source_kind="meeting",
+                    source_id="presence-today",
+                    score=1.2,
+                    sort_at=datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc),
+                ),
+                DigestEntry(
+                    title="Site Horizon",
+                    summary="Signal de présence pour la journée : Site Horizon",
+                    section_name="daily_presence",
+                    source_kind="meeting",
+                    source_id="presence-tomorrow",
+                    score=1.2,
+                    sort_at=datetime(2026, 3, 11, 0, 0, tzinfo=timezone.utc),
+                ),
+            ),
+        )
+
+        self.assertIn("presence-today", [item.source_id for item in payload.daily_presence])
+        self.assertNotIn("presence-tomorrow", [item.source_id for item in payload.daily_presence])
 
 
 if __name__ == "__main__":

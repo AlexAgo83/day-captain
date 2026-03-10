@@ -617,7 +617,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
                 ),
                 DigestEntry(
                     title="Daily Meeting",
-                    summary="lun. 09 mars à 11:30 avec Project Author sur Teams",
+                    summary="lun. 09 mars à 11:30 avec Casey Morgan sur Teams",
                     section_name="upcoming_meetings",
                     source_kind="meeting",
                     source_id="mtg-2",
