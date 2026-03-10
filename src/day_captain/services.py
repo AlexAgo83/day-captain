@@ -33,6 +33,8 @@ SECTION_NAMES = (
     "upcoming_meetings",
 )
 
+PROJECT_REPOSITORY_URL = "https://github.com/AlexAgo83/day-captain"
+
 STOPWORDS = {
     "a",
     "an",
@@ -272,6 +274,12 @@ LANGUAGE_COPY = {
             "warmer": "Warmer than yesterday.",
             "cooler": "Cooler than yesterday.",
             "same": "Close to yesterday.",
+            "dry_day": "Dry day.",
+            "rain_risk": "Rain risk.",
+            "showers_likely": "Showers likely.",
+            "rain_likely": "Rain likely.",
+            "storm_risk": "Storm risk.",
+            "snow_likely": "Snow likely.",
         },
         "sections": {
             "critical_topics": "Critical topics",
@@ -295,10 +303,11 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Quick actions",
-            "hint": "Opens a Day Captain draft.",
+            "hint": "Use these buttons to ask Day Captain for this brief again, today's brief, or this week's brief.",
             "recall": "Recall this brief",
             "recall_today": "Recall today",
             "recall_week": "Recall week",
+            "copyright": "Day Captain © {year}",
         },
         "item_actions": {
             "open_mail": "Open in Outlook",
@@ -311,6 +320,11 @@ LANGUAGE_COPY = {
             "meeting_cancelled": "Cancelled",
             "meeting_new": "New",
             "meeting_updated": "Updated",
+            "meeting_recurring": "Recurring",
+            "meeting_daily": "Daily",
+            "meeting_weekly": "Weekly",
+            "meeting_monthly": "Monthly",
+            "meeting_yearly": "Yearly",
         },
         "overview": {
             "label": "In brief",
@@ -380,6 +394,12 @@ LANGUAGE_COPY = {
             "warmer": "Plus doux qu'hier.",
             "cooler": "Plus frais qu'hier.",
             "same": "Proche d'hier.",
+            "dry_day": "Temps sec.",
+            "rain_risk": "Risque de pluie.",
+            "showers_likely": "Averses probables.",
+            "rain_likely": "Pluie probable.",
+            "storm_risk": "Risque d'orages.",
+            "snow_likely": "Risque de neige.",
         },
         "sections": {
             "critical_topics": "Points critiques",
@@ -403,10 +423,11 @@ LANGUAGE_COPY = {
         },
         "footer": {
             "label": "Actions rapides",
-            "hint": "Ouvre un brouillon Day Captain.",
+            "hint": "Utilisez ces boutons pour redemander ce brief, celui d'aujourd'hui ou celui de la semaine.",
             "recall": "Rappeler ce brief",
             "recall_today": "Rappel aujourd'hui",
             "recall_week": "Rappel semaine",
+            "copyright": "Day Captain © {year}",
         },
         "item_actions": {
             "open_mail": "Ouvrir dans Outlook",
@@ -419,6 +440,11 @@ LANGUAGE_COPY = {
             "meeting_cancelled": "Annulé",
             "meeting_new": "Nouvelle réunion",
             "meeting_updated": "Déplacée",
+            "meeting_recurring": "Récurrent",
+            "meeting_daily": "Quotidien",
+            "meeting_weekly": "Hebdo",
+            "meeting_monthly": "Mensuel",
+            "meeting_yearly": "Annuel",
         },
         "overview": {
             "label": "En bref",
@@ -856,6 +882,92 @@ def _decision_ready_preview(preview: str) -> str:
     return " ".join(sentences).strip()
 
 
+def _is_low_information_reply(preview: str) -> bool:
+    cleaned = " ".join((preview or "").strip().split())
+    if not cleaned:
+        return True
+    normalized = _normalize_text(cleaned)
+    if len(cleaned) <= 18:
+        return True
+    if len(normalized.split()) <= 3 and normalized in {
+        "ok",
+        "okay",
+        "bien recu",
+        "bien reçu",
+        "merci",
+        "thanks",
+        "thank you",
+        "voici",
+        "voici !",
+        "done",
+        "noted",
+    }:
+        return True
+    return normalized in {
+        "voici",
+        "voici !",
+        "ok merci",
+        "ok, merci",
+        "best",
+        "thanks",
+        "thank you",
+    }
+
+
+def _looks_like_fragment_start(text: str) -> bool:
+    cleaned = " ".join((text or "").strip().split())
+    if not cleaned:
+        return False
+    if cleaned[:1].islower():
+        return True
+    lowered = cleaned.lower()
+    return lowered.startswith(
+        (
+            "qui ",
+            "which ",
+            "that ",
+            "et ",
+            "and ",
+            "mais ",
+            "but ",
+            "ou ",
+            "or ",
+            "ainsi ",
+        )
+    )
+
+
+def _thread_reinforced_preview(
+    message: MessageRecord,
+    thread_messages: Sequence[MessageRecord],
+    cleaned_preview: str,
+) -> str:
+    latest_preview = _decision_ready_preview(cleaned_preview)
+    if len(thread_messages) <= 1:
+        return latest_preview
+    candidates = []
+    for candidate in sorted(thread_messages, key=lambda item: item.received_at):
+        preview = _decision_ready_preview(_clean_preview(candidate.body_preview))
+        if not preview:
+            continue
+        candidates.append((candidate.graph_message_id, preview))
+    supporting = ""
+    for graph_message_id, preview in reversed(candidates):
+        if graph_message_id == message.graph_message_id:
+            continue
+        if preview == latest_preview:
+            continue
+        if _is_low_information_reply(preview):
+            continue
+        supporting = preview
+        break
+    if not supporting:
+        return latest_preview
+    if not latest_preview or _is_low_information_reply(latest_preview) or _looks_like_fragment_start(latest_preview):
+        return supporting
+    return latest_preview
+
+
 def _is_candidate_profile_message(subject: str, preview: str) -> bool:
     normalized = _normalize_text(subject, preview)
     strong_markers = (
@@ -939,6 +1051,16 @@ def _truncate_sentence(value: str, max_chars: int = 220) -> str:
     cleaned = " ".join((value or "").strip().split())
     if len(cleaned) <= max_chars:
         return cleaned
+    forward_window = cleaned[max_chars : max_chars + 28]
+    forward_match = re.search(r"[.!?](?:\s|$)", forward_window)
+    if forward_match:
+        return cleaned[: max_chars + forward_match.end()].strip()
+    backward_window = cleaned[:max_chars]
+    backward_matches = list(re.finditer(r"[.!?](?:\s|$)", backward_window))
+    if backward_matches:
+        last_match = backward_matches[-1]
+        if last_match.end() >= int(max_chars * 0.65):
+            return backward_window[: last_match.end()].strip()
     truncated = cleaned[:max_chars].rstrip()
     if " " in truncated:
         truncated = truncated.rsplit(" ", 1)[0].rstrip()
@@ -1037,14 +1159,14 @@ def _strip_known_summary_prefix(summary: str, language: str) -> str:
 
 def _item_summary_limit(item: DigestEntry) -> int:
     if item.source_kind == "meeting":
-        return 110
+        return 130
     if item.section_name == "critical_topics":
-        return 160
+        return 190
     if item.section_name == "actions_to_take":
-        return 170
+        return 220
     if item.section_name == "watch_items":
-        return 180
-    return 200
+        return 220
+    return 240
 
 
 def _normalized_confidence_label(value: str, score: int, language: str) -> str:
@@ -1068,6 +1190,26 @@ def _confidence_score_bounds(value: object) -> int:
 def _confidence_reason(value: str, fallback: str) -> str:
     candidate = " ".join((value or "").strip().split())
     return candidate or fallback
+
+
+def _display_confidence_reason(value: str, language: str) -> str:
+    normalized = " ".join((value or "").strip().split())
+    compact_map = {
+        "en": {
+            "Explicit request or urgency is visible in the latest thread update.": "Explicit request in the latest thread update.",
+            "The message preview is readable, but the broader thread context is limited.": "Readable preview; broader thread context is limited.",
+            "Calendar details are supported by extra context for this briefing.": "Calendar details reinforced by extra context.",
+            "This all-day agenda entry explicitly looks like a location or presence signal.": "Clear all-day location or presence signal.",
+        },
+        "fr": {
+            "Une demande explicite ou une urgence apparaît dans la dernière mise à jour du fil.": "Demande explicite visible dans la dernière mise à jour.",
+            "L'aperçu du message est exploitable, mais le contexte plus large du fil reste limité.": "Aperçu exploitable ; contexte plus large limité.",
+            "Les détails calendrier sont soutenus par du contexte supplémentaire pour ce compte rendu.": "Détails calendrier renforcés par du contexte supplémentaire.",
+            "Cet événement agenda sur la journée ressemble explicitement à un signal de lieu ou de présence.": "Signal clair de lieu ou de présence sur la journée.",
+        },
+    }
+    localized = compact_map.get(_normalize_language(language), {})
+    return _truncate_sentence(localized.get(normalized) or normalized, max_chars=95)
 
 
 def _handling_bucket_from_section(section_name: str) -> str:
@@ -1142,10 +1284,16 @@ def _message_thread_briefing(
     digest_language: str,
     *,
     duplicate_count: int = 1,
+    thread_messages: Sequence[MessageRecord] = (),
 ) -> str:
+    reinforced_preview = _thread_reinforced_preview(
+        message,
+        thread_messages or (message,),
+        cleaned_preview,
+    )
     summary = DeterministicScoringEngine(digest_language=digest_language)._summarize_message(
         message,
-        cleaned_preview,
+        reinforced_preview,
         reason_codes,
     )
     if duplicate_count <= 1:
@@ -1156,7 +1304,7 @@ def _message_thread_briefing(
         title=_normalize_display_title(message.subject or ""),
         text=base,
     )
-    return _normalize_item_summary(message.subject or "", threaded, max_chars=185)
+    return _normalize_item_summary(message.subject or "", threaded, max_chars=220)
 
 
 def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[str], digest_language: str) -> str:
@@ -1465,6 +1613,36 @@ def _meeting_status_reason(reason_codes: Sequence[str]) -> str:
     return ""
 
 
+def _meeting_recurrence_kind(meeting: MeetingRecord) -> str:
+    raw_payload = meeting.raw_payload if isinstance(meeting.raw_payload, Mapping) else {}
+    recurrence = raw_payload.get("recurrence") or {}
+    if isinstance(recurrence, Mapping):
+        pattern = recurrence.get("pattern") or {}
+        if isinstance(pattern, Mapping):
+            pattern_type = str(pattern.get("type") or "").strip().lower()
+            if pattern_type in {"daily", "weekly", "absoluteMonthly".lower(), "relativeMonthly".lower(), "absoluteYearly".lower(), "relativeYearly".lower()}:
+                if "daily" in pattern_type:
+                    return "daily"
+                if "weekly" in pattern_type:
+                    return "weekly"
+                if "monthly" in pattern_type:
+                    return "monthly"
+                if "yearly" in pattern_type:
+                    return "yearly"
+    event_type = str(raw_payload.get("type") or "").strip().lower()
+    if event_type in {"seriesmaster", "occurrence", "exception"} or raw_payload.get("seriesMasterId"):
+        return "recurring"
+    return ""
+
+
+def _meeting_recurrence_label(meeting: MeetingRecord, digest_language: str) -> str:
+    kind = _meeting_recurrence_kind(meeting)
+    if not kind:
+        return ""
+    badges = _language_copy(digest_language)["badges"]
+    return str(badges.get("meeting_{0}".format(kind)) or badges["meeting_recurring"])
+
+
 class DeterministicScoringEngine:
     def __init__(self, digest_language: str = "en", display_timezone: str = "UTC") -> None:
         self.digest_language = _normalize_language(digest_language)
@@ -1553,18 +1731,20 @@ class DeterministicScoringEngine:
     ) -> DigestEntry:
         base_entry = self._with_thread_reason(entry, duplicate_count)
         cleaned_preview = _clean_preview(message.body_preview)
+        reinforced_preview = _thread_reinforced_preview(message, thread_messages, cleaned_preview)
         summary = _message_thread_briefing(
             message,
             cleaned_preview,
             base_entry.reason_codes,
             self.digest_language,
             duplicate_count=duplicate_count,
+            thread_messages=thread_messages,
         )
         confidence_score, confidence_reason = _message_confidence(
             message,
             base_entry.reason_codes,
             duplicate_count,
-            cleaned_preview,
+            reinforced_preview,
             self.digest_language,
         )
         return _with_digest_entry_updates(
@@ -1742,6 +1922,9 @@ class DeterministicScoringEngine:
         related_messages = _related_messages_for_meeting(meeting, messages)
         if related_messages:
             reason_codes.append("meeting_related_context")
+        recurrence_label = _meeting_recurrence_label(meeting, self.digest_language)
+        if recurrence_label:
+            reason_codes.append("meeting_recurring")
         if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting):
             summary = _presence_summary(meeting, self.digest_language)
             confidence_score, confidence_reason = _presence_confidence(self.digest_language)
@@ -1761,6 +1944,8 @@ class DeterministicScoringEngine:
                     "is_all_day": True,
                     "location": meeting.location,
                     "related_messages": list(related_messages),
+                    "is_recurring": bool(recurrence_label),
+                    "recurrence_label": recurrence_label,
                 },
                 source_url=_meeting_source_url(meeting),
                 desktop_source_url=_meeting_desktop_source_url(meeting),
@@ -1850,6 +2035,8 @@ class DeterministicScoringEngine:
                 "location": meeting.location,
                 "body_preview": _preview_snippet(meeting.body_preview),
                 "related_messages": list(related_messages),
+                "is_recurring": bool(recurrence_label),
+                "recurrence_label": recurrence_label,
             },
             source_url=_meeting_source_url(meeting),
             desktop_source_url=_meeting_desktop_source_url(meeting),
@@ -1879,13 +2066,13 @@ class DeterministicScoringEngine:
             return copy["file_shared"]
         if "critical_keyword" in reason_codes:
             template = "Urgent : {text}" if mixed_english_source else str(copy["critical"])
-            return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=175)
+            return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=190)
         if "direct_target_recipient" in reason_codes:
-            return _normalize_item_summary(message.subject or "", copy["direct_target"].format(text=base), max_chars=175)
+            return _normalize_item_summary(message.subject or "", copy["direct_target"].format(text=base), max_chars=210)
         if "action_keyword" in reason_codes:
             template = "Action : {text}" if mixed_english_source else str(copy["action"])
-            return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=175)
-        return _normalize_item_summary(message.subject or "", copy["watch"].format(text=base), max_chars=170)
+            return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=210)
+        return _normalize_item_summary(message.subject or "", copy["watch"].format(text=base), max_chars=210)
 
 
 class StructuredDigestRenderer:
@@ -2097,7 +2284,7 @@ class StructuredDigestRenderer:
                 for item in items:
                     lines.extend(self._body_item_lines(item))
             lines.append("")
-        footer_lines = self._footer_body_lines(command_mailbox)
+        footer_lines = self._footer_body_lines(command_mailbox, generated_at)
         if footer_lines:
             lines.extend(footer_lines)
             lines.append("")
@@ -2176,7 +2363,7 @@ class StructuredDigestRenderer:
                 for item in items:
                     parts.append(self._html_item(item))
             parts.append("</section>")
-        footer_html = self._footer_html(command_mailbox)
+        footer_html = self._footer_html(command_mailbox, generated_at)
         if footer_html:
             parts.append(footer_html)
         parts.append("</div></body></html>")
@@ -2222,7 +2409,7 @@ class StructuredDigestRenderer:
         if recommended_action:
             lines.append("  {0}: {1}".format(localized["next_step"], recommended_action))
         confidence_label = self._entry_confidence_label(item)
-        confidence_reason = " ".join((item.confidence_reason or "").split())
+        confidence_reason = _display_confidence_reason(item.confidence_reason, self.digest_language)
         if item.confidence_score > 0 or confidence_label or confidence_reason:
             confidence_bits = []
             if item.confidence_score > 0:
@@ -2255,7 +2442,7 @@ class StructuredDigestRenderer:
                 )
             )
         confidence_label = self._entry_confidence_label(item)
-        confidence_reason = " ".join((item.confidence_reason or "").split())
+        confidence_reason = _display_confidence_reason(item.confidence_reason, self.digest_language)
         if item.confidence_score > 0 or confidence_label or confidence_reason:
             confidence_bits = []
             if item.confidence_score > 0:
@@ -2311,20 +2498,46 @@ class StructuredDigestRenderer:
         )
 
     def _body_badge_prefix(self, item: DigestEntry) -> str:
-        if "flagged" not in item.reason_codes:
+        labels = self._item_badge_labels(item)
+        if not labels:
             return ""
-        badge = str(_language_copy(self.digest_language)["badges"]["flagged"])
-        return "[{0}] ".format(badge)
+        return "".join("[{0}] ".format(label) for label, _tone in labels)
 
     def _item_badges_html(self, item: DigestEntry) -> str:
-        if "flagged" not in item.reason_codes:
+        labels = self._item_badge_labels(item)
+        if not labels:
             return ""
-        badge = str(_language_copy(self.digest_language)["badges"]["flagged"])
-        return (
-            "<span style=\"display:inline-block;margin:0 8px 0 0;padding:2px 7px;border-radius:999px;"
-            "background:#fff3cd;border:1px solid #facc15;color:#854d0e;font-size:11px;font-weight:700;"
-            "letter-spacing:0.04em;text-transform:uppercase;vertical-align:middle;\">{0}</span>"
-        ).format(self._html_escape(badge))
+        parts = []
+        for badge, tone in labels:
+            if tone == "warning":
+                background = "#fff3cd"
+                border = "#facc15"
+                color = "#854d0e"
+            else:
+                background = "#f8fafc"
+                border = "#cbd5e1"
+                color = "#475569"
+            parts.append(
+                "<span style=\"display:inline-block;margin:0 8px 0 0;padding:2px 7px;border-radius:999px;"
+                "background:{0};border:1px solid {1};color:{2};font-size:11px;font-weight:700;"
+                "letter-spacing:0.04em;text-transform:uppercase;vertical-align:middle;\">{3}</span>".format(
+                    background,
+                    border,
+                    color,
+                    self._html_escape(badge),
+                )
+            )
+        return "".join(parts)
+
+    def _item_badge_labels(self, item: DigestEntry) -> Sequence[tuple[str, str]]:
+        localized = _language_copy(self.digest_language)["badges"]
+        labels = []
+        if "flagged" in item.reason_codes:
+            labels.append((str(localized["flagged"]), "warning"))
+        recurrence_label = " ".join(str((item.context_metadata or {}).get("recurrence_label") or "").split())
+        if recurrence_label:
+            labels.append((recurrence_label, "neutral"))
+        return tuple(labels)
 
     def _rendered_item_title(self, item: DigestEntry) -> str:
         if item.source_kind != "meeting":
@@ -2368,10 +2581,31 @@ class StructuredDigestRenderer:
         )
         if weather.location_name.strip():
             headline = "{0}: {1}".format(weather.location_name.strip(), headline)
+        rain_signal = self._weather_rain_text(weather, localized)
         trend = self._weather_trend_text(weather, localized)
+        if rain_signal and trend:
+            return "{0}. {1} {2}".format(headline, rain_signal, trend)
+        if rain_signal:
+            return "{0}. {1}".format(headline, rain_signal)
         if trend:
             return "{0}. {1}".format(headline, trend)
         return headline
+
+    def _weather_rain_text(self, weather: WeatherSnapshot, localized: Mapping[str, str]) -> str:
+        kind = _weather_kind(weather.weather_code)
+        if kind in {"clear", "partly_cloudy", "cloudy", "fog"}:
+            return str(localized["dry_day"])
+        if kind == "drizzle":
+            return str(localized["rain_risk"])
+        if kind == "showers":
+            return str(localized["showers_likely"])
+        if kind == "rain":
+            return str(localized["rain_likely"])
+        if kind == "storm":
+            return str(localized["storm_risk"])
+        if kind == "snow":
+            return str(localized["snow_likely"])
+        return ""
 
     def _weather_trend_text(self, weather: WeatherSnapshot, localized: Mapping[str, str]) -> str:
         previous_temperature = weather.previous_temperature_max_c
@@ -2384,7 +2618,7 @@ class StructuredDigestRenderer:
             return str(localized["cooler"])
         return str(localized["same"])
 
-    def _footer_body_lines(self, command_mailbox: str) -> Sequence[str]:
+    def _footer_body_lines(self, command_mailbox: str, generated_at: datetime) -> Sequence[str]:
         mailbox = str(command_mailbox or "").strip()
         if "@" not in mailbox:
             return ()
@@ -2395,9 +2629,10 @@ class StructuredDigestRenderer:
             "- {0}: {1} (subject/body: recall)".format(footer["recall"], mailbox),
             "- {0}: {1} (subject/body: recall-today)".format(footer["recall_today"], mailbox),
             "- {0}: {1} (subject/body: recall-week)".format(footer["recall_week"], mailbox),
+            "{0}: {1}".format(str(footer["copyright"]).format(year=generated_at.year), PROJECT_REPOSITORY_URL),
         )
 
-    def _footer_html(self, command_mailbox: str) -> str:
+    def _footer_html(self, command_mailbox: str, generated_at: datetime) -> str:
         mailbox = str(command_mailbox or "").strip()
         if "@" not in mailbox:
             return ""
@@ -2424,7 +2659,17 @@ class StructuredDigestRenderer:
                 "<a href=\"{0}\" style=\"display:inline-block;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;color:#0f172a;text-decoration:none;font-size:13px;white-space:nowrap;\">{1}</a>"
                 "</td>".format(self._html_escape(href), self._html_escape(label))
             )
-        parts.append("</tr></table></section>")
+        copyright_html = self._html_escape(str(footer["copyright"]).format(year=generated_at.year))
+        parts.append("</tr></table>")
+        parts.append(
+            "<p style=\"margin:12px 0 0;font-size:12px;color:#94a3b8;\">"
+            "<a href=\"{0}\" style=\"color:#94a3b8;text-decoration:none;\">{1}</a>"
+            "</p>".format(
+                self._html_escape(PROJECT_REPOSITORY_URL),
+                copyright_html,
+            )
+        )
+        parts.append("</section>")
         return "".join(parts)
 
     def _meeting_note(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
@@ -2629,16 +2874,16 @@ class LlmDigestOverviewEngine:
 
     def _overview_summary_limit(self, item: DigestEntry) -> int:
         if item.section_name == "daily_presence":
-            return 100
+            return 115
         if item.source_kind == "meeting":
-            return 90
-        if item.section_name == "critical_topics":
             return 110
+        if item.section_name == "critical_topics":
+            return 130
         if item.section_name == "actions_to_take":
-            return 120
+            return 135
         if item.section_name == "watch_items":
-            return 120
-        return 120
+            return 135
+        return 135
 
     def _overview_meeting_note(self, payload: DigestPayload, language: str) -> str:
         meetings = tuple(payload.upcoming_meetings)
@@ -2728,7 +2973,7 @@ class LlmDigestWordingEngine:
                     ),
                     confidence_score=confidence_score,
                     confidence_label=_normalized_confidence_label(confidence_label, confidence_score, getattr(self.provider, "language", "en")),
-                    confidence_reason=_truncate_sentence(confidence_reason, max_chars=180),
+                    confidence_reason=_truncate_sentence(confidence_reason, max_chars=110),
                 )
             )
         return tuple(updated_items)

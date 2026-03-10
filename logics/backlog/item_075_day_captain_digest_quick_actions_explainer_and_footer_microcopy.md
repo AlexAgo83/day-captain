@@ -1,9 +1,9 @@
 ## item_075_day_captain_digest_quick_actions_explainer_and_footer_microcopy - Explain the quick-action buttons and add a small Day Captain footer line
 > From version: 1.5.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
-> Confidence: 96%
-> Progress: 0%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Small
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -29,8 +29,8 @@
 - AC3: Rendering remains stable in text and HTML outputs.
 
 # AC Traceability
-- Req035 AC6 -> This item is the dedicated quick-actions and footer microcopy slice. Proof: it explicitly covers both requested bottom-of-mail changes.
-- Req035 AC7 -> This item requires stable rendering coverage. Proof: closure depends on text and HTML behavior staying aligned.
+- Req035 AC7 -> This item is the dedicated quick-actions and footer microcopy slice. Proof: it explicitly covers both requested bottom-of-mail changes.
+- Req035 AC8 -> This item requires stable rendering coverage. Proof: closure depends on text and HTML behavior staying aligned.
 
 # Links
 - Request: `req_035_day_captain_digest_summary_coherence_privacy_weather_and_footer_polish`
@@ -41,3 +41,4 @@
 
 # Notes
 - Derived from live digest review of the bottom-of-mail experience.
+- Closed on Wednesday, March 11, 2026 after updating the helper copy and adding the linked `Day Captain © YEAR` footer in text and HTML.

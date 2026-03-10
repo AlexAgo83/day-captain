@@ -1,9 +1,9 @@
 ## item_073_day_captain_digest_privacy_safe_abstraction_and_action_oriented_overview - Reduce over-literal business carry-over and make overview/confidence wording more action-oriented
 > From version: 1.5.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
-> Confidence: 96%
-> Progress: 0%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -37,7 +37,7 @@
 - Req035 AC3 -> This item is the dedicated abstraction and action-oriented overview slice. Proof: it explicitly covers less literal visible wording.
 - Req035 AC3 supporting rule -> This item also carries repository fixture hygiene for the same privacy-safe contract. Proof: synthetic-only examples are part of the same discretion requirement.
 - Req035 AC4 -> This item also covers lighter confidence copy. Proof: shorter confidence reasons are part of the same editorial-output pass.
-- Req035 AC7 -> This item requires aligned tests and docs. Proof: closure depends on updated wording and coverage.
+- Req035 AC8 -> This item requires aligned tests and docs. Proof: closure depends on updated wording and coverage.
 
 # Links
 - Request: `req_035_day_captain_digest_summary_coherence_privacy_weather_and_footer_polish`
@@ -48,3 +48,4 @@
 
 # Notes
 - Derived from live Outlook review and explicit product guidance to avoid exposing business content too literally in visible digest text.
+- Closed on Wednesday, March 11, 2026 after shortening confidence copy, tightening abstraction rules, and keeping the implementation/tests synthetic-only.

@@ -1,9 +1,9 @@
 ## item_076_day_captain_digest_meeting_recurrence_indicator - Expose a visible recurrence indicator on meeting cards when calendar metadata supports it
 > From version: 1.5.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
-> Confidence: 96%
-> Progress: 10%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Small
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -46,3 +46,4 @@
 
 # Notes
 - Derived from live digest review where recurring meetings were visible but not explicitly identified as recurring.
+- Closed on Wednesday, March 11, 2026 after adding recurrence metadata detection, discreet badges, and recurring/non-recurring rendering coverage.

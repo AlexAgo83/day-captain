@@ -3,7 +3,7 @@
 > Status: Done
 > Understanding: 99%
 > Confidence: 98%
-> Progress: 99%
+> Progress: 100%
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -76,4 +76,4 @@ flowchart LR
   - private `day-captain-ops` GitHub Actions workflow on the real private repo -> `warm-hosted-service` plus per-user `trigger-morning-digest` succeeded against `release`
   - mailbox delivery confirmed for `target.user@company.com`
   - live cold-start bug found and fixed in `src/day_captain/hosted_jobs.py` (`6309af3`) before the successful scheduler rerun
-- The deployment slice is functionally complete and now proven on the real hosted path; status remains `In Progress` only because the parent product backlog item still has open downstream quality work outside this deployment slice.
+- The deployment slice is functionally complete and now proven on the real hosted path, including Render/Postgres runtime proof, private-ops scheduling, and mailbox delivery.

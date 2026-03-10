@@ -1,9 +1,9 @@
 ## item_074_day_captain_digest_weather_rain_signal_copy - Add a rain expectation signal to the weather line when forecast data supports it
 > From version: 1.5.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
-> Confidence: 95%
-> Progress: 0%
+> Confidence: 96%
+> Progress: 100%
 > Complexity: Small
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -32,7 +32,7 @@
 # AC Traceability
 - Req035 AC5 -> This item is the dedicated weather-rain-copy slice. Proof: it explicitly adds a rain expectation signal when data allows it.
 - Req035 AC5 supporting nuance -> This item also carries the more nuanced rain wording rule. Proof: the desired signal is more than a simple yes/no.
-- Req035 AC7 -> This item requires representative weather-copy coverage. Proof: closure depends on rain/no-rain tests.
+- Req035 AC8 -> This item requires representative weather-copy coverage. Proof: closure depends on rain/no-rain tests.
 
 # Links
 - Request: `req_035_day_captain_digest_summary_coherence_privacy_weather_and_footer_polish`
@@ -43,3 +43,4 @@
 
 # Notes
 - Derived from live digest review where temperature was visible but precipitation expectation was still missing.
+- Closed on Wednesday, March 11, 2026 after adding nuanced dry/rain/showers wording and the related renderer coverage.

@@ -61,9 +61,10 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("In brief", payload.delivery_payload["html_body"])
         self.assertIn("No meetings are lined up for today.", payload.delivery_body)
         self.assertIn("Quick actions", payload.delivery_body)
-        self.assertIn("Opens a Day Captain draft.", payload.delivery_body)
+        self.assertIn("Use these buttons to ask Day Captain for this brief again, today's brief, or this week's brief.", payload.delivery_body)
         self.assertIn("subject/body: recall", payload.delivery_body)
         self.assertIn("mailto:daycaptain@example.com?subject=recall&amp;body=recall", payload.delivery_payload["html_body"])
+        self.assertIn("Day Captain © 2026: https://github.com/AlexAgo83/day-captain", payload.delivery_body)
         self.assertIn("margin:10px 0 24px;padding:0 0 0 14px;border-left:3px solid #94a3b8;", payload.delivery_payload["html_body"])
         self.assertNotIn("background:#f8fafc", payload.delivery_payload["html_body"])
 
@@ -345,10 +346,10 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
 
         self.assertIn("Today's weather", payload.delivery_body)
-        self.assertIn("Paris: Rain, 13C max / 6C min. Warmer than yesterday.", payload.delivery_body)
+        self.assertIn("Paris: Rain, 13C max / 6C min. Rain likely. Warmer than yesterday.", payload.delivery_body)
         self.assertLess(payload.delivery_body.index("Today's weather"), payload.delivery_body.index("In brief"))
         self.assertIn("Today's weather", payload.delivery_payload["html_body"])
-        self.assertIn("Paris: Rain, 13C max / 6C min. Warmer than yesterday.", payload.delivery_payload["html_body"])
+        self.assertIn("Paris: Rain, 13C max / 6C min. Rain likely. Warmer than yesterday.", payload.delivery_payload["html_body"])
         self.assertEqual(payload.delivery_payload["weather"]["location_name"], "Paris")
 
     def test_localizes_weather_capsule_in_french(self) -> None:
@@ -373,7 +374,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
 
         self.assertIn("Météo du jour", payload.delivery_body)
-        self.assertIn("Lille: Couvert, 9C max / 3C min. Proche d'hier.", payload.delivery_body)
+        self.assertIn("Lille: Couvert, 9C max / 3C min. Temps sec. Proche d'hier.", payload.delivery_body)
 
     def test_localizes_footer_quick_actions_in_french(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
@@ -390,9 +391,38 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
 
         self.assertIn("Actions rapides", payload.delivery_body)
-        self.assertIn("Ouvre un brouillon Day Captain.", payload.delivery_body)
+        self.assertIn("Utilisez ces boutons pour redemander ce brief, celui d'aujourd'hui ou celui de la semaine.", payload.delivery_body)
         self.assertIn("Rappeler ce brief", payload.delivery_payload["html_body"])
         self.assertIn("subject=recall-week&amp;body=recall-week", payload.delivery_payload["html_body"])
+        self.assertIn("Day Captain © 2026: https://github.com/AlexAgo83/day-captain", payload.delivery_body)
+        self.assertIn(">Day Captain © 2026<", payload.delivery_payload["html_body"])
+        self.assertIn("https://github.com/AlexAgo83/day-captain", payload.delivery_payload["html_body"])
+
+    def test_renders_recurring_meeting_badge_when_metadata_supports_it(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-recurring",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Point équipe",
+                    summary="Demain, 10:00 | Morgan Lee | Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-weekly",
+                    score=1.5,
+                    context_metadata={"recurrence_label": "Hebdo"},
+                ),
+            ),
+        )
+
+        self.assertIn("[Hebdo] Point équipe", payload.delivery_body)
+        self.assertIn(">Hebdo<", payload.delivery_payload["html_body"])
 
     def test_renders_daily_presence_section_and_meta_lines(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
