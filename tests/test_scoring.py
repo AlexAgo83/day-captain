@@ -243,7 +243,9 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(len(prioritized), 1)
         self.assertEqual(prioritized[0].section_name, "actions_to_take")
         self.assertIn("direct_target_recipient", prioritized[0].reason_codes)
-        self.assertTrue(prioritized[0].summary.startswith("Vous êtes directement destinataire :"))
+        self.assertTrue(prioritized[0].summary.startswith("Directement adressé à Casey Morgan :"))
+        self.assertIn("bank account", prioritized[0].summary)
+        self.assertEqual(prioritized[0].context_metadata["target_recipient_display_name"], "Casey Morgan")
 
     def test_marks_print_and_download_deliverables_as_actions(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)

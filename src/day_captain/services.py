@@ -295,6 +295,7 @@ LANGUAGE_COPY = {
             "action": "Likely needs your follow-up: {text}",
             "watch": "Worth noting: {text}",
             "direct_target": "Directly addressed to you: {text}",
+            "direct_target_named": "Directly addressed to {name}: {text}",
             "candidate_profile": "Candidate profile: {text}",
             "candidate_follow_up": "Review the candidate or decide on follow-up.",
             "file_shared": "Shared a file or document for your review.",
@@ -398,6 +399,7 @@ LANGUAGE_COPY = {
             "action": "Demande probablement un suivi de votre part : {text}",
             "watch": "À noter : {text}",
             "direct_target": "Vous êtes directement destinataire : {text}",
+            "direct_target_named": "Directement adressé à {name} : {text}",
             "candidate_profile": "Profil candidat : {text}",
             "candidate_follow_up": "Examiner la candidature ou proposer un suivi.",
             "file_shared": "Un fichier ou document a été partagé pour consultation.",
@@ -1011,6 +1013,7 @@ def _thread_context_payload(messages: Sequence[MessageRecord], display_timezone:
         "thread_id": ordered[-1].thread_id if ordered else "",
         "message_count": len(messages),
         "participants": participants[:4],
+        "target_recipient_display_name": _target_recipient_display_name(ordered[-1]) if ordered else "",
         "messages": thread_messages,
     }
 
@@ -1737,6 +1740,13 @@ class DeterministicScoringEngine:
         if "critical_keyword" in reason_codes:
             return _normalize_item_summary(message.subject or "", copy["critical"].format(text=base), max_chars=175)
         if "direct_target_recipient" in reason_codes:
+            display_name = _target_recipient_display_name(message)
+            if display_name:
+                return _normalize_item_summary(
+                    message.subject or "",
+                    str(copy["direct_target_named"]).format(name=display_name, text=base),
+                    max_chars=175,
+                )
             return _normalize_item_summary(message.subject or "", copy["direct_target"].format(text=base), max_chars=175)
         if "action_keyword" in reason_codes:
             return _normalize_item_summary(message.subject or "", copy["action"].format(text=base), max_chars=175)
@@ -2336,9 +2346,16 @@ class IdentityDigestWordingEngine:
                 rewritten.append(item)
                 continue
             base = _strip_known_summary_prefix(item.summary, self.digest_language)
+            target_name = " ".join(
+                str((item.context_metadata or {}).get("target_recipient_display_name") or "").split()
+            )
+            if target_name:
+                rewritten_summary = str(localized["direct_target_named"]).format(name=target_name, text=base)
+            else:
+                rewritten_summary = str(localized["direct_target"]).format(text=base)
             summary = _normalize_item_summary(
                 item.title,
-                str(localized["direct_target"]).format(text=base),
+                rewritten_summary,
                 max_chars=_item_summary_limit(item),
             )
             rewritten.append(_with_digest_entry_updates(item, summary=summary))
