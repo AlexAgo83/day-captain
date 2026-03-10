@@ -489,6 +489,71 @@ class HostedJobsTest(unittest.TestCase):
         self.assertEqual(recorder.requests[2][0], "https://example.com/jobs/email-command-recall")
         self.assertEqual(json.loads(recorder.requests[2][1])["command_text"], "recall-week")
 
+    def test_validate_hosted_service_accepts_case_only_target_user_difference_for_email_command(self) -> None:
+        payloads = [
+            {
+                "status": "ok",
+                "runtime": {
+                    "status": "ok",
+                    "graph_auth_mode": "app_only",
+                    "storage_backend": "postgres",
+                    "configured_target_user_count": 1,
+                    "database_configured": True,
+                },
+            },
+            {
+                "status": "completed",
+                "job": "morning_digest",
+                "run_id": "run-1",
+                "generated_at": "2026-03-08T08:00:00+00:00",
+                "delivery_mode": "json",
+                "section_counts": {
+                    "critical_topics": 1,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            },
+            {
+                "status": "completed",
+                "job": "email_command_recall",
+                "command_message_id": "validate-email-command-123",
+                "command_name": "recall-week",
+                "target_user_id": "alice@example.com",
+                "deduplicated": False,
+                "run_id": "run-email",
+                "generated_at": "2026-03-08T08:05:00+00:00",
+                "delivery_mode": "graph_send",
+                "section_counts": {
+                    "critical_topics": 1,
+                    "actions_to_take": 0,
+                    "watch_items": 0,
+                    "upcoming_meetings": 0,
+                },
+            },
+        ]
+
+        class SequenceRecorder:
+            def __call__(self, req, timeout=0):
+                return FakeResponse(payloads.pop(0), status=200)
+
+        with mock.patch("day_captain.hosted_jobs.time.time", return_value=123):
+            result = validate_hosted_service(
+                "https://example.com",
+                "secret",
+                target_user_id="ALICE@example.com",
+                expected_graph_auth_mode="app_only",
+                expected_storage_backend="postgres",
+                check_recall=False,
+                check_email_command=True,
+                email_command_sender="alice@example.com",
+                email_command_text="recall-week",
+                opener=SequenceRecorder(),
+            )
+
+        self.assertEqual(result["status"], "ok")
+        self.assertEqual(result["target_user_id"], "alice@example.com")
+
     def test_validate_hosted_service_raises_when_recall_run_id_differs(self) -> None:
         payloads = [
             {

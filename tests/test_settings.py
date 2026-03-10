@@ -116,9 +116,23 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.resolved_default_target_user(), "alex@example.com")
 
     def test_validate_hosted_requires_job_secret(self) -> None:
-        settings = DayCaptainSettings(environment="production", job_secret="")
+        settings = DayCaptainSettings(
+            environment="production",
+            job_secret="",
+            database_url="postgresql://db.example/day_captain",
+        )
 
         with self.assertRaises(ValueError):
+            settings.validate_hosted()
+
+    def test_validate_hosted_requires_database_for_durable_storage(self) -> None:
+        settings = DayCaptainSettings(
+            environment="production",
+            job_secret="secret",
+            graph_client_id="client-id",
+        )
+
+        with self.assertRaisesRegex(ValueError, "DAY_CAPTAIN_DATABASE_URL is required"):
             settings.validate_hosted()
 
     def test_validate_hosted_requires_app_only_credentials_and_targets(self) -> None:
@@ -126,6 +140,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
                 graph_auth_mode="app_only",
                 graph_client_id="client-id",
             ).validate_hosted()
@@ -133,6 +148,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         settings = DayCaptainSettings(
             environment="production",
             job_secret="secret",
+            database_url="postgresql://db.example/day_captain",
             delivery_mode="graph_send",
             graph_send_enabled=True,
             graph_auth_mode="app_only",
@@ -148,6 +164,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
                 graph_auth_mode="app_only",
                 graph_client_id="client-id",
                 graph_client_secret="client-secret",
@@ -159,9 +176,11 @@ class DayCaptainSettingsTest(unittest.TestCase):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
                 delivery_mode="json",
                 graph_send_enabled=True,
                 graph_auth_mode="delegated",
+                graph_client_id="client-id",
                 target_users=("alice@example.com",),
                 email_command_allowed_senders=("assistant@example.com",),
             ).validate_hosted()
@@ -169,6 +188,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         DayCaptainSettings(
             environment="production",
             job_secret="secret",
+            database_url="postgresql://db.example/day_captain",
             delivery_mode="json",
             graph_send_enabled=True,
             graph_auth_mode="app_only",
@@ -183,6 +203,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
                 graph_send_enabled=True,
                 graph_auth_mode="app_only",
                 graph_client_id="client-id",
@@ -195,6 +216,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         DayCaptainSettings(
             environment="production",
             job_secret="secret",
+            database_url="postgresql://db.example/day_captain",
             delivery_mode="json",
             graph_send_enabled=True,
             graph_auth_mode="app_only",
@@ -209,6 +231,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
                 graph_send_enabled=True,
                 graph_auth_mode="app_only",
                 graph_client_id="client-id",
@@ -223,10 +246,17 @@ class DayCaptainSettingsTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             settings.validate_target_user("carol@example.com")
 
+    def test_validate_target_user_accepts_case_only_variants(self) -> None:
+        settings = DayCaptainSettings(target_users=("Alice@example.com", "Bob@example.com"))
+
+        settings.validate_target_user("alice@example.com")
+        self.assertEqual(settings.resolve_target_user("BOB@example.com"), "bob@example.com")
+
     def test_validation_summary_reports_resolved_runtime(self) -> None:
         settings = DayCaptainSettings(
             environment="production",
             job_secret="secret",
+            database_url="postgresql://db.example/day_captain",
             delivery_mode="graph_send",
             graph_send_enabled=True,
             graph_auth_mode="app_only",
@@ -260,6 +290,15 @@ class DayCaptainSettingsTest(unittest.TestCase):
         )
 
         self.assertEqual(settings.resolved_graph_auth_mode(), "app_only")
+
+    def test_validate_hosted_delegated_requires_graph_runtime_inputs(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Hosted delegated Graph execution requires"):
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
+                graph_auth_mode="delegated",
+            ).validate_hosted()
 
 
 if __name__ == "__main__":

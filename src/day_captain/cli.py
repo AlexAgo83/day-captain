@@ -22,6 +22,7 @@ from day_captain.hosted_jobs import check_hosted_health
 from day_captain.hosted_jobs import trigger_hosted_job
 from day_captain.hosted_jobs import validate_hosted_service
 from day_captain.hosted_jobs import wait_for_hosted_health
+from day_captain.models import parse_datetime
 from day_captain.models import to_jsonable
 from day_captain.web import serve
 
@@ -29,7 +30,7 @@ from day_captain.web import serve
 def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
     if not value:
         return None
-    return datetime.fromisoformat(value)
+    return parse_datetime(str(value))
 
 
 def _parse_date(value: Optional[str]) -> Optional[date]:

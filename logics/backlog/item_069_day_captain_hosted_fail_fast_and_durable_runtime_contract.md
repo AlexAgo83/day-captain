@@ -1,9 +1,9 @@
 ## item_069_day_captain_hosted_fail_fast_and_durable_runtime_contract - Make hosted runtime fail fast and tighten durable execution prerequisites
 > From version: 1.5.0
-> Status: Ready
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -42,3 +42,4 @@
 
 # Notes
 - Derived from the project review that highlighted hosted runtime fallback and durability ambiguity.
+- Closed on Tuesday, March 10, 2026 after enforcing durable hosted storage, requiring explicit hosted Graph runtime inputs, and ensuring hosted bootstrap no longer degrades to stub runtime paths through invalid config.

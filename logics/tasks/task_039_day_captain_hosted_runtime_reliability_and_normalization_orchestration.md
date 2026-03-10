@@ -1,9 +1,9 @@
 ## task_039_day_captain_hosted_runtime_reliability_and_normalization_orchestration - Day Captain hosted runtime reliability and normalization orchestration
 > From version: 1.5.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -23,11 +23,11 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Tighten hosted runtime bootstrap and validation so Graph-backed hosted execution fails explicitly instead of silently falling back to stub behavior.
-- [ ] 2. Harden delegated auth so expired cached tokens are never reused as if they were valid when refresh cannot proceed.
-- [ ] 3. Normalize target-user resolution and email-command routing consistently across config and runtime.
-- [ ] 4. Align CLI and hosted web datetime parsing with the shared model behavior, including standard `Z`-suffixed UTC timestamps.
-- [ ] FINAL: Update regression tests and operational docs
+- [x] 1. Tighten hosted runtime bootstrap and validation so Graph-backed hosted execution fails explicitly instead of silently falling back to stub behavior.
+- [x] 2. Harden delegated auth so expired cached tokens are never reused as if they were valid when refresh cannot proceed.
+- [x] 3. Normalize target-user resolution and email-command routing consistently across config and runtime.
+- [x] 4. Align CLI and hosted web datetime parsing with the shared model behavior, including standard `Z`-suffixed UTC timestamps.
+- [x] FINAL: Update regression tests and operational docs
 
 # AC Traceability
 - Req034 AC1 -> Plan step 1. Proof: the hosted runtime contract is explicitly tightened to remove misleading stub fallback.
@@ -48,13 +48,14 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Hosted runtime can no longer silently run in misleading Graph-free fallback modes where hosted Graph execution is expected.
-- [ ] Delegated auth does not reuse expired cached tokens without a valid refresh path.
-- [ ] Target-user normalization is consistent across config, runtime, and email-command flows.
-- [ ] CLI and hosted web datetime parsing are aligned with shared model parsing for standard ISO inputs.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Hosted runtime can no longer silently run in misleading Graph-free fallback modes where hosted Graph execution is expected.
+- [x] Delegated auth does not reuse expired cached tokens without a valid refresh path.
+- [x] Target-user normalization is consistent across config, runtime, and email-command flows.
+- [x] CLI and hosted web datetime parsing are aligned with shared model parsing for standard ISO inputs.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Tuesday, March 10, 2026 from a project-wide runtime review focused on fail-fast behavior, durable hosted execution, auth clarity, and cross-entrypoint consistency.
+- Completed on Tuesday, March 10, 2026 after shipping hosted fail-fast validation, durable-storage enforcement, explicit delegated-token expiry failures, mailbox-case normalization, parser alignment, and regression coverage across settings, auth, app, CLI, web, and hosted-job validation.

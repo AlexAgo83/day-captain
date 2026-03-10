@@ -1,9 +1,9 @@
 ## item_071_day_captain_target_user_normalization_and_entrypoint_datetime_alignment - Normalize target-user identity and align datetime parsing across entrypoints
 > From version: 1.5.0
-> Status: Ready
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -42,3 +42,4 @@
 
 # Notes
 - Derived from the project review of multi-user resolution and cross-entrypoint parsing consistency.
+- Closed on Tuesday, March 10, 2026 after normalizing mailbox-target handling across config/runtime flows and aligning CLI plus web datetime parsing with the shared model parser for `Z`-suffixed ISO inputs.

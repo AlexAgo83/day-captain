@@ -12,6 +12,7 @@ from wsgiref.simple_server import make_server
 
 from day_captain.app import build_application
 from day_captain.config import DayCaptainSettings
+from day_captain.models import parse_datetime
 from day_captain.models import to_jsonable
 
 
@@ -23,7 +24,7 @@ logger = logging.getLogger(__name__)
 def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
     if not value:
         return None
-    return datetime.fromisoformat(value)
+    return parse_datetime(str(value))
 
 
 def _parse_date(value: Optional[str]) -> Optional[date]:

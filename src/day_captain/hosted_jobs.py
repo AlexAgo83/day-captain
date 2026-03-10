@@ -345,6 +345,7 @@ def validate_hosted_service(
     wake_delay_seconds: int = 0,
     sleeper: Optional[Callable[[float], None]] = None,
 ) -> Mapping[str, Any]:
+    normalized_target_user = str(target_user_id or "").strip().lower()
     warmup = None
     if wake_service:
         warmup = wait_for_hosted_health(
@@ -425,13 +426,13 @@ def validate_hosted_service(
         command_response = email_command.get("response") or {}
         if str(command_response.get("job") or "").strip() != "email_command_recall":
             raise HostedJobError("Hosted email-command validation reported an unexpected job name.")
-        resolved_target_user = str(command_response.get("target_user_id") or "").strip()
-        if target_user_id and resolved_target_user and resolved_target_user != str(target_user_id).strip():
+        resolved_target_user = str(command_response.get("target_user_id") or "").strip().lower()
+        if normalized_target_user and resolved_target_user and resolved_target_user != normalized_target_user:
             raise HostedJobError("Hosted email-command validation resolved an unexpected target user.")
     return {
         "status": "ok",
         "service_url": _normalized_service_url(service_url),
-        "target_user_id": str(target_user_id or "").strip(),
+        "target_user_id": normalized_target_user,
         "warmup": warmup,
         "health": health,
         "runtime": health.get("runtime"),
