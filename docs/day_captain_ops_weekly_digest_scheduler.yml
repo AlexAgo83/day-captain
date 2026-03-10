@@ -20,7 +20,7 @@ jobs:
       - name: Checkout day-captain release branch
         uses: actions/checkout@v4
         with:
-          repository: example-owner/day-captain
+          repository: AlexAgo83/day-captain
           ref: release
           path: day-captain
 
@@ -91,7 +91,7 @@ jobs:
       - name: Checkout day-captain release branch
         uses: actions/checkout@v4
         with:
-          repository: example-owner/day-captain
+          repository: AlexAgo83/day-captain
           ref: release
           path: day-captain
 
@@ -131,7 +131,7 @@ jobs:
       - name: Checkout day-captain release branch
         uses: actions/checkout@v4
         with:
-          repository: example-owner/day-captain
+          repository: AlexAgo83/day-captain
           ref: release
           path: day-captain
 
