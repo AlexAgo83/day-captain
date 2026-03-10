@@ -1,9 +1,9 @@
 ## item_065_day_captain_per_meeting_assistant_briefings_with_related_context - Day Captain per-meeting assistant briefings with related context
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: High
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring`
-- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Draft`)
+- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Done`)
 
 # Priority
 - Impact: High - meetings are a core part of the daily brief and need stronger assistant interpretation to be useful.
@@ -52,3 +52,4 @@ flowchart LR
 
 # Notes
 - Created on Tuesday, March 10, 2026 from product direction to extend assistant-style interpretation from mail cards to surfaced meetings.
+- Closed on Tuesday, March 10, 2026 after implementing meeting briefings with related mail context, bounded fallback behavior, and regression coverage.

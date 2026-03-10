@@ -1,9 +1,9 @@
 ## item_068_day_captain_all_day_presence_event_classification_and_rendering - Day Captain all-day presence event classification and rendering
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -42,7 +42,7 @@ flowchart LR
 
 # Links
 - Request: `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring`
-- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Draft`)
+- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Done`)
 
 # Priority
 - Impact: High - this affects daily operational understanding of where the person is, not just wording quality.
@@ -50,3 +50,4 @@ flowchart LR
 
 # Notes
 - Created on Tuesday, March 10, 2026 from domain-specific product guidance that all-day agenda entries can encode daily physical presence rather than meetings.
+- Closed on Tuesday, March 10, 2026 after implementing daily presence classification and rendering for qualifying all-day agenda entries, with regression coverage.

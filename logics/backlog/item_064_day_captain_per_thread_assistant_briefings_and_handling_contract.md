@@ -1,9 +1,9 @@
 ## item_064_day_captain_per_thread_assistant_briefings_and_handling_contract - Day Captain per-thread assistant briefings and handling contract
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: High
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring`
-- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Draft`)
+- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Done`)
 
 # Priority
 - Impact: High - mail cards are one of the main digest surfaces and currently under-explain what the conversation means.
@@ -52,3 +52,4 @@ flowchart LR
 
 # Notes
 - Created on Tuesday, March 10, 2026 from product direction to summarize surfaced email threads as assistant briefings instead of excerpt-oriented cards.
+- Closed on Tuesday, March 10, 2026 after implementing structured per-thread briefings, mapped handling outcomes, thread context metadata, and regression coverage.

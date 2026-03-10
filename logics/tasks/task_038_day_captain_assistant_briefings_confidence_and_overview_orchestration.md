@@ -1,9 +1,9 @@
 ## task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration - Day Captain assistant briefings confidence and overview orchestration
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 98%
-> Confidence: 95%
-> Progress: 5%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: High
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -27,12 +27,12 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Implement structured assistant briefings and mapped handling outcomes for surfaced email threads.
-- [ ] 2. Implement structured assistant briefings for surfaced meetings using related context when available.
-- [ ] 3. Classify qualifying all-day agenda entries as daily presence events rather than ordinary meetings.
-- [ ] 4. Add confidence signals with score, label, short reason, and explicit low-confidence versus fallback behavior.
-- [ ] 5. Rebuild `En bref` from important structured assistant briefings.
-- [ ] FINAL: Update related Logics docs
+- [x] 1. Implement structured assistant briefings and mapped handling outcomes for surfaced email threads.
+- [x] 2. Implement structured assistant briefings for surfaced meetings using related context when available.
+- [x] 3. Classify qualifying all-day agenda entries as daily presence events rather than ordinary meetings.
+- [x] 4. Add confidence signals with score, label, short reason, and explicit low-confidence versus fallback behavior.
+- [x] 5. Rebuild `En bref` from important structured assistant briefings.
+- [x] FINAL: Update related Logics docs
 
 # AC Traceability
 - Req033 AC1 -> Plan step 1. Proof: task explicitly implements per-thread assistant briefings.
@@ -55,13 +55,14 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Structured assistant briefings exist for surfaced mail threads and surfaced meetings.
-- [ ] Qualifying all-day agenda entries are rendered as daily presence events rather than ordinary meetings.
-- [ ] Confidence signals and low-confidence/fallback behavior are implemented consistently across generated briefings.
-- [ ] `En bref` is rebuilt from important structured assistant briefings.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Structured assistant briefings exist for surfaced mail threads and surfaced meetings.
+- [x] Qualifying all-day agenda entries are rendered as daily presence events rather than ordinary meetings.
+- [x] Confidence signals and low-confidence/fallback behavior are implemented consistently across generated briefings.
+- [x] `En bref` is rebuilt from important structured assistant briefings.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Tuesday, March 10, 2026 from product direction to replace the mechanical summary system with structured assistant briefings plus confidence and overview regeneration.
+- Completed on Tuesday, March 10, 2026 after shipping structured mail-thread and meeting briefings, daily presence classification, confidence metadata, overview regeneration, and recipient-aware follow-up wording with full test validation.
