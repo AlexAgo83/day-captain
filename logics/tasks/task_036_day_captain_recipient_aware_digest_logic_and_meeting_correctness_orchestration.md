@@ -1,9 +1,9 @@
 ## task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration - Orchestrate recipient-aware digest identity, per-mail summaries, bilingual wording, and meeting correctness
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 98%
-> Confidence: 95%
-> Progress: 5%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -24,10 +24,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Tighten recipient-aware identity handling and direct-address relevance.
-- [ ] 2. Improve French digest language coherence for English-source content.
-- [ ] 3. Keep `req_031` aligned with the newer execution path in `task_038` so overlapping summary and meeting work is not implemented twice.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Tighten recipient-aware identity handling and direct-address relevance.
+- [x] 2. Improve French digest language coherence for English-source content.
+- [x] 3. Keep `req_031` aligned with the newer execution path in `task_038` so overlapping summary and meeting work is not implemented twice.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req031 AC1 -> Plan step 1. Proof: task explicitly includes recipient-aware identity behavior.
@@ -46,14 +46,15 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Digest wording is recipient-aware where target-user identity is available.
-- [ ] Surfaced mail cards include short, grounded assistant summaries.
-- [ ] French digests preserve English-source meaning with intentional bilingual wording where needed.
-- [ ] Upcoming meetings are chronologically correct and important overnight changes are clearly visible.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Digest wording is recipient-aware where target-user identity is available.
+- [x] Surfaced mail cards include short, grounded assistant summaries.
+- [x] French digests preserve English-source meaning with intentional bilingual wording where needed.
+- [x] Upcoming meetings are chronologically correct and important overnight changes are clearly visible.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Tuesday, March 10, 2026 from direct feedback on the delivered digest for Casey Morgan.
 - This task intentionally focuses on product logic and assistant correctness rather than layout redesign.
 - Synchronization note: this task now mainly carries the remaining recipient-aware and bilingual wording work, while overlapping summary-system replacement execution is coordinated through `task_038`.
+- Completed on Tuesday, March 10, 2026 after shipping recipient-aware direct-address handling, synchronized per-thread and per-meeting briefings, bounded bilingual fallback wording, and meeting chronology/change-visibility validation.

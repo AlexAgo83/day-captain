@@ -163,6 +163,45 @@ EXECUTIVE_HINTS = (
     "leadership",
 )
 
+ENGLISH_LANGUAGE_HINTS = (
+    "account",
+    "approve",
+    "attached",
+    "before",
+    "feedback",
+    "input",
+    "invoice",
+    "join",
+    "keep",
+    "milestones",
+    "need",
+    "noon",
+    "please",
+    "review",
+    "same",
+    "thanks",
+    "update",
+)
+
+FRENCH_LANGUAGE_HINTS = (
+    "aujourd",
+    "besoin",
+    "bonjour",
+    "candidature",
+    "demain",
+    "disponible",
+    "jointe",
+    "merci",
+    "pièce",
+    "piece",
+    "réunion",
+    "reunion",
+    "retour",
+    "suivi",
+    "votre",
+    "vous",
+)
+
 SECTION_PRIORITY = {
     "critical_topics": 3,
     "actions_to_take": 2,
@@ -522,6 +561,28 @@ def _contains_any(text: str, patterns: Iterable[str]) -> bool:
     return any(pattern in text for pattern in patterns)
 
 
+def _language_hint_for_text(value: str) -> str:
+    normalized = " ".join((value or "").strip().lower().split())
+    if not normalized:
+        return ""
+    tokens = tuple(token.strip("'") for token in re.findall(r"[a-zA-ZÀ-ÿ']+", normalized))
+    if not tokens:
+        return ""
+    english_score = sum(1 for token in tokens if token in ENGLISH_LANGUAGE_HINTS)
+    french_score = sum(1 for token in tokens if token in FRENCH_LANGUAGE_HINTS)
+    for phrase in ("please review", "need your input", "thank you", "before noon"):
+        if phrase in normalized:
+            english_score += 2
+    for phrase in ("bonjour", "merci", "je vous", "votre retour"):
+        if phrase in normalized:
+            french_score += 2
+    if english_score >= 2 and english_score > french_score:
+        return "en"
+    if french_score >= 2 and french_score > english_score:
+        return "fr"
+    return ""
+
+
 def _tokenize_subject(subject: str) -> Sequence[str]:
     tokens = []
     for token in re.findall(r"[a-z0-9]{3,}", subject.lower()):
@@ -830,6 +891,14 @@ def _clean_overview_fragment(value: str) -> str:
     return cleaned.rstrip(" .!?:;,\n\t") or cleaned
 
 
+def _overview_item_fragment(item: DigestEntry, language: str, max_chars: int = 90) -> str:
+    if item.source_kind == "message":
+        summary = _strip_known_summary_prefix(item.summary, language)
+        if summary:
+            return _clean_overview_fragment(_truncate_sentence(summary, max_chars=max_chars))
+    return _clean_overview_fragment(_truncate_sentence(item.title, max_chars=max_chars))
+
+
 def _truncate_sentence(value: str, max_chars: int = 220) -> str:
     cleaned = " ".join((value or "").strip().split())
     if len(cleaned) <= max_chars:
@@ -908,6 +977,8 @@ def _strip_known_summary_prefix(summary: str, language: str) -> str:
         "en": (
             "Needs attention:",
             "Likely needs your follow-up:",
+            "Critical:",
+            "Action:",
             "Worth noting:",
             "Directly addressed to you:",
             "Candidate profile:",
@@ -915,6 +986,8 @@ def _strip_known_summary_prefix(summary: str, language: str) -> str:
         "fr": (
             "À surveiller de près :",
             "Demande probablement un suivi de votre part :",
+            "Urgent :",
+            "Action :",
             "À noter :",
             "Vous êtes directement destinataire :",
             "Profil candidat :",
@@ -1016,6 +1089,11 @@ def _thread_context_payload(messages: Sequence[MessageRecord], display_timezone:
         "message_count": len(messages),
         "participants": participants[:4],
         "target_recipient_display_name": _target_recipient_display_name(ordered[-1]) if ordered else "",
+        "source_language_hint": (
+            _language_hint_for_text("{0} {1}".format(ordered[-1].subject or "", ordered[-1].body_preview or ""))
+            if ordered
+            else ""
+        ),
         "messages": thread_messages,
     }
 
@@ -1755,6 +1833,8 @@ class DeterministicScoringEngine:
         preview = _decision_ready_preview(cleaned_preview or (message.body_preview or "").strip())
         normalized_preview = _normalize_text(preview)
         base = preview if preview else copy["from_sender"].format(sender=message.from_address)
+        source_language_hint = _language_hint_for_text("{0} {1}".format(message.subject or "", preview))
+        mixed_english_source = self.digest_language == "fr" and source_language_hint == "en"
         candidate_summary = _deterministic_candidate_profile_summary(message.subject or "", preview, self.digest_language)
         if candidate_summary and "critical_keyword" not in reason_codes and "action_keyword" not in reason_codes:
             return candidate_summary
@@ -1763,7 +1843,8 @@ class DeterministicScoringEngine:
                 return copy["download_shared"]
             return copy["file_shared"]
         if "critical_keyword" in reason_codes:
-            return _normalize_item_summary(message.subject or "", copy["critical"].format(text=base), max_chars=175)
+            template = "Urgent : {text}" if mixed_english_source else str(copy["critical"])
+            return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=175)
         if "direct_target_recipient" in reason_codes:
             display_name = _target_recipient_display_name(message)
             if display_name:
@@ -1774,7 +1855,8 @@ class DeterministicScoringEngine:
                 )
             return _normalize_item_summary(message.subject or "", copy["direct_target"].format(text=base), max_chars=175)
         if "action_keyword" in reason_codes:
-            return _normalize_item_summary(message.subject or "", copy["action"].format(text=base), max_chars=175)
+            template = "Action : {text}" if mixed_english_source else str(copy["action"])
+            return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=175)
         return _normalize_item_summary(message.subject or "", copy["watch"].format(text=base), max_chars=170)
 
 
@@ -2406,7 +2488,7 @@ class DeterministicDigestOverviewEngine:
             items = sections[section_name]
             if not items:
                 continue
-            sentences.append(self._section_sentence(section_name, items, localized))
+            sentences.append(self._section_sentence(section_name, items, localized, language))
             if len(sentences) >= 2:
                 break
         presence_items = sections["daily_presence"]
@@ -2429,9 +2511,10 @@ class DeterministicDigestOverviewEngine:
         section_name: str,
         items: Sequence[DigestEntry],
         localized: Mapping[str, str],
+        language: str,
     ) -> str:
-        first = _clean_overview_fragment(items[0].title)
-        second = _clean_overview_fragment(items[1].title) if len(items) > 1 else ""
+        first = _overview_item_fragment(items[0], language)
+        second = _overview_item_fragment(items[1], language, max_chars=72) if len(items) > 1 else ""
         if section_name == "critical_topics":
             key = "critical_many" if second else "critical_one"
         elif section_name == "actions_to_take":

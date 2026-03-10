@@ -1,9 +1,9 @@
 ## item_059_day_captain_per_mail_assistant_summaries - Add short assistant-style summaries for every surfaced mail card
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 5%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -40,7 +40,7 @@ flowchart LR
 
 # Links
 - Request: `req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology`
-- Primary task(s): `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` (`Draft`)
+- Primary task(s): `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` (`Done`)
 
 # Priority
 - Impact: High - card summaries are one of the main product surfaces users read.
@@ -49,3 +49,4 @@ flowchart LR
 # Notes
 - Derived from the same March 10, 2026 feedback asking for a concise summary on every mail card.
 - Synchronization note: the newer `item_064_day_captain_per_thread_assistant_briefings_and_handling_contract` extends this narrower per-mail-summary slice into a thread-centric replacement path with handling outcomes and deterministic fallback. Execution should be synchronized there rather than duplicated separately.
+- Completed on Tuesday, March 10, 2026 through the synchronized thread-briefing implementation in `task_038`, with bounded assistant-style mail summaries and deterministic fallback coverage.

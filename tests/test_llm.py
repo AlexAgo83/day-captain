@@ -526,7 +526,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
         overview = DeterministicDigestOverviewEngine().summarize(payload)
 
         self.assertEqual(overview.source, "deterministic")
-        self.assertIn("Top priority: Urgent budget review.", overview.summary)
+        self.assertIn("Top priority: Please review before noon.", overview.summary)
         self.assertIn("Upcoming meeting: Today at 10:00 with ceo@example.com.", overview.summary)
 
     def test_llm_summary_falls_back_to_deterministic_summary(self) -> None:
@@ -562,6 +562,31 @@ class DigestOverviewEngineTest(unittest.TestCase):
 
         self.assertEqual(overview.source, "deterministic")
         self.assertIn("Suivi principal", overview.summary)
+
+    def test_deterministic_french_overview_preserves_english_source_terms(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            actions_to_take=(
+                DigestEntry(
+                    title="Payment discussion",
+                    summary="Action : Need your input before noon on the bank account update.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-bilingual",
+                    score=2.0,
+                ),
+            ),
+        )
+
+        overview = DeterministicDigestOverviewEngine().summarize(payload)
+
+        self.assertEqual(overview.source, "deterministic")
+        self.assertIn("Suivi principal : Need your input before noon on the bank account update.", overview.summary)
 
     def test_llm_summary_limits_meeting_input_and_passes_meeting_note(self) -> None:
         payload = DigestPayload(
