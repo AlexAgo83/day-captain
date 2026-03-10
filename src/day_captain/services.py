@@ -306,6 +306,7 @@ LANGUAGE_COPY = {
             "meeting_today_self": "Today, {time}",
             "meeting_day_self": "{day}, {time}",
             "meeting_location": " | {location}",
+            "meeting_context_note": "Context: {text}",
             "unknown_organizer": "an unknown organizer",
             "meeting_status_summary": "{status}: {text}",
             "presence_location": "Location signal for the day: {text}",
@@ -410,6 +411,7 @@ LANGUAGE_COPY = {
             "meeting_today_self": "Aujourd'hui, {time}",
             "meeting_day_self": "{day}, {time}",
             "meeting_location": " | {location}",
+            "meeting_context_note": "Contexte : {text}",
             "unknown_organizer": "un organisateur inconnu",
             "meeting_status_summary": "{status} : {text}",
             "presence_location": "Signal de présence pour la journée : {text}",
@@ -1175,6 +1177,26 @@ def _meeting_confidence(meeting: MeetingRecord, reason_codes: Sequence[str], has
     )
 
 
+def _meeting_related_context_summary(related_messages: Sequence[Mapping[str, str]], digest_language: str) -> str:
+    if not related_messages:
+        return ""
+    first = dict(related_messages[0] or {})
+    preview = " ".join(str(first.get("preview") or "").split())
+    subject = " ".join(str(first.get("subject") or "").split())
+    sender = " ".join(str(first.get("sender") or "").split())
+    if not preview and not subject:
+        return ""
+    if preview:
+        text = preview
+    elif subject and sender:
+        text = "{0} ({1})".format(subject, sender)
+    else:
+        text = subject or sender
+    return str(_language_copy(digest_language)["summary"]["meeting_context_note"]).format(
+        text=_truncate_sentence(text, max_chars=90)
+    )
+
+
 def _compact_candidate_profile_summary(title: str, summary: str) -> str:
     normalized = _normalize_text(title, summary)
     candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
@@ -1679,6 +1701,9 @@ class DeterministicScoringEngine:
                 )
         if meeting.location and _normalized_place(meeting.location) != _normalized_place(meeting.subject):
             summary += copy["meeting_location"].format(location=meeting.location)
+        related_context_note = _meeting_related_context_summary(related_messages, self.digest_language)
+        if related_context_note:
+            summary = "{0}. {1}".format(summary.rstrip("."), related_context_note)
         status_reason = _meeting_status_reason(reason_codes)
         if status_reason:
             status_text = str(_language_copy(self.digest_language)["badges"][status_reason])
