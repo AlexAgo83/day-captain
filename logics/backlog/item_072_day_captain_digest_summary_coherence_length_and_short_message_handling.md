@@ -1,9 +1,9 @@
 ## item_072_day_captain_digest_summary_coherence_length_and_short_message_handling - Fix fragmented summaries, relax hard stops, and improve short-message rendering
 > From version: 1.5.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
-> Confidence: 96%
-> Progress: 0%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@
 - Req035 AC1 supporting rule on variable bounds -> This item also carries the variable-by-item-type bound rule. Proof: cleaner summary limits belong to the same slice.
 - Req035 AC2 -> This item is also the short-message-rendering slice. Proof: weak direct-message wording remains part of the same problem family.
 - Req035 AC2 supporting rule -> This item explicitly makes older thread context part of the default synthesis path. Proof: stronger thread-aware summaries are part of this slice, not an edge-case fallback only.
-- Req035 AC7 -> This item requires regression coverage for the affected summary cases. Proof: closure depends on fragment and short-message tests.
+- Req035 AC8 -> This item requires regression coverage for the affected summary cases. Proof: closure depends on fragment and short-message tests.
 
 # Links
 - Request: `req_035_day_captain_digest_summary_coherence_privacy_weather_and_footer_polish`
@@ -55,3 +55,4 @@
 
 # Notes
 - Derived from live Outlook review where summaries still looked partially mechanical or incomplete.
+- Closed on Wednesday, March 11, 2026 after implementing thread-reinforced preview selection, more generous item-type bounds, and regression tests for short replies.

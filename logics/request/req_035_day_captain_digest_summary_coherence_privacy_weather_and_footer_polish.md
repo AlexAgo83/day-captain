@@ -1,8 +1,8 @@
 ## req_035_day_captain_digest_summary_coherence_privacy_weather_and_footer_polish - Day Captain digest summary coherence, privacy-safe wording, weather rain signal, and footer polish
 > From version: 1.5.1
-> Status: Ready
-> Understanding: 100%
-> Confidence: 97%
+> Status: Done
+> Understanding: 99%
+> Confidence: 98%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -109,14 +109,15 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_072_day_captain_digest_summary_coherence_length_and_short_message_handling` - Fix fragmented summaries, relax hard stops, and improve short-message rendering. Status: `Ready`.
-- `item_073_day_captain_digest_privacy_safe_abstraction_and_action_oriented_overview` - Reduce over-literal business carry-over and make overview/confidence wording more action-oriented. Status: `Ready`.
-- `item_074_day_captain_digest_weather_rain_signal_copy` - Add a rain expectation signal to the weather line when forecast data supports it. Status: `Ready`.
-- `item_075_day_captain_digest_quick_actions_explainer_and_footer_microcopy` - Explain the quick-action buttons and add a small Day Captain footer line. Status: `Ready`.
-- `item_076_day_captain_digest_meeting_recurrence_indicator` - Expose a visible recurrence indicator on meeting cards when calendar metadata supports it. Status: `Ready`.
-- `task_040_day_captain_digest_editorial_privacy_weather_and_footer_orchestration` - Orchestrate summary coherence, privacy-safe wording, weather rain copy, and footer microcopy. Status: `Ready`.
+- `item_072_day_captain_digest_summary_coherence_length_and_short_message_handling` - Fix fragmented summaries, relax hard stops, and improve short-message rendering. Status: `Done`.
+- `item_073_day_captain_digest_privacy_safe_abstraction_and_action_oriented_overview` - Reduce over-literal business carry-over and make overview/confidence wording more action-oriented. Status: `Done`.
+- `item_074_day_captain_digest_weather_rain_signal_copy` - Add a rain expectation signal to the weather line when forecast data supports it. Status: `Done`.
+- `item_075_day_captain_digest_quick_actions_explainer_and_footer_microcopy` - Explain the quick-action buttons and add a small Day Captain footer line. Status: `Done`.
+- `item_076_day_captain_digest_meeting_recurrence_indicator` - Expose a visible recurrence indicator on meeting cards when calendar metadata supports it. Status: `Done`.
+- `task_040_day_captain_digest_editorial_privacy_weather_and_footer_orchestration` - Orchestrate summary coherence, privacy-safe wording, weather rain copy, and footer microcopy. Status: `Done`.
 
 # Notes
 - Created on Wednesday, March 11, 2026 from live Outlook review of the `1.5.1` digest.
 - This request is a follow-up quality slice on top of the structured-briefing system: the structure is now solid, and the remaining work is about better editorial output, safer abstraction, and final visible polish.
 - Privacy note: this request explicitly prefers summarization and abstraction over raw business-fragment carry-over in visible digest copy.
+- Closed on Wednesday, March 11, 2026 after implementing synthetic-only repo fixtures, thread-reinforced summaries, nuanced weather rain copy, discreet meeting recurrence badges, and the linked Day Captain footer.

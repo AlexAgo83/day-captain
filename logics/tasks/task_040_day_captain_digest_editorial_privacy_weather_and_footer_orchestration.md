@@ -1,9 +1,9 @@
 ## task_040_day_captain_digest_editorial_privacy_weather_and_footer_orchestration - Orchestrate summary coherence, privacy-safe wording, weather rain copy, and footer microcopy
 > From version: 1.5.1
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -25,12 +25,12 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Fix fragmented summaries, relax abrupt hard stops, improve very short direct-message rendering, use older thread context by default, and apply variable bounded length by item type.
-- [ ] 2. Make visible digest wording more privacy-safe and action-oriented, including lighter confidence reasons and synthetic-only repo fixtures/examples.
-- [ ] 3. Extend the weather line with a nuanced rain expectation signal when forecast data allows it.
-- [ ] 4. Add a discreet visible recurrence indicator on meeting cards when calendar metadata supports it, with frequency-aware labels when available.
-- [ ] 5. Replace the quick-actions intro copy with slightly explanatory wording and add a small linked `Day Captain © YEAR` footer line.
-- [ ] FINAL: Update regression tests and linked Logics docs.
+- [x] 1. Fix fragmented summaries, relax abrupt hard stops, improve very short direct-message rendering, use older thread context by default, and apply variable bounded length by item type.
+- [x] 2. Make visible digest wording more privacy-safe and action-oriented, including lighter confidence reasons and synthetic-only repo fixtures/examples.
+- [x] 3. Extend the weather line with a nuanced rain expectation signal when forecast data allows it.
+- [x] 4. Add a discreet visible recurrence indicator on meeting cards when calendar metadata supports it, with frequency-aware labels when available.
+- [x] 5. Replace the quick-actions intro copy with slightly explanatory wording and add a small linked `Day Captain © YEAR` footer line.
+- [x] FINAL: Update regression tests and linked Logics docs.
 
 # AC Traceability
 - Req035 AC1 -> Plan step 1. Proof: task explicitly targets summary coherence and bounded length behavior.
@@ -57,15 +57,20 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Summaries avoid obvious fragment starts/stops and handle very short direct messages more naturally.
-- [ ] Summary bounds can vary by item type while remaining bounded and readable.
-- [ ] Visible digest wording is more abstract and action-oriented without overexposing raw business fragments, and repo fixtures/examples remain synthetic.
-- [ ] Weather copy indicates nuanced rain expectation when supported by the data.
-- [ ] Meeting cards expose a discreet recurrence indicator when supported by calendar metadata.
-- [ ] Bottom quick-actions copy and footer line are updated in stable text and HTML rendering.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Summaries avoid obvious fragment starts/stops and handle very short direct messages more naturally.
+- [x] Summary bounds can vary by item type while remaining bounded and readable.
+- [x] Visible digest wording is more abstract and action-oriented without overexposing raw business fragments, and repo fixtures/examples remain synthetic.
+- [x] Weather copy indicates nuanced rain expectation when supported by the data.
+- [x] Meeting cards expose a discreet recurrence indicator when supported by calendar metadata.
+- [x] Bottom quick-actions copy and footer line are updated in stable text and HTML rendering.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Wednesday, March 11, 2026 from live Outlook review of the `1.5.1` digest output.
+- Completed on Wednesday, March 11, 2026.
+- Validation:
+  - `python3 -m unittest discover -s tests`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`

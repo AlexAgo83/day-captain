@@ -631,6 +631,36 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertTrue(prioritized[0].confidence_label)
         self.assertGreater(prioritized[0].confidence_score, 0)
 
+    def test_thread_summary_uses_older_context_when_latest_reply_is_too_short(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-thread-older",
+                thread_id="thread-render",
+                subject="Rendu clip salon",
+                from_address="agency@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 10, 6, 45, tzinfo=timezone.utc),
+                body_preview="Le rendu export final est prêt au téléchargement pour validation.",
+            ),
+            MessageRecord(
+                graph_message_id="msg-thread-latest",
+                thread_id="thread-render",
+                subject="Re: Rendu clip salon",
+                from_address="agency@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 10, 7, 30, tzinfo=timezone.utc),
+                body_preview="Voici !",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertNotIn("Voici !", prioritized[0].summary)
+        self.assertIn("rendu export final", prioritized[0].summary.lower())
+
     def test_meeting_summary_uses_related_message_context_when_available(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
@@ -662,6 +692,30 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertIn("Context:", meeting_entry.summary)
         self.assertIn("launch milestones", meeting_entry.summary)
         self.assertIn("meeting_related_context", meeting_entry.reason_codes)
+
+    def test_meeting_context_marks_recurring_events_when_metadata_supports_it(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-weekly",
+                subject="Point équipe",
+                start_at=datetime(2026, 3, 11, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 11, 9, 30, tzinfo=timezone.utc),
+                organizer_address="lead@example.com",
+                location="Teams",
+                raw_payload={
+                    "type": "occurrence",
+                    "seriesMasterId": "series-1",
+                    "recurrence": {"pattern": {"type": "weekly"}},
+                },
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertIn("meeting_recurring", prioritized[0].reason_codes)
+        self.assertEqual(prioritized[0].context_metadata["recurrence_label"], "Hebdo")
 
 
 if __name__ == "__main__":
