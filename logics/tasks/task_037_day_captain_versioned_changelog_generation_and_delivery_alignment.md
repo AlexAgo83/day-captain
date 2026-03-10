@@ -1,9 +1,9 @@
 ## task_037_day_captain_versioned_changelog_generation_and_delivery_alignment - Orchestrate changelog artifact conventions and delivery-closure alignment
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 93%
-> Progress: 0%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Delivery Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Define the `changelogs/` artifact contract and versioned filename strategy.
-- [ ] 2. Align delivery closure guidance so shipped work generates a changelog using the real current version at completion time.
-- [ ] 3. Update docs/process guidance and add any bounded validation needed for the changelog workflow.
-- [ ] FINAL: Update linked Logics docs, statuses, and closure links.
+- [x] 1. Define the `changelogs/` artifact contract and versioned filename strategy.
+- [x] 2. Align delivery closure guidance so shipped work generates a changelog using the real current version at completion time.
+- [x] 3. Update docs/process guidance and add any bounded validation needed for the changelog workflow.
+- [x] FINAL: Update linked Logics docs, statuses, and closure links.
 
 # AC Traceability
 - Req032 AC1 -> Plan step 1. Proof: task explicitly defines the root changelog artifact convention.
@@ -42,11 +42,12 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Day Captain has a documented `changelogs/` artifact convention.
-- [ ] Delivery closure guidance includes changelog generation using the real current project version.
-- [ ] Linked request/backlog/task docs are updated consistently.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Day Captain has a documented `changelogs/` artifact convention.
+- [x] Delivery closure guidance includes changelog generation using the real current project version.
+- [x] Linked request/backlog/task docs are updated consistently.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Tuesday, March 10, 2026 from process direction to add versioned changelog generation to Day Captain.
 - This task intentionally scopes only repository artifacts and delivery workflow alignment, not a changelog UI.
+- Completed on Tuesday, March 10, 2026 after validating helper utilities, script-driven changelog generation, README/process guidance, and the closure-time `1.5.0` changelog artifact.

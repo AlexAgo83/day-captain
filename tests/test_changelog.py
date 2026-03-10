@@ -1,4 +1,5 @@
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -34,6 +35,30 @@ class ChangelogHelpersTest(unittest.TestCase):
         self.assertIn("# Changelog (`1.4.2 -> 1.4.3`)", rendered)
         self.assertIn("## Version 1.4.3", rendered)
         self.assertIn("### Validation", rendered)
+
+    def test_generate_changelog_script_uses_repo_version_by_default(self) -> None:
+        repo_root = Path(__file__).resolve().parents[1]
+        script_path = repo_root / "scripts" / "generate_changelog.py"
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            temp_repo = Path(tmpdir)
+            (temp_repo / "pyproject.toml").write_text(
+                '[project]\nname = "day-captain"\nversion = "2.0.1"\n',
+                encoding="utf-8",
+            )
+
+            result = subprocess.run(
+                [sys.executable, str(script_path), "--repo-root", str(temp_repo), "--previous-version", "2.0.0"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+
+            output_path = temp_repo / "changelogs" / "CHANGELOGS_2_0_1.md"
+            self.assertEqual(Path(result.stdout.strip()).resolve(), output_path.resolve())
+            self.assertTrue(output_path.is_file())
+            rendered = output_path.read_text(encoding="utf-8")
+            self.assertIn("# Changelog (`2.0.0 -> 2.0.1`)", rendered)
 
 
 if __name__ == "__main__":

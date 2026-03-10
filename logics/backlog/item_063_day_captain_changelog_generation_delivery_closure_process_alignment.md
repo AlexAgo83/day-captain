@@ -1,9 +1,9 @@
 ## item_063_day_captain_changelog_generation_delivery_closure_process_alignment - Align delivery closure workflow and docs with changelog generation
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 93%
-> Progress: 0%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Delivery Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -40,7 +40,7 @@ flowchart LR
 
 # Links
 - Request: `req_032_day_captain_versioned_changelog_generation_and_delivery_closure_alignment`
-- Primary task(s): `task_037_day_captain_versioned_changelog_generation_and_delivery_alignment` (`Draft`)
+- Primary task(s): `task_037_day_captain_versioned_changelog_generation_and_delivery_alignment` (`Done`)
 
 # Priority
 - Impact: Medium - process alignment is what makes the changelog contract actually stick.
@@ -48,3 +48,4 @@ flowchart LR
 
 # Notes
 - Derived from the decision to adopt the closure-time changelog pattern already proven in `electrical-plan-editor`.
+- Completed on Tuesday, March 10, 2026 after aligning README guidance, closure validation, and generation workflow around the real project version resolved at delivery time.
