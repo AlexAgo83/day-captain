@@ -587,6 +587,38 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertTrue(prioritized[0].confidence_label)
         self.assertGreater(prioritized[0].confidence_score, 0)
 
+    def test_meeting_summary_uses_related_message_context_when_available(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-context",
+                subject="Roadmap sync",
+                start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                organizer_address="pm@example.com",
+                location="Teams",
+            ),
+        )
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-roadmap",
+                thread_id="thread-roadmap",
+                subject="Roadmap sync prep",
+                from_address="pm@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 10, 7, 15, tzinfo=timezone.utc),
+                body_preview="Please review the launch milestones before the sync.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, meetings, (), reference_time=now)
+        meeting_entry = next(item for item in prioritized if item.source_kind == "meeting")
+
+        self.assertIn("Context:", meeting_entry.summary)
+        self.assertIn("launch milestones", meeting_entry.summary)
+        self.assertIn("meeting_related_context", meeting_entry.reason_codes)
+
 
 if __name__ == "__main__":
     unittest.main()
