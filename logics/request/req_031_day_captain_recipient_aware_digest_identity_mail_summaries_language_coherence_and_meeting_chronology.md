@@ -1,8 +1,8 @@
 ## req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology - Day Captain recipient-aware digest identity, mail summaries, language coherence, and meeting chronology
 > From version: 1.4.2
 > Status: Draft
-> Understanding: 97%
-> Confidence: 95%
+> Understanding: 98%
+> Confidence: 96%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -85,3 +85,5 @@ flowchart TD
 - Created on Tuesday, March 10, 2026 from direct user feedback on the delivered morning digest for Casey Morgan.
 - The main product issue is no longer raw rendering quality; it is trust in the assistant wording and the correctness of who the digest is for.
 - This request intentionally keeps the scope on digest logic and editorial behavior rather than email layout redesign.
+- Synchronization note: the newer `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring` now carries the primary execution path for replacing the mechanical summary system, including thread-centric mail briefings, richer meeting briefings, confidence signals, `En bref` regeneration, and all-day presence-event handling.
+- Synchronization note: `req_031` remains the originating user-feedback umbrella for recipient-aware identity and bilingual wording needs, while overlapping mail-summary and meeting-interpretation work should be executed through `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` rather than duplicated independently.

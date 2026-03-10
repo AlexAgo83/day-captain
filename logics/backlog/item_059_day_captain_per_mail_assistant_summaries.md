@@ -1,9 +1,9 @@
 ## item_059_day_captain_per_mail_assistant_summaries - Add short assistant-style summaries for every surfaced mail card
 > From version: 1.4.2
 > Status: Draft
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Understanding: 98%
+> Confidence: 96%
+> Progress: 5%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -48,3 +48,4 @@ flowchart LR
 
 # Notes
 - Derived from the same March 10, 2026 feedback asking for a concise summary on every mail card.
+- Synchronization note: the newer `item_064_day_captain_per_thread_assistant_briefings_and_handling_contract` extends this narrower per-mail-summary slice into a thread-centric replacement path with handling outcomes and deterministic fallback. Execution should be synchronized there rather than duplicated separately.

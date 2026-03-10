@@ -1,9 +1,9 @@
 ## task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration - Day Captain assistant briefings confidence and overview orchestration
 > From version: 1.4.2
 > Status: Draft
-> Understanding: 97%
-> Confidence: 94%
-> Progress: 0%
+> Understanding: 98%
+> Confidence: 95%
+> Progress: 5%
 > Complexity: High
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -12,6 +12,7 @@
 - Derived from backlog items `item_064_day_captain_per_thread_assistant_briefings_and_handling_contract`, `item_065_day_captain_per_meeting_assistant_briefings_with_related_context`, `item_066_day_captain_digest_confidence_signals_and_low_confidence_fallback_behavior`, `item_067_day_captain_overview_synthesis_from_structured_assistant_briefings`, and `item_068_day_captain_all_day_presence_event_classification_and_rendering`.
 - Related request(s): `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring`.
 - Related earlier draft work: `req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology` and `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration`.
+- Primary execution note: this task is the main delivery path for the new summary-system replacement, and overlapping mail-summary and meeting-interpretation work from `task_036` should be synchronized here.
 - Delivery target: replace the current mechanical summary layer with structured per-thread and per-meeting assistant briefings, expose confidence clearly, and rebuild `En bref` on top of the new structured outputs.
 - Delivery target also includes separating qualifying all-day agenda presence/location entries from ordinary meetings, because those entries communicate where the person is for the day.
 

@@ -1,9 +1,9 @@
 ## item_061_day_captain_meeting_chronology_and_overnight_change_highlighting - Render meetings in chronological order and highlight overnight changes
 > From version: 1.4.2
 > Status: Draft
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 5%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -50,3 +50,4 @@ flowchart LR
 
 # Notes
 - Derived from live user feedback on Tuesday, March 10, 2026 after reviewing the delivered morning brief.
+- Synchronization note: the newer `item_065_day_captain_per_meeting_assistant_briefings_with_related_context` and `item_068_day_captain_all_day_presence_event_classification_and_rendering` extend this meeting-correctness slice into the new assistant-briefing model. Execution should be synchronized there rather than duplicated separately.

@@ -1,8 +1,8 @@
 ## req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring - Day Captain per-thread and per-meeting assistant briefings with confidence scoring
 > From version: 1.4.2
 > Status: Draft
-> Understanding: 97%
-> Confidence: 95%
+> Understanding: 98%
+> Confidence: 96%
 > Complexity: High
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -79,6 +79,7 @@ flowchart TD
 # Notes
 - Created on Tuesday, March 10, 2026 from product direction to replace the current mechanical summary system with per-object assistant briefings.
 - This request intentionally goes beyond the narrower per-mail-summary request because it also covers meeting briefings, explicit handling outcomes, confidence signals, and `En bref` regeneration from those structured outputs.
+- Synchronization note: `req_033` is now the primary execution path for the summary-system replacement. Older overlapping draft work from `req_031` should be synchronized here rather than implemented in parallel.
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.
