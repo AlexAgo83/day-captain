@@ -21,6 +21,7 @@ from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
 from day_captain.models import WeatherSnapshot
+from day_captain.models import parse_datetime
 from day_captain.ports import Storage
 
 
@@ -242,6 +243,9 @@ LANGUAGE_COPY = {
         },
         "badges": {
             "flagged": "Flagged",
+            "meeting_cancelled": "Cancelled",
+            "meeting_new": "New",
+            "meeting_updated": "Updated",
         },
         "overview": {
             "label": "In brief",
@@ -258,6 +262,7 @@ LANGUAGE_COPY = {
             "critical": "Needs attention: {text}",
             "action": "Likely needs your follow-up: {text}",
             "watch": "Worth noting: {text}",
+            "direct_target": "Directly addressed to you: {text}",
             "candidate_profile": "Candidate profile: {text}",
             "candidate_follow_up": "Review the candidate or decide on follow-up.",
             "file_shared": "Shared a file or document for your review.",
@@ -269,6 +274,7 @@ LANGUAGE_COPY = {
             "meeting_day_self": "{day}, {time}",
             "meeting_location": " | {location}",
             "unknown_organizer": "an unknown organizer",
+            "meeting_status_summary": "{status}: {text}",
         },
     },
     "fr": {
@@ -315,6 +321,9 @@ LANGUAGE_COPY = {
         },
         "badges": {
             "flagged": "Marqué",
+            "meeting_cancelled": "Annulé",
+            "meeting_new": "Nouvelle réunion",
+            "meeting_updated": "Déplacée",
         },
         "overview": {
             "label": "En bref",
@@ -331,6 +340,7 @@ LANGUAGE_COPY = {
             "critical": "À surveiller de près : {text}",
             "action": "Demande probablement un suivi de votre part : {text}",
             "watch": "À noter : {text}",
+            "direct_target": "Vous êtes directement destinataire : {text}",
             "candidate_profile": "Profil candidat : {text}",
             "candidate_follow_up": "Examiner la candidature ou proposer un suivi.",
             "file_shared": "Un fichier ou document a été partagé pour consultation.",
@@ -342,6 +352,7 @@ LANGUAGE_COPY = {
             "meeting_day_self": "{day}, {time}",
             "meeting_location": " | {location}",
             "unknown_organizer": "un organisateur inconnu",
+            "meeting_status_summary": "{status} : {text}",
         },
     },
 }
@@ -563,11 +574,51 @@ def _same_identity(left: str, right: str) -> bool:
     return not left_tokens.isdisjoint(right_tokens)
 
 
+def _address_list_contains_identity(addresses: Sequence[str], identity: str) -> bool:
+    if not identity:
+        return False
+    return any(_same_identity(address, identity) for address in addresses)
+
+
 def _first_non_self_attendee(meeting: MeetingRecord) -> str:
     for attendee in meeting.attendees:
         if not _same_identity(attendee, meeting.user_id):
             return _humanize_identifier(attendee)
     return ""
+
+
+def _target_recipient_display_name(message: MessageRecord) -> str:
+    target_user = str(message.user_id or "").strip()
+    if not target_user or "@" not in target_user:
+        return _humanize_identifier(target_user)
+    recipients = []
+    raw_payload = message.raw_payload if isinstance(message.raw_payload, Mapping) else {}
+    recipients.extend(raw_payload.get("toRecipients") or ())
+    recipients.extend(raw_payload.get("ccRecipients") or ())
+    for recipient in recipients:
+        if not isinstance(recipient, Mapping):
+            continue
+        email = (recipient.get("emailAddress") or {}) if isinstance(recipient.get("emailAddress"), Mapping) else {}
+        address = str(email.get("address") or "").strip()
+        if not _same_identity(address, target_user):
+            continue
+        display_name = str(email.get("name") or "").strip()
+        if display_name:
+            return " ".join(display_name.split())
+    return _humanize_identifier(target_user)
+
+
+def _parse_optional_datetime(value: object) -> Optional[datetime]:
+    candidate = str(value or "").strip()
+    if not candidate:
+        return None
+    try:
+        parsed = parse_datetime(candidate)
+    except Exception:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=timezone.utc)
+    return parsed
 
 
 def _clamp_weight(value: float) -> float:
@@ -773,6 +824,32 @@ def _normalize_item_summary(title: str, summary: str, max_chars: int = 220) -> s
     return _truncate_sentence(cleaned, max_chars=max_chars)
 
 
+def _strip_known_summary_prefix(summary: str, language: str) -> str:
+    cleaned = " ".join((summary or "").strip().split())
+    if not cleaned:
+        return ""
+    prefixes = {
+        "en": (
+            "Needs attention:",
+            "Likely needs your follow-up:",
+            "Worth noting:",
+            "Directly addressed to you:",
+            "Candidate profile:",
+        ),
+        "fr": (
+            "À surveiller de près :",
+            "Demande probablement un suivi de votre part :",
+            "À noter :",
+            "Vous êtes directement destinataire :",
+            "Profil candidat :",
+        ),
+    }
+    for prefix in prefixes[_normalize_language(language)]:
+        if cleaned.lower().startswith(prefix.lower()):
+            return cleaned[len(prefix) :].strip()
+    return cleaned
+
+
 def _item_summary_limit(item: DigestEntry) -> int:
     if item.source_kind == "meeting":
         return 110
@@ -909,6 +986,37 @@ def _meeting_day_reference(target_day: date, source_day: date, language: str) ->
     return _weekday_name(target_day, normalized, short=False)
 
 
+def _meeting_change_reason_codes(
+    meeting: MeetingRecord,
+    *,
+    now: datetime,
+    window_start: Optional[datetime],
+) -> Sequence[str]:
+    raw_payload = meeting.raw_payload if isinstance(meeting.raw_payload, Mapping) else {}
+    reason_codes = []
+    boundary = window_start or (now - timedelta(hours=18))
+    created_at = _parse_optional_datetime(raw_payload.get("createdDateTime"))
+    modified_at = _parse_optional_datetime(raw_payload.get("lastModifiedDateTime"))
+    if bool(raw_payload.get("isCancelled")):
+        reason_codes.append("meeting_cancelled")
+    if created_at is not None and created_at >= boundary:
+        reason_codes.append("meeting_new")
+    elif (
+        modified_at is not None
+        and modified_at >= boundary
+        and (created_at is None or modified_at > created_at + timedelta(minutes=5))
+    ):
+        reason_codes.append("meeting_updated")
+    return tuple(reason_codes)
+
+
+def _meeting_status_reason(reason_codes: Sequence[str]) -> str:
+    for code in ("meeting_cancelled", "meeting_new", "meeting_updated"):
+        if code in reason_codes:
+            return code
+    return ""
+
+
 class DeterministicScoringEngine:
     def __init__(self, digest_language: str = "en", display_timezone: str = "UTC") -> None:
         self.digest_language = _normalize_language(digest_language)
@@ -920,6 +1028,7 @@ class DeterministicScoringEngine:
         meetings: Sequence[MeetingRecord],
         preferences: Sequence[UserPreference],
         reference_time: Optional[datetime] = None,
+        window_start: Optional[datetime] = None,
     ) -> Sequence[DigestEntry]:
         now = reference_time or datetime.now(timezone.utc)
         preference_weights = {
@@ -944,7 +1053,7 @@ class DeterministicScoringEngine:
         for _message, entry, duplicate_count in thread_candidates.values():
             prioritized.append(self._with_thread_reason(entry, duplicate_count))
         for meeting in meetings:
-            prioritized.append(self._score_meeting(meeting, now))
+            prioritized.append(self._score_meeting(meeting, now, window_start=window_start))
         return tuple(sorted(prioritized, key=lambda item: (-item.score, item.title.lower())))
 
     def _thread_key(self, message: MessageRecord) -> str:
@@ -974,6 +1083,7 @@ class DeterministicScoringEngine:
             score=entry.score,
             source_url=entry.source_url,
             desktop_source_url=entry.desktop_source_url,
+            sort_at=entry.sort_at,
             reason_codes=tuple(entry.reason_codes) + ("thread_collapsed",),
             guardrail_applied=entry.guardrail_applied,
         )
@@ -1022,7 +1132,15 @@ class DeterministicScoringEngine:
         if message.has_attachments:
             score += 0.25
             reason_codes.append("attachment_present")
-        if message.to_addresses:
+        target_in_to = _address_list_contains_identity(message.to_addresses, message.user_id)
+        target_in_cc = _address_list_contains_identity(message.cc_addresses, message.user_id)
+        if target_in_to:
+            score += 1.35
+            reason_codes.append("direct_target_recipient")
+        elif target_in_cc:
+            score += 0.3
+            reason_codes.append("target_cc")
+        elif message.to_addresses:
             score += 1.0
             reason_codes.append("direct_recipient")
         elif message.cc_addresses:
@@ -1075,7 +1193,14 @@ class DeterministicScoringEngine:
 
         if guardrail:
             section_name = "critical_topics"
-        elif "action_keyword" in reason_codes or "flagged" in reason_codes:
+        elif (
+            "action_keyword" in reason_codes
+            or "flagged" in reason_codes
+            or (
+                "direct_target_recipient" in reason_codes
+                and not _is_low_signal_watch_message(subject, cleaned_preview)
+            )
+        ):
             section_name = "actions_to_take"
         else:
             section_name = "watch_items"
@@ -1105,11 +1230,18 @@ class DeterministicScoringEngine:
             score=round(score, 2),
             source_url=_message_source_url(message),
             desktop_source_url=_message_desktop_source_url(message),
+            sort_at=message.received_at,
             reason_codes=tuple(reason_codes),
             guardrail_applied=guardrail,
         )
 
-    def _score_meeting(self, meeting: MeetingRecord, now: datetime) -> DigestEntry:
+    def _score_meeting(
+        self,
+        meeting: MeetingRecord,
+        now: datetime,
+        *,
+        window_start: Optional[datetime] = None,
+    ) -> DigestEntry:
         hours_until = (meeting.start_at - now).total_seconds() / 3600.0
         copy = _language_copy(self.digest_language)["summary"]
         local_start = meeting.start_at.astimezone(_display_zone(self.display_timezone))
@@ -1125,6 +1257,14 @@ class DeterministicScoringEngine:
         if meeting.is_online_meeting:
             score += 0.25
             reason_codes.append("online_meeting")
+        change_reason_codes = _meeting_change_reason_codes(meeting, now=now, window_start=window_start)
+        if "meeting_cancelled" in change_reason_codes:
+            score += 1.6
+        elif "meeting_new" in change_reason_codes:
+            score += 1.0
+        elif "meeting_updated" in change_reason_codes:
+            score += 0.8
+        reason_codes.extend(change_reason_codes)
         organizer = _humanize_identifier(meeting.organizer_address) or copy["unknown_organizer"]
         organizer_is_target_user = _same_identity(meeting.organizer_address, meeting.user_id)
         fallback_person = _first_non_self_attendee(meeting) if organizer_is_target_user else ""
@@ -1154,6 +1294,10 @@ class DeterministicScoringEngine:
                 )
         if meeting.location and _normalized_place(meeting.location) != _normalized_place(meeting.subject):
             summary += copy["meeting_location"].format(location=meeting.location)
+        status_reason = _meeting_status_reason(reason_codes)
+        if status_reason:
+            status_text = str(_language_copy(self.digest_language)["badges"][status_reason])
+            summary = str(copy["meeting_status_summary"]).format(status=status_text, text=summary)
         return DigestEntry(
             title=_normalize_display_title(meeting.subject or "(untitled meeting)"),
             summary=summary,
@@ -1163,6 +1307,7 @@ class DeterministicScoringEngine:
             score=round(score, 2),
             source_url=_meeting_source_url(meeting),
             desktop_source_url=_meeting_desktop_source_url(meeting),
+            sort_at=meeting.start_at,
             reason_codes=tuple(reason_codes),
             guardrail_applied=False,
         )
@@ -1186,6 +1331,8 @@ class DeterministicScoringEngine:
             return copy["file_shared"]
         if "critical_keyword" in reason_codes:
             return _normalize_item_summary(message.subject or "", copy["critical"].format(text=base), max_chars=175)
+        if "direct_target_recipient" in reason_codes:
+            return _normalize_item_summary(message.subject or "", copy["direct_target"].format(text=base), max_chars=175)
         if "action_keyword" in reason_codes:
             return _normalize_item_summary(message.subject or "", copy["action"].format(text=base), max_chars=175)
         return _normalize_item_summary(message.subject or "", copy["watch"].format(text=base), max_chars=170)
@@ -1217,7 +1364,17 @@ class StructuredDigestRenderer:
             target_section = item.section_name if item.section_name in sections else "watch_items"
             sections[target_section].append(item)
         for name in SECTION_NAMES:
-            sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[:5]
+            if name == "upcoming_meetings":
+                sections[name] = sorted(
+                    sections[name],
+                    key=lambda item: (
+                        item.sort_at or datetime.max.replace(tzinfo=timezone.utc),
+                        -item.score,
+                        item.title.lower(),
+                    ),
+                )[:5]
+            else:
+                sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[:5]
 
         localized = _language_copy(self.digest_language)
         normalized_top_summary = _normalize_top_summary(top_summary)
@@ -1323,6 +1480,7 @@ class StructuredDigestRenderer:
             "score": item.score,
             "source_url": item.source_url,
             "desktop_source_url": item.desktop_source_url,
+            "sort_at": item.sort_at.isoformat() if item.sort_at is not None else "",
             "reason_codes": list(item.reason_codes),
             "guardrail_applied": item.guardrail_applied,
         }
@@ -1462,13 +1620,14 @@ class StructuredDigestRenderer:
 
     def _body_item_lines(self, item: DigestEntry) -> Sequence[str]:
         action_label, action_url = self._item_action(item)
+        rendered_title = self._rendered_item_title(item)
         if item.source_kind == "meeting":
-            lines = ["- {0}{1} - {2}".format(self._body_badge_prefix(item), item.title, item.summary)]
+            lines = ["- {0}{1} - {2}".format(self._body_badge_prefix(item), rendered_title, item.summary)]
             if action_url:
                 lines.append("  {0}: {1}".format(action_label, action_url))
             return tuple(lines)
         lines = [
-            "- {0}{1}".format(self._body_badge_prefix(item), item.title),
+            "- {0}{1}".format(self._body_badge_prefix(item), rendered_title),
             "  {0}".format(item.summary),
         ]
         if action_url:
@@ -1477,6 +1636,7 @@ class StructuredDigestRenderer:
 
     def _html_item(self, item: DigestEntry) -> str:
         action_html = self._item_action_html(item)
+        rendered_title = self._rendered_item_title(item)
         if item.source_kind == "meeting":
             return (
                 "<div style=\"margin:0 0 8px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;\">"
@@ -1486,7 +1646,7 @@ class StructuredDigestRenderer:
                 "</div>"
             ).format(
                 self._item_badges_html(item),
-                self._html_escape(item.title),
+                self._html_escape(rendered_title),
                 self._html_escape(item.summary),
                 action_html,
             )
@@ -1498,7 +1658,7 @@ class StructuredDigestRenderer:
             "</div>"
         ).format(
             self._item_badges_html(item),
-            self._html_escape(item.title),
+            self._html_escape(rendered_title),
             self._html_escape(item.summary),
             action_html,
         )
@@ -1545,6 +1705,15 @@ class StructuredDigestRenderer:
             "background:#fff3cd;border:1px solid #facc15;color:#854d0e;font-size:11px;font-weight:700;"
             "letter-spacing:0.04em;text-transform:uppercase;vertical-align:middle;\">{0}</span>"
         ).format(self._html_escape(badge))
+
+    def _rendered_item_title(self, item: DigestEntry) -> str:
+        if item.source_kind != "meeting":
+            return item.title
+        status_reason = _meeting_status_reason(item.reason_codes)
+        if not status_reason:
+            return item.title
+        status_label = str(_language_copy(self.digest_language)["badges"][status_reason])
+        return "{0} : {1}".format(status_label, item.title)
 
     def _weather_body_lines(self, weather: Optional[WeatherSnapshot]) -> Sequence[str]:
         if weather is None:
@@ -1693,11 +1862,41 @@ class StructuredDigestRenderer:
 
 
 class IdentityDigestWordingEngine:
+    def __init__(self, digest_language: str = "en") -> None:
+        self.digest_language = _normalize_language(digest_language)
+
     def rewrite(
         self,
         prioritized_items: Sequence[DigestEntry],
     ) -> Sequence[DigestEntry]:
-        return tuple(prioritized_items)
+        localized = _language_copy(self.digest_language)["summary"]
+        rewritten = []
+        for item in prioritized_items:
+            if item.source_kind != "message" or "direct_target_recipient" not in item.reason_codes:
+                rewritten.append(item)
+                continue
+            base = _strip_known_summary_prefix(item.summary, self.digest_language)
+            summary = _normalize_item_summary(
+                item.title,
+                str(localized["direct_target"]).format(text=base),
+                max_chars=_item_summary_limit(item),
+            )
+            rewritten.append(
+                DigestEntry(
+                    title=item.title,
+                    summary=summary,
+                    section_name=item.section_name,
+                    source_kind=item.source_kind,
+                    source_id=item.source_id,
+                    score=item.score,
+                    source_url=item.source_url,
+                    desktop_source_url=item.desktop_source_url,
+                    sort_at=item.sort_at,
+                    reason_codes=item.reason_codes,
+                    guardrail_applied=item.guardrail_applied,
+                )
+            )
+        return tuple(rewritten)
 
 
 class DeterministicDigestOverviewEngine:
@@ -1797,6 +1996,7 @@ class LlmDigestOverviewEngine:
                     score=item.score,
                     source_url=item.source_url,
                     desktop_source_url=item.desktop_source_url,
+                    sort_at=item.sort_at,
                     reason_codes=item.reason_codes,
                     guardrail_applied=item.guardrail_applied,
                 )
@@ -1878,6 +2078,7 @@ class LlmDigestWordingEngine:
                     score=item.score,
                     source_url=item.source_url,
                     desktop_source_url=item.desktop_source_url,
+                    sort_at=item.sort_at,
                     reason_codes=item.reason_codes,
                     guardrail_applied=item.guardrail_applied,
                 )

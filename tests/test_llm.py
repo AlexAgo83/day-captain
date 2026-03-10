@@ -97,6 +97,8 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("Drop greetings, thank-you lead-ins, and sign-offs", captured["body"]["messages"][0]["content"])
         self.assertIn("under 160 characters", captured["body"]["messages"][0]["content"])
         self.assertIn("candidate or profile-style messages", captured["body"]["messages"][0]["content"])
+        self.assertIn("important English business terms", captured["body"]["messages"][0]["content"])
+        self.assertIn("prefer intentional FR-English wording", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             rewritten["message:msg-1"],
             "Review the budget before noon because the request is urgent.",
@@ -191,6 +193,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("Avoid unfinished endings", captured["body"]["messages"][0]["content"])
         self.assertIn("candidate or profile-style items", captured["body"]["messages"][0]["content"])
         self.assertIn("Prefer readable names over raw email addresses", captured["body"]["messages"][0]["content"])
+        self.assertIn("important English business terms", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             summary,
             "Budget review is the main priority, with roadmap follow-up next.",

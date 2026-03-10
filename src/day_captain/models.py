@@ -100,6 +100,7 @@ class DigestEntry:
     score: float
     source_url: str = ""
     desktop_source_url: str = ""
+    sort_at: Optional[datetime] = None
     reason_codes: Sequence[str] = field(default_factory=tuple)
     guardrail_applied: bool = False
 
@@ -224,6 +225,7 @@ def digest_entry_from_dict(payload: Mapping[str, Any]) -> DigestEntry:
         score=float(payload.get("score") or 0.0),
         source_url=str(payload.get("source_url") or ""),
         desktop_source_url=str(payload.get("desktop_source_url") or ""),
+        sort_at=parse_datetime(str(payload.get("sort_at"))) if payload.get("sort_at") else None,
         reason_codes=tuple(str(item) for item in payload.get("reason_codes") or ()),
         guardrail_applied=bool(payload.get("guardrail_applied")),
     )

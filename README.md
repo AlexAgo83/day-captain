@@ -7,7 +7,7 @@
 <p align="center">
   <a href="https://github.com/example-owner/day-captain/actions/workflows/ci.yml"><img src="https://github.com/example-owner/day-captain/actions/workflows/ci.yml/badge.svg" alt="CI" /></a>
   <a href="./LICENSE"><img src="https://img.shields.io/github/license/example-owner/day-captain" alt="License" /></a>
-  <img src="https://img.shields.io/badge/version-v1.4.2-4C8BF5" alt="Version" />
+  <img src="https://img.shields.io/badge/version-v1.4.3-4C8BF5" alt="Version" />
   <img src="https://img.shields.io/badge/python-3.9%2B-3776AB?logo=python&logoColor=white" alt="Python" />
   <img src="https://img.shields.io/badge/Render-ready-46E3B7?logo=render&logoColor=white" alt="Render" />
   <img src="https://img.shields.io/badge/Microsoft%20365-Graph%20digest-0078D4?logo=microsoftoutlook&logoColor=white" alt="Microsoft 365" />
@@ -51,7 +51,7 @@ It currently supports:
 
 ## Project status
 
-Current package version: `1.4.2`
+Current package version: `1.4.3`
 
 This repository is in active development. The core digest flow works locally and against a real Microsoft 365 mailbox. The hosted Render path is scaffolded, and a dedicated hardening track exists in Logics before treating it as production-ready.
 
@@ -66,6 +66,7 @@ Current operating model:
 
 - `src/day_captain/`: application code
 - `tests/`: unit and integration-style tests
+- `changelogs/`: versioned changelog artifacts (`CHANGELOGS_x_y_z.md`)
 - `logics/`: request, backlog, specs, and task tracking
 - `render.yaml`: Render deployment blueprint
 - `.github/workflows/`: CI and example hosted trigger workflows
@@ -93,6 +94,21 @@ Planned operating model:
 - `services.py`: scoring, filtering, digest rendering, recall, and feedback logic
 - `web.py`: hosted HTTP endpoints for health, morning digest, and recall
 - `cli.py`: command-line entrypoints
+
+## Changelog workflow
+
+Day Captain now reserves repository-level changelog artifacts under `changelogs/` using the pattern `CHANGELOGS_x_y_z.md`.
+
+The intended workflow is:
+- close delivery work first
+- resolve the real current version from `pyproject.toml`
+- generate the changelog artifact at closure time instead of guessing the filename in advance
+
+Generate a scaffold with:
+
+```bash
+python3 scripts/generate_changelog.py --previous-version 1.4.2
+```
 
 ## Requirements
 
