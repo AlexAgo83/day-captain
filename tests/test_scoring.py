@@ -530,6 +530,61 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertIn("meeting_updated", prioritized[0].reason_codes)
         self.assertTrue(prioritized[0].summary.startswith("Annulé :"))
 
+    def test_classifies_all_day_presence_events_separately_from_meetings(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="presence-1",
+                subject="Télétravail",
+                start_at=datetime(2026, 3, 10, 0, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 23, 59, tzinfo=timezone.utc),
+                organizer_address="target.user@company.com",
+                location="Télétravail",
+                raw_payload={"isAllDay": True},
+                user_id="target.user@company.com",
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(prioritized[0].section_name, "daily_presence")
+        self.assertIn("Signal de télétravail", prioritized[0].summary)
+        self.assertEqual(prioritized[0].handling_bucket, "daily_presence")
+        self.assertGreaterEqual(prioritized[0].confidence_score, 80)
+
+    def test_thread_entries_include_context_and_confidence_metadata(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-thread-1",
+                thread_id="thread-budget",
+                subject="Budget review",
+                from_address="boss@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 10, 6, 30, tzinfo=timezone.utc),
+                body_preview="Please review the budget deck.",
+            ),
+            MessageRecord(
+                graph_message_id="msg-thread-2",
+                thread_id="thread-budget",
+                subject="Re: Budget review",
+                from_address="boss@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 10, 7, 30, tzinfo=timezone.utc),
+                body_preview="Need your input before noon.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].context_metadata["message_count"], 2)
+        self.assertEqual(len(prioritized[0].context_metadata["messages"]), 2)
+        self.assertTrue(prioritized[0].recommended_action)
+        self.assertTrue(prioritized[0].confidence_label)
+        self.assertGreater(prioritized[0].confidence_score, 0)
+
 
 if __name__ == "__main__":
     unittest.main()

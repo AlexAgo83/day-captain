@@ -70,7 +70,7 @@ class OpenAICompatibleDigestWordingProvider:
     def rewrite_summaries(
         self,
         items: Sequence[DigestEntry],
-    ) -> Mapping[str, str]:
+    ) -> Mapping[str, Any]:
         payload = {
             "model": self.model,
             "max_completion_tokens": self.max_output_tokens,
@@ -79,7 +79,7 @@ class OpenAICompatibleDigestWordingProvider:
                 {
                     "role": "system",
                     "content": (
-                        "Rewrite each digest item summary in one sentence. "
+                        "Generate a short assistant briefing for each digest item. "
                         "Write the output in {0}. "
                         "{1} "
                         "Do not repeat the title at the start of the summary. "
@@ -91,9 +91,10 @@ class OpenAICompatibleDigestWordingProvider:
                         "Preserve supplier names, internal topic names, and important English business terms when translating them would reduce clarity. "
                         "If the output language is French and the source content is in English, prefer intentional FR-English wording over awkward full translation. "
                         "Preserve facts, urgency, and requested actions. "
-                        "Do not invent details. Return JSON with an `items` array "
-                        "containing `{ref, summary}` objects only."
-                    ).replace("{ref, summary}", "{{ref, summary}}").format(
+                        "Do not invent details. "
+                        "Return JSON with an `items` array containing objects with: "
+                        "`ref`, `summary`, optional `recommended_action`, optional `confidence_score`, optional `confidence_label`, and optional `confidence_reason`."
+                    ).format(
                         "French" if self.language == "fr" else "English",
                         self.style_prompt,
                     ),
@@ -108,6 +109,12 @@ class OpenAICompatibleDigestWordingProvider:
                                     "section_name": item.section_name,
                                     "title": item.title,
                                     "summary": item.summary,
+                                    "recommended_action": item.recommended_action,
+                                    "handling_bucket": item.handling_bucket or item.section_name,
+                                    "confidence_score": item.confidence_score,
+                                    "confidence_label": item.confidence_label,
+                                    "confidence_reason": item.confidence_reason,
+                                    "context_metadata": dict(item.context_metadata),
                                     "reason_codes": list(item.reason_codes),
                                     "guardrail_applied": item.guardrail_applied,
                                 }
@@ -152,8 +159,15 @@ class OpenAICompatibleDigestWordingProvider:
                 continue
             ref = str(item.get("ref") or "").strip()
             summary = str(item.get("summary") or "").strip()
-            if ref and summary:
-                result[ref] = summary
+            if not ref or not summary:
+                continue
+            result[ref] = {
+                "summary": summary,
+                "recommended_action": str(item.get("recommended_action") or "").strip(),
+                "confidence_score": item.get("confidence_score"),
+                "confidence_label": str(item.get("confidence_label") or "").strip(),
+                "confidence_reason": str(item.get("confidence_reason") or "").strip(),
+            }
         if not result:
             raise LlmProviderError("LLM response did not include any rewritten items.")
         return result
@@ -209,6 +223,10 @@ class OpenAICompatibleDigestWordingProvider:
                                         {
                                             "title": item.title,
                                             "summary": item.summary,
+                                            "recommended_action": item.recommended_action,
+                                            "confidence_score": item.confidence_score,
+                                            "confidence_label": item.confidence_label,
+                                            "confidence_reason": item.confidence_reason,
                                         }
                                         for item in items
                                     ],

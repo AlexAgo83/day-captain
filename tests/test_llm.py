@@ -100,7 +100,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("important English business terms", captured["body"]["messages"][0]["content"])
         self.assertIn("prefer intentional FR-English wording", captured["body"]["messages"][0]["content"])
         self.assertEqual(
-            rewritten["message:msg-1"],
+            rewritten["message:msg-1"]["summary"],
             "Review the budget before noon because the request is urgent.",
         )
 
@@ -419,6 +419,43 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
         self.assertIn("Profil designer chez Studio Meridian.", rewritten[0].summary)
         self.assertIn("Suivi :", rewritten[0].summary)
         self.assertLessEqual(len(rewritten[0].summary), 183)
+
+    def test_rewrite_accepts_structured_briefing_payload(self) -> None:
+        provider = type(
+            "Provider",
+            (),
+            {
+                "language": "fr",
+                "rewrite_summaries": lambda self, items: {
+                    "message:msg-1": {
+                        "summary": "Le fil confirme un retour attendu avant midi.",
+                        "recommended_action": "Répondre avec la validation finale.",
+                        "confidence_score": 84,
+                        "confidence_label": "high",
+                        "confidence_reason": "La demande est explicite dans la dernière réponse.",
+                    },
+                }
+            },
+        )()
+        engine = LlmDigestWordingEngine(provider=provider, shortlist_limit=1)
+        items = (
+            DigestEntry(
+                title="Budget review",
+                summary="Original summary",
+                section_name="actions_to_take",
+                source_kind="message",
+                source_id="msg-1",
+                score=2.0,
+            ),
+        )
+
+        rewritten = engine.rewrite(items)
+
+        self.assertEqual(rewritten[0].summary, "Le fil confirme un retour attendu avant midi.")
+        self.assertEqual(rewritten[0].recommended_action, "Répondre avec la validation finale.")
+        self.assertEqual(rewritten[0].confidence_score, 84)
+        self.assertEqual(rewritten[0].confidence_label, "Élevée")
+        self.assertEqual(rewritten[0].confidence_reason, "La demande est explicite dans la dernière réponse.")
 
 
 class DigestOverviewEngineTest(unittest.TestCase):
