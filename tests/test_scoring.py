@@ -247,6 +247,27 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertIn("bank account", prioritized[0].summary)
         self.assertEqual(prioritized[0].context_metadata["target_recipient_display_name"], "Casey Morgan")
 
+    def test_keeps_english_action_text_clear_in_french_digest(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-bilingual",
+                thread_id="thread-bilingual",
+                subject="Payment discussion",
+                from_address="finance@example.com",
+                to_addresses=("team@example.com",),
+                received_at=datetime(2026, 3, 10, 7, 40, tzinfo=timezone.utc),
+                body_preview="Need your input before noon on the bank account update.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].section_name, "actions_to_take")
+        self.assertTrue(prioritized[0].summary.startswith("Action : Need your input before noon"))
+        self.assertEqual(prioritized[0].context_metadata["source_language_hint"], "en")
+
     def test_marks_print_and_download_deliverables_as_actions(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine()

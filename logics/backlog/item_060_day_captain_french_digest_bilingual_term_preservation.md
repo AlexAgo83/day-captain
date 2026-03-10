@@ -1,9 +1,9 @@
 ## item_060_day_captain_french_digest_bilingual_term_preservation - Preserve key English terms and bilingual coherence in French digests
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 97%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -40,7 +40,7 @@ flowchart LR
 
 # Links
 - Request: `req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology`
-- Primary task(s): `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` (`Draft`)
+- Primary task(s): `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` (`Done`)
 
 # Priority
 - Impact: High - comprehension drops quickly when translation hides the original business meaning.
@@ -48,3 +48,4 @@ flowchart LR
 
 # Notes
 - Derived from user feedback that the French translation of English emails was actively confusing inside the digest.
+- Completed on Tuesday, March 10, 2026 after adding bounded bilingual wording rules for English-source mail summaries and deterministic `En bref` fallback reuse of structured briefing content.

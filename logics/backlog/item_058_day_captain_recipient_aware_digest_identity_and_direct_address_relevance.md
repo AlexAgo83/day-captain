@@ -1,9 +1,9 @@
 ## item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance - Make the digest recipient-aware and improve direct-address relevance
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,7 +41,7 @@ flowchart LR
 
 # Links
 - Request: `req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology`
-- Primary task(s): `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` (`Draft`)
+- Primary task(s): `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` (`Done`)
 
 # Priority
 - Impact: High - if the digest addresses the wrong person generically, the assistant loses credibility.
@@ -49,3 +49,4 @@ flowchart LR
 
 # Notes
 - Derived from direct user feedback on the digest delivered to Casey Morgan on Tuesday, March 10, 2026.
+- Completed on Tuesday, March 10, 2026 after shipping target-recipient display-name awareness, direct-address relevance scoring, and regression coverage for mailbox-scoped recipient-aware behavior.

@@ -1,8 +1,8 @@
 ## req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology - Day Captain recipient-aware digest identity, mail summaries, language coherence, and meeting chronology
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 98%
-> Confidence: 96%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -75,11 +75,11 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance` - Make the digest recipient-aware and improve direct-address relevance. Status: `Draft`.
-- `item_059_day_captain_per_mail_assistant_summaries` - Add short assistant-style summaries for every surfaced mail card. Status: `Draft`.
-- `item_060_day_captain_french_digest_bilingual_term_preservation` - Preserve key English terms and bilingual coherence in French digests. Status: `Draft`.
-- `item_061_day_captain_meeting_chronology_and_overnight_change_highlighting` - Render meetings in chronological order and highlight overnight changes. Status: `Draft`.
-- `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` - Orchestrate recipient-aware digest identity, per-mail summaries, bilingual wording, and meeting correctness. Status: `Draft`.
+- `item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance` - Make the digest recipient-aware and improve direct-address relevance. Status: `Done`.
+- `item_059_day_captain_per_mail_assistant_summaries` - Add short assistant-style summaries for every surfaced mail card. Status: `Done`.
+- `item_060_day_captain_french_digest_bilingual_term_preservation` - Preserve key English terms and bilingual coherence in French digests. Status: `Done`.
+- `item_061_day_captain_meeting_chronology_and_overnight_change_highlighting` - Render meetings in chronological order and highlight overnight changes. Status: `Done`.
+- `task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration` - Orchestrate recipient-aware digest identity, per-mail summaries, bilingual wording, and meeting correctness. Status: `Done`.
 
 # Notes
 - Created on Tuesday, March 10, 2026 from direct user feedback on the delivered morning digest for Casey Morgan.
@@ -87,3 +87,4 @@ flowchart TD
 - This request intentionally keeps the scope on digest logic and editorial behavior rather than email layout redesign.
 - Synchronization note: the newer `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring` now carries the primary execution path for replacing the mechanical summary system, including thread-centric mail briefings, richer meeting briefings, confidence signals, `En bref` regeneration, and all-day presence-event handling.
 - Synchronization note: `req_031` remains the originating user-feedback umbrella for recipient-aware identity and bilingual wording needs, while overlapping mail-summary and meeting-interpretation work should be executed through `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` rather than duplicated independently.
+- Completed on Tuesday, March 10, 2026 after the synchronized implementation path delivered recipient-aware wording, grounded assistant mail summaries, bounded bilingual coherence for English-source content, and corrected meeting chronology/change visibility.
