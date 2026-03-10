@@ -105,10 +105,16 @@ class DayCaptainSettings:
     llm_model: str = ""
     llm_base_url: str = "https://api.openai.com/v1"
     llm_timeout_seconds: int = 30
-    llm_shortlist_limit: int = 5
+    llm_shortlist_limit: int = 25
     llm_max_output_tokens: int = 300
     llm_temperature: float = 0.2
-    llm_enabled_sections: Tuple[str, ...] = ("critical_topics", "actions_to_take", "watch_items")
+    llm_enabled_sections: Tuple[str, ...] = (
+        "critical_topics",
+        "actions_to_take",
+        "watch_items",
+        "daily_presence",
+        "upcoming_meetings",
+    )
     llm_style_prompt: str = "Write like a concise executive assistant."
     weather_latitude: Optional[float] = None
     weather_longitude: Optional[float] = None
@@ -151,13 +157,13 @@ class DayCaptainSettings:
             llm_model=os.getenv("DAY_CAPTAIN_LLM_MODEL", ""),
             llm_base_url=os.getenv("DAY_CAPTAIN_LLM_BASE_URL", "https://api.openai.com/v1"),
             llm_timeout_seconds=int(os.getenv("DAY_CAPTAIN_LLM_TIMEOUT_SECONDS", "30")),
-            llm_shortlist_limit=int(os.getenv("DAY_CAPTAIN_LLM_SHORTLIST_LIMIT", "5")),
+            llm_shortlist_limit=int(os.getenv("DAY_CAPTAIN_LLM_SHORTLIST_LIMIT", "25")),
             llm_max_output_tokens=int(os.getenv("DAY_CAPTAIN_LLM_MAX_OUTPUT_TOKENS", "300")),
             llm_temperature=float(os.getenv("DAY_CAPTAIN_LLM_TEMPERATURE", "0.2")),
             llm_enabled_sections=_parse_csv(
                 os.getenv(
                     "DAY_CAPTAIN_LLM_ENABLED_SECTIONS",
-                    "critical_topics,actions_to_take,watch_items",
+                    "critical_topics,actions_to_take,watch_items,daily_presence,upcoming_meetings",
                 )
             ),
             llm_style_prompt=os.getenv(

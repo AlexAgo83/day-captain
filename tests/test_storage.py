@@ -68,15 +68,36 @@ class SQLiteStorageTest(unittest.TestCase):
                         title="Urgent budget review",
                         summary="Please review before noon.",
                         section_name="critical_topics",
-                    source_kind="message",
-                    source_id="msg-1",
-                    source_url="https://outlook.office.com/mail/msg-1",
-                    desktop_source_url="ms-outlook://mail/msg-1",
-                    score=2.0,
-                    reason_codes=("critical_keyword",),
-                    guardrail_applied=True,
+                        source_kind="message",
+                        source_id="msg-1",
+                        source_url="https://outlook.office.com/mail/msg-1",
+                        desktop_source_url="ms-outlook://mail/msg-1",
+                        score=2.0,
+                        recommended_action="Review the budget deck and confirm.",
+                        handling_bucket="critical_topics",
+                        confidence_score=88,
+                        confidence_label="High",
+                        confidence_reason="The request is explicit.",
+                        context_metadata={"message_count": 2},
+                        reason_codes=("critical_keyword",),
+                        guardrail_applied=True,
+                    ),
                 ),
-            ),
+                daily_presence=(
+                    DigestEntry(
+                        title="Site Horizon",
+                        summary="Location signal for the day: Site Horizon",
+                        section_name="daily_presence",
+                        source_kind="meeting",
+                        source_id="presence-1",
+                        score=1.0,
+                        recommended_action="Use this as the day's location or presence signal.",
+                        handling_bucket="daily_presence",
+                        confidence_score=92,
+                        confidence_label="High",
+                        confidence_reason="Explicit all-day location entry.",
+                    ),
+                ),
             )
             run = DigestRunRecord(
                 run_id="run-1",
@@ -97,10 +118,13 @@ class SQLiteStorageTest(unittest.TestCase):
             self.assertEqual(loaded.summary.critical_topics[0].source_id, "msg-1")
             self.assertEqual(loaded.summary.critical_topics[0].source_url, "https://outlook.office.com/mail/msg-1")
             self.assertEqual(loaded.summary.critical_topics[0].desktop_source_url, "ms-outlook://mail/msg-1")
+            self.assertEqual(loaded.summary.critical_topics[0].recommended_action, "Review the budget deck and confirm.")
+            self.assertEqual(loaded.summary.critical_topics[0].confidence_score, 88)
+            self.assertEqual(loaded.summary.daily_presence[0].section_name, "daily_presence")
             with sqlite3.connect(path) as connection:
                 item_count = connection.execute("SELECT COUNT(*) FROM scoped_digest_items").fetchone()[0]
 
-            self.assertEqual(item_count, 1)
+            self.assertEqual(item_count, 2)
 
     def test_feedback_is_persisted(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -110,7 +110,9 @@ class StructuredDigestRendererTest(unittest.TestCase):
             ),
         )
 
-        self.assertIn("- Point equipe - Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_body)
+        self.assertIn("- Point equipe", payload.delivery_body)
+        self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_body)
+        self.assertIn("Confiance:", payload.delivery_body)
         self.assertIn("Point equipe", payload.delivery_payload["html_body"])
         self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_payload["html_body"])
 
@@ -365,6 +367,41 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Ouvre un brouillon Day Captain.", payload.delivery_body)
         self.assertIn("Rappeler ce brief", payload.delivery_payload["html_body"])
         self.assertIn("subject=recall-week&amp;body=recall-week", payload.delivery_payload["html_body"])
+
+    def test_renders_daily_presence_section_and_meta_lines(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-presence",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Site Horizon",
+                    summary="Signal de présence pour la journée : Site Horizon",
+                    section_name="daily_presence",
+                    source_kind="meeting",
+                    source_id="presence-1",
+                    score=1.2,
+                    recommended_action="Utiliser cet élément comme signal de présence ou de lieu pour la journée.",
+                    handling_bucket="daily_presence",
+                    confidence_score=92,
+                    confidence_label="Élevée",
+                    confidence_reason="Cet événement agenda sur la journée ressemble explicitement à un signal de lieu ou de présence.",
+                ),
+            ),
+        )
+
+        self.assertIn("Présence du jour", payload.delivery_body)
+        self.assertIn("Site Horizon", payload.delivery_body)
+        self.assertIn("À faire:", payload.delivery_body)
+        self.assertIn("Confiance: 92 / Élevée", payload.delivery_body)
+        self.assertIn("Présence du jour", payload.delivery_payload["html_body"])
+        self.assertIn("<strong>À faire:</strong>", payload.delivery_payload["html_body"])
+        self.assertIn("<strong>Confiance:</strong>", payload.delivery_payload["html_body"])
 
 
 if __name__ == "__main__":

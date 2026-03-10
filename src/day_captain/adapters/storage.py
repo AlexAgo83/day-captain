@@ -34,6 +34,7 @@ SECTION_NAMES = (
     "critical_topics",
     "actions_to_take",
     "watch_items",
+    "daily_presence",
     "upcoming_meetings",
 )
 

@@ -98,6 +98,12 @@ class DigestEntry:
     source_kind: str
     source_id: str
     score: float
+    recommended_action: str = ""
+    handling_bucket: str = ""
+    confidence_score: int = 0
+    confidence_label: str = ""
+    confidence_reason: str = ""
+    context_metadata: Mapping[str, Any] = field(default_factory=dict)
     source_url: str = ""
     desktop_source_url: str = ""
     sort_at: Optional[datetime] = None
@@ -132,6 +138,7 @@ class DigestPayload:
     critical_topics: Sequence[DigestEntry] = field(default_factory=tuple)
     actions_to_take: Sequence[DigestEntry] = field(default_factory=tuple)
     watch_items: Sequence[DigestEntry] = field(default_factory=tuple)
+    daily_presence: Sequence[DigestEntry] = field(default_factory=tuple)
     upcoming_meetings: Sequence[DigestEntry] = field(default_factory=tuple)
 
 
@@ -223,6 +230,12 @@ def digest_entry_from_dict(payload: Mapping[str, Any]) -> DigestEntry:
         source_kind=str(payload.get("source_kind") or ""),
         source_id=str(payload.get("source_id") or ""),
         score=float(payload.get("score") or 0.0),
+        recommended_action=str(payload.get("recommended_action") or ""),
+        handling_bucket=str(payload.get("handling_bucket") or ""),
+        confidence_score=int(payload.get("confidence_score") or 0),
+        confidence_label=str(payload.get("confidence_label") or ""),
+        confidence_reason=str(payload.get("confidence_reason") or ""),
+        context_metadata=dict(payload.get("context_metadata") or {}),
         source_url=str(payload.get("source_url") or ""),
         desktop_source_url=str(payload.get("desktop_source_url") or ""),
         sort_at=parse_datetime(str(payload.get("sort_at"))) if payload.get("sort_at") else None,
@@ -266,6 +279,9 @@ def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
         ),
         watch_items=tuple(
             digest_entry_from_dict(item) for item in payload.get("watch_items") or ()
+        ),
+        daily_presence=tuple(
+            digest_entry_from_dict(item) for item in payload.get("daily_presence") or ()
         ),
         upcoming_meetings=tuple(
             digest_entry_from_dict(item) for item in payload.get("upcoming_meetings") or ()

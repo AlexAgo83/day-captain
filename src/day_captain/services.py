@@ -29,6 +29,7 @@ SECTION_NAMES = (
     "critical_topics",
     "actions_to_take",
     "watch_items",
+    "daily_presence",
     "upcoming_meetings",
 )
 
@@ -166,7 +167,28 @@ SECTION_PRIORITY = {
     "critical_topics": 3,
     "actions_to_take": 2,
     "watch_items": 1,
+    "daily_presence": 1,
 }
+
+THREAD_CONTEXT_MESSAGE_LIMIT = 12
+THREAD_CONTEXT_PREVIEW_LIMIT = 180
+MEETING_CONTEXT_MESSAGE_LIMIT = 3
+LOW_CONFIDENCE_THRESHOLD = 60
+HIGH_CONFIDENCE_THRESHOLD = 80
+
+PRESENCE_PATTERNS = (
+    "bureau",
+    "office",
+    "onsite",
+    "on site",
+    "sur site",
+    "teletravail",
+    "télétravail",
+    "remote",
+    "wfh",
+    "home office",
+    "home-office",
+)
 
 TRIVIAL_PREVIEW_LINES = (
     "sent from outlook for mac",
@@ -216,12 +238,14 @@ LANGUAGE_COPY = {
             "critical_topics": "Critical topics",
             "actions_to_take": "Actions to take",
             "watch_items": "Watch items",
+            "daily_presence": "Daily presence",
             "upcoming_meetings": "Upcoming meetings",
         },
         "empty": {
             "critical_topics": "Nothing urgent right now.",
             "actions_to_take": "No follow-up is waiting on you.",
             "watch_items": "Nothing else needs a flag right now.",
+            "daily_presence": "No all-day presence signal is set for {day}.",
             "upcoming_meetings": "No meetings are lined up for {day}.",
         },
         "meeting_notes": {
@@ -256,7 +280,15 @@ LANGUAGE_COPY = {
             "action_many": "Main follow-ups: {first}; {second}.",
             "watch_one": "Worth keeping in view: {first}.",
             "watch_many": "Worth keeping in view: {first}; {second}.",
+            "presence": "Today's location signal: {text}.",
             "meeting": "Upcoming meeting: {text}.",
+        },
+        "item_meta": {
+            "next_step": "Next step",
+            "confidence": "Confidence",
+            "confidence_high": "High",
+            "confidence_medium": "Medium",
+            "confidence_low": "Low",
         },
         "summary": {
             "critical": "Needs attention: {text}",
@@ -275,6 +307,21 @@ LANGUAGE_COPY = {
             "meeting_location": " | {location}",
             "unknown_organizer": "an unknown organizer",
             "meeting_status_summary": "{status}: {text}",
+            "presence_location": "Location signal for the day: {text}",
+            "presence_remote": "Remote-work signal for the day: {text}",
+            "thread_context": "Thread on {title}: {text}",
+        },
+        "actions": {
+            "critical": "Review or intervene quickly.",
+            "deliverable": "Review the shared file or link and reply if needed.",
+            "reply": "Reply or confirm the requested point.",
+            "watch": "Keep this in view; no explicit action is confirmed yet.",
+            "meeting_prepare": "Prepare the key points before it starts.",
+            "meeting_watch": "Keep this meeting in view; context is still limited.",
+            "meeting_cancelled": "Adjust the day plan; this meeting is no longer happening.",
+            "meeting_updated": "Reconfirm the new timing or scope before it starts.",
+            "meeting_new": "Check whether preparation is needed for this new meeting.",
+            "presence": "Use this as the day's location or presence signal.",
         },
     },
     "fr": {
@@ -294,12 +341,14 @@ LANGUAGE_COPY = {
             "critical_topics": "Points critiques",
             "actions_to_take": "Actions à mener",
             "watch_items": "À surveiller",
+            "daily_presence": "Présence du jour",
             "upcoming_meetings": "Réunions à venir",
         },
         "empty": {
             "critical_topics": "Rien d'urgent pour l'instant.",
             "actions_to_take": "Aucun suivi immédiat.",
             "watch_items": "Rien d'autre à signaler.",
+            "daily_presence": "Aucun événement journalier de présence pour {day}.",
             "upcoming_meetings": "Aucune réunion n'est prévue pour {day}.",
         },
         "meeting_notes": {
@@ -334,7 +383,15 @@ LANGUAGE_COPY = {
             "action_many": "Suivis principaux : {first} ; {second}.",
             "watch_one": "À garder en tête : {first}.",
             "watch_many": "À garder en tête : {first} ; {second}.",
+            "presence": "Signal de présence du jour : {text}.",
             "meeting": "Réunion à venir : {text}.",
+        },
+        "item_meta": {
+            "next_step": "À faire",
+            "confidence": "Confiance",
+            "confidence_high": "Élevée",
+            "confidence_medium": "Moyenne",
+            "confidence_low": "Faible",
         },
         "summary": {
             "critical": "À surveiller de près : {text}",
@@ -353,6 +410,21 @@ LANGUAGE_COPY = {
             "meeting_location": " | {location}",
             "unknown_organizer": "un organisateur inconnu",
             "meeting_status_summary": "{status} : {text}",
+            "presence_location": "Signal de présence pour la journée : {text}",
+            "presence_remote": "Signal de télétravail pour la journée : {text}",
+            "thread_context": "Fil sur {title} : {text}",
+        },
+        "actions": {
+            "critical": "Examiner ou traiter rapidement.",
+            "deliverable": "Consulter le fichier ou le lien partagé puis répondre si besoin.",
+            "reply": "Répondre ou confirmer le point demandé.",
+            "watch": "Garder ce sujet en vue ; aucune action explicite n'est encore certaine.",
+            "meeting_prepare": "Préparer les points clés avant le début.",
+            "meeting_watch": "Garder cette réunion en vue ; le contexte reste limité.",
+            "meeting_cancelled": "Ajuster la journée ; cette réunion n'a plus lieu.",
+            "meeting_updated": "Reconfirmer l'horaire ou le périmètre avant le début.",
+            "meeting_new": "Vérifier si une préparation est nécessaire pour cette nouvelle réunion.",
+            "presence": "Utiliser cet élément comme signal de présence ou de lieu pour la journée.",
         },
     },
 }
@@ -862,6 +934,244 @@ def _item_summary_limit(item: DigestEntry) -> int:
     return 200
 
 
+def _normalized_confidence_label(value: str, score: int, language: str) -> str:
+    candidate = str(value or "").strip().lower()
+    localized = _language_copy(language)["item_meta"]
+    if candidate in {"high", "elevated", "élevée", "elevee"} or score >= HIGH_CONFIDENCE_THRESHOLD:
+        return str(localized["confidence_high"])
+    if candidate in {"medium", "moyenne"} or score >= LOW_CONFIDENCE_THRESHOLD:
+        return str(localized["confidence_medium"])
+    return str(localized["confidence_low"])
+
+
+def _confidence_score_bounds(value: object) -> int:
+    try:
+        score = int(round(float(value)))
+    except Exception:
+        score = 0
+    return max(0, min(100, score))
+
+
+def _confidence_reason(value: str, fallback: str) -> str:
+    candidate = " ".join((value or "").strip().split())
+    return candidate or fallback
+
+
+def _handling_bucket_from_section(section_name: str) -> str:
+    if section_name in SECTION_NAMES:
+        return section_name
+    return "watch_items"
+
+
+def _with_digest_entry_updates(item: DigestEntry, **changes) -> DigestEntry:
+    payload = {
+        "title": item.title,
+        "summary": item.summary,
+        "section_name": item.section_name,
+        "source_kind": item.source_kind,
+        "source_id": item.source_id,
+        "score": item.score,
+        "recommended_action": item.recommended_action,
+        "handling_bucket": item.handling_bucket,
+        "confidence_score": item.confidence_score,
+        "confidence_label": item.confidence_label,
+        "confidence_reason": item.confidence_reason,
+        "context_metadata": dict(item.context_metadata),
+        "source_url": item.source_url,
+        "desktop_source_url": item.desktop_source_url,
+        "sort_at": item.sort_at,
+        "reason_codes": item.reason_codes,
+        "guardrail_applied": item.guardrail_applied,
+    }
+    payload.update(changes)
+    return DigestEntry(**payload)
+
+
+def _preview_snippet(value: str, limit: int = THREAD_CONTEXT_PREVIEW_LIMIT) -> str:
+    return _truncate_sentence(_decision_ready_preview(_clean_preview(value)), max_chars=limit)
+
+
+def _thread_context_payload(messages: Sequence[MessageRecord], display_timezone: str) -> Mapping[str, object]:
+    zone = _display_zone(display_timezone)
+    ordered = sorted(messages, key=lambda item: item.received_at)
+    participants = []
+    thread_messages = []
+    for message in ordered[:THREAD_CONTEXT_MESSAGE_LIMIT]:
+        sender_name = _humanize_identifier(message.from_address) or message.from_address
+        if sender_name and sender_name not in participants:
+            participants.append(sender_name)
+        thread_messages.append(
+            {
+                "sender": sender_name,
+                "received_at": message.received_at.astimezone(zone).isoformat(),
+                "preview": _preview_snippet(message.body_preview),
+            }
+        )
+    return {
+        "thread_id": ordered[-1].thread_id if ordered else "",
+        "message_count": len(messages),
+        "participants": participants[:4],
+        "messages": thread_messages,
+    }
+
+
+def _message_thread_briefing(
+    message: MessageRecord,
+    cleaned_preview: str,
+    reason_codes: Sequence[str],
+    digest_language: str,
+    *,
+    duplicate_count: int = 1,
+) -> str:
+    summary = DeterministicScoringEngine(digest_language=digest_language)._summarize_message(
+        message,
+        cleaned_preview,
+        reason_codes,
+    )
+    if duplicate_count <= 1:
+        return summary
+    copy = _language_copy(digest_language)["summary"]
+    base = _strip_known_summary_prefix(summary, digest_language)
+    threaded = str(copy["thread_context"]).format(
+        title=_normalize_display_title(message.subject or ""),
+        text=base,
+    )
+    return _normalize_item_summary(message.subject or "", threaded, max_chars=185)
+
+
+def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[str], digest_language: str) -> str:
+    actions = _language_copy(digest_language)["actions"]
+    if "critical_keyword" in reason_codes:
+        return str(actions["critical"])
+    normalized_preview = _normalize_text(message.subject, message.body_preview)
+    if "deliverable_shared" in reason_codes or "download" in normalized_preview or "telechargement" in normalized_preview or "téléchargement" in normalized_preview:
+        return str(actions["deliverable"])
+    if "action_keyword" in reason_codes or "direct_target_recipient" in reason_codes or "flagged" in reason_codes:
+        return str(actions["reply"])
+    return str(actions["watch"])
+
+
+def _message_confidence(message: MessageRecord, reason_codes: Sequence[str], duplicate_count: int, preview: str, digest_language: str) -> tuple[int, str]:
+    if "critical_keyword" in reason_codes or "action_keyword" in reason_codes:
+        return 88, (
+            "Explicit request or urgency is visible in the latest thread update."
+            if digest_language == "en"
+            else "Une demande explicite ou une urgence apparaît dans la dernière mise à jour du fil."
+        )
+    if duplicate_count > 1 and preview:
+        return 78, (
+            "Several messages are available in the thread and the latest update is readable."
+            if digest_language == "en"
+            else "Plusieurs messages sont disponibles dans le fil et la dernière mise à jour est lisible."
+        )
+    if preview:
+        return 67, (
+            "The message preview is readable, but the broader thread context is limited."
+            if digest_language == "en"
+            else "L'aperçu du message est exploitable, mais le contexte plus large du fil reste limité."
+        )
+    return 48, (
+        "Only thin message context is available for this briefing."
+        if digest_language == "en"
+        else "Le contexte disponible pour ce compte rendu reste très limité."
+    )
+
+
+def _meeting_is_all_day(meeting: MeetingRecord) -> bool:
+    raw_payload = meeting.raw_payload if isinstance(meeting.raw_payload, Mapping) else {}
+    if bool(raw_payload.get("isAllDay")):
+        return True
+    duration = meeting.end_at - meeting.start_at
+    return duration >= timedelta(hours=20)
+
+
+def _looks_like_presence_signal(meeting: MeetingRecord) -> bool:
+    normalized = _normalize_text(meeting.subject, meeting.location)
+    return _contains_any(normalized, PRESENCE_PATTERNS)
+
+
+def _presence_summary(meeting: MeetingRecord, digest_language: str) -> str:
+    copy = _language_copy(digest_language)["summary"]
+    location_text = _normalize_display_title(meeting.location or meeting.subject or "")
+    if _contains_any(_normalize_text(meeting.subject, meeting.location), ("teletravail", "télétravail", "remote", "wfh", "home office", "home-office")):
+        return str(copy["presence_remote"]).format(text=location_text or _normalize_display_title(meeting.subject or ""))
+    return str(copy["presence_location"]).format(text=location_text or _normalize_display_title(meeting.subject or ""))
+
+
+def _presence_confidence(digest_language: str) -> tuple[int, str]:
+    return 92, (
+        "This all-day agenda entry explicitly looks like a location or presence signal."
+        if digest_language == "en"
+        else "Cet événement agenda sur la journée ressemble explicitement à un signal de lieu ou de présence."
+    )
+
+
+def _related_messages_for_meeting(
+    meeting: MeetingRecord,
+    messages: Sequence[MessageRecord],
+) -> Sequence[Mapping[str, str]]:
+    if not messages:
+        return ()
+    meeting_tokens = set(_tokenize_subject(_normalize_display_title(meeting.subject or "")))
+    related = []
+    for message in messages:
+        score = 0
+        if meeting_tokens and meeting_tokens.intersection(_tokenize_subject(_normalize_display_title(message.subject or ""))):
+            score += 2
+        if _same_identity(message.from_address, meeting.organizer_address):
+            score += 1
+        if score <= 0:
+            continue
+        related.append(
+            (
+                score,
+                message.received_at,
+                {
+                    "subject": _normalize_display_title(message.subject or ""),
+                    "sender": _humanize_identifier(message.from_address) or message.from_address,
+                    "preview": _preview_snippet(message.body_preview, limit=140),
+                },
+            )
+        )
+    related = sorted(related, key=lambda item: (-item[0], -item[1].timestamp()))
+    return tuple(item[2] for item in related[:MEETING_CONTEXT_MESSAGE_LIMIT])
+
+
+def _meeting_recommended_action(reason_codes: Sequence[str], digest_language: str, *, has_related_context: bool = False) -> str:
+    actions = _language_copy(digest_language)["actions"]
+    if "meeting_cancelled" in reason_codes:
+        return str(actions["meeting_cancelled"])
+    if "meeting_updated" in reason_codes:
+        return str(actions["meeting_updated"])
+    if "meeting_new" in reason_codes:
+        return str(actions["meeting_new"])
+    if "meeting_soon" in reason_codes or has_related_context:
+        return str(actions["meeting_prepare"])
+    return str(actions["meeting_watch"])
+
+
+def _meeting_confidence(meeting: MeetingRecord, reason_codes: Sequence[str], has_related_context: bool, digest_language: str) -> tuple[int, str]:
+    if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting):
+        return _presence_confidence(digest_language)
+    if has_related_context or meeting.body_preview.strip():
+        return 81, (
+            "Calendar details are supported by extra context for this briefing."
+            if digest_language == "en"
+            else "Les détails calendrier sont soutenus par du contexte supplémentaire pour ce compte rendu."
+        )
+    if "meeting_cancelled" in reason_codes or "meeting_updated" in reason_codes or "meeting_new" in reason_codes:
+        return 76, (
+            "Calendar metadata clearly shows a recent schedule change."
+            if digest_language == "en"
+            else "Les métadonnées calendrier montrent clairement un changement récent du planning."
+        )
+    return 58, (
+        "This meeting briefing mainly relies on basic calendar metadata."
+        if digest_language == "en"
+        else "Ce compte rendu repose surtout sur les métadonnées de base du calendrier."
+    )
+
+
 def _compact_candidate_profile_summary(title: str, summary: str) -> str:
     normalized = _normalize_text(title, summary)
     candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
@@ -1036,10 +1346,12 @@ class DeterministicScoringEngine:
         }
         prioritized = []
         thread_candidates = {}
+        thread_messages = {}
         for message in messages:
             entry = self._score_message(message, preference_weights, now)
+            thread_key = self._thread_key(message)
+            thread_messages.setdefault(thread_key, []).append(message)
             if entry is not None:
-                thread_key = self._thread_key(message)
                 existing = thread_candidates.get(thread_key)
                 if existing is None:
                     thread_candidates[thread_key] = (message, entry, 1)
@@ -1050,10 +1362,24 @@ class DeterministicScoringEngine:
                         thread_candidates[thread_key] = (message, entry, duplicate_count)
                     else:
                         thread_candidates[thread_key] = (kept_message, kept_entry, duplicate_count)
-        for _message, entry, duplicate_count in thread_candidates.values():
-            prioritized.append(self._with_thread_reason(entry, duplicate_count))
+        for thread_key, (message, entry, duplicate_count) in thread_candidates.items():
+            prioritized.append(
+                self._finalize_message_entry(
+                    message,
+                    entry,
+                    duplicate_count,
+                    thread_messages=tuple(thread_messages.get(thread_key) or (message,)),
+                )
+            )
         for meeting in meetings:
-            prioritized.append(self._score_meeting(meeting, now, window_start=window_start))
+            prioritized.append(
+                self._score_meeting(
+                    meeting,
+                    now,
+                    messages=messages,
+                    window_start=window_start,
+                )
+            )
         return tuple(sorted(prioritized, key=lambda item: (-item.score, item.title.lower())))
 
     def _thread_key(self, message: MessageRecord) -> str:
@@ -1074,18 +1400,44 @@ class DeterministicScoringEngine:
     def _with_thread_reason(self, entry: DigestEntry, duplicate_count: int) -> DigestEntry:
         if duplicate_count <= 1:
             return entry
-        return DigestEntry(
-            title=entry.title,
-            summary=entry.summary,
-            section_name=entry.section_name,
-            source_kind=entry.source_kind,
-            source_id=entry.source_id,
-            score=entry.score,
-            source_url=entry.source_url,
-            desktop_source_url=entry.desktop_source_url,
-            sort_at=entry.sort_at,
+        return _with_digest_entry_updates(
+            entry,
             reason_codes=tuple(entry.reason_codes) + ("thread_collapsed",),
-            guardrail_applied=entry.guardrail_applied,
+        )
+
+    def _finalize_message_entry(
+        self,
+        message: MessageRecord,
+        entry: DigestEntry,
+        duplicate_count: int,
+        *,
+        thread_messages: Sequence[MessageRecord],
+    ) -> DigestEntry:
+        base_entry = self._with_thread_reason(entry, duplicate_count)
+        cleaned_preview = _clean_preview(message.body_preview)
+        summary = _message_thread_briefing(
+            message,
+            cleaned_preview,
+            base_entry.reason_codes,
+            self.digest_language,
+            duplicate_count=duplicate_count,
+        )
+        confidence_score, confidence_reason = _message_confidence(
+            message,
+            base_entry.reason_codes,
+            duplicate_count,
+            cleaned_preview,
+            self.digest_language,
+        )
+        return _with_digest_entry_updates(
+            base_entry,
+            summary=summary,
+            recommended_action=_message_recommended_action(message, base_entry.reason_codes, self.digest_language),
+            handling_bucket=_handling_bucket_from_section(base_entry.section_name),
+            confidence_score=confidence_score,
+            confidence_label=_normalized_confidence_label("", confidence_score, self.digest_language),
+            confidence_reason=confidence_reason,
+            context_metadata=_thread_context_payload(thread_messages, self.display_timezone),
         )
 
     def _score_message(
@@ -1240,6 +1592,7 @@ class DeterministicScoringEngine:
         meeting: MeetingRecord,
         now: datetime,
         *,
+        messages: Sequence[MessageRecord] = (),
         window_start: Optional[datetime] = None,
     ) -> DigestEntry:
         hours_until = (meeting.start_at - now).total_seconds() / 3600.0
@@ -1248,6 +1601,35 @@ class DeterministicScoringEngine:
         local_now = now.astimezone(_display_zone(self.display_timezone))
         score = 1.0
         reason_codes = ["meeting_context"]
+        related_messages = _related_messages_for_meeting(meeting, messages)
+        if related_messages:
+            reason_codes.append("meeting_related_context")
+        if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting):
+            summary = _presence_summary(meeting, self.digest_language)
+            confidence_score, confidence_reason = _presence_confidence(self.digest_language)
+            return DigestEntry(
+                title=_normalize_display_title(meeting.location or meeting.subject or "(presence event)"),
+                summary=summary,
+                section_name="daily_presence",
+                source_kind="meeting",
+                source_id=meeting.graph_event_id,
+                score=round(score + 0.2, 2),
+                recommended_action=str(_language_copy(self.digest_language)["actions"]["presence"]),
+                handling_bucket="daily_presence",
+                confidence_score=confidence_score,
+                confidence_label=_normalized_confidence_label("", confidence_score, self.digest_language),
+                confidence_reason=confidence_reason,
+                context_metadata={
+                    "is_all_day": True,
+                    "location": meeting.location,
+                    "related_messages": list(related_messages),
+                },
+                source_url=_meeting_source_url(meeting),
+                desktop_source_url=_meeting_desktop_source_url(meeting),
+                sort_at=meeting.start_at,
+                reason_codes=tuple(reason_codes) + ("all_day_presence",),
+                guardrail_applied=False,
+            )
         if hours_until <= 2:
             score += 1.5
             reason_codes.append("meeting_soon")
@@ -1298,6 +1680,12 @@ class DeterministicScoringEngine:
         if status_reason:
             status_text = str(_language_copy(self.digest_language)["badges"][status_reason])
             summary = str(copy["meeting_status_summary"]).format(status=status_text, text=summary)
+        confidence_score, confidence_reason = _meeting_confidence(
+            meeting,
+            reason_codes,
+            bool(related_messages),
+            self.digest_language,
+        )
         return DigestEntry(
             title=_normalize_display_title(meeting.subject or "(untitled meeting)"),
             summary=summary,
@@ -1305,6 +1693,23 @@ class DeterministicScoringEngine:
             source_kind="meeting",
             source_id=meeting.graph_event_id,
             score=round(score, 2),
+            recommended_action=_meeting_recommended_action(
+                reason_codes,
+                self.digest_language,
+                has_related_context=bool(related_messages),
+            ),
+            handling_bucket="upcoming_meetings",
+            confidence_score=confidence_score,
+            confidence_label=_normalized_confidence_label("", confidence_score, self.digest_language),
+            confidence_reason=confidence_reason,
+            context_metadata={
+                "is_all_day": _meeting_is_all_day(meeting),
+                "organizer": organizer,
+                "attendees": list(meeting.attendees[:6]),
+                "location": meeting.location,
+                "body_preview": _preview_snippet(meeting.body_preview),
+                "related_messages": list(related_messages),
+            },
             source_url=_meeting_source_url(meeting),
             desktop_source_url=_meeting_desktop_source_url(meeting),
             sort_at=meeting.start_at,
@@ -1468,6 +1873,7 @@ class StructuredDigestRenderer:
             critical_topics=tuple(sections["critical_topics"]),
             actions_to_take=tuple(sections["actions_to_take"]),
             watch_items=tuple(sections["watch_items"]),
+            daily_presence=tuple(sections["daily_presence"]),
             upcoming_meetings=tuple(sections["upcoming_meetings"]),
         )
 
@@ -1478,6 +1884,12 @@ class StructuredDigestRenderer:
             "source_kind": item.source_kind,
             "source_id": item.source_id,
             "score": item.score,
+            "recommended_action": item.recommended_action,
+            "handling_bucket": item.handling_bucket,
+            "confidence_score": item.confidence_score,
+            "confidence_label": item.confidence_label,
+            "confidence_reason": item.confidence_reason,
+            "context_metadata": dict(item.context_metadata),
             "source_url": item.source_url,
             "desktop_source_url": item.desktop_source_url,
             "sort_at": item.sort_at.isoformat() if item.sort_at is not None else "",
@@ -1621,15 +2033,12 @@ class StructuredDigestRenderer:
     def _body_item_lines(self, item: DigestEntry) -> Sequence[str]:
         action_label, action_url = self._item_action(item)
         rendered_title = self._rendered_item_title(item)
-        if item.source_kind == "meeting":
-            lines = ["- {0}{1} - {2}".format(self._body_badge_prefix(item), rendered_title, item.summary)]
-            if action_url:
-                lines.append("  {0}: {1}".format(action_label, action_url))
-            return tuple(lines)
         lines = [
             "- {0}{1}".format(self._body_badge_prefix(item), rendered_title),
             "  {0}".format(item.summary),
         ]
+        meta_lines = self._body_meta_lines(item)
+        lines.extend(meta_lines)
         if action_url:
             lines.append("  {0}: {1}".format(action_label, action_url))
         return tuple(lines)
@@ -1637,31 +2046,72 @@ class StructuredDigestRenderer:
     def _html_item(self, item: DigestEntry) -> str:
         action_html = self._item_action_html(item)
         rendered_title = self._rendered_item_title(item)
-        if item.source_kind == "meeting":
-            return (
-                "<div style=\"margin:0 0 8px;padding:10px 12px;border:1px solid #cbd5e1;border-radius:10px;\">"
-                "<p style=\"margin:0;font-size:15px;font-weight:600;color:#0f172a;\">{0}{1}</p>"
-                "<p style=\"margin:4px 0 0;font-size:13px;color:#475569;\">{2}</p>"
-                "{3}"
-                "</div>"
-            ).format(
-                self._item_badges_html(item),
-                self._html_escape(rendered_title),
-                self._html_escape(item.summary),
-                action_html,
-            )
         return (
             "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;\">"
             "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}{1}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{2}</p>"
-            "{3}"
+            "{3}{4}"
             "</div>"
         ).format(
             self._item_badges_html(item),
             self._html_escape(rendered_title),
             self._html_escape(item.summary),
+            self._item_meta_html(item),
             action_html,
         )
+
+    def _body_meta_lines(self, item: DigestEntry) -> Sequence[str]:
+        localized = _language_copy(self.digest_language)["item_meta"]
+        lines = []
+        recommended_action = " ".join((item.recommended_action or "").split())
+        if recommended_action:
+            lines.append("  {0}: {1}".format(localized["next_step"], recommended_action))
+        confidence_label = self._entry_confidence_label(item)
+        confidence_reason = " ".join((item.confidence_reason or "").split())
+        if item.confidence_score > 0 or confidence_label or confidence_reason:
+            confidence_bits = []
+            if item.confidence_score > 0:
+                confidence_bits.append(str(item.confidence_score))
+            if confidence_label:
+                confidence_bits.append(confidence_label)
+            confidence_text = " / ".join(confidence_bits) if confidence_bits else confidence_label
+            if confidence_reason:
+                confidence_text = "{0} - {1}".format(confidence_text, confidence_reason).strip(" -")
+            lines.append("  {0}: {1}".format(localized["confidence"], confidence_text))
+        return tuple(lines)
+
+    def _item_meta_html(self, item: DigestEntry) -> str:
+        localized = _language_copy(self.digest_language)["item_meta"]
+        parts = []
+        recommended_action = " ".join((item.recommended_action or "").split())
+        if recommended_action:
+            parts.append(
+                "<p style=\"margin:6px 0 0;font-size:12px;color:#475569;\"><strong>{0}:</strong> {1}</p>".format(
+                    self._html_escape(str(localized["next_step"])),
+                    self._html_escape(recommended_action),
+                )
+            )
+        confidence_label = self._entry_confidence_label(item)
+        confidence_reason = " ".join((item.confidence_reason or "").split())
+        if item.confidence_score > 0 or confidence_label or confidence_reason:
+            confidence_bits = []
+            if item.confidence_score > 0:
+                confidence_bits.append(str(item.confidence_score))
+            if confidence_label:
+                confidence_bits.append(confidence_label)
+            confidence_text = " / ".join(confidence_bits) if confidence_bits else confidence_label
+            if confidence_reason:
+                confidence_text = "{0} - {1}".format(confidence_text, confidence_reason).strip(" -")
+            parts.append(
+                "<p style=\"margin:6px 0 0;font-size:12px;color:#64748b;\"><strong>{0}:</strong> {1}</p>".format(
+                    self._html_escape(str(localized["confidence"])),
+                    self._html_escape(confidence_text),
+                )
+            )
+        return "".join(parts)
+
+    def _entry_confidence_label(self, item: DigestEntry) -> str:
+        return _normalized_confidence_label(item.confidence_label, item.confidence_score, self.digest_language)
 
     def _item_action(self, item: DigestEntry) -> tuple[str, str]:
         desktop_source_url = _safe_desktop_source_url(item.desktop_source_url)
@@ -1823,6 +2273,16 @@ class StructuredDigestRenderer:
 
     def _empty_state(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
         localized = _language_copy(self.digest_language)
+        if section_name == "daily_presence":
+            target_day = self._meeting_target_day(meeting_horizon)
+            source_day = self._meeting_source_day(meeting_horizon)
+            if target_day is None:
+                target_day = datetime.now(_display_zone(self.display_timezone)).date()
+            if source_day is None:
+                source_day = target_day
+            return localized["empty"]["daily_presence"].format(
+                day=self._meeting_horizon_day_label(str(meeting_horizon.get("mode") or "same_day"), target_day, source_day)
+            )
         if section_name != "upcoming_meetings":
             return localized["empty"][section_name]
         target_day = self._meeting_target_day(meeting_horizon)
@@ -1881,21 +2341,7 @@ class IdentityDigestWordingEngine:
                 str(localized["direct_target"]).format(text=base),
                 max_chars=_item_summary_limit(item),
             )
-            rewritten.append(
-                DigestEntry(
-                    title=item.title,
-                    summary=summary,
-                    section_name=item.section_name,
-                    source_kind=item.source_kind,
-                    source_id=item.source_id,
-                    score=item.score,
-                    source_url=item.source_url,
-                    desktop_source_url=item.desktop_source_url,
-                    sort_at=item.sort_at,
-                    reason_codes=item.reason_codes,
-                    guardrail_applied=item.guardrail_applied,
-                )
-            )
+            rewritten.append(_with_digest_entry_updates(item, summary=summary))
         return tuple(rewritten)
 
 
@@ -1910,6 +2356,7 @@ class DeterministicDigestOverviewEngine:
             "critical_topics": tuple(payload.critical_topics),
             "actions_to_take": tuple(payload.actions_to_take),
             "watch_items": tuple(payload.watch_items),
+            "daily_presence": tuple(payload.daily_presence),
             "upcoming_meetings": tuple(payload.upcoming_meetings),
         }
         sentences = []
@@ -1920,6 +2367,10 @@ class DeterministicDigestOverviewEngine:
             sentences.append(self._section_sentence(section_name, items, localized))
             if len(sentences) >= 2:
                 break
+        presence_items = sections["daily_presence"]
+        if presence_items and len(sentences) < 2:
+            presence_text = _normalize_item_summary(presence_items[0].title, presence_items[0].summary, max_chars=90)
+            sentences.append(localized["presence"].format(text=_clean_overview_fragment(presence_text)))
         meetings = sections["upcoming_meetings"]
         if meetings and len(sentences) < 2:
             meeting_text = _normalize_item_summary(meetings[0].title, meetings[0].summary, max_chars=110)
@@ -1980,6 +2431,7 @@ class LlmDigestOverviewEngine:
             "critical_topics": self._compact_overview_items(tuple(payload.critical_topics[:1])),
             "actions_to_take": self._compact_overview_items(tuple(payload.actions_to_take[:1])),
             "watch_items": self._compact_overview_items(tuple(payload.watch_items[:1])),
+            "daily_presence": self._compact_overview_items(tuple(payload.daily_presence[:1])),
             "upcoming_meetings": self._compact_overview_items(tuple(payload.upcoming_meetings[:1])),
         }
 
@@ -1987,23 +2439,18 @@ class LlmDigestOverviewEngine:
         compacted = []
         for item in items:
             compacted.append(
-                DigestEntry(
-                    title=item.title,
+                _with_digest_entry_updates(
+                    item,
                     summary=_normalize_item_summary(item.title, item.summary, max_chars=self._overview_summary_limit(item)),
-                    section_name=item.section_name,
-                    source_kind=item.source_kind,
-                    source_id=item.source_id,
-                    score=item.score,
-                    source_url=item.source_url,
-                    desktop_source_url=item.desktop_source_url,
-                    sort_at=item.sort_at,
-                    reason_codes=item.reason_codes,
-                    guardrail_applied=item.guardrail_applied,
+                    recommended_action=_truncate_sentence(item.recommended_action, max_chars=110),
+                    confidence_reason=_truncate_sentence(item.confidence_reason, max_chars=110),
                 )
             )
         return tuple(compacted)
 
     def _overview_summary_limit(self, item: DigestEntry) -> int:
+        if item.section_name == "daily_presence":
+            return 100
         if item.source_kind == "meeting":
             return 90
         if item.section_name == "critical_topics":
@@ -2063,24 +2510,46 @@ class LlmDigestWordingEngine:
         updated_items = []
         for item in items:
             ref = "{0}:{1}".format(item.source_kind, item.source_id)
-            summary = str(rewritten.get(ref) or "").strip()
+            rewritten_payload = rewritten.get(ref)
+            if isinstance(rewritten_payload, str):
+                summary = rewritten_payload.strip()
+                recommended_action = ""
+                confidence_score = item.confidence_score
+                confidence_label = item.confidence_label
+                confidence_reason = item.confidence_reason
+            elif isinstance(rewritten_payload, Mapping):
+                summary = str(rewritten_payload.get("summary") or "").strip()
+                recommended_action = " ".join(str(rewritten_payload.get("recommended_action") or "").split())
+                confidence_score = _confidence_score_bounds(
+                    rewritten_payload.get("confidence_score") if rewritten_payload.get("confidence_score") not in (None, "") else item.confidence_score
+                )
+                confidence_label = str(rewritten_payload.get("confidence_label") or item.confidence_label)
+                confidence_reason = _confidence_reason(
+                    str(rewritten_payload.get("confidence_reason") or ""),
+                    item.confidence_reason,
+                )
+            else:
+                summary = ""
+                recommended_action = ""
+                confidence_score = item.confidence_score
+                confidence_label = item.confidence_label
+                confidence_reason = item.confidence_reason
             if not summary:
                 updated_items.append(item)
                 continue
             summary = _normalize_item_summary(item.title, summary, max_chars=_item_summary_limit(item))
             updated_items.append(
-                DigestEntry(
-                    title=item.title,
+                _with_digest_entry_updates(
+                    item,
                     summary=summary,
-                    section_name=item.section_name,
-                    source_kind=item.source_kind,
-                    source_id=item.source_id,
-                    score=item.score,
-                    source_url=item.source_url,
-                    desktop_source_url=item.desktop_source_url,
-                    sort_at=item.sort_at,
-                    reason_codes=item.reason_codes,
-                    guardrail_applied=item.guardrail_applied,
+                    recommended_action=(
+                        _truncate_sentence(recommended_action, max_chars=160)
+                        if recommended_action
+                        else item.recommended_action
+                    ),
+                    confidence_score=confidence_score,
+                    confidence_label=_normalized_confidence_label(confidence_label, confidence_score, getattr(self.provider, "language", "en")),
+                    confidence_reason=_truncate_sentence(confidence_reason, max_chars=180),
                 )
             )
         return tuple(updated_items)
