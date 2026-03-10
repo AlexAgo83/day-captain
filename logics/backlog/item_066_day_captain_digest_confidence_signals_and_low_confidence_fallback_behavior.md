@@ -1,9 +1,9 @@
 ## item_066_day_captain_digest_confidence_signals_and_low_confidence_fallback_behavior - Day Captain digest confidence signals and low-confidence fallback behavior
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 96%
-> Confidence: 94%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -45,7 +45,7 @@ flowchart LR
 
 # Links
 - Request: `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring`
-- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Draft`)
+- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Done`)
 
 # Priority
 - Impact: High - confidence is the main trust control for a more generative digest layer.
@@ -53,3 +53,4 @@ flowchart LR
 
 # Notes
 - Created on Tuesday, March 10, 2026 from product direction to expose confidence explicitly for each generated mail-thread and meeting briefing.
+- Closed on Tuesday, March 10, 2026 after implementing score/label/reason confidence metadata, low-confidence rendering, and safe fallback preservation.

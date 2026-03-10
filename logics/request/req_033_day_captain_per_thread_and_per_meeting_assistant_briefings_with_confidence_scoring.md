@@ -1,8 +1,8 @@
 ## req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring - Day Captain per-thread and per-meeting assistant briefings with confidence scoring
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 98%
-> Confidence: 96%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
 > Complexity: High
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -88,9 +88,9 @@ flowchart TD
 - [x] Dependencies and known risks are listed.
 
 # Backlog
-- `item_064_day_captain_per_thread_assistant_briefings_and_handling_contract` - Add structured assistant briefings and mapped handling outcomes for surfaced email threads. Status: `Draft`.
-- `item_065_day_captain_per_meeting_assistant_briefings_with_related_context` - Add assistant briefings for surfaced meetings using related context when available. Status: `Draft`.
-- `item_066_day_captain_digest_confidence_signals_and_low_confidence_fallback_behavior` - Add score, label, reason confidence signals plus low-confidence/fallback behavior. Status: `Draft`.
-- `item_067_day_captain_overview_synthesis_from_structured_assistant_briefings` - Rebuild `En bref` from important structured assistant briefings. Status: `Draft`.
-- `item_068_day_captain_all_day_presence_event_classification_and_rendering` - Isolate qualifying all-day agenda entries as daily presence events rather than ordinary meetings. Status: `Draft`.
-- `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` - Orchestrate mail-thread briefings, meeting briefings, confidence behavior, and overview regeneration. Status: `Draft`.
+- `item_064_day_captain_per_thread_assistant_briefings_and_handling_contract` - Add structured assistant briefings and mapped handling outcomes for surfaced email threads. Status: `Done`.
+- `item_065_day_captain_per_meeting_assistant_briefings_with_related_context` - Add assistant briefings for surfaced meetings using related context when available. Status: `Done`.
+- `item_066_day_captain_digest_confidence_signals_and_low_confidence_fallback_behavior` - Add score, label, reason confidence signals plus low-confidence/fallback behavior. Status: `Done`.
+- `item_067_day_captain_overview_synthesis_from_structured_assistant_briefings` - Rebuild `En bref` from important structured assistant briefings. Status: `Done`.
+- `item_068_day_captain_all_day_presence_event_classification_and_rendering` - Isolate qualifying all-day agenda entries as daily presence events rather than ordinary meetings. Status: `Done`.
+- `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` - Orchestrate mail-thread briefings, meeting briefings, confidence behavior, and overview regeneration. Status: `Done`.

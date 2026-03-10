@@ -1,9 +1,9 @@
 ## item_067_day_captain_overview_synthesis_from_structured_assistant_briefings - Day Captain overview synthesis from structured assistant briefings
 > From version: 1.4.2
-> Status: Draft
-> Understanding: 97%
-> Confidence: 95%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -43,7 +43,7 @@ flowchart LR
 
 # Links
 - Request: `req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring`
-- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Draft`)
+- Primary task(s): `task_038_day_captain_assistant_briefings_confidence_and_overview_orchestration` (`Done`)
 
 # Priority
 - Impact: High - the overview is the first summary surface the user sees and must stay aligned with the new briefing system.
@@ -51,3 +51,4 @@ flowchart LR
 
 # Notes
 - Created on Tuesday, March 10, 2026 from product direction to rebuild `En bref` on top of structured assistant briefings instead of the older mechanical path.
+- Closed on Tuesday, March 10, 2026 after rebuilding `En bref` on the structured briefing outputs with deterministic fallback retained.
