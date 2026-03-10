@@ -10,7 +10,7 @@ Contract:
 Generate a scaffold with:
 
 ```bash
-python3 scripts/generate_changelog.py --previous-version 1.4.2
+python3 scripts/generate_changelog.py --previous-version 1.4.3
 ```
 
 This keeps changelog filenames aligned with the current package version instead of guessing a release number in advance.
