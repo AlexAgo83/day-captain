@@ -114,6 +114,20 @@ def _start_of_local_day(target_day: date, zone) -> datetime:
     ).astimezone(timezone.utc)
 
 
+SPARSE_MEETING_DAY_THRESHOLD = 1
+
+
+def _merge_unique_meetings(*groups: Sequence[MeetingRecord]) -> Sequence[MeetingRecord]:
+    merged = {}
+    for meeting in groups:
+        for item in meeting:
+            key = str(item.graph_event_id or "").strip() or "{0}:{1}".format(item.subject, item.start_at.isoformat())
+            existing = merged.get(key)
+            if existing is None or item.start_at < existing.start_at:
+                merged[key] = item
+    return tuple(sorted(merged.values(), key=lambda item: item.start_at))
+
+
 def _start_of_local_week(value: datetime, zone) -> datetime:
     local_now = value.astimezone(zone)
     target_day = local_now.date() - timedelta(days=local_now.weekday())
@@ -632,8 +646,10 @@ class DayCaptainApplication:
             }
 
         meetings_end = _end_of_local_day(current_time, zone)
-        meetings = self.calendar_collector.collect_meetings(auth_context, current_time, meetings_end)
-        if meetings:
+        meetings = _merge_unique_meetings(
+            tuple(self.calendar_collector.collect_meetings(auth_context, current_time, meetings_end))
+        )
+        if len(meetings) > SPARSE_MEETING_DAY_THRESHOLD:
             return meetings, {
                 "mode": "same_day",
                 "target_date": local_date.isoformat(),
@@ -642,10 +658,42 @@ class DayCaptainApplication:
 
         target_date = local_date + timedelta(days=1)
         next_start, next_end = _full_local_day_window(target_date, zone)
-        meetings = self.calendar_collector.collect_meetings(auth_context, next_start, next_end)
+        next_day_meetings = _merge_unique_meetings(
+            tuple(self.calendar_collector.collect_meetings(auth_context, next_start, next_end))
+        )
+        if meetings and next_day_meetings:
+            return _merge_unique_meetings(meetings, next_day_meetings), {
+                "mode": "two_day_span",
+                "target_date": target_date.isoformat(),
+                "source_date": local_date.isoformat(),
+            }
+        if not meetings and len(next_day_meetings) > SPARSE_MEETING_DAY_THRESHOLD:
+            return next_day_meetings, {
+                "mode": "next_day",
+                "target_date": target_date.isoformat(),
+                "source_date": local_date.isoformat(),
+            }
+        if not meetings and next_day_meetings:
+            second_target_date = target_date + timedelta(days=1)
+            second_start, second_end = _full_local_day_window(second_target_date, zone)
+            second_day_meetings = _merge_unique_meetings(
+                tuple(self.calendar_collector.collect_meetings(auth_context, second_start, second_end))
+            )
+            if second_day_meetings:
+                return _merge_unique_meetings(next_day_meetings, second_day_meetings), {
+                    "mode": "next_two_days",
+                    "target_date": second_target_date.isoformat(),
+                    "source_date": local_date.isoformat(),
+                }
+        if next_day_meetings:
+            return next_day_meetings, {
+                "mode": "next_day",
+                "target_date": target_date.isoformat(),
+                "source_date": local_date.isoformat(),
+            }
         return meetings, {
-            "mode": "next_day",
-            "target_date": target_date.isoformat(),
+            "mode": "same_day",
+            "target_date": local_date.isoformat(),
             "source_date": local_date.isoformat(),
         }
 

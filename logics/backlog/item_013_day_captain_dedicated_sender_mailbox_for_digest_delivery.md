@@ -1,9 +1,9 @@
 ## item_013_day_captain_dedicated_sender_mailbox_for_digest_delivery - Decouple digest sender mailbox from the source mailbox
 > From version: 0.9.0
 > Status: Done
-> Understanding: 99%
-> Confidence: 99%
-> Progress: 100%
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 99%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.

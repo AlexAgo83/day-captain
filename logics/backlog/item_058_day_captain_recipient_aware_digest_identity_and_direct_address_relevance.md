@@ -1,16 +1,16 @@
 ## item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance - Make the digest recipient-aware and improve direct-address relevance
 > From version: 1.4.2
 > Status: Done
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 100%
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 99%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
 
 # Problem
 - The digest does not yet behave consistently as if it knows exactly who it is addressing from the existing target-user context.
-- Live feedback from Casey Morgan shows a trust gap: the brief can mention `Casey` inside card content, but still fails to clearly treat messages addressed to Casey as a first-class relevance signal.
+- Live feedback from a target digest user shows a trust gap: the brief can mention the recipient inside card content, but still fails to clearly treat messages addressed to that person as a first-class relevance signal.
 - Without recipient-aware identity handling, wording and prioritization stay too generic for a multi-user assistant product.
 
 # Scope
@@ -48,5 +48,5 @@ flowchart LR
 - Urgency: High - this is a correctness and trust issue surfaced directly by user feedback.
 
 # Notes
-- Derived from direct user feedback on the digest delivered to Casey Morgan on Tuesday, March 10, 2026.
+- Derived from direct user feedback on the digest delivered to the target digest user on Tuesday, March 10, 2026.
 - Completed on Tuesday, March 10, 2026 after shipping target-recipient display-name awareness, direct-address relevance scoring, and regression coverage for mailbox-scoped recipient-aware behavior.

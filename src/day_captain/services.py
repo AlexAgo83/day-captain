@@ -290,6 +290,8 @@ LANGUAGE_COPY = {
         "meeting_notes": {
             "weekend_monday": "Looking ahead to {day}.",
             "next_day": "Nothing else is scheduled for today, so here is {day}.",
+            "two_day_span": "Light meeting day, so this section also includes {day}.",
+            "next_two_days": "Nothing else is scheduled for today, so here are {first_day} and {second_day}.",
         },
         "footer": {
             "label": "Quick actions",
@@ -323,6 +325,7 @@ LANGUAGE_COPY = {
             "meeting": "Upcoming meeting: {text}.",
         },
         "item_meta": {
+            "sender": "Sender",
             "next_step": "Next step",
             "confidence": "Confidence",
             "confidence_high": "High",
@@ -333,7 +336,7 @@ LANGUAGE_COPY = {
             "critical": "Needs attention: {text}",
             "action": "Likely needs your follow-up: {text}",
             "watch": "Worth noting: {text}",
-            "direct_target": "Directly addressed to you: {text}",
+            "direct_target": "You're expected on this point: {text}",
             "direct_target_named": "Directly addressed to {name}: {text}",
             "candidate_profile": "Candidate profile: {text}",
             "candidate_follow_up": "Review the candidate or decide on follow-up.",
@@ -395,6 +398,8 @@ LANGUAGE_COPY = {
         "meeting_notes": {
             "weekend_monday": "Aperçu des réunions de {day}.",
             "next_day": "Rien d'autre n'est prévu aujourd'hui, voici {day}.",
+            "two_day_span": "Journée légère côté réunions, cette section inclut aussi {day}.",
+            "next_two_days": "Rien d'autre n'est prévu aujourd'hui, voici {first_day} et {second_day}.",
         },
         "footer": {
             "label": "Actions rapides",
@@ -428,6 +433,7 @@ LANGUAGE_COPY = {
             "meeting": "Réunion à venir : {text}.",
         },
         "item_meta": {
+            "sender": "Expéditeur",
             "next_step": "À faire",
             "confidence": "Confiance",
             "confidence_high": "Élevée",
@@ -438,7 +444,7 @@ LANGUAGE_COPY = {
             "critical": "À surveiller de près : {text}",
             "action": "Demande probablement un suivi de votre part : {text}",
             "watch": "À noter : {text}",
-            "direct_target": "Vous êtes directement destinataire : {text}",
+            "direct_target": "Vous êtes attendu sur ce point : {text}",
             "direct_target_named": "Directement adressé à {name} : {text}",
             "candidate_profile": "Profil candidat : {text}",
             "candidate_follow_up": "Examiner la candidature ou proposer un suivi.",
@@ -852,8 +858,38 @@ def _decision_ready_preview(preview: str) -> str:
 
 def _is_candidate_profile_message(subject: str, preview: str) -> bool:
     normalized = _normalize_text(subject, preview)
-    candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
-    return any(marker in normalized for marker in candidate_markers)
+    strong_markers = (
+        "candidature",
+        "candidate",
+        "curriculum vitae",
+        "cv ",
+        "resume",
+        "résumé",
+        "job application",
+        "application spontan",
+        "candidature spontan",
+        "alternance",
+        "stage",
+    )
+    if any(marker in normalized for marker in strong_markers):
+        return True
+    profile_context_markers = (
+        "je suis",
+        "i am",
+        "designer chez",
+        "working at",
+        "currently at",
+        "cherche une nouvelle opportunit",
+        "looking for a new opportunity",
+    )
+    profile_background_markers = (
+        "bachelor",
+        "master",
+        "designer",
+    )
+    return any(marker in normalized for marker in profile_context_markers) and any(
+        marker in normalized for marker in profile_background_markers
+    )
 
 
 def _is_low_signal_watch_message(subject: str, preview: str) -> bool:
@@ -980,7 +1016,7 @@ def _strip_known_summary_prefix(summary: str, language: str) -> str:
             "Critical:",
             "Action:",
             "Worth noting:",
-            "Directly addressed to you:",
+            "You're expected on this point:",
             "Candidate profile:",
         ),
         "fr": (
@@ -989,7 +1025,7 @@ def _strip_known_summary_prefix(summary: str, language: str) -> str:
             "Urgent :",
             "Action :",
             "À noter :",
-            "Vous êtes directement destinataire :",
+            "Vous êtes attendu sur ce point :",
             "Profil candidat :",
         ),
     }
@@ -1088,6 +1124,7 @@ def _thread_context_payload(messages: Sequence[MessageRecord], display_timezone:
         "thread_id": ordered[-1].thread_id if ordered else "",
         "message_count": len(messages),
         "participants": participants[:4],
+        "latest_sender_display_name": _humanize_identifier(ordered[-1].from_address) or ordered[-1].from_address if ordered else "",
         "target_recipient_display_name": _target_recipient_display_name(ordered[-1]) if ordered else "",
         "source_language_hint": (
             _language_hint_for_text("{0} {1}".format(ordered[-1].subject or "", ordered[-1].body_preview or ""))
@@ -1277,8 +1314,7 @@ def _meeting_related_context_summary(related_messages: Sequence[Mapping[str, str
 
 def _compact_candidate_profile_summary(title: str, summary: str) -> str:
     normalized = _normalize_text(title, summary)
-    candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
-    if not any(marker in normalized for marker in candidate_markers):
+    if not _is_candidate_profile_message(title, summary):
         return ""
     follow_up = ""
     for marker in ("Suivi :", "Next step:"):
@@ -1310,8 +1346,7 @@ def _compact_candidate_profile_summary(title: str, summary: str) -> str:
 
 def _deterministic_candidate_profile_summary(title: str, preview: str, language: str) -> str:
     normalized = _normalize_text(title, preview)
-    candidate_markers = ("candidature", "candidate", "designer", "opportunit", "opportunity", "bachelor", "master")
-    if not any(marker in normalized for marker in candidate_markers):
+    if not _is_candidate_profile_message(title, preview):
         return ""
     copy = _language_copy(language)["summary"]
     preview_text = " ".join((preview or "").strip().split())
@@ -1846,13 +1881,6 @@ class DeterministicScoringEngine:
             template = "Urgent : {text}" if mixed_english_source else str(copy["critical"])
             return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=175)
         if "direct_target_recipient" in reason_codes:
-            display_name = _target_recipient_display_name(message)
-            if display_name:
-                return _normalize_item_summary(
-                    message.subject or "",
-                    str(copy["direct_target_named"]).format(name=display_name, text=base),
-                    max_chars=175,
-                )
             return _normalize_item_summary(message.subject or "", copy["direct_target"].format(text=base), max_chars=175)
         if "action_keyword" in reason_codes:
             template = "Action : {text}" if mixed_english_source else str(copy["action"])
@@ -1885,6 +1913,13 @@ class StructuredDigestRenderer:
         for item in prioritized_items:
             target_section = item.section_name if item.section_name in sections else "watch_items"
             sections[target_section].append(item)
+        source_day = self._meeting_source_day(meeting_horizon or {})
+        if source_day is not None:
+            sections["daily_presence"] = [
+                item
+                for item in sections["daily_presence"]
+                if item.sort_at is not None and item.sort_at.astimezone(_display_zone(self.display_timezone)).date() == source_day
+            ]
         for name in SECTION_NAMES:
             if name == "upcoming_meetings":
                 sections[name] = sorted(
@@ -2180,6 +2215,9 @@ class StructuredDigestRenderer:
     def _body_meta_lines(self, item: DigestEntry) -> Sequence[str]:
         localized = _language_copy(self.digest_language)["item_meta"]
         lines = []
+        sender_name = self._entry_sender_name(item)
+        if sender_name:
+            lines.append("  {0}: {1}".format(localized["sender"], sender_name))
         recommended_action = " ".join((item.recommended_action or "").split())
         if recommended_action:
             lines.append("  {0}: {1}".format(localized["next_step"], recommended_action))
@@ -2200,6 +2238,14 @@ class StructuredDigestRenderer:
     def _item_meta_html(self, item: DigestEntry) -> str:
         localized = _language_copy(self.digest_language)["item_meta"]
         parts = []
+        sender_name = self._entry_sender_name(item)
+        if sender_name:
+            parts.append(
+                "<p style=\"margin:6px 0 0;font-size:12px;color:#475569;\"><strong>{0}:</strong> {1}</p>".format(
+                    self._html_escape(str(localized["sender"])),
+                    self._html_escape(sender_name),
+                )
+            )
         recommended_action = " ".join((item.recommended_action or "").split())
         if recommended_action:
             parts.append(
@@ -2226,6 +2272,13 @@ class StructuredDigestRenderer:
                 )
             )
         return "".join(parts)
+
+    def _entry_sender_name(self, item: DigestEntry) -> str:
+        if item.source_kind != "message":
+            return ""
+        metadata = item.context_metadata or {}
+        sender_name = " ".join(str(metadata.get("latest_sender_display_name") or "").split())
+        return sender_name
 
     def _entry_confidence_label(self, item: DigestEntry) -> str:
         return _normalized_confidence_label(item.confidence_label, item.confidence_score, self.digest_language)
@@ -2378,14 +2431,21 @@ class StructuredDigestRenderer:
         if section_name != "upcoming_meetings":
             return ""
         mode = str(meeting_horizon.get("mode") or "same_day")
-        if mode not in {"weekend_monday", "next_day"}:
+        if mode not in {"weekend_monday", "next_day", "two_day_span", "next_two_days"}:
             return ""
         localized = _language_copy(self.digest_language)
         target_day = self._meeting_target_day(meeting_horizon)
         if target_day is None:
             return ""
+        source_day = self._meeting_source_day(meeting_horizon) or target_day
+        if mode == "next_two_days":
+            first_day = source_day + timedelta(days=1)
+            return localized["meeting_notes"][mode].format(
+                first_day=self._meeting_horizon_day_label("next_day", first_day, source_day),
+                second_day=self._meeting_horizon_day_label("next_day", target_day, source_day),
+            )
         return localized["meeting_notes"][mode].format(
-            day=self._meeting_horizon_day_label(mode, target_day, self._meeting_source_day(meeting_horizon) or target_day)
+            day=self._meeting_horizon_day_label(mode, target_day, source_day)
         )
 
     def _empty_state(self, section_name: str, meeting_horizon: Mapping[str, str]) -> str:
@@ -2453,13 +2513,7 @@ class IdentityDigestWordingEngine:
                 rewritten.append(item)
                 continue
             base = _strip_known_summary_prefix(item.summary, self.digest_language)
-            target_name = " ".join(
-                str((item.context_metadata or {}).get("target_recipient_display_name") or "").split()
-            )
-            if target_name:
-                rewritten_summary = str(localized["direct_target_named"]).format(name=target_name, text=base)
-            else:
-                rewritten_summary = str(localized["direct_target"]).format(text=base)
+            rewritten_summary = str(localized["direct_target"]).format(text=base)
             summary = _normalize_item_summary(
                 item.title,
                 rewritten_summary,

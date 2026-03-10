@@ -1,9 +1,9 @@
 ## task_036_day_captain_recipient_aware_digest_logic_and_meeting_correctness_orchestration - Orchestrate recipient-aware digest identity, per-mail summaries, bilingual wording, and meeting correctness
 > From version: 1.4.2
 > Status: Done
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 100%
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 99%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -54,7 +54,7 @@ flowchart LR
 - [x] Status is `Done` and progress is `100%`.
 
 # Report
-- Created on Tuesday, March 10, 2026 from direct feedback on the delivered digest for Casey Morgan.
+- Created on Tuesday, March 10, 2026 from direct feedback on the delivered digest for the target digest user.
 - This task intentionally focuses on product logic and assistant correctness rather than layout redesign.
 - Synchronization note: this task now mainly carries the remaining recipient-aware and bilingual wording work, while overlapping summary-system replacement execution is coordinated through `task_038`.
 - Completed on Tuesday, March 10, 2026 after shipping recipient-aware direct-address handling, synchronized per-thread and per-meeting briefings, bounded bilingual fallback wording, and meeting chronology/change-visibility validation.

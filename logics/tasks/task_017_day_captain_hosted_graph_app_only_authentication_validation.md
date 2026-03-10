@@ -1,9 +1,9 @@
 ## task_017_day_captain_hosted_graph_app_only_authentication_validation - Validate Render-hosted Graph app-only digest execution end to end
 > From version: 0.7.0
 > Status: Done
-> Understanding: 100%
-> Confidence: 99%
-> Progress: 100%
+> Understanding: 99%
+> Confidence: 98%
+> Progress: 99%
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.

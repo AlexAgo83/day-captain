@@ -1,9 +1,9 @@
 ## task_021_day_captain_hosted_sleep_and_cold_start_trigger_robustness - Harden hosted trigger flow for sleeping or cold-starting services
 > From version: 0.8.0
 > Status: Done
-> Understanding: 100%
-> Confidence: 100%
-> Progress: 100%
+> Understanding: 99%
+> Confidence: 99%
+> Progress: 99%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
