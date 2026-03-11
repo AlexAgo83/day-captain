@@ -1,8 +1,8 @@
 ## req_036_day_captain_promotional_mail_detection_and_digest_deprioritization - Day Captain promotional mail detection and digest deprioritization
 > From version: 1.5.2
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -86,3 +86,4 @@ flowchart TD
 - Created on Wednesday, March 11, 2026 from live digest feedback where a promotional email was surfaced as an action item and repeated in `En bref`.
 - The preferred implementation direction is heuristic-first with a bounded structured LLM pass for ambiguous surfaced candidates, not an unbounded mailbox-wide classifier.
 - This request is intentionally about digest trust, ranking, and rendering behavior rather than a generic spam-filtering subsystem.
+- Closed on Wednesday, March 11, 2026 after shipping bounded promotional detection, action-section demotion, neutral rendering, and overview exclusion with regression coverage.

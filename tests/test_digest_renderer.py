@@ -323,6 +323,37 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("[Flagged] Budget note", payload.delivery_body)
         self.assertIn(">Flagged<", payload.delivery_payload["html_body"])
 
+    def test_renders_promotional_badge_without_next_step(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-promo",
+            generated_at=now,
+            window_start=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Billets été",
+                    summary="Annonce commerciale sur des billets désormais disponibles en ligne.",
+                    section_name="watch_items",
+                    source_kind="message",
+                    source_id="msg-promo",
+                    score=0.8,
+                    reason_codes=("promotional",),
+                    context_metadata={"latest_sender_display_name": "Info"},
+                    confidence_score=52,
+                    confidence_reason="Le contenu ressemble surtout à un message promotionnel plutôt qu'à une demande opérationnelle concrète.",
+                ),
+            ),
+        )
+
+        self.assertIn("[Promotion] Billets été", payload.delivery_body)
+        self.assertIn(">Promotion<", payload.delivery_payload["html_body"])
+        self.assertNotIn("À faire:", payload.delivery_body)
+        self.assertNotIn("<strong>À faire:</strong>", payload.delivery_payload["html_body"])
+
     def test_renders_weather_capsule_before_overview(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

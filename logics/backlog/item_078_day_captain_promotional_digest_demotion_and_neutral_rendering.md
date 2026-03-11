@@ -1,9 +1,9 @@
 ## item_078_day_captain_promotional_digest_demotion_and_neutral_rendering - Demote promotional items and remove action-forward rendering
 > From version: 1.5.2
-> Status: Ready
-> Understanding: 99%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from `req_036_day_captain_promotional_mail_detection_and_digest_deprioritization`.
 - The final rendering can either exclude promotional items or place them in a bounded low-prominence section, but it must not imply user urgency by default.
+- Closed on Wednesday, March 11, 2026 after demoting promotional items out of action-oriented sections, neutralizing next-step wording, and rendering a bounded promo badge.
