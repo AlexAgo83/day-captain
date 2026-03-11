@@ -93,9 +93,12 @@ class OpenAICompatibleDigestWordingProvider:
                         "Preserve supplier names, internal topic names, and important English business terms when translating them would reduce clarity. "
                         "If the output language is French and the source content is in English, prefer intentional FR-English wording over awkward full translation. "
                         "Preserve facts, urgency, and requested actions. "
+                        "For email items only, also classify whether the item is mainly promotional or commercial marketing rather than a genuine operational follow-up. "
+                        "Only mark an item as promotional when the main user-visible intent is commercial promotion, sales outreach, or marketing content. "
+                        "Do not mark ordinary vendor coordination, customer support, or real operational follow-up as promotional. "
                         "Do not invent details. "
                         "Return JSON with an `items` array containing objects with: "
-                        "`ref`, `summary`, optional `recommended_action`, optional `confidence_score`, optional `confidence_label`, and optional `confidence_reason`."
+                        "`ref`, `summary`, optional `recommended_action`, optional `confidence_score`, optional `confidence_label`, optional `confidence_reason`, optional `promotional_label`, and optional `promotional_reason`."
                     ).format(
                         "French" if self.language == "fr" else "English",
                         self.style_prompt,
@@ -169,6 +172,8 @@ class OpenAICompatibleDigestWordingProvider:
                 "confidence_score": item.get("confidence_score"),
                 "confidence_label": str(item.get("confidence_label") or "").strip(),
                 "confidence_reason": str(item.get("confidence_reason") or "").strip(),
+                "promotional_label": str(item.get("promotional_label") or "").strip(),
+                "promotional_reason": str(item.get("promotional_reason") or "").strip(),
             }
         if not result:
             raise LlmProviderError("LLM response did not include any rewritten items.")

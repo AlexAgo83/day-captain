@@ -113,6 +113,35 @@ NEWSLETTER_PATTERNS = (
     "rua tag",
 )
 
+PROMOTIONAL_ACTION_PATTERNS = (
+    "book now",
+    "buy now",
+    "shop now",
+    "reserve now",
+    "reservez des maintenant",
+    "réservez dès maintenant",
+    "discover the offer",
+    "decouvrez l offre",
+    "découvrez l'offre",
+)
+
+PROMOTIONAL_OFFER_PATTERNS = (
+    "ticket",
+    "tickets",
+    "billet",
+    "billets",
+    "promotion",
+    "promo",
+    "special offer",
+    "offre speciale",
+    "offre spéciale",
+    "discount",
+    "sale",
+    "soldes",
+    "version en ligne",
+    "available online",
+)
+
 SELF_DIGEST_PATTERNS = (
     "day captain digest for",
     "day captain morning digest",
@@ -317,6 +346,7 @@ LANGUAGE_COPY = {
         },
         "badges": {
             "flagged": "Flagged",
+            "promotional": "Promo",
             "meeting_cancelled": "Cancelled",
             "meeting_new": "New",
             "meeting_updated": "Updated",
@@ -437,6 +467,7 @@ LANGUAGE_COPY = {
         },
         "badges": {
             "flagged": "Marqué",
+            "promotional": "Promotion",
             "meeting_cancelled": "Annulé",
             "meeting_new": "Nouvelle réunion",
             "meeting_updated": "Déplacée",
@@ -715,6 +746,29 @@ def _message_is_flagged(message: MessageRecord) -> bool:
     if not isinstance(flag_payload, Mapping):
         return False
     return str(flag_payload.get("flagStatus") or "").strip().lower() == "flagged"
+
+
+def _matched_patterns(text: str, patterns: Sequence[str]) -> Sequence[str]:
+    normalized = str(text or "").strip().lower()
+    if not normalized:
+        return ()
+    return tuple(pattern for pattern in patterns if pattern in normalized)
+
+
+def _message_promotional_signal(message: MessageRecord, combined_text: str) -> str:
+    offer_matches = _matched_patterns(combined_text, PROMOTIONAL_OFFER_PATTERNS)
+    action_matches = _matched_patterns(combined_text, PROMOTIONAL_ACTION_PATTERNS)
+    if not offer_matches:
+        return ""
+    sender = str(message.from_address or "").strip().lower()
+    sender_local = sender.split("@", 1)[0] if "@" in sender else sender
+    if action_matches:
+        return "promotional"
+    if len(offer_matches) >= 2 and sender_local in {"info", "newsletter", "news", "marketing"}:
+        return "promotional"
+    if len(offer_matches) >= 2:
+        return "promotional_candidate"
+    return ""
 
 
 def _identity_tokens(value: str) -> Sequence[str]:
@@ -1242,6 +1296,20 @@ def _with_digest_entry_updates(item: DigestEntry, **changes) -> DigestEntry:
     return DigestEntry(**payload)
 
 
+def _is_promotional_item(item: DigestEntry) -> bool:
+    codes = set(item.reason_codes)
+    return "promotional" in codes
+
+
+def _promotional_reason(value: str, language: str) -> str:
+    cleaned = " ".join(str(value or "").split())
+    if cleaned:
+        return cleaned
+    if language == "fr":
+        return "Le contenu ressemble surtout à une sollicitation commerciale plutôt qu'à un suivi opérationnel."
+    return "The content looks primarily promotional rather than operational."
+
+
 def _preview_snippet(value: str, limit: int = THREAD_CONTEXT_PREVIEW_LIMIT) -> str:
     return _truncate_sentence(_decision_ready_preview(_clean_preview(value)), max_chars=limit)
 
@@ -1309,6 +1377,10 @@ def _message_thread_briefing(
 
 def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[str], digest_language: str) -> str:
     actions = _language_copy(digest_language)["actions"]
+    if "promotional" in reason_codes:
+        return ""
+    if "promotional_candidate" in reason_codes:
+        return str(actions["watch"])
     if "critical_keyword" in reason_codes:
         return str(actions["critical"])
     normalized_preview = _normalize_text(message.subject, message.body_preview)
@@ -1320,6 +1392,18 @@ def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[s
 
 
 def _message_confidence(message: MessageRecord, reason_codes: Sequence[str], duplicate_count: int, preview: str, digest_language: str) -> tuple[int, str]:
+    if "promotional" in reason_codes:
+        return 52, (
+            "The content reads primarily like a promotional message rather than a concrete operational request."
+            if digest_language == "en"
+            else "Le contenu ressemble surtout à un message promotionnel plutôt qu'à une demande opérationnelle concrète."
+        )
+    if "promotional_candidate" in reason_codes:
+        return 46, (
+            "Some marketing cues are visible, so this item should be treated cautiously."
+            if digest_language == "en"
+            else "Des indices marketing sont visibles, donc cet élément doit être traité avec prudence."
+        )
     if "critical_keyword" in reason_codes or "action_keyword" in reason_codes:
         return 88, (
             "Explicit request or urgency is visible in the latest thread update."
@@ -1837,6 +1921,14 @@ class DeterministicScoringEngine:
             guardrail = True
             reason_codes.append("executive_sender")
 
+        promotional_signal = _message_promotional_signal(message, combined_text)
+        if promotional_signal == "promotional":
+            score -= 2.25
+            reason_codes.append("promotional")
+        elif promotional_signal == "promotional_candidate":
+            score -= 0.75
+            reason_codes.append("promotional_candidate")
+
         is_newsletter = _contains_any(combined_text, NEWSLETTER_PATTERNS)
         is_automated = _contains_any(sender, AUTOMATED_SENDERS)
         is_bulk_report = "report domain:" in combined_text and "submitter:" in combined_text
@@ -1863,6 +1955,8 @@ class DeterministicScoringEngine:
 
         if guardrail:
             section_name = "critical_topics"
+        elif "promotional" in reason_codes:
+            section_name = "watch_items"
         elif (
             "action_keyword" in reason_codes
             or "flagged" in reason_codes
@@ -1885,6 +1979,8 @@ class DeterministicScoringEngine:
                 or ("direct_recipient" in reason_codes and internal_sender)
                 or is_candidate_profile
             )
+            if "promotional" in reason_codes and not strong_watch_signal and score < 1.5:
+                return None
             if _is_low_signal_watch_message(subject, cleaned_preview) and not strong_watch_signal:
                 return None
             if not strong_watch_signal and score < 1.75:
@@ -2534,6 +2630,8 @@ class StructuredDigestRenderer:
         labels = []
         if "flagged" in item.reason_codes:
             labels.append((str(localized["flagged"]), "warning"))
+        if "promotional" in item.reason_codes:
+            labels.append((str(localized["promotional"]), "neutral"))
         recurrence_label = " ".join(str((item.context_metadata or {}).get("recurrence_label") or "").split())
         if recurrence_label:
             labels.append((recurrence_label, "neutral"))
@@ -2776,9 +2874,9 @@ class DeterministicDigestOverviewEngine:
         language = _normalize_language(str(payload.delivery_payload.get("digest_language") or "en"))
         localized = _language_copy(language)["overview"]
         sections = {
-            "critical_topics": tuple(payload.critical_topics),
-            "actions_to_take": tuple(payload.actions_to_take),
-            "watch_items": tuple(payload.watch_items),
+            "critical_topics": tuple(item for item in payload.critical_topics if not _is_promotional_item(item)),
+            "actions_to_take": tuple(item for item in payload.actions_to_take if not _is_promotional_item(item)),
+            "watch_items": tuple(item for item in payload.watch_items if not _is_promotional_item(item)),
             "daily_presence": tuple(payload.daily_presence),
             "upcoming_meetings": tuple(payload.upcoming_meetings),
         }
@@ -2852,9 +2950,9 @@ class LlmDigestOverviewEngine:
 
     def _overview_sections(self, payload: DigestPayload) -> Mapping[str, Sequence[DigestEntry]]:
         return {
-            "critical_topics": self._compact_overview_items(tuple(payload.critical_topics[:1])),
-            "actions_to_take": self._compact_overview_items(tuple(payload.actions_to_take[:1])),
-            "watch_items": self._compact_overview_items(tuple(payload.watch_items[:1])),
+            "critical_topics": self._compact_overview_items(tuple(item for item in payload.critical_topics if not _is_promotional_item(item))[:1]),
+            "actions_to_take": self._compact_overview_items(tuple(item for item in payload.actions_to_take if not _is_promotional_item(item))[:1]),
+            "watch_items": self._compact_overview_items(tuple(item for item in payload.watch_items if not _is_promotional_item(item))[:1]),
             "daily_presence": self._compact_overview_items(tuple(payload.daily_presence[:1])),
             "upcoming_meetings": self._compact_overview_items(tuple(payload.upcoming_meetings[:1])),
         }
@@ -2941,6 +3039,8 @@ class LlmDigestWordingEngine:
                 confidence_score = item.confidence_score
                 confidence_label = item.confidence_label
                 confidence_reason = item.confidence_reason
+                promotional_label = ""
+                promotional_reason = ""
             elif isinstance(rewritten_payload, Mapping):
                 summary = str(rewritten_payload.get("summary") or "").strip()
                 recommended_action = " ".join(str(rewritten_payload.get("recommended_action") or "").split())
@@ -2952,28 +3052,58 @@ class LlmDigestWordingEngine:
                     str(rewritten_payload.get("confidence_reason") or ""),
                     item.confidence_reason,
                 )
+                promotional_label = " ".join(str(rewritten_payload.get("promotional_label") or "").split()).lower()
+                promotional_reason = _promotional_reason(
+                    str(rewritten_payload.get("promotional_reason") or ""),
+                    getattr(self.provider, "language", "en"),
+                )
             else:
                 summary = ""
                 recommended_action = ""
                 confidence_score = item.confidence_score
                 confidence_label = item.confidence_label
                 confidence_reason = item.confidence_reason
+                promotional_label = ""
+                promotional_reason = ""
             if not summary:
                 updated_items.append(item)
                 continue
+            reason_codes = list(item.reason_codes)
+            context_metadata = dict(item.context_metadata)
+            section_name = item.section_name
+            handling_bucket = item.handling_bucket
+            score = item.score
+            final_recommended_action = (
+                _truncate_sentence(recommended_action, max_chars=160)
+                if recommended_action
+                else item.recommended_action
+            )
+            if item.source_kind == "message":
+                if promotional_label == "promotional":
+                    reason_codes = [code for code in reason_codes if code != "promotional_candidate"]
+                    if "promotional" not in reason_codes:
+                        reason_codes.append("promotional")
+                    context_metadata["promotional_reason"] = promotional_reason
+                    section_name = "watch_items"
+                    handling_bucket = "watch_items"
+                    score = min(score, 0.8)
+                    final_recommended_action = ""
+                elif promotional_label in {"not_promotional", "non_promotional"}:
+                    reason_codes = [code for code in reason_codes if code != "promotional_candidate"]
             summary = _normalize_item_summary(item.title, summary, max_chars=_item_summary_limit(item))
             updated_items.append(
                 _with_digest_entry_updates(
                     item,
                     summary=summary,
-                    recommended_action=(
-                        _truncate_sentence(recommended_action, max_chars=160)
-                        if recommended_action
-                        else item.recommended_action
-                    ),
+                    section_name=section_name,
+                    score=score,
+                    recommended_action=final_recommended_action,
+                    handling_bucket=handling_bucket,
                     confidence_score=confidence_score,
                     confidence_label=_normalized_confidence_label(confidence_label, confidence_score, getattr(self.provider, "language", "en")),
                     confidence_reason=_truncate_sentence(confidence_reason, max_chars=110),
+                    reason_codes=tuple(reason_codes),
+                    context_metadata=context_metadata,
                 )
             )
         return tuple(updated_items)

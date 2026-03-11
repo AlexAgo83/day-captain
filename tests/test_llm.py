@@ -101,6 +101,7 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertIn("candidate or profile-style messages", captured["body"]["messages"][0]["content"])
         self.assertIn("important English business terms", captured["body"]["messages"][0]["content"])
         self.assertIn("prefer intentional FR-English wording", captured["body"]["messages"][0]["content"])
+        self.assertIn("classify whether the item is mainly promotional", captured["body"]["messages"][0]["content"])
         self.assertEqual(
             rewritten["message:msg-1"]["summary"],
             "Review the budget before noon because the request is urgent.",
@@ -459,6 +460,43 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
         self.assertEqual(rewritten[0].confidence_label, "Élevée")
         self.assertEqual(rewritten[0].confidence_reason, "La demande est explicite dans la dernière réponse.")
 
+    def test_rewrite_demotes_promotional_message_when_provider_marks_it(self) -> None:
+        provider = type(
+            "Provider",
+            (),
+            {
+                "language": "fr",
+                "rewrite_summaries": lambda self, items: {
+                    "message:msg-promo": {
+                        "summary": "Annonce commerciale sur des billets désormais disponibles en ligne.",
+                        "promotional_label": "promotional",
+                        "promotional_reason": "Le message est principalement commercial et promotionnel.",
+                    },
+                }
+            },
+        )()
+        engine = LlmDigestWordingEngine(provider=provider, shortlist_limit=1)
+        items = (
+            DigestEntry(
+                title="Billets été",
+                summary="Original summary",
+                section_name="actions_to_take",
+                source_kind="message",
+                source_id="msg-promo",
+                score=2.8,
+                recommended_action="Répondre ou confirmer le point demandé.",
+                reason_codes=("direct_target_recipient", "promotional_candidate"),
+            ),
+        )
+
+        rewritten = engine.rewrite(items)
+
+        self.assertEqual(rewritten[0].section_name, "watch_items")
+        self.assertEqual(rewritten[0].recommended_action, "")
+        self.assertIn("promotional", rewritten[0].reason_codes)
+        self.assertNotIn("promotional_candidate", rewritten[0].reason_codes)
+        self.assertEqual(rewritten[0].context_metadata["promotional_reason"], "Le message est principalement commercial et promotionnel.")
+
 
 class DigestOverviewEngineTest(unittest.TestCase):
     def test_llm_summary_uses_provider_output_when_available(self) -> None:
@@ -530,6 +568,32 @@ class DigestOverviewEngineTest(unittest.TestCase):
         self.assertEqual(overview.source, "deterministic")
         self.assertIn("Top priority: Please review before noon.", overview.summary)
         self.assertIn("Upcoming meeting: Today at 10:00 with ceo@example.com.", overview.summary)
+
+    def test_deterministic_summary_excludes_promotional_items(self) -> None:
+        payload = DigestPayload(
+            run_id="run-promo",
+            generated_at=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            actions_to_take=(
+                DigestEntry(
+                    title="Billets été",
+                    summary="Réservez dès maintenant vos billets.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-promo",
+                    score=2.0,
+                    reason_codes=("promotional",),
+                ),
+            ),
+        )
+
+        overview = DeterministicDigestOverviewEngine().summarize(payload)
+
+        self.assertEqual(overview.source, "deterministic")
+        self.assertEqual(overview.summary, "Rien d'urgent ne remonte pour l'instant.")
 
     def test_llm_summary_falls_back_to_deterministic_summary(self) -> None:
         payload = DigestPayload(
@@ -644,6 +708,38 @@ class DigestOverviewEngineTest(unittest.TestCase):
             "2 réunions sont prévues. Résume-les brièvement sans toutes les lister. Si elles sont demain ou lundi, dis-le ainsi plutôt que 'la semaine prochaine'. Si tu mentionnes une réunion, cite la plus proche avec un horaire concret et évite les formulations vagues.",
         )
         self.assertEqual(len(captured["sections"]["upcoming_meetings"]), 1)
+
+    def test_llm_summary_omits_promotional_items_from_prompt_sections(self) -> None:
+        payload = DigestPayload(
+            run_id="run-1",
+            generated_at=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            actions_to_take=(
+                DigestEntry(
+                    title="Billets été",
+                    summary="Réservez dès maintenant vos billets.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-promo",
+                    score=2.0,
+                    reason_codes=("promotional",),
+                ),
+            ),
+        )
+        captured = {}
+
+        class Provider:
+            def summarize_digest(self, sections, labels, meeting_note=""):
+                captured["sections"] = sections
+                return "Résumé court."
+
+        overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
+
+        self.assertEqual(overview.source, "deterministic")
+        self.assertEqual(captured, {})
 
     def test_llm_summary_compacts_verbose_watch_item_before_prompt(self) -> None:
         payload = DigestPayload(
