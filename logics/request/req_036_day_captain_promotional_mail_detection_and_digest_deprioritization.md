@@ -1,5 +1,5 @@
 ## req_036_day_captain_promotional_mail_detection_and_digest_deprioritization - Day Captain promotional mail detection and digest deprioritization
-> From version: 1.5.2
+> From version: 1.7.0
 > Status: Done
 > Understanding: 100%
 > Confidence: 98%
