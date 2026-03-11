@@ -1,5 +1,5 @@
 ## item_078_day_captain_promotional_digest_demotion_and_neutral_rendering - Demote promotional items and remove action-forward rendering
-> From version: 1.6.0
+> From version: 1.5.2
 > Status: Ready
 > Understanding: 99%
 > Confidence: 96%

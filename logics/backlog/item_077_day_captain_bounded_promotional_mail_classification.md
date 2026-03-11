@@ -1,5 +1,5 @@
 ## item_077_day_captain_bounded_promotional_mail_classification - Add a bounded heuristic-first promotional classification step for surfaced mail
-> From version: 1.6.0
+> From version: 1.5.2
 > Status: Ready
 > Understanding: 99%
 > Confidence: 96%
