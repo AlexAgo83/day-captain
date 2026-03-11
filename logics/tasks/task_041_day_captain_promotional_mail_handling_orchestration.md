@@ -1,9 +1,9 @@
 ## task_041_day_captain_promotional_mail_handling_orchestration - Orchestrate promotional mail classification, demotion, and overview exclusion
 > From version: 1.5.2
-> Status: Ready
-> Understanding: 99%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Add a bounded promotional-signal contract with deterministic heuristics first and optional structured LLM classification only for ambiguous surfaced or borderline mail candidates.
-- [ ] 2. Use the promotional signal to demote or isolate promotional items in digest rendering and neutralize action-forward recommendation wording by default.
-- [ ] 3. Exclude promotional-only items from `En bref` unless an explicit stronger non-promotional override applies, while preserving deterministic fallback behavior.
-- [ ] FINAL: Update regression tests, docs, and linked Logics artifacts.
+- [x] 1. Add a bounded promotional-signal contract with deterministic heuristics first and optional structured LLM classification only for ambiguous surfaced or borderline mail candidates.
+- [x] 2. Use the promotional signal to demote or isolate promotional items in digest rendering and neutralize action-forward recommendation wording by default.
+- [x] 3. Exclude promotional-only items from `En bref` unless an explicit stronger non-promotional override applies, while preserving deterministic fallback behavior.
+- [x] FINAL: Update regression tests, docs, and linked Logics artifacts.
 
 # AC Traceability
 - Req036 AC1 -> Plan step 2. Proof: visible action-section demotion belongs to the rendering step.
@@ -45,13 +45,18 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Promotional classification is bounded, explainable, and resilient when LLM output is missing.
-- [ ] Promotional items no longer read like assistant-endorsed actions in digest rendering.
-- [ ] Promotional-only items no longer feed `En bref` by default.
-- [ ] Tests and docs cover representative false positives and fallback behavior.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Promotional classification is bounded, explainable, and resilient when LLM output is missing.
+- [x] Promotional items no longer read like assistant-endorsed actions in digest rendering.
+- [x] Promotional-only items no longer feed `En bref` by default.
+- [x] Tests and docs cover representative false positives and fallback behavior.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Wednesday, March 11, 2026 from live digest feedback showing a promotional false positive in both the action section and the overview.
+- Completed on Wednesday, March 11, 2026.
+- Validation:
+  - `python3 -m unittest discover -s tests`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`

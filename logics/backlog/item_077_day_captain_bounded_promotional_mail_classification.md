@@ -1,9 +1,9 @@
 ## item_077_day_captain_bounded_promotional_mail_classification - Add a bounded heuristic-first promotional classification step for surfaced mail
 > From version: 1.5.2
-> Status: Ready
-> Understanding: 99%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -55,3 +55,4 @@ flowchart LR
 # Notes
 - Derived from `req_036_day_captain_promotional_mail_detection_and_digest_deprioritization`.
 - The preferred contract is heuristic-first with a structured LLM fallback only for ambiguous surfaced candidates.
+- Closed on Wednesday, March 11, 2026 after adding a bounded promotional signal, deterministic heuristics, structured LLM override support, and fallback coverage.

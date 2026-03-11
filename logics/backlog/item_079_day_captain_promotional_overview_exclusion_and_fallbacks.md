@@ -1,9 +1,9 @@
 ## item_079_day_captain_promotional_overview_exclusion_and_fallbacks - Exclude promotional items from En bref and preserve safe fallback behavior
 > From version: 1.5.2
-> Status: Ready
-> Understanding: 99%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 97%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,3 +53,4 @@ flowchart LR
 # Notes
 - Derived from `req_036_day_captain_promotional_mail_detection_and_digest_deprioritization`.
 - This item keeps the overview contract explicit: promotional-only items should not be summarized as priorities.
+- Closed on Wednesday, March 11, 2026 after excluding promotional-only items from deterministic and LLM overview inputs while preserving fallback behavior.
