@@ -212,6 +212,29 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].section_name, "actions_to_take")
         self.assertIn("action_keyword", prioritized[0].reason_codes)
 
+    def test_demotes_promotional_ticket_mail_out_of_actions(self) -> None:
+        now = datetime(2026, 3, 11, 7, 51, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-promo-train",
+                thread_id="thread-promo-train",
+                subject="Romaric, les billets pour l'été sont en ligne !",
+                from_address="info@rail.example",
+                to_addresses=("romaric@example.com",),
+                user_id="romaric@example.com",
+                received_at=datetime(2026, 3, 11, 6, 55, tzinfo=timezone.utc),
+                body_preview="Réservez dès maintenant vos billets pour la France et l'Europe. Consultez la version en ligne.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertTrue(all(item.section_name != "actions_to_take" for item in prioritized))
+        if prioritized:
+            self.assertIn("promotional", prioritized[0].reason_codes)
+            self.assertEqual(prioritized[0].recommended_action, "")
+
     def test_promotes_messages_directly_addressed_to_target_user(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
