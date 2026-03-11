@@ -1,5 +1,5 @@
 ## item_079_day_captain_promotional_overview_exclusion_and_fallbacks - Exclude promotional items from En bref and preserve safe fallback behavior
-> From version: 1.5.2
+> From version: 1.7.0
 > Status: Done
 > Understanding: 100%
 > Confidence: 97%
