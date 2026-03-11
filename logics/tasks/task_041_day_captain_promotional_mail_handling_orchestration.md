@@ -1,5 +1,5 @@
 ## task_041_day_captain_promotional_mail_handling_orchestration - Orchestrate promotional mail classification, demotion, and overview exclusion
-> From version: 1.6.0
+> From version: 1.5.2
 > Status: Ready
 > Understanding: 99%
 > Confidence: 96%
