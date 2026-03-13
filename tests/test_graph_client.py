@@ -222,6 +222,19 @@ class GraphAdapterTest(unittest.TestCase):
 
         self.assertEqual(seen_urls, ["https://graph.microsoft.com/v1.0/me/messages"])
 
+    def test_get_object_wraps_timeout_error_as_graph_api_error(self) -> None:
+        def opener(_req, timeout=0):
+            raise TimeoutError("timed out")
+
+        client = GraphApiClient(
+            base_url="https://graph.microsoft.com/v1.0",
+            timeout_seconds=45,
+            opener=opener,
+        )
+
+        with self.assertRaisesRegex(GraphApiError, "timed out after 45 seconds"):
+            client.get_object("/me", access_token="token")
+
     def test_mail_collector_reads_from_inbox_only(self) -> None:
         api_client = CollectionRecorderApiClient()
         collector = GraphMailCollector(api_client)

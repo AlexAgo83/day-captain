@@ -3,7 +3,7 @@ services:
     name: day-captain
     env: python
     buildCommand: pip install -e .
-    startCommand: gunicorn --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"
+    startCommand: gunicorn --timeout 90 --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"
     healthCheckPath: /healthz
     envVars:
       - key: DAY_CAPTAIN_ENV
@@ -16,6 +16,8 @@ services:
         value: "true"
       - key: DAY_CAPTAIN_GRAPH_BASE_URL
         value: https://graph.microsoft.com/v1.0
+      - key: DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS
+        value: "60"
       - key: DAY_CAPTAIN_GRAPH_SCOPES
         value: User.Read,Mail.Read,Calendars.Read,Mail.Send
       - key: DAY_CAPTAIN_GRAPH_TENANT_ID
