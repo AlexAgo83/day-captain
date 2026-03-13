@@ -3,6 +3,7 @@
 from datetime import datetime
 from datetime import timezone
 import json
+import socket
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -28,6 +29,10 @@ from day_captain.models import parse_datetime
 
 class GraphApiError(RuntimeError):
     """Raised when Microsoft Graph returns an unexpected response."""
+
+
+def _graph_timeout_error_message(timeout_seconds: int) -> str:
+    return "Microsoft Graph request timed out after {0} seconds.".format(timeout_seconds)
 
 
 def _normalize_identity(value: str) -> str:
@@ -173,6 +178,8 @@ class GraphApiClient:
         except error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
             raise GraphApiError("Graph request failed with {0}: {1}".format(exc.code, detail)) from exc
+        except (TimeoutError, socket.timeout) as exc:
+            raise GraphApiError(_graph_timeout_error_message(self.timeout_seconds)) from exc
         except error.URLError as exc:
             raise GraphApiError("Unable to reach Microsoft Graph: {0}".format(exc.reason)) from exc
         payload = json.loads(raw or "{}")
@@ -208,6 +215,8 @@ class GraphApiClient:
         except error.HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="replace")
             raise GraphApiError("Graph request failed with {0}: {1}".format(exc.code, detail)) from exc
+        except (TimeoutError, socket.timeout) as exc:
+            raise GraphApiError(_graph_timeout_error_message(self.timeout_seconds)) from exc
         except error.URLError as exc:
             raise GraphApiError("Unable to reach Microsoft Graph: {0}".format(exc.reason)) from exc
         if not raw.strip():
