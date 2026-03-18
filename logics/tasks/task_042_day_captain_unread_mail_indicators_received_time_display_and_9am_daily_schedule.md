@@ -1,9 +1,9 @@
 ## task_042_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule - Day Captain unread mail indicators received time display and 9am daily schedule
 > From version: 1.7.0
-> Status: Ready
-> Understanding: 95%
-> Confidence: 92%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 96%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Confirm the mail metadata contract, including unread/read-state availability and received-time formatting in the effective display timezone.
-- [ ] 2. Add the digest rendering changes needed to show a compact unread/read-state cue and low-prominence received-time metadata without hiding already read but still relevant emails.
-- [ ] 3. Update the repository-defined default daily schedule to `09:00 Europe/Paris` wherever that contract is implemented or documented.
-- [ ] FINAL: Run regression checks, update the linked Logics docs, and capture validation results.
+- [x] 1. Confirm the mail metadata contract, including unread/read-state availability and received-time formatting in the effective display timezone.
+- [x] 2. Add the digest rendering changes needed to show a compact unread/read-state cue and low-prominence received-time metadata without hiding already read but still relevant emails.
+- [x] 3. Update the repository-defined default daily schedule to `09:00 Europe/Paris` wherever that contract is implemented or documented.
+- [x] FINAL: Run regression checks, update the linked Logics docs, and capture validation results.
 
 # AC Traceability
 - Req037 AC1 -> Plan step 2. Proof: visible read-state metadata is part of the rendering step.
@@ -54,9 +54,21 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
+- Created on Wednesday, March 18, 2026 from user feedback about unread visibility, mail received-time hints, and a later weekday digest run.
+- Completed on Wednesday, March 18, 2026.
+- Implemented:
+  - added visible unread/read state plus received-time metadata to surfaced mail items in text and HTML digest rendering
+  - preserved surfacing of already read but still relevant emails while making unread items easier to spot
+  - shifted the supported weekday scheduler default to `09:00 Europe/Paris` through a timezone-aware morning gate shared by the repo and ops templates
+  - updated scheduler and rendering docs to reflect the new metadata and scheduling contract
+- Validation:
+  - `python3 -m unittest tests.test_digest_renderer tests.test_scheduler tests.test_scheduler_templates`
+  - `python3 -m unittest discover -s tests`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`

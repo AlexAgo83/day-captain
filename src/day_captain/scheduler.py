@@ -22,3 +22,21 @@ def should_run_sunday_weekly_digest(
         and local_now.hour == target_hour
         and local_now.minute >= target_minute
     )
+
+
+def should_run_weekday_morning_digest(
+    now: Optional[datetime] = None,
+    *,
+    timezone_name: str = "Europe/Paris",
+    target_hour: int = 9,
+    target_minute: int = 0,
+) -> bool:
+    current_time = now or datetime.now(timezone.utc)
+    if current_time.tzinfo is None:
+        current_time = current_time.replace(tzinfo=timezone.utc)
+    local_now = current_time.astimezone(ZoneInfo(timezone_name))
+    return (
+        local_now.weekday() < 5
+        and local_now.hour == target_hour
+        and local_now.minute >= target_minute
+    )

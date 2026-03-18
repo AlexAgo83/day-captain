@@ -1,9 +1,9 @@
 ## item_080_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule - Day Captain unread mail indicators received time display and 9am daily schedule
 > From version: 1.7.0
-> Status: Ready
-> Understanding: 95%
-> Confidence: 92%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 96%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -60,7 +60,7 @@ flowchart LR
 - Product brief(s): (none yet)
 - Architecture decision(s): (none yet)
 - Request: `req_037_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule`
-- Primary task(s): `task_042_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule` (`Ready`)
+- Primary task(s): `task_042_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule` (`Done`)
 
 # Priority
 - Impact: High - the change improves day-to-day triage speed in the most frequently used digest surface.
@@ -70,3 +70,4 @@ flowchart LR
 - Derived from request `req_037_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule`.
 - Source file: `logics/request/req_037_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule.md`.
 - Request context seeded into this backlog item from `logics/request/req_037_day_captain_unread_mail_indicators_received_time_display_and_9am_daily_schedule.md`.
+- Closed on Wednesday, March 18, 2026 after shipping unread/read message visibility, received-time metadata, the `09:00 Europe/Paris` weekday scheduler default, and aligned tests/docs.

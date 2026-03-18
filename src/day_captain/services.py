@@ -345,6 +345,7 @@ LANGUAGE_COPY = {
             "open_meeting_desktop": "Open meeting in Outlook desktop",
         },
         "badges": {
+            "unread": "Unread",
             "flagged": "Flagged",
             "promotional": "Promo",
             "meeting_cancelled": "Cancelled",
@@ -369,6 +370,10 @@ LANGUAGE_COPY = {
             "meeting": "Upcoming meeting: {text}.",
         },
         "item_meta": {
+            "status": "Status",
+            "received": "Received",
+            "status_unread": "Unread",
+            "status_read": "Read",
             "sender": "Sender",
             "next_step": "Next step",
             "confidence": "Confidence",
@@ -466,6 +471,7 @@ LANGUAGE_COPY = {
             "open_meeting_desktop": "Ouvrir la réunion dans Outlook bureau",
         },
         "badges": {
+            "unread": "Non lu",
             "flagged": "Marqué",
             "promotional": "Promotion",
             "meeting_cancelled": "Annulé",
@@ -490,6 +496,10 @@ LANGUAGE_COPY = {
             "meeting": "Réunion à venir : {text}.",
         },
         "item_meta": {
+            "status": "Statut",
+            "received": "Reçu",
+            "status_unread": "Non lu",
+            "status_read": "Lu",
             "sender": "Expéditeur",
             "next_step": "À faire",
             "confidence": "Confiance",
@@ -1335,6 +1345,7 @@ def _thread_context_payload(messages: Sequence[MessageRecord], display_timezone:
         "message_count": len(messages),
         "participants": participants[:4],
         "latest_sender_display_name": _humanize_identifier(ordered[-1].from_address) or ordered[-1].from_address if ordered else "",
+        "latest_is_unread": bool(ordered[-1].is_unread) if ordered else False,
         "target_recipient_display_name": _target_recipient_display_name(ordered[-1]) if ordered else "",
         "source_language_hint": (
             _language_hint_for_text("{0} {1}".format(ordered[-1].subject or "", ordered[-1].body_preview or ""))
@@ -2498,6 +2509,12 @@ class StructuredDigestRenderer:
     def _body_meta_lines(self, item: DigestEntry) -> Sequence[str]:
         localized = _language_copy(self.digest_language)["item_meta"]
         lines = []
+        message_status = self._entry_message_status(item)
+        if message_status:
+            lines.append("  {0}: {1}".format(localized["status"], message_status))
+        received_label = self._entry_received_label(item)
+        if received_label:
+            lines.append("  {0}: {1}".format(localized["received"], received_label))
         sender_name = self._entry_sender_name(item)
         if sender_name:
             lines.append("  {0}: {1}".format(localized["sender"], sender_name))
@@ -2521,6 +2538,22 @@ class StructuredDigestRenderer:
     def _item_meta_html(self, item: DigestEntry) -> str:
         localized = _language_copy(self.digest_language)["item_meta"]
         parts = []
+        message_status = self._entry_message_status(item)
+        if message_status:
+            parts.append(
+                "<p style=\"margin:6px 0 0;font-size:12px;color:#475569;\"><strong>{0}:</strong> {1}</p>".format(
+                    self._html_escape(str(localized["status"])),
+                    self._html_escape(message_status),
+                )
+            )
+        received_label = self._entry_received_label(item)
+        if received_label:
+            parts.append(
+                "<p style=\"margin:6px 0 0;font-size:12px;color:#64748b;\"><strong>{0}:</strong> {1}</p>".format(
+                    self._html_escape(str(localized["received"])),
+                    self._html_escape(received_label),
+                )
+            )
         sender_name = self._entry_sender_name(item)
         if sender_name:
             parts.append(
@@ -2562,6 +2595,20 @@ class StructuredDigestRenderer:
         metadata = item.context_metadata or {}
         sender_name = " ".join(str(metadata.get("latest_sender_display_name") or "").split())
         return sender_name
+
+    def _entry_message_status(self, item: DigestEntry) -> str:
+        if item.source_kind != "message":
+            return ""
+        metadata = item.context_metadata or {}
+        if "latest_is_unread" not in metadata:
+            return ""
+        localized = _language_copy(self.digest_language)["item_meta"]
+        return str(localized["status_unread"] if bool(metadata.get("latest_is_unread")) else localized["status_read"])
+
+    def _entry_received_label(self, item: DigestEntry) -> str:
+        if item.source_kind != "message" or item.sort_at is None:
+            return ""
+        return _format_localized_timestamp(item.sort_at, self.display_timezone, self.digest_language)
 
     def _entry_confidence_label(self, item: DigestEntry) -> str:
         return _normalized_confidence_label(item.confidence_label, item.confidence_score, self.digest_language)
@@ -2609,6 +2656,10 @@ class StructuredDigestRenderer:
                 background = "#fff3cd"
                 border = "#facc15"
                 color = "#854d0e"
+            elif tone == "info":
+                background = "#e0f2fe"
+                border = "#7dd3fc"
+                color = "#075985"
             else:
                 background = "#f8fafc"
                 border = "#cbd5e1"
@@ -2628,6 +2679,8 @@ class StructuredDigestRenderer:
     def _item_badge_labels(self, item: DigestEntry) -> Sequence[tuple[str, str]]:
         localized = _language_copy(self.digest_language)["badges"]
         labels = []
+        if item.source_kind == "message" and bool((item.context_metadata or {}).get("latest_is_unread")):
+            labels.append((str(localized["unread"]), "info"))
         if "flagged" in item.reason_codes:
             labels.append((str(localized["flagged"]), "warning"))
         if "promotional" in item.reason_codes:
