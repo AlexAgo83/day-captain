@@ -7,9 +7,35 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.scheduler import should_run_sunday_weekly_digest
+from day_captain.scheduler import should_run_weekday_morning_digest
 
 
 class SchedulerGateTest(unittest.TestCase):
+    def test_weekday_morning_digest_gate_accepts_exact_target_minute_in_cet(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)  # 09:00 CET
+
+        self.assertTrue(should_run_weekday_morning_digest(now))
+
+    def test_weekday_morning_digest_gate_accepts_exact_target_minute_in_cest(self) -> None:
+        now = datetime(2026, 4, 6, 7, 0, tzinfo=timezone.utc)  # 09:00 CEST
+
+        self.assertTrue(should_run_weekday_morning_digest(now))
+
+    def test_weekday_morning_digest_gate_accepts_delayed_run_within_same_local_hour(self) -> None:
+        now = datetime(2026, 3, 9, 8, 14, tzinfo=timezone.utc)  # 09:14 CET
+
+        self.assertTrue(should_run_weekday_morning_digest(now))
+
+    def test_weekday_morning_digest_gate_rejects_weekend(self) -> None:
+        now = datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc)  # Sunday 09:00 CET
+
+        self.assertFalse(should_run_weekday_morning_digest(now))
+
+    def test_weekday_morning_digest_gate_rejects_wrong_local_hour(self) -> None:
+        now = datetime(2026, 3, 9, 7, 0, tzinfo=timezone.utc)  # 08:00 CET
+
+        self.assertFalse(should_run_weekday_morning_digest(now))
+
     def test_weekly_digest_gate_accepts_exact_target_minute(self) -> None:
         now = datetime(2026, 3, 8, 19, 30, tzinfo=timezone.utc)  # 20:30 CET
 

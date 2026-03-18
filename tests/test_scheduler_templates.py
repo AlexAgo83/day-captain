@@ -5,6 +5,24 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 
 
+class MorningSchedulerTemplateTest(unittest.TestCase):
+    def test_repository_morning_template_uses_shared_scheduler_helper(self) -> None:
+        content = (ROOT / ".github" / "workflows" / "morning-digest-scheduler.yml").read_text()
+
+        self.assertIn("from day_captain.scheduler import should_run_weekday_morning_digest", content)
+        self.assertIn("should_run = should_run_weekday_morning_digest()", content)
+        self.assertIn('- cron: "0 7 * * 1-5"', content)
+        self.assertIn('- cron: "0 8 * * 1-5"', content)
+
+    def test_docs_morning_ops_template_uses_shared_scheduler_helper(self) -> None:
+        content = (ROOT / "docs" / "day_captain_ops_morning_digest_scheduler.yml").read_text()
+
+        self.assertIn("from day_captain.scheduler import should_run_weekday_morning_digest", content)
+        self.assertIn("should_run = should_run_weekday_morning_digest()", content)
+        self.assertIn('- cron: "0 7 * * 1-5"', content)
+        self.assertIn('- cron: "0 8 * * 1-5"', content)
+
+
 class WeeklySchedulerTemplateTest(unittest.TestCase):
     def test_repository_weekly_template_uses_shared_scheduler_helper(self) -> None:
         content = (ROOT / ".github" / "workflows" / "weekly-digest-scheduler.yml").read_text()

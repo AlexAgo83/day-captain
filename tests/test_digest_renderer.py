@@ -143,6 +143,69 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Expéditeur: Jordan Blake", payload.delivery_body)
         self.assertIn("<strong>Expéditeur:</strong> Jordan Blake", payload.delivery_payload["html_body"])
 
+    def test_renders_message_read_state_and_received_time_in_text_and_html(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-meta-fr",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Suivi client",
+                    summary="Vous êtes attendu sur ce point : Peut-on confirmer le créneau ?",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-meta-fr",
+                    score=2.4,
+                    sort_at=datetime(2026, 3, 10, 7, 15, tzinfo=timezone.utc),
+                    context_metadata={
+                        "latest_sender_display_name": "Jordan Blake",
+                        "latest_is_unread": True,
+                    },
+                ),
+            ),
+        )
+
+        self.assertIn("[Non lu] Suivi client", payload.delivery_body)
+        self.assertIn("Statut: Non lu", payload.delivery_body)
+        self.assertIn("Reçu: mar. 10 mars 2026 à 08:15 CET", payload.delivery_body)
+        self.assertIn(">Non lu</span>Suivi client", payload.delivery_payload["html_body"])
+        self.assertIn("<strong>Statut:</strong> Non lu", payload.delivery_payload["html_body"])
+        self.assertIn("<strong>Reçu:</strong> mar. 10 mars 2026 à 08:15 CET", payload.delivery_payload["html_body"])
+
+    def test_renders_read_state_without_unread_badge_for_read_messages(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-meta-en",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Budget follow-up",
+                    summary="Likely needs your follow-up: Can we close this today?",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-meta-en",
+                    score=2.2,
+                    sort_at=datetime(2026, 3, 10, 7, 5, tzinfo=timezone.utc),
+                    context_metadata={"latest_is_unread": False},
+                ),
+            ),
+        )
+
+        self.assertIn("Status: Read", payload.delivery_body)
+        self.assertIn("Received: Tue 10 Mar 2026 at 08:05 CET", payload.delivery_body)
+        self.assertNotIn("[Unread] Budget follow-up", payload.delivery_body)
+        self.assertIn("<strong>Status:</strong> Read", payload.delivery_payload["html_body"])
+
     def test_orders_upcoming_meetings_chronologically(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)

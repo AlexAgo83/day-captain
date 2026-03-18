@@ -72,6 +72,8 @@ That run produced a stub preview with:
   - `Critical topics`, `Actions to take`, `Watch items`, and `Upcoming meetings` have a steady visual rhythm
   - item cards remain readable without large vertical gaps
   - flagged items remain more visible than ordinary messages without overwhelming the full digest
+  - surfaced mail items clearly show whether the latest message is unread or already read
+  - surfaced mail items show a low-prominence received timestamp without cluttering the card
 - footer:
   - if quick actions are present, the `mailto:` links point to the intended Day Captain mailbox
   - the command subjects are prefilled as `recall`, `recall-today`, or `recall-week`
@@ -100,6 +102,8 @@ The local preview is only a preflight step. Before closing the readability slice
    - section spacing survives Outlook rendering
    - meeting rows stay compact
    - flagged items still stand out appropriately
+   - unread/read mail status is easy to spot at a glance
+   - received timestamps stay visible but secondary
    - source-open controls use the expected desktop/web fallback behavior on the actual Outlook client
    - empty states remain light and readable
 

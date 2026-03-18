@@ -35,7 +35,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 - Store `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET` as GitHub Actions secrets.
 - If the hosted service may sleep, use `--wake-service` plus bounded wake retries before the real job trigger and give the workflow a longer timeout budget.
 - If the scheduler fans out across several users, prefer one standalone readiness/wake-up step before the fan-out instead of waking the service once per target.
-- Keep the routine weekday cron path on `trigger-hosted-job --job morning-digest`, the Sunday recap path on `trigger-hosted-job --job weekly-digest`, and reserve `validate-hosted-service` for manual checks and rollout validation.
+- Keep the routine weekday cron path on `trigger-hosted-job --job morning-digest` with a default target time of `09:00 Europe/Paris`, keep the Sunday recap path on `trigger-hosted-job --job weekly-digest`, and reserve `validate-hosted-service` for manual checks and rollout validation.
 - For the Sunday weekly recap, use a jitter-tolerant scheduler gate so GitHub schedule delays within the intended Sunday `20:30 Europe/Paris` hour do not skip the run entirely.
 - Keep the weekly scheduler templates aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` helper-backed gate.
 

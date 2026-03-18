@@ -294,7 +294,7 @@ If the hosted web service can sleep between runs, treat the first request as a w
 
 Recommended scheduler split:
 - use `check-hosted-health` for a standalone readiness step
-- use `trigger-hosted-job --job morning-digest` for the routine weekday cron
+- use `trigger-hosted-job --job morning-digest` for the routine weekday cron, with a default target time of `09:00 Europe/Paris`
 - use `trigger-hosted-job --job weekly-digest` for the Sunday-evening weekly recap cron
 - reserve `validate-hosted-service` for manual checks, rollout validation, or pre-cron verification
 
