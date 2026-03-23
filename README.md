@@ -577,6 +577,8 @@ The example scheduler workflows are in:
 - [`morning-digest-scheduler.yml`](./.github/workflows/morning-digest-scheduler.yml)
 - [`weekly-digest-scheduler.yml`](./.github/workflows/weekly-digest-scheduler.yml)
 
+They are intentionally `workflow_dispatch` only in this repository. Scheduled production triggers belong in the private ops repository, not in the application repository.
+
 They expect:
 - `DAY_CAPTAIN_SERVICE_URL`
 - `DAY_CAPTAIN_JOB_SECRET`
