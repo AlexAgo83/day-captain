@@ -186,6 +186,7 @@ class DigestRenderer(Protocol):
         weather: Optional[WeatherSnapshot] = None,
         external_news: Sequence[ExternalNewsItem] = (),
         meeting_horizon: Optional[Mapping[str, str]] = None,
+        generation_duration_seconds: Optional[float] = None,
     ) -> DigestPayload:
         ...
 

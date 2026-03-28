@@ -6,6 +6,7 @@ from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
 import logging
+from time import perf_counter
 import uuid
 from typing import Dict
 from typing import Iterable
@@ -462,7 +463,9 @@ class StubDigestRenderer:
         top_summary: str = "",
         top_summary_source: str = "none",
         weather: Optional[WeatherSnapshot] = None,
+        external_news: Sequence[ExternalNewsItem] = (),
         meeting_horizon: Optional[Dict[str, str]] = None,
+        generation_duration_seconds: Optional[float] = None,
     ) -> DigestPayload:
         return StructuredDigestRenderer(
             display_timezone=self.display_timezone,
@@ -480,7 +483,9 @@ class StubDigestRenderer:
             top_summary=top_summary,
             top_summary_source=top_summary_source,
             weather=weather,
+            external_news=external_news,
             meeting_horizon=meeting_horizon,
+            generation_duration_seconds=generation_duration_seconds,
         )
 
 
@@ -762,6 +767,7 @@ class DayCaptainApplication:
         tenant_id: Optional[str] = None,
         before_delivery=None,
     ) -> DigestPayload:
+        generation_started_at = perf_counter()
         auth_context = self.auth_provider.authenticate(
             self.settings.graph_scopes,
             target_user_id=self._resolve_target_user_id(target_user_id),
@@ -795,37 +801,42 @@ class DayCaptainApplication:
         )
         prioritized_items, cleared_recent_items = annotate_with_recent_memory(prioritized_items, recent_runs)
         run_id = uuid.uuid4().hex
+        render_kwargs = {
+            "run_id": run_id,
+            "generated_at": current_time,
+            "window_start": window_start,
+            "window_end": window_end,
+            "delivery_mode": delivery_mode,
+            "prioritized_items": prioritized_items,
+            "tenant_id": scoped_tenant_id,
+            "user_id": scoped_user_id,
+            "command_mailbox": str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
+            "weather": weather,
+            "external_news": external_news,
+            "meeting_horizon": meeting_horizon,
+        }
         payload = self.digest_renderer.render(
-            run_id=run_id,
-            generated_at=current_time,
-            window_start=window_start,
-            window_end=window_end,
-            delivery_mode=delivery_mode,
-            prioritized_items=prioritized_items,
-            tenant_id=scoped_tenant_id,
-            user_id=scoped_user_id,
-            command_mailbox=str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
-            weather=weather,
-            external_news=external_news,
-            meeting_horizon=meeting_horizon,
+            **render_kwargs,
+            generation_duration_seconds=None,
         )
         overview = self.digest_overview_engine.summarize(payload)
-        if overview.summary or overview.source != "none":
+        top_summary = overview.summary if overview.summary or overview.source != "none" else ""
+        top_summary_source = overview.source if overview.summary or overview.source != "none" else "none"
+        generation_duration_seconds = max(0.0, perf_counter() - generation_started_at)
+        payload = self.digest_renderer.render(
+            **render_kwargs,
+            top_summary=top_summary,
+            top_summary_source=top_summary_source,
+            generation_duration_seconds=generation_duration_seconds,
+        )
+        finalized_generation_duration_seconds = max(0.0, perf_counter() - generation_started_at)
+        rendered_generation_duration = payload.delivery_payload.get("generation_duration_seconds")
+        if not isinstance(rendered_generation_duration, (int, float)) or abs(float(rendered_generation_duration) - finalized_generation_duration_seconds) >= 0.05:
             payload = self.digest_renderer.render(
-                run_id=run_id,
-                generated_at=current_time,
-                window_start=window_start,
-                window_end=window_end,
-                delivery_mode=delivery_mode,
-                prioritized_items=prioritized_items,
-                tenant_id=scoped_tenant_id,
-                user_id=scoped_user_id,
-                command_mailbox=str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
-                top_summary=overview.summary,
-                top_summary_source=overview.source,
-                weather=weather,
-                external_news=external_news,
-                meeting_horizon=meeting_horizon,
+                **render_kwargs,
+                top_summary=top_summary,
+                top_summary_source=top_summary_source,
+                generation_duration_seconds=finalized_generation_duration_seconds,
             )
         if cleared_recent_items:
             payload = replace(
