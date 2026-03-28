@@ -1,10 +1,10 @@
 ## item_095_day_captain_footer_processing_duration_in_delivered_digest_emails - Day Captain footer processing duration in delivered digest emails
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -38,11 +38,11 @@ flowchart LR
 - AC5: Tests cover timing capture/propagation and footer rendering.
 
 # AC Traceability
-- AC1 -> Scope: Delivered digest emails include a processing-duration line directly below `Day Captain © 2026` in the footer.. Proof: Implement through `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`.
-- AC2 -> Scope: The displayed value reflects the current digest generation duration, measured from run start until the delivery content is ready, and does not depend on downstream mailbox delivery latency.. Proof: Timing contract and measurement point are explicitly staged in `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`.
-- AC3 -> Scope: Both text and HTML rendering paths display the same duration information in a readable operator-facing format.. Proof: Shared renderer validation is required by `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`.
-- AC4 -> Scope: If timing metadata is unavailable, the digest still renders safely without breaking footer layout or delivery.. Proof: Safe fallback behavior is part of the bounded renderer update in `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`.
-- AC5 -> Scope: Tests cover timing capture/propagation and footer rendering.. Proof: Focused renderer and app regression coverage is required by `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`.
+- AC1 -> Scope: Delivered digest emails include a processing-duration line directly below `Day Captain © 2026` in the footer.. Proof: implemented in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py) and covered by [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
+- AC2 -> Scope: The displayed value reflects the current digest generation duration, measured from run start until the delivery content is ready, and does not depend on downstream mailbox delivery latency.. Proof: bounded timing capture now starts in [app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py) before collection/auth work and is injected before delivery.
+- AC3 -> Scope: Both text and HTML rendering paths display the same duration information in a readable operator-facing format.. Proof: the footer line is rendered in both body and HTML in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py) and verified in [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
+- AC4 -> Scope: If timing metadata is unavailable, the digest still renders safely without breaking footer layout or delivery.. Proof: the renderer keeps the duration optional and only renders the line when a value is present in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py).
+- AC5 -> Scope: Tests cover timing capture/propagation and footer rendering.. Proof: covered by [test_app.py](/Users/alexandreagostini/Documents/day-captain/tests/test_app.py) and [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
 
 # Decision framing
 - Product framing: Not needed
@@ -77,3 +77,4 @@ flowchart LR
 - Derived from request `req_049_day_captain_footer_processing_duration_in_delivered_digest_emails`.
 - Source file: `logics/request/req_049_day_captain_footer_processing_duration_in_delivered_digest_emails.md`.
 - Request context seeded into this backlog item from `logics/request/req_049_day_captain_footer_processing_duration_in_delivered_digest_emails.md`.
+- Completed on Saturday, March 28, 2026 through `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`.
