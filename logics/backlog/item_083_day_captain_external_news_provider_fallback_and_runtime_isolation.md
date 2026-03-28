@@ -1,9 +1,9 @@
 ## item_083_day_captain_external_news_provider_fallback_and_runtime_isolation - Isolate external news provider failures from the core digest runtime
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -47,7 +47,7 @@ flowchart LR
 
 # Links
 - Request: `req_038_day_captain_external_news_capsule_in_daily_digest`
-- Primary task(s): `task_043_day_captain_external_news_capsule_orchestration` (`Ready`)
+- Primary task(s): `task_043_day_captain_external_news_capsule_orchestration` (`Done`)
 
 # Priority
 - Impact: High - runtime isolation determines whether the feature is safe to add to the morning digest.
@@ -56,4 +56,3 @@ flowchart LR
 # Notes
 - Derived from `req_038_day_captain_external_news_capsule_in_daily_digest`.
 - The main intent is to keep external news additive and non-blocking.
-

@@ -1,7 +1,7 @@
 ## req_048_day_captain_explicit_local_fail_fast_instead_of_stub_runtime_fallback - Day Captain explicit local fail-fast instead of stub runtime fallback
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
 > Complexity: Medium

@@ -1,6 +1,6 @@
 ## req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections - Day Captain delivery recovery and delegated auth contract corrections
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 97%
 > Complexity: Medium

@@ -1,7 +1,7 @@
 ## req_046_day_captain_typed_digest_contract_and_services_decomposition - Day Captain typed digest contract and services decomposition
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 97%
 > Confidence: 94%
 > Complexity: High

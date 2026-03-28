@@ -1,9 +1,9 @@
 ## item_091_day_captain_mail_action_ownership_and_non_owner_wording - Distinguish mail action ownership and avoid non-owner miswording
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -53,7 +53,7 @@ flowchart LR
 # Links
 - Request: `req_042_day_captain_mail_action_ownership_and_non_owner_handling`
 - Related request(s): `req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation`
-- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Ready`)
+- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Done`)
 
 # Priority
 - Impact: High - incorrect ownership attribution directly harms digest trust.

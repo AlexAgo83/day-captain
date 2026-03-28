@@ -1,9 +1,9 @@
 ## item_081_day_captain_bounded_external_news_capsule_contract - Define the bounded external-news capsule contract for the daily digest
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -48,7 +48,7 @@ flowchart LR
 
 # Links
 - Request: `req_038_day_captain_external_news_capsule_in_daily_digest`
-- Primary task(s): `task_043_day_captain_external_news_capsule_orchestration` (`Ready`)
+- Primary task(s): `task_043_day_captain_external_news_capsule_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - a clean contract is the prerequisite for adding outside context without diluting the core digest.
@@ -57,4 +57,3 @@ flowchart LR
 # Notes
 - Derived from `req_038_day_captain_external_news_capsule_in_daily_digest`.
 - The preferred shape is a small external-context block, not a new primary action section.
-

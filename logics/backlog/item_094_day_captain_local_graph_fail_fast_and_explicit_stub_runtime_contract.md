@@ -1,9 +1,9 @@
 ## item_094_day_captain_local_graph_fail_fast_and_explicit_stub_runtime_contract - Make local Graph-backed runs fail fast and keep stub runtime explicit
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -48,7 +48,7 @@ flowchart LR
 # Links
 - Request: `req_048_day_captain_explicit_local_fail_fast_instead_of_stub_runtime_fallback`
 - Related request(s): `req_034_day_captain_hosted_runtime_fail_fast_and_identity_normalization`
-- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Ready`)
+- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - this is mainly a local operator-trust and diagnosability issue.

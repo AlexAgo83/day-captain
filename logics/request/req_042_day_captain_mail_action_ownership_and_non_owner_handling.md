@@ -1,7 +1,7 @@
 ## req_042_day_captain_mail_action_ownership_and_non_owner_handling - Day Captain mail action ownership and non-owner handling
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
 > Complexity: Medium

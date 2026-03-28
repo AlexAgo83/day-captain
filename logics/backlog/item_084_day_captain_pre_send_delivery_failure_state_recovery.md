@@ -1,9 +1,9 @@
 ## item_084_day_captain_pre_send_delivery_failure_state_recovery - Correct run-state recovery for clearly pre-send Graph delivery failures
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 98%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections`
-- Primary task(s): `task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration` (`Ready`)
+- Primary task(s): `task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration` (`Done`)
 
 # Priority
 - Impact: High - a single misclassified failure can freeze routine delivery for a user.
@@ -53,4 +53,3 @@ flowchart LR
 # Notes
 - Derived from `req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections`.
 - The implementation must preserve the intended meaning of `delivery_pending` as post-send uncertainty, not generic failure.
-

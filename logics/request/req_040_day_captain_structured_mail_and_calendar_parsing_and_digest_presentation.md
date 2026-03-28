@@ -1,7 +1,7 @@
 ## req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation - Day Captain structured mail and calendar parsing and digest presentation
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 97%
 > Confidence: 94%
 > Complexity: High

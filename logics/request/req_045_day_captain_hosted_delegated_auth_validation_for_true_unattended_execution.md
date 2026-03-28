@@ -1,7 +1,7 @@
 ## req_045_day_captain_hosted_delegated_auth_validation_for_true_unattended_execution - Day Captain hosted delegated auth validation for true unattended execution
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 96%
 > Complexity: Medium

@@ -129,6 +129,7 @@ class DayCaptainWebAppTest(unittest.TestCase):
                 job_secret="secret",
                 database_url="postgresql://db.example/day_captain",
                 graph_client_id="client-id",
+                graph_refresh_token="refresh-token",
             )
         )
 

@@ -1,6 +1,6 @@
 ## req_038_day_captain_external_news_capsule_in_daily_digest - Day Captain external news capsule in daily digest
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 96%
 > Complexity: Medium
