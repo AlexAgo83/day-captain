@@ -1,10 +1,10 @@
 ## item_099_day_captain_stronger_action_gating_for_informational_mail - Day Captain stronger action gating for informational mail
-> From version: 1.9.0
+> From version: 1.9.0  
 > Schema version: 1.0
 > Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 5%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -47,18 +47,18 @@ flowchart LR
 - Req051 AC6 -> AC4. Proof: regression coverage is required for both demotion and preserved-action cases.
 
 # Decision framing
-- Product framing: Required
-- Product signals: user segmentation, navigation and discoverability, engagement loop
-- Product follow-up: Create or link a product brief before implementation moves deeper into delivery.
-- Architecture framing: Required
-- Architecture signals: data model and persistence, contracts and integration, state and sync
-- Architecture follow-up: Create or link an architecture decision before irreversible implementation work starts.
+- Product framing: Not needed
+- Product signals: action gating remains a bounded ranking and section-routing adjustment already framed by the request.
+- Product follow-up: No separate product brief is needed unless this grows into a broader user-configurable prioritization model.
+- Architecture framing: Not needed
+- Architecture signals: the work remains local to existing deterministic scoring and section placement.
+- Architecture follow-up: No ADR is expected unless action gating becomes a shared policy engine across multiple delivery channels.
 
 # Links
 - Product brief(s): (none yet)
 - Architecture decision(s): (none yet)
 - Request: `req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening`
-- Primary task(s): (none yet)
+- Primary task(s): `task_047_day_captain_remaining_digest_trust_fixes_orchestration`
 
 # AI Context
 - Summary: Reduce remaining digest trust issues by deduplicating alias copies of the same alert, filtering placeholder meetings, and requiring...
