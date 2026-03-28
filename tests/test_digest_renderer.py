@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.models import DigestEntry
+from day_captain.models import ExternalNewsItem
 from day_captain.models import WeatherSnapshot
 from day_captain.services import StructuredDigestRenderer
 
@@ -491,6 +492,68 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Day Captain © 2026: https://github.com/AlexAgo83/day-captain", payload.delivery_body)
         self.assertIn(">Day Captain © 2026<", payload.delivery_payload["html_body"])
         self.assertIn("https://github.com/AlexAgo83/day-captain", payload.delivery_payload["html_body"])
+
+    def test_renders_external_news_capsule_between_weather_and_overview(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-news",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            top_summary="Review the open priorities first.",
+            weather=WeatherSnapshot(
+                forecast_date=datetime(2026, 3, 9, tzinfo=timezone.utc).date(),
+                weather_code=61,
+                temperature_max_c=13.4,
+                temperature_min_c=6.1,
+                location_name="Paris",
+                previous_temperature_max_c=11.0,
+            ),
+            external_news=(
+                ExternalNewsItem(
+                    headline="ECB signals slower cuts",
+                    summary="Markets are recalibrating rate expectations ahead of the next meeting.",
+                    source_name="Financial Times",
+                    source_url="https://example.com/ft/ecb",
+                ),
+            ),
+        )
+
+        self.assertIn("External news", payload.delivery_body)
+        self.assertIn("Source: Financial Times (https://example.com/ft/ecb)", payload.delivery_body)
+        self.assertLess(payload.delivery_body.index("Today's weather"), payload.delivery_body.index("External news"))
+        self.assertLess(payload.delivery_body.index("External news"), payload.delivery_body.index("In brief"))
+        self.assertIn("Open article", payload.delivery_payload["html_body"])
+        self.assertEqual(payload.delivery_payload["external_news"][0]["source_name"], "Financial Times")
+
+    def test_localizes_external_news_capsule_in_french(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-news-fr",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            external_news=(
+                ExternalNewsItem(
+                    headline="Les marchés attendent la BCE",
+                    summary="Les investisseurs ajustent leurs scénarios avant la prochaine réunion.",
+                    source_name="Les Echos",
+                    source_url="https://example.com/echos/bce",
+                ),
+            ),
+        )
+
+        self.assertIn("Actualités externes", payload.delivery_body)
+        self.assertIn("Source: Les Echos (https://example.com/echos/bce)", payload.delivery_body)
+        self.assertIn("Ouvrir l'article", payload.delivery_payload["html_body"])
 
     def test_renders_recurring_meeting_badge_when_metadata_supports_it(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")

@@ -24,6 +24,8 @@ from day_captain.adapters.graph import GraphDelegatedAuthProvider
 from day_captain.adapters.graph import GraphDigestDelivery
 from day_captain.adapters.graph import GraphMailCollector
 from day_captain.adapters.llm import OpenAICompatibleDigestWordingProvider
+from day_captain.adapters.news import ExternalNewsProviderError
+from day_captain.adapters.news import RssExternalNewsProvider
 from day_captain.adapters.storage import PostgresStorage
 from day_captain.adapters.storage import SQLiteStorage
 from day_captain.adapters.weather import OpenMeteoWeatherProvider
@@ -36,6 +38,7 @@ from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
 from day_captain.models import EmailCommandRecord
 from day_captain.models import EmailCommandResult
+from day_captain.models import ExternalNewsItem
 from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -47,6 +50,7 @@ from day_captain.ports import DigestDelivery
 from day_captain.ports import DigestOverviewEngine
 from day_captain.ports import DigestRenderer
 from day_captain.ports import DigestWordingEngine
+from day_captain.ports import ExternalNewsProvider
 from day_captain.ports import FeedbackProcessor
 from day_captain.ports import MailCollector
 from day_captain.ports import RecallProvider
@@ -485,6 +489,16 @@ def _build_weather_provider(settings: DayCaptainSettings) -> Optional[WeatherPro
     )
 
 
+def _build_external_news_provider(settings: DayCaptainSettings) -> Optional[ExternalNewsProvider]:
+    if not settings.external_news_is_enabled():
+        return None
+    return RssExternalNewsProvider(
+        feed_url=settings.resolved_external_news_feed_url(),
+        timeout_seconds=settings.external_news_timeout_seconds,
+        max_items=settings.resolved_external_news_max_items(),
+    )
+
+
 def _build_llm_provider(settings: DayCaptainSettings):
     if not settings.llm_is_enabled():
         return None
@@ -555,6 +569,7 @@ class DayCaptainApplication:
         recall_provider: RecallProvider,
         feedback_processor: FeedbackProcessor,
         weather_provider: Optional[WeatherProvider],
+        external_news_provider: Optional[ExternalNewsProvider],
     ) -> None:
         self.settings = settings
         self.auth_provider = auth_provider
@@ -569,6 +584,7 @@ class DayCaptainApplication:
         self.recall_provider = recall_provider
         self.feedback_processor = feedback_processor
         self.weather_provider = weather_provider
+        self.external_news_provider = external_news_provider
 
     def _resolve_tenant_id(self, tenant_id: Optional[str]) -> str:
         return str(tenant_id or self.settings.resolved_tenant_scope()).strip()
@@ -726,6 +742,7 @@ class DayCaptainApplication:
         messages = self.mail_collector.collect_messages(auth_context, window_start, window_end)
         meetings, meeting_horizon = self._collect_meetings(auth_context, current_time)
         weather = self._get_weather(current_time)
+        external_news = self._get_external_news(current_time)
         messages = _scoped_messages(messages, scoped_tenant_id, scoped_user_id)
         meetings = _scoped_meetings(meetings, scoped_tenant_id, scoped_user_id)
         self.storage.upsert_messages(messages, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
@@ -751,6 +768,7 @@ class DayCaptainApplication:
             user_id=scoped_user_id,
             command_mailbox=str(auth_context.sender_user_id or self.settings.graph_sender_user_id or ""),
             weather=weather,
+            external_news=external_news,
             meeting_horizon=meeting_horizon,
         )
         overview = self.digest_overview_engine.summarize(payload)
@@ -768,6 +786,7 @@ class DayCaptainApplication:
                 top_summary=overview.summary,
                 top_summary_source=overview.source,
                 weather=weather,
+                external_news=external_news,
                 meeting_horizon=meeting_horizon,
             )
         run_record = DigestRunRecord(
@@ -1006,6 +1025,14 @@ class DayCaptainApplication:
         except (ValueError, WeatherApiError):
             return None
 
+    def _get_external_news(self, current_time: datetime) -> Sequence[ExternalNewsItem]:
+        if self.external_news_provider is None:
+            return ()
+        try:
+            return tuple(self.external_news_provider.get_news(current_time=current_time))
+        except (ValueError, ExternalNewsProviderError):
+            return ()
+
 
 def build_application(
     settings: Optional[DayCaptainSettings] = None,
@@ -1021,6 +1048,7 @@ def build_application(
     recall_provider: Optional[RecallProvider] = None,
     feedback_processor: Optional[FeedbackProcessor] = None,
     weather_provider: Optional[WeatherProvider] = None,
+    external_news_provider: Optional[ExternalNewsProvider] = None,
 ) -> DayCaptainApplication:
     resolved_settings = settings or DayCaptainSettings.from_env()
     if resolved_settings.is_hosted_environment():
@@ -1123,4 +1151,9 @@ def build_application(
         recall_provider=recall_provider or SnapshotRecallProvider(),
         feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),
         weather_provider=weather_provider if weather_provider is not None else _build_weather_provider(resolved_settings),
+        external_news_provider=(
+            external_news_provider
+            if external_news_provider is not None
+            else _build_external_news_provider(resolved_settings)
+        ),
     )

@@ -51,6 +51,10 @@ class DayCaptainSettingsTest(unittest.TestCase):
             os.environ["DAY_CAPTAIN_WEATHER_LOCATION_NAME"] = "Paris"
             os.environ["DAY_CAPTAIN_WEATHER_BASE_URL"] = "https://api.open-meteo.com/v1/forecast"
             os.environ["DAY_CAPTAIN_WEATHER_TIMEOUT_SECONDS"] = "12"
+            os.environ["DAY_CAPTAIN_EXTERNAL_NEWS_ENABLED"] = "true"
+            os.environ["DAY_CAPTAIN_EXTERNAL_NEWS_FEED_URL"] = "https://example.com/feed.xml"
+            os.environ["DAY_CAPTAIN_EXTERNAL_NEWS_TIMEOUT_SECONDS"] = "7"
+            os.environ["DAY_CAPTAIN_EXTERNAL_NEWS_MAX_ITEMS"] = "2"
             settings = DayCaptainSettings.from_env()
         finally:
             os.environ.clear()
@@ -98,6 +102,10 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.weather_location_name, "Paris")
         self.assertEqual(settings.weather_base_url, "https://api.open-meteo.com/v1/forecast")
         self.assertEqual(settings.weather_timeout_seconds, 12)
+        self.assertTrue(settings.external_news_enabled)
+        self.assertEqual(settings.external_news_feed_url, "https://example.com/feed.xml")
+        self.assertEqual(settings.external_news_timeout_seconds, 7)
+        self.assertEqual(settings.external_news_max_items, 2)
         self.assertTrue(settings.llm_is_enabled())
         self.assertTrue(settings.weather_is_enabled())
         self.assertEqual(settings.resolved_digest_language(), "fr")
@@ -276,6 +284,7 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(summary["email_command_sender_routes"], {})
         self.assertFalse(summary["weather_enabled"])
         self.assertEqual(summary["weather_location_name"], "")
+        self.assertFalse(summary["external_news_enabled"])
 
     def test_llm_is_disabled_by_default(self) -> None:
         self.assertFalse(DayCaptainSettings().llm_is_enabled())
@@ -299,6 +308,16 @@ class DayCaptainSettingsTest(unittest.TestCase):
                 database_url="postgresql://db.example/day_captain",
                 graph_auth_mode="delegated",
             ).validate_hosted()
+
+    def test_external_news_is_enabled_only_with_flag_and_feed_url(self) -> None:
+        disabled = DayCaptainSettings(external_news_enabled=False, external_news_feed_url="https://example.com/feed.xml")
+        self.assertFalse(disabled.external_news_is_enabled())
+
+        missing_url = DayCaptainSettings(external_news_enabled=True, external_news_feed_url="")
+        self.assertFalse(missing_url.external_news_is_enabled())
+
+        enabled = DayCaptainSettings(external_news_enabled=True, external_news_feed_url="https://example.com/feed.xml")
+        self.assertTrue(enabled.external_news_is_enabled())
 
 
 if __name__ == "__main__":

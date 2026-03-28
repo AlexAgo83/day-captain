@@ -121,6 +121,10 @@ class DayCaptainSettings:
     weather_location_name: str = ""
     weather_base_url: str = "https://api.open-meteo.com/v1/forecast"
     weather_timeout_seconds: int = 10
+    external_news_enabled: bool = False
+    external_news_feed_url: str = ""
+    external_news_timeout_seconds: int = 6
+    external_news_max_items: int = 3
 
     @classmethod
     def from_env(cls) -> "DayCaptainSettings":
@@ -175,6 +179,10 @@ class DayCaptainSettings:
             weather_location_name=os.getenv("DAY_CAPTAIN_WEATHER_LOCATION_NAME", ""),
             weather_base_url=os.getenv("DAY_CAPTAIN_WEATHER_BASE_URL", "https://api.open-meteo.com/v1/forecast"),
             weather_timeout_seconds=int(os.getenv("DAY_CAPTAIN_WEATHER_TIMEOUT_SECONDS", "10")),
+            external_news_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_EXTERNAL_NEWS_ENABLED"), default=False),
+            external_news_feed_url=os.getenv("DAY_CAPTAIN_EXTERNAL_NEWS_FEED_URL", ""),
+            external_news_timeout_seconds=int(os.getenv("DAY_CAPTAIN_EXTERNAL_NEWS_TIMEOUT_SECONDS", "6")),
+            external_news_max_items=int(os.getenv("DAY_CAPTAIN_EXTERNAL_NEWS_MAX_ITEMS", "3")),
         )
 
     def graph_login_scopes(self) -> Tuple[str, ...]:
@@ -288,6 +296,9 @@ class DayCaptainSettings:
             "graph_send_enabled": self.graph_send_enabled,
             "weather_enabled": self.weather_is_enabled(),
             "weather_location_name": self.resolved_weather_location_name(),
+            "external_news_enabled": self.external_news_is_enabled(),
+            "external_news_feed_url": self.resolved_external_news_feed_url(),
+            "external_news_max_items": self.resolved_external_news_max_items(),
             "database_configured": bool(resolved_database_url),
             "storage_backend": "postgres" if resolved_database_url else "sqlite",
         }
@@ -318,6 +329,15 @@ class DayCaptainSettings:
 
     def resolved_weather_location_name(self) -> str:
         return self.weather_location_name.strip()
+
+    def external_news_is_enabled(self) -> bool:
+        return bool(self.external_news_enabled and self.external_news_feed_url.strip())
+
+    def resolved_external_news_feed_url(self) -> str:
+        return self.external_news_feed_url.strip()
+
+    def resolved_external_news_max_items(self) -> int:
+        return max(1, min(int(self.external_news_max_items), 5))
 
     def resolved_email_command_sender_routes(self) -> Tuple[Tuple[str, str], ...]:
         if not self.email_command_allowed_senders:
