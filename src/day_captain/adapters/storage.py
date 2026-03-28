@@ -817,6 +817,41 @@ class SQLiteStorage:
             return None
         return self._row_to_run(row)
 
+    def list_recent_completed_runs(
+        self,
+        limit: int,
+        tenant_id: str = "",
+        user_id: str = "",
+        run_type: str = "",
+    ) -> Sequence[DigestRunRecord]:
+        params = []
+        where_clauses = ["status = 'completed'"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = ?")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = ?")
+            params.append(scoped_user_id)
+        if run_type:
+            where_clauses.append("run_type = ?")
+            params.append(run_type)
+        params.append(max(0, int(limit)))
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
+                ORDER BY generated_at DESC
+                LIMIT ?
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
+            ).fetchall()
+        return tuple(self._row_to_run(row) for row in rows)
+
     def get_latest_completed_run_for_day(
         self,
         target_day: date,
@@ -1740,6 +1775,41 @@ class PostgresStorage:
         if row is None:
             return None
         return self._row_to_run(row)
+
+    def list_recent_completed_runs(
+        self,
+        limit: int,
+        tenant_id: str = "",
+        user_id: str = "",
+        run_type: str = "",
+    ) -> Sequence[DigestRunRecord]:
+        params = []
+        where_clauses = ["status = 'completed'"]
+        if tenant_id:
+            scoped_tenant_id, _ = self._scope(tenant_id, "")
+            where_clauses.append("tenant_id = %s")
+            params.append(scoped_tenant_id)
+        if user_id:
+            _, scoped_user_id = self._scope("", user_id)
+            where_clauses.append("user_id = %s")
+            params.append(scoped_user_id)
+        if run_type:
+            where_clauses.append("run_type = %s")
+            params.append(run_type)
+        params.append(max(0, int(limit)))
+        with self._connect() as connection:
+            rows = connection.execute(
+                """
+                SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
+                       delivery_mode, summary_json
+                FROM scoped_digest_runs
+                WHERE {0}
+                ORDER BY generated_at DESC
+                LIMIT %s
+                """.format(" AND ".join(where_clauses)),
+                tuple(params),
+            ).fetchall()
+        return tuple(self._row_to_run(row) for row in rows)
 
     def get_latest_completed_run_for_day(
         self,

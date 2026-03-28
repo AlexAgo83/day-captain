@@ -5,6 +5,7 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from datetime import timezone
+import logging
 import uuid
 from typing import Dict
 from typing import Iterable
@@ -31,6 +32,7 @@ from day_captain.adapters.storage import SQLiteStorage
 from day_captain.adapters.weather import OpenMeteoWeatherProvider
 from day_captain.adapters.weather import WeatherApiError
 from day_captain.config import DayCaptainSettings
+from day_captain.digest_memory import annotate_with_recent_memory
 from day_captain.models import AuthContext
 from day_captain.models import AuthTokenBundle
 from day_captain.models import DigestEntry
@@ -66,6 +68,8 @@ from day_captain.services import PreferenceFeedbackProcessor
 from day_captain.services import SECTION_NAMES
 from day_captain.services import SnapshotRecallProvider
 from day_captain.services import StructuredDigestRenderer
+
+LOGGER = logging.getLogger(__name__)
 
 
 def _coerce_datetime(value: Optional[datetime]) -> datetime:
@@ -362,6 +366,24 @@ class InMemoryStorage:
             return None
         return sorted(completed, key=lambda item: item.generated_at)[-1]
 
+    def list_recent_completed_runs(
+        self,
+        limit: int,
+        tenant_id: str = "",
+        user_id: str = "",
+        run_type: str = "",
+    ) -> Sequence[DigestRunRecord]:
+        completed = [
+            run
+            for run in self._runs.values()
+            if run.status == "completed"
+            and (not tenant_id or run.tenant_id == tenant_id)
+            and (not user_id or run.user_id == user_id)
+            and (not run_type or run.run_type == run_type)
+        ]
+        completed = sorted(completed, key=lambda item: item.generated_at, reverse=True)
+        return tuple(completed[: max(0, int(limit))])
+
     def get_latest_completed_run_for_day(
         self,
         target_day: date,
@@ -496,6 +518,15 @@ def _build_external_news_provider(settings: DayCaptainSettings) -> Optional[Exte
         feed_url=settings.resolved_external_news_feed_url(),
         timeout_seconds=settings.external_news_timeout_seconds,
         max_items=settings.resolved_external_news_max_items(),
+    )
+
+
+def _local_graph_runtime_expected(settings: DayCaptainSettings) -> bool:
+    return bool(
+        settings.graph_send_enabled
+        or settings.delivery_mode == "graph_send"
+        or settings.graph_sender_user_id.strip()
+        or settings.email_command_allowed_senders
     )
 
 
@@ -756,6 +787,13 @@ class DayCaptainApplication:
             window_start=window_start,
         )
         prioritized_items = self.digest_wording_engine.rewrite(prioritized_items)
+        recent_runs = self.storage.list_recent_completed_runs(
+            3,
+            tenant_id=scoped_tenant_id,
+            user_id=scoped_user_id,
+            run_type=run_type,
+        )
+        prioritized_items, cleared_recent_items = annotate_with_recent_memory(prioritized_items, recent_runs)
         run_id = uuid.uuid4().hex
         payload = self.digest_renderer.render(
             run_id=run_id,
@@ -788,6 +826,14 @@ class DayCaptainApplication:
                 weather=weather,
                 external_news=external_news,
                 meeting_horizon=meeting_horizon,
+            )
+        if cleared_recent_items:
+            payload = replace(
+                payload,
+                delivery_payload={
+                    **dict(payload.delivery_payload),
+                    "recent_memory": {"cleared": list(cleared_recent_items)},
+                },
             )
         run_record = DigestRunRecord(
             run_id=run_id,
@@ -1022,7 +1068,8 @@ class DayCaptainApplication:
                 current_time=current_time,
                 display_timezone=self.settings.display_timezone,
             )
-        except (ValueError, WeatherApiError):
+        except (ValueError, WeatherApiError) as exc:
+            LOGGER.warning("Weather provider failed; continuing without weather capsule: %s", exc)
             return None
 
     def _get_external_news(self, current_time: datetime) -> Sequence[ExternalNewsItem]:
@@ -1112,6 +1159,18 @@ def build_application(
     use_graph_collectors = auth_provider is not None or resolved_graph_auth_mode == "app_only"
     if not use_graph_collectors:
         use_graph_collectors = bool(resolved_settings.graph_access_token or resolved_settings.graph_client_id)
+
+    if (
+        auth_provider is None
+        and mail_collector is None
+        and calendar_collector is None
+        and not resolved_settings.is_hosted_environment()
+        and not use_graph_collectors
+        and _local_graph_runtime_expected(resolved_settings)
+    ):
+        raise ValueError(
+            "Local Graph-backed runtime is incomplete. Configure Graph auth explicitly or pass explicit stub providers."
+        )
 
     if mail_collector is not None:
         resolved_mail_collector = mail_collector
