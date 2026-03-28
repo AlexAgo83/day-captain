@@ -98,9 +98,11 @@ CRITICAL_PATTERNS = (
     "deadline",
     "escalation",
     "asap",
-    "security",
+    "security incident",
+    "security alert",
     "breach",
-    "production",
+    "production incident",
+    "production outage",
 )
 
 NEWSLETTER_PATTERNS = (
@@ -108,6 +110,13 @@ NEWSLETTER_PATTERNS = (
     "digest",
     "unsubscribe",
     "subscription",
+    "manage preferences",
+    "email preferences",
+    "communication preferences",
+    "view in browser",
+    "view as webpage",
+    "view as web page",
+    "browser version",
     "daily news",
     "weekly update",
     "aggregate report",
@@ -122,6 +131,10 @@ PROMOTIONAL_ACTION_PATTERNS = (
     "buy now",
     "shop now",
     "reserve now",
+    "register now",
+    "save your seat",
+    "claim your spot",
+    "join us",
     "reservez des maintenant",
     "réservez dès maintenant",
     "discover the offer",
@@ -144,6 +157,28 @@ PROMOTIONAL_OFFER_PATTERNS = (
     "soldes",
     "version en ligne",
     "available online",
+    "marketing hub",
+    "lead generation",
+    "generate leads",
+    "webinar",
+    "summit",
+    "conference",
+    "trade show",
+    "expo",
+    "whitepaper",
+    "white paper",
+    "ebook",
+)
+
+MARKETING_SENDER_HINTS = (
+    "newsletter",
+    "marketing",
+    "news",
+    "updates",
+    "hello",
+    "events",
+    "community",
+    "mailer",
 )
 
 SELF_DIGEST_PATTERNS = (
@@ -173,6 +208,24 @@ COLD_OUTREACH_PATTERNS = (
     "oem support",
     "custom cable solutions",
     "commercial vehicles",
+)
+
+TRANSACTIONAL_ALERT_PATTERNS = (
+    "payment failed",
+    "payment failure",
+    "overdue payment",
+    "past due",
+    "billing issue",
+    "billing problem",
+    "account will be suspended",
+    "account suspension",
+    "service suspension",
+    "non-paiement",
+    "defaut de paiement",
+    "défaut de paiement",
+    "sera suspendu",
+    "risque d'être suspendu",
+    "risque d etre suspendu",
 )
 
 LOW_SIGNAL_WATCH_PATTERNS = (
@@ -827,15 +880,22 @@ def _matched_patterns(text: str, patterns: Sequence[str]) -> Sequence[str]:
 def _message_promotional_signal(message: MessageRecord, combined_text: str) -> str:
     offer_matches = _matched_patterns(combined_text, PROMOTIONAL_OFFER_PATTERNS)
     action_matches = _matched_patterns(combined_text, PROMOTIONAL_ACTION_PATTERNS)
-    if not offer_matches:
-        return ""
     sender = str(message.from_address or "").strip().lower()
     sender_local = sender.split("@", 1)[0] if "@" in sender else sender
-    if action_matches:
+    sender_domain = sender.split("@", 1)[1] if "@" in sender else ""
+    sender_hint = any(hint in sender_local or hint in sender_domain for hint in MARKETING_SENDER_HINTS)
+    newsletter_matches = _matched_patterns(combined_text, NEWSLETTER_PATTERNS)
+    if action_matches and (offer_matches or newsletter_matches or sender_hint):
         return "promotional"
-    if len(offer_matches) >= 2 and sender_local in {"info", "newsletter", "news", "marketing"}:
+    if sender_hint and newsletter_matches:
+        return "promotional"
+    if len(offer_matches) >= 2 and (sender_hint or newsletter_matches):
         return "promotional"
     if len(offer_matches) >= 2:
+        return "promotional_candidate"
+    if sender_hint and offer_matches:
+        return "promotional_candidate"
+    if sender_hint and newsletter_matches:
         return "promotional_candidate"
     return ""
 
@@ -1565,22 +1625,33 @@ def _presence_confidence(digest_language: str) -> tuple[int, str]:
     )
 
 
+def _meeting_has_strong_subject_match(meeting_subject: str, message_subject: str) -> bool:
+    normalized_meeting = _normalize_display_title(meeting_subject or "")
+    normalized_message = _normalize_display_title(message_subject or "")
+    meeting_tokens = tuple(_tokenize_subject(normalized_meeting))
+    message_tokens = set(_tokenize_subject(normalized_message))
+    if len(meeting_tokens) < 2 or not message_tokens:
+        return False
+    if len(set(meeting_tokens).intersection(message_tokens)) >= 2:
+        return True
+    lowered_meeting = normalized_meeting.lower()
+    lowered_message = normalized_message.lower()
+    return bool(lowered_meeting and lowered_message and lowered_meeting in lowered_message)
+
+
 def _related_messages_for_meeting(
     meeting: MeetingRecord,
     messages: Sequence[MessageRecord],
 ) -> Sequence[Mapping[str, str]]:
     if not messages:
         return ()
-    meeting_tokens = set(_tokenize_subject(_normalize_display_title(meeting.subject or "")))
     related = []
     for message in messages:
-        score = 0
-        if meeting_tokens and meeting_tokens.intersection(_tokenize_subject(_normalize_display_title(message.subject or ""))):
-            score += 2
+        if not _meeting_has_strong_subject_match(meeting.subject or "", message.subject or ""):
+            continue
+        score = 2
         if _same_identity(message.from_address, meeting.organizer_address):
             score += 1
-        if score <= 0:
-            continue
         related.append(
             (
                 score,
@@ -1594,6 +1665,22 @@ def _related_messages_for_meeting(
         )
     related = sorted(related, key=lambda item: (-item[0], -item[1].timestamp()))
     return tuple(item[2] for item in related[:MEETING_CONTEXT_MESSAGE_LIMIT])
+
+
+def _has_meaningful_meeting_body_preview(preview: str) -> bool:
+    cleaned = " ".join((preview or "").strip().split())
+    if not cleaned:
+        return False
+    normalized = _normalize_text(cleaned)
+    placeholder_patterns = (
+        "ceci est un espace réservé temporaire",
+        "ceci est un espace reserve temporaire",
+        "modifications apportées à cet événement peuvent ne pas être conservées",
+        "modifications apportees a cet evenement peuvent ne pas etre conservees",
+        "this is a temporary reserved space",
+        "changes made to this event might not be saved",
+    )
+    return not any(pattern in normalized for pattern in placeholder_patterns)
 
 
 def _meeting_recommended_action(reason_codes: Sequence[str], digest_language: str, *, has_related_context: bool = False) -> str:
@@ -1612,7 +1699,7 @@ def _meeting_recommended_action(reason_codes: Sequence[str], digest_language: st
 def _meeting_confidence(meeting: MeetingRecord, reason_codes: Sequence[str], has_related_context: bool, digest_language: str) -> tuple[int, str]:
     if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting):
         return _presence_confidence(digest_language)
-    if has_related_context or meeting.body_preview.strip():
+    if has_related_context or _has_meaningful_meeting_body_preview(meeting.body_preview):
         return 81, (
             "Calendar details are supported by extra context for this briefing."
             if digest_language == "en"
@@ -2088,6 +2175,12 @@ class DeterministicScoringEngine:
             guardrail = True
             reason_codes.append("executive_sender")
 
+        is_automated = _contains_any(sender, AUTOMATED_SENDERS)
+        if is_automated and _contains_any(combined_text, TRANSACTIONAL_ALERT_PATTERNS):
+            score += 2.25
+            guardrail = True
+            reason_codes.append("transactional_alert")
+
         promotional_signal = _message_promotional_signal(message, combined_text)
         if promotional_signal == "promotional":
             score -= 2.25
@@ -2097,7 +2190,6 @@ class DeterministicScoringEngine:
             reason_codes.append("promotional_candidate")
 
         is_newsletter = _contains_any(combined_text, NEWSLETTER_PATTERNS)
-        is_automated = _contains_any(sender, AUTOMATED_SENDERS)
         is_bulk_report = "report domain:" in combined_text and "submitter:" in combined_text
         is_cold_outreach = _contains_any(combined_text, COLD_OUTREACH_PATTERNS)
         low_signal_cc = bool(message.cc_addresses and not message.to_addresses and not guardrail and "action_keyword" not in reason_codes)

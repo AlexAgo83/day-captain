@@ -43,6 +43,66 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].section_name, "critical_topics")
         self.assertIn("critical_keyword", prioritized[0].reason_codes)
 
+    def test_filters_marketing_teaser_with_webpage_view_and_generic_security_language(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-marketing-teaser",
+                thread_id="thread-marketing-teaser",
+                subject="Industry outlook for connected operations",
+                from_address="marketing@vendor.example",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 30, tzinfo=timezone.utc),
+                body_preview="View as Webpage. Explore safety and cybersecurity trends shaping the industry this quarter.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized, ())
+
+    def test_filters_marketing_onboarding_sequence(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-marketing-onboarding",
+                thread_id="thread-marketing-onboarding",
+                subject="Welcome! Discover your Marketing Hub",
+                from_address="hello@newsletter.example",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 40, tzinfo=timezone.utc),
+                body_preview="Manage preferences and learn how to generate leads with our onboarding series.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized, ())
+
+    def test_keeps_automated_transactional_suspension_alert(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-service-alert",
+                thread_id="thread-service-alert",
+                subject="Action requise - le compte risque d'être suspendu",
+                from_address="no-reply@service.example",
+                to_addresses=("ops-team@example.com",),
+                user_id="alex@example.com",
+                received_at=datetime(2026, 3, 7, 7, 40, tzinfo=timezone.utc),
+                body_preview="Le service sera suspendu pour défaut de paiement si le solde n'est pas régularisé.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].section_name, "critical_topics")
+        self.assertIn("transactional_alert", prioritized[0].reason_codes)
+
     def test_uses_preferences_and_action_cues_for_actions_section(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine()
@@ -781,6 +841,57 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertIn("Context:", meeting_entry.summary)
         self.assertIn("launch milestones", meeting_entry.summary)
         self.assertIn("meeting_related_context", meeting_entry.reason_codes)
+
+    def test_meeting_summary_ignores_weak_single_token_message_overlap(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-vendor-review",
+                subject="Vendor review",
+                start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                organizer_address="contact@example.com",
+                location="Teams",
+            ),
+        )
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-vendor-mail",
+                thread_id="thread-vendor-mail",
+                subject="Vendor contract",
+                from_address="contact@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 10, 7, 15, tzinfo=timezone.utc),
+                body_preview="Voici le point sur le contrat fournisseur pour validation.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, meetings, (), reference_time=now)
+        meeting_entry = next(item for item in prioritized if item.source_kind == "meeting")
+
+        self.assertNotIn("Contexte :", meeting_entry.summary)
+        self.assertNotIn("meeting_related_context", meeting_entry.reason_codes)
+
+    def test_meeting_confidence_ignores_placeholder_body_preview(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-placeholder",
+                subject="HOLDING SLOT : vendor review and action items",
+                start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                organizer_address="alex@example.com",
+                location="Microsoft Teams Meeting",
+                body_preview="*** CECI EST UN ESPACE RÉSERVÉ TEMPORAIRE *** Les modifications apportées à cet événement peuvent ne pas être conservées.",
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(prioritized[0].confidence_score, 58)
+        self.assertIn("métadonnées de base du calendrier", prioritized[0].confidence_reason.lower())
 
     def test_meeting_context_marks_recurring_events_when_metadata_supports_it(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
