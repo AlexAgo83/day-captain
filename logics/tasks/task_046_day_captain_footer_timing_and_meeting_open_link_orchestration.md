@@ -1,10 +1,10 @@
 ## task_046_day_captain_footer_timing_and_meeting_open_link_orchestration - Orchestrate footer timing and meeting open-link delivery refinements
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -29,12 +29,12 @@ flowchart TD
 ```
 
 # Plan
-- [ ] 1. Confirm the shared renderer and payload scope for footer timing metadata and meeting open-link rendering, including the acceptance-criteria mapping for both backlog items.
-- [ ] 2. Add bounded timing capture for the current digest generation run, propagate it through the delivery payload, and render it below `Day Captain © 2026` in both text and HTML footers.
-- [ ] 3. Make meeting cards render an explicit open action when a reliable calendar source URL exists, with wording aligned to the existing mail open-link affordance and safe omission otherwise.
-- [ ] 4. Validate the renderer and app paths together, then update the linked Logics docs so both backlog items and both requests reference the shared orchestration task.
-- [ ] CHECKPOINT: leave the current wave commit-ready and update the linked Logics docs before continuing.
-- [ ] FINAL: Capture validation results, close the related docs if delivery is complete, and leave a report that covers both delivery refinements.
+- [x] 1. Confirm the shared renderer and payload scope for footer timing metadata and meeting open-link rendering, including the acceptance-criteria mapping for both backlog items.
+- [x] 2. Add bounded timing capture for the current digest generation run, propagate it through the delivery payload, and render it below `Day Captain © 2026` in both text and HTML footers.
+- [x] 3. Make meeting cards render an explicit open action when a reliable calendar source URL exists, with wording aligned to the existing mail open-link affordance and safe omission otherwise.
+- [x] 4. Validate the renderer and app paths together, then update the linked Logics docs so both backlog items and both requests reference the shared orchestration task.
+- [x] CHECKPOINT: leave the current wave commit-ready and update the linked Logics docs before continuing.
+- [x] FINAL: Capture validation results, close the related docs if delivery is complete, and leave a report that covers both delivery refinements.
 
 # Delivery checkpoints
 - Each completed wave should leave the repository in a coherent, commit-ready state.
@@ -76,11 +76,18 @@ flowchart TD
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc --refs req_049_day_captain_footer_processing_duration_in_delivered_digest_emails req_050_day_captain_meeting_cards_direct_open_link_in_digest item_095_day_captain_footer_processing_duration_in_delivered_digest_emails item_096_day_captain_meeting_cards_direct_open_link_in_digest task_046_day_captain_footer_timing_and_meeting_open_link_orchestration
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated during completed waves and at closure.
-- [ ] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated during completed waves and at closure.
+- [x] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Saturday, March 28, 2026 by consolidating the footer-timing and meeting open-link delivery refinements into one shared orchestration task.
+- Completed on Saturday, March 28, 2026.
+- Wave 1 commit: `78c6a39` - add bounded digest-generation timing metadata, render the footer duration in text and HTML, and extend renderer/app coverage including the no-link meeting fallback path.
+- Validation:
+  - `python3 -m pytest -q tests/test_digest_renderer.py tests/test_app.py`
+  - `python3 -m pytest -q`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc --refs req_049_day_captain_footer_processing_duration_in_delivered_digest_emails req_050_day_captain_meeting_cards_direct_open_link_in_digest item_095_day_captain_footer_processing_duration_in_delivered_digest_emails item_096_day_captain_meeting_cards_direct_open_link_in_digest task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`

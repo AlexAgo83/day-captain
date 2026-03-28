@@ -1,9 +1,9 @@
 ## req_049_day_captain_footer_processing_duration_in_delivered_digest_emails - Day Captain footer processing duration in delivered digest emails
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 95%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -83,3 +83,4 @@ flowchart TD
 # Notes
 - Created on Saturday, March 28, 2026 from an operator request to show the mail processing time in the footer.
 - The intended reading is `generation duration for this digest`, not `total external delivery latency`.
+- Completed on Saturday, March 28, 2026 through `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration` with timing capture in the app pipeline plus footer rendering in text and HTML.

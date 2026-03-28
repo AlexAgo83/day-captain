@@ -1,9 +1,9 @@
 ## req_050_day_captain_meeting_cards_direct_open_link_in_digest - Day Captain meeting cards direct open link in digest
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 95%
+> Status: Done
+> Understanding: 99%
+> Confidence: 97%
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -81,3 +81,4 @@ flowchart TD
 # Notes
 - Created on Saturday, March 28, 2026 from an operator request to align meeting cards with the existing mail open-link behavior.
 - The intent is `open the calendar event from the digest`, not a broader meeting action menu.
+- Completed on Saturday, March 28, 2026 through `task_046_day_captain_footer_timing_and_meeting_open_link_orchestration`; the renderer behavior is now explicitly covered for both positive and no-link fallback paths.
