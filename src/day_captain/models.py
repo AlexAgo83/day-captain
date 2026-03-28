@@ -109,6 +109,26 @@ class DigestEntry:
     sort_at: Optional[datetime] = None
     reason_codes: Sequence[str] = field(default_factory=tuple)
     guardrail_applied: bool = False
+    card: Optional["DigestCard"] = None
+
+
+@dataclass(frozen=True)
+class DigestCard:
+    sender_display_name: str = ""
+    is_unread: Optional[bool] = None
+    target_recipient_display_name: str = ""
+    source_language_hint: str = ""
+    recurrence_label: str = ""
+    action_owner: str = ""
+    action_owner_display_name: str = ""
+    action_expected_from_user: Optional[bool] = None
+    relevance_to_user: Optional[bool] = None
+    risk_level: str = ""
+    risk_reasons: Sequence[str] = field(default_factory=tuple)
+    trust_signals: Sequence[str] = field(default_factory=tuple)
+    continuity_state: str = ""
+    continuity_previous_date: str = ""
+    continuity_reason: str = ""
 
 
 @dataclass(frozen=True)
@@ -250,6 +270,33 @@ def digest_entry_from_dict(payload: Mapping[str, Any]) -> DigestEntry:
         sort_at=parse_datetime(str(payload.get("sort_at"))) if payload.get("sort_at") else None,
         reason_codes=tuple(str(item) for item in payload.get("reason_codes") or ()),
         guardrail_applied=bool(payload.get("guardrail_applied")),
+        card=digest_card_from_dict(payload.get("card") or {}) if payload.get("card") else None,
+    )
+
+
+def digest_card_from_dict(payload: Mapping[str, Any]) -> DigestCard:
+    is_unread_raw = payload.get("is_unread")
+    is_unread = None if is_unread_raw is None else bool(is_unread_raw)
+    action_expected_raw = payload.get("action_expected_from_user")
+    action_expected = None if action_expected_raw is None else bool(action_expected_raw)
+    relevance_raw = payload.get("relevance_to_user")
+    relevance = None if relevance_raw is None else bool(relevance_raw)
+    return DigestCard(
+        sender_display_name=str(payload.get("sender_display_name") or ""),
+        is_unread=is_unread,
+        target_recipient_display_name=str(payload.get("target_recipient_display_name") or ""),
+        source_language_hint=str(payload.get("source_language_hint") or ""),
+        recurrence_label=str(payload.get("recurrence_label") or ""),
+        action_owner=str(payload.get("action_owner") or ""),
+        action_owner_display_name=str(payload.get("action_owner_display_name") or ""),
+        action_expected_from_user=action_expected,
+        relevance_to_user=relevance,
+        risk_level=str(payload.get("risk_level") or ""),
+        risk_reasons=tuple(str(item) for item in payload.get("risk_reasons") or ()),
+        trust_signals=tuple(str(item) for item in payload.get("trust_signals") or ()),
+        continuity_state=str(payload.get("continuity_state") or ""),
+        continuity_previous_date=str(payload.get("continuity_previous_date") or ""),
+        continuity_reason=str(payload.get("continuity_reason") or ""),
     )
 
 

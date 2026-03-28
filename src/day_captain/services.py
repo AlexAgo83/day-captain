@@ -13,6 +13,7 @@ from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 from day_captain.models import DigestEntry
+from day_captain.models import DigestCard
 from day_captain.models import DigestOverview
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
@@ -23,6 +24,8 @@ from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
 from day_captain.models import WeatherSnapshot
 from day_captain.models import parse_datetime
+from day_captain.digest_parsing import build_agenda_digest_input
+from day_captain.digest_parsing import build_mail_thread_digest_input
 from day_captain.ports import Storage
 
 
@@ -354,6 +357,11 @@ LANGUAGE_COPY = {
             "unread": "Unread",
             "flagged": "Flagged",
             "promotional": "Promo",
+            "verify": "Verify",
+            "suspicious": "Suspicious",
+            "seen_before": "Seen",
+            "still_open": "Still open",
+            "changed": "Changed",
             "meeting_cancelled": "Cancelled",
             "meeting_new": "New",
             "meeting_updated": "Updated",
@@ -390,6 +398,8 @@ LANGUAGE_COPY = {
         "summary": {
             "critical": "Needs attention: {text}",
             "action": "Likely needs your follow-up: {text}",
+            "action_other": "Action appears to sit with {owner}: {text}",
+            "action_shared": "Shared follow-up: {text}",
             "watch": "Worth noting: {text}",
             "direct_target": "You're expected on this point: {text}",
             "direct_target_named": "Directly addressed to {name}: {text}",
@@ -414,6 +424,9 @@ LANGUAGE_COPY = {
             "critical": "Review or intervene quickly.",
             "deliverable": "Review the shared file or link and reply if needed.",
             "reply": "Reply or confirm the requested point.",
+            "reply_other": "Track this thread; the next action appears to belong to {owner}.",
+            "reply_shared": "Coordinate with the thread participants before acting.",
+            "verify_sender": "Verify the sender before acting.",
             "watch": "Keep this in view; no explicit action is confirmed yet.",
             "meeting_prepare": "Prepare the key points before it starts.",
             "meeting_watch": "Keep this meeting in view; context is still limited.",
@@ -485,6 +498,11 @@ LANGUAGE_COPY = {
             "unread": "Non lu",
             "flagged": "Marqué",
             "promotional": "Promotion",
+            "verify": "Vérifier",
+            "suspicious": "Suspect",
+            "seen_before": "Déjà vu",
+            "still_open": "Toujours ouvert",
+            "changed": "Évolue",
             "meeting_cancelled": "Annulé",
             "meeting_new": "Nouvelle réunion",
             "meeting_updated": "Déplacée",
@@ -521,6 +539,8 @@ LANGUAGE_COPY = {
         "summary": {
             "critical": "À surveiller de près : {text}",
             "action": "Demande probablement un suivi de votre part : {text}",
+            "action_other": "L'action semble surtout attendue de {owner} : {text}",
+            "action_shared": "Suivi partagé : {text}",
             "watch": "À noter : {text}",
             "direct_target": "Vous êtes attendu sur ce point : {text}",
             "direct_target_named": "Directement adressé à {name} : {text}",
@@ -545,6 +565,9 @@ LANGUAGE_COPY = {
             "critical": "Examiner ou traiter rapidement.",
             "deliverable": "Consulter le fichier ou le lien partagé puis répondre si besoin.",
             "reply": "Répondre ou confirmer le point demandé.",
+            "reply_other": "Suivre ce fil ; l'action semble surtout attendue de {owner}.",
+            "reply_shared": "Coordonner le suivi avec les participants du fil avant d'agir.",
+            "verify_sender": "Vérifier l'expéditeur avant d'agir.",
             "watch": "Garder ce sujet en vue ; aucune action explicite n'est encore certaine.",
             "meeting_prepare": "Préparer les points clés avant le début.",
             "meeting_watch": "Garder cette réunion en vue ; le contexte reste limité.",
@@ -1312,6 +1335,7 @@ def _with_digest_entry_updates(item: DigestEntry, **changes) -> DigestEntry:
         "sort_at": item.sort_at,
         "reason_codes": item.reason_codes,
         "guardrail_applied": item.guardrail_applied,
+        "card": item.card,
     }
     payload.update(changes)
     return DigestEntry(**payload)
@@ -1397,8 +1421,25 @@ def _message_thread_briefing(
     return _normalize_item_summary(message.subject or "", threaded, max_chars=220)
 
 
-def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[str], digest_language: str) -> str:
+def _message_summary_for_thread_input(summary: str, thread_input, digest_language: str) -> str:
+    if thread_input is None:
+        return summary
+    copy = _language_copy(digest_language)["summary"]
+    base = _strip_known_summary_prefix(summary, digest_language)
+    if thread_input.action_owner == "other":
+        owner = thread_input.action_owner_display_name or (
+            "someone else" if digest_language == "en" else "quelqu'un d'autre"
+        )
+        return _normalize_item_summary("", str(copy["action_other"]).format(owner=owner, text=base), max_chars=220)
+    if thread_input.action_owner == "shared":
+        return _normalize_item_summary("", str(copy["action_shared"]).format(text=base), max_chars=220)
+    return summary
+
+
+def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[str], digest_language: str, thread_input=None) -> str:
     actions = _language_copy(digest_language)["actions"]
+    if thread_input is not None and thread_input.risk_level in {"medium", "high"}:
+        return str(actions["verify_sender"])
     if "promotional" in reason_codes:
         return ""
     if "promotional_candidate" in reason_codes:
@@ -1409,11 +1450,30 @@ def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[s
     if "deliverable_shared" in reason_codes or "download" in normalized_preview or "telechargement" in normalized_preview or "téléchargement" in normalized_preview:
         return str(actions["deliverable"])
     if "action_keyword" in reason_codes or "direct_target_recipient" in reason_codes or "flagged" in reason_codes:
+        if thread_input is not None and thread_input.action_owner == "other":
+            owner = thread_input.action_owner_display_name or (
+                "someone else" if digest_language == "en" else "quelqu'un d'autre"
+            )
+            return str(actions["reply_other"]).format(owner=owner)
+        if thread_input is not None and thread_input.action_owner == "shared":
+            return str(actions["reply_shared"])
         return str(actions["reply"])
     return str(actions["watch"])
 
 
-def _message_confidence(message: MessageRecord, reason_codes: Sequence[str], duplicate_count: int, preview: str, digest_language: str) -> tuple[int, str]:
+def _message_confidence(message: MessageRecord, reason_codes: Sequence[str], duplicate_count: int, preview: str, digest_language: str, thread_input=None) -> tuple[int, str]:
+    if thread_input is not None and thread_input.risk_level == "high":
+        return 38, (
+            "The message shows several suspicious signals, so it should not be trusted without manual verification."
+            if digest_language == "en"
+            else "Plusieurs signaux suspects sont visibles ; il ne faut pas faire confiance à ce message sans vérification manuelle."
+        )
+    if thread_input is not None and thread_input.risk_level == "medium":
+        return 49, (
+            "Some suspicious signals are visible, so the sender should be verified before acting."
+            if digest_language == "en"
+            else "Quelques signaux suspects sont visibles ; l'expéditeur doit être vérifié avant d'agir."
+        )
     if "promotional" in reason_codes:
         return 52, (
             "The content reads primarily like a promotional message rather than a concrete operational request."
@@ -1836,32 +1896,92 @@ class DeterministicScoringEngine:
         thread_messages: Sequence[MessageRecord],
     ) -> DigestEntry:
         base_entry = self._with_thread_reason(entry, duplicate_count)
+        thread_input = build_mail_thread_digest_input(
+            message,
+            thread_messages,
+            display_timezone=self.display_timezone,
+            action_detected=bool(
+                {"action_keyword", "direct_target_recipient", "flagged"} & set(base_entry.reason_codes)
+            ),
+        )
+        adjusted_reason_codes = tuple(base_entry.reason_codes)
+        adjusted_entry = base_entry
+        if thread_input.risk_level in {"medium", "high"} and "suspicious_mail" not in adjusted_reason_codes:
+            adjusted_reason_codes = adjusted_reason_codes + ("suspicious_mail",)
+        if thread_input.risk_level == "high" and adjusted_entry.section_name != "watch_items":
+            adjusted_entry = _with_digest_entry_updates(
+                adjusted_entry,
+                section_name="watch_items",
+                score=round(max(0.1, adjusted_entry.score - 1.5), 2),
+                reason_codes=adjusted_reason_codes,
+            )
+        elif thread_input.action_owner == "other" and adjusted_entry.section_name == "actions_to_take" and "critical_keyword" not in adjusted_entry.reason_codes:
+            adjusted_entry = _with_digest_entry_updates(
+                adjusted_entry,
+                section_name="watch_items",
+                score=round(max(0.1, adjusted_entry.score - 0.5), 2),
+                reason_codes=adjusted_reason_codes,
+            )
+        elif adjusted_reason_codes != tuple(adjusted_entry.reason_codes):
+            adjusted_entry = _with_digest_entry_updates(adjusted_entry, reason_codes=adjusted_reason_codes)
         cleaned_preview = _clean_preview(message.body_preview)
         reinforced_preview = _thread_reinforced_preview(message, thread_messages, cleaned_preview)
         summary = _message_thread_briefing(
             message,
             cleaned_preview,
-            base_entry.reason_codes,
+            adjusted_entry.reason_codes,
             self.digest_language,
             duplicate_count=duplicate_count,
             thread_messages=thread_messages,
         )
+        summary = _message_summary_for_thread_input(summary, thread_input, self.digest_language)
         confidence_score, confidence_reason = _message_confidence(
             message,
-            base_entry.reason_codes,
+            adjusted_entry.reason_codes,
             duplicate_count,
             reinforced_preview,
             self.digest_language,
+            thread_input=thread_input,
+        )
+        context_metadata = dict(_thread_context_payload(thread_messages, self.display_timezone))
+        context_metadata.update(
+            {
+                "action_owner": thread_input.action_owner,
+                "action_owner_display_name": thread_input.action_owner_display_name,
+                "action_expected_from_user": thread_input.action_expected_from_user,
+                "relevance_to_user": thread_input.relevance_to_user,
+                "risk_level": thread_input.risk_level,
+                "risk_reasons": list(thread_input.risk_reasons),
+                "trust_signals": list(thread_input.trust_signals),
+            }
         )
         return _with_digest_entry_updates(
-            base_entry,
+            adjusted_entry,
             summary=summary,
-            recommended_action=_message_recommended_action(message, base_entry.reason_codes, self.digest_language),
-            handling_bucket=_handling_bucket_from_section(base_entry.section_name),
+            recommended_action=_message_recommended_action(
+                message,
+                adjusted_entry.reason_codes,
+                self.digest_language,
+                thread_input=thread_input,
+            ),
+            handling_bucket=_handling_bucket_from_section(adjusted_entry.section_name),
             confidence_score=confidence_score,
             confidence_label=_normalized_confidence_label("", confidence_score, self.digest_language),
             confidence_reason=confidence_reason,
-            context_metadata=_thread_context_payload(thread_messages, self.display_timezone),
+            context_metadata=context_metadata,
+            card=DigestCard(
+                sender_display_name=thread_input.latest_sender_display_name,
+                is_unread=thread_input.latest_is_unread,
+                target_recipient_display_name=thread_input.target_recipient_display_name,
+                source_language_hint=thread_input.source_language_hint,
+                action_owner=thread_input.action_owner,
+                action_owner_display_name=thread_input.action_owner_display_name,
+                action_expected_from_user=thread_input.action_expected_from_user,
+                relevance_to_user=thread_input.relevance_to_user,
+                risk_level=thread_input.risk_level,
+                risk_reasons=thread_input.risk_reasons,
+                trust_signals=thread_input.trust_signals,
+            ),
         )
 
     def _score_message(
@@ -2043,6 +2163,14 @@ class DeterministicScoringEngine:
         recurrence_label = _meeting_recurrence_label(meeting, self.digest_language)
         if recurrence_label:
             reason_codes.append("meeting_recurring")
+        agenda_kind = "presence" if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting) else "meeting"
+        agenda_input = build_agenda_digest_input(
+            meeting,
+            event_kind=agenda_kind,
+            recurrence_label=recurrence_label,
+            related_messages=related_messages,
+            display_timezone=self.display_timezone,
+        )
         if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting):
             summary = _presence_summary(meeting, self.digest_language)
             confidence_score, confidence_reason = _presence_confidence(self.digest_language)
@@ -2061,15 +2189,16 @@ class DeterministicScoringEngine:
                 context_metadata={
                     "is_all_day": True,
                     "location": meeting.location,
-                    "related_messages": list(related_messages),
-                    "is_recurring": bool(recurrence_label),
-                    "recurrence_label": recurrence_label,
+                    "related_messages": list(agenda_input.related_messages),
+                    "is_recurring": bool(agenda_input.recurrence_label),
+                    "recurrence_label": agenda_input.recurrence_label,
                 },
                 source_url=_meeting_source_url(meeting),
                 desktop_source_url=_meeting_desktop_source_url(meeting),
                 sort_at=meeting.start_at,
                 reason_codes=tuple(reason_codes) + ("all_day_presence",),
                 guardrail_applied=False,
+                card=DigestCard(recurrence_label=agenda_input.recurrence_label),
             )
         if hours_until <= 2:
             score += 1.5
@@ -2152,15 +2281,16 @@ class DeterministicScoringEngine:
                 "attendees": list(meeting.attendees[:6]),
                 "location": meeting.location,
                 "body_preview": _preview_snippet(meeting.body_preview),
-                "related_messages": list(related_messages),
-                "is_recurring": bool(recurrence_label),
-                "recurrence_label": recurrence_label,
+                "related_messages": list(agenda_input.related_messages),
+                "is_recurring": bool(agenda_input.recurrence_label),
+                "recurrence_label": agenda_input.recurrence_label,
             },
             source_url=_meeting_source_url(meeting),
             desktop_source_url=_meeting_desktop_source_url(meeting),
             sort_at=meeting.start_at,
             reason_codes=tuple(reason_codes),
             guardrail_applied=False,
+            card=DigestCard(recurrence_label=agenda_input.recurrence_label),
         )
 
     def _summarize_message(
@@ -2365,6 +2495,25 @@ class StructuredDigestRenderer:
             "sort_at": item.sort_at.isoformat() if item.sort_at is not None else "",
             "reason_codes": list(item.reason_codes),
             "guardrail_applied": item.guardrail_applied,
+            "card": {
+                "sender_display_name": item.card.sender_display_name,
+                "is_unread": item.card.is_unread,
+                "target_recipient_display_name": item.card.target_recipient_display_name,
+                "source_language_hint": item.card.source_language_hint,
+                "recurrence_label": item.card.recurrence_label,
+                "action_owner": item.card.action_owner,
+                "action_owner_display_name": item.card.action_owner_display_name,
+                "action_expected_from_user": item.card.action_expected_from_user,
+                "relevance_to_user": item.card.relevance_to_user,
+                "risk_level": item.card.risk_level,
+                "risk_reasons": list(item.card.risk_reasons),
+                "trust_signals": list(item.card.trust_signals),
+                "continuity_state": item.card.continuity_state,
+                "continuity_previous_date": item.card.continuity_previous_date,
+                "continuity_reason": item.card.continuity_reason,
+            }
+            if item.card is not None
+            else None,
         }
 
     def _build_delivery_body(
@@ -2625,6 +2774,8 @@ class StructuredDigestRenderer:
     def _entry_sender_name(self, item: DigestEntry) -> str:
         if item.source_kind != "message":
             return ""
+        if item.card is not None and item.card.sender_display_name:
+            return " ".join(item.card.sender_display_name.split())
         metadata = item.context_metadata or {}
         sender_name = " ".join(str(metadata.get("latest_sender_display_name") or "").split())
         return sender_name
@@ -2632,6 +2783,9 @@ class StructuredDigestRenderer:
     def _entry_message_status(self, item: DigestEntry) -> str:
         if item.source_kind != "message":
             return ""
+        if item.card is not None and item.card.is_unread is not None:
+            localized = _language_copy(self.digest_language)["item_meta"]
+            return str(localized["status_unread"] if bool(item.card.is_unread) else localized["status_read"])
         metadata = item.context_metadata or {}
         if "latest_is_unread" not in metadata:
             return ""
@@ -2712,13 +2866,29 @@ class StructuredDigestRenderer:
     def _item_badge_labels(self, item: DigestEntry) -> Sequence[tuple[str, str]]:
         localized = _language_copy(self.digest_language)["badges"]
         labels = []
-        if item.source_kind == "message" and bool((item.context_metadata or {}).get("latest_is_unread")):
+        if item.source_kind == "message" and (
+            (item.card is not None and bool(item.card.is_unread))
+            or bool((item.context_metadata or {}).get("latest_is_unread"))
+        ):
             labels.append((str(localized["unread"]), "info"))
         if "flagged" in item.reason_codes:
             labels.append((str(localized["flagged"]), "warning"))
         if "promotional" in item.reason_codes:
             labels.append((str(localized["promotional"]), "neutral"))
-        recurrence_label = " ".join(str((item.context_metadata or {}).get("recurrence_label") or "").split())
+        if item.card is not None:
+            if item.card.risk_level == "high":
+                labels.append((str(localized["suspicious"]), "warning"))
+            elif item.card.risk_level == "medium":
+                labels.append((str(localized["verify"]), "warning"))
+            if item.card.continuity_state == "already_surfaced":
+                labels.append((str(localized["seen_before"]), "neutral"))
+            elif item.card.continuity_state == "still_open":
+                labels.append((str(localized["still_open"]), "warning"))
+            elif item.card.continuity_state == "changed":
+                labels.append((str(localized["changed"]), "info"))
+        recurrence_label = " ".join(
+            str((item.card.recurrence_label if item.card is not None else "") or (item.context_metadata or {}).get("recurrence_label") or "").split()
+        )
         if recurrence_label:
             labels.append((recurrence_label, "neutral"))
         return tuple(labels)

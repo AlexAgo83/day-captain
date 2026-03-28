@@ -291,6 +291,72 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertTrue(prioritized[0].summary.startswith("Action : Need your input before noon"))
         self.assertEqual(prioritized[0].context_metadata["source_language_hint"], "en")
 
+    def test_demotes_cc_only_action_when_next_step_appears_owned_by_someone_else(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-owner-other",
+                thread_id="thread-owner-other",
+                subject="Please review the contract",
+                from_address="legal@example.com",
+                to_addresses=("jordan@example.com",),
+                cc_addresses=("alex@example.com",),
+                user_id="alex@example.com",
+                received_at=datetime(2026, 3, 10, 7, 45, tzinfo=timezone.utc),
+                body_preview="Jordan, please review the contract before noon.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].section_name, "watch_items")
+        self.assertEqual(prioritized[0].card.action_owner, "other")
+        self.assertFalse(prioritized[0].card.action_expected_from_user)
+        self.assertIn("belong to Jordan", prioritized[0].recommended_action)
+
+    def test_marks_sensitive_urgent_mail_as_suspicious_and_conservative(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-suspicious",
+                thread_id="thread-suspicious",
+                subject="Urgent invoice update needed",
+                from_address="billing@vendor-payments.example",
+                to_addresses=("alex@example.com",),
+                user_id="alex@example.com",
+                received_at=datetime(2026, 3, 10, 7, 50, tzinfo=timezone.utc),
+                body_preview="Urgent: confirm the bank account immediately via https://pay-now.example/reset.",
+                has_attachments=True,
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].card.risk_level, "high")
+        self.assertIn("suspicious_mail", prioritized[0].reason_codes)
+        self.assertEqual(prioritized[0].section_name, "watch_items")
+        self.assertEqual(prioritized[0].recommended_action, "Verify the sender before acting.")
+
+    def test_populates_typed_card_for_recurring_meeting(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-weekly-card",
+                subject="Point équipe",
+                start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                organizer_address="lead@example.com",
+                raw_payload={"recurrence": {"pattern": {"type": "weekly"}}},
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(prioritized[0].card.recurrence_label, "Hebdo")
+
     def test_marks_print_and_download_deliverables_as_actions(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine()

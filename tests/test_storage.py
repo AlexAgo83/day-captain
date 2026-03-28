@@ -13,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from day_captain.adapters.storage import PostgresStorage
 from day_captain.adapters.storage import SQLiteStorage
 from day_captain.models import DigestEntry
+from day_captain.models import DigestCard
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
 from day_captain.models import FeedbackRecord
@@ -81,6 +82,14 @@ class SQLiteStorageTest(unittest.TestCase):
                         context_metadata={"message_count": 2},
                         reason_codes=("critical_keyword",),
                         guardrail_applied=True,
+                        card=DigestCard(
+                            sender_display_name="Boss",
+                            is_unread=True,
+                            target_recipient_display_name="Alex",
+                            action_owner="user",
+                            action_expected_from_user=True,
+                            risk_level="low",
+                        ),
                     ),
                 ),
                 daily_presence=(
@@ -120,6 +129,8 @@ class SQLiteStorageTest(unittest.TestCase):
             self.assertEqual(loaded.summary.critical_topics[0].desktop_source_url, "ms-outlook://mail/msg-1")
             self.assertEqual(loaded.summary.critical_topics[0].recommended_action, "Review the budget deck and confirm.")
             self.assertEqual(loaded.summary.critical_topics[0].confidence_score, 88)
+            self.assertEqual(loaded.summary.critical_topics[0].card.sender_display_name, "Boss")
+            self.assertTrue(loaded.summary.critical_topics[0].card.is_unread)
             self.assertEqual(loaded.summary.daily_presence[0].section_name, "daily_presence")
             with sqlite3.connect(path) as connection:
                 item_count = connection.execute("SELECT COUNT(*) FROM scoped_digest_items").fetchone()[0]

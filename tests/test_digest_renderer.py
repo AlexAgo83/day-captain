@@ -7,6 +7,7 @@ import unittest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.models import DigestEntry
+from day_captain.models import DigestCard
 from day_captain.models import ExternalNewsItem
 from day_captain.models import WeatherSnapshot
 from day_captain.services import StructuredDigestRenderer
@@ -554,6 +555,36 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Actualités externes", payload.delivery_body)
         self.assertIn("Source: Les Echos (https://example.com/echos/bce)", payload.delivery_body)
         self.assertIn("Ouvrir l'article", payload.delivery_payload["html_body"])
+
+    def test_renders_risk_and_continuity_badges_from_typed_card(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-card-badges",
+            generated_at=now,
+            window_start=datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Urgent invoice update needed",
+                    summary="Worth noting: confirm the bank account immediately.",
+                    section_name="watch_items",
+                    source_kind="message",
+                    source_id="msg-risk",
+                    score=1.1,
+                    card=DigestCard(
+                        is_unread=True,
+                        risk_level="high",
+                        continuity_state="changed",
+                    ),
+                ),
+            ),
+        )
+
+        self.assertIn("[Unread] [Suspicious] [Changed]", payload.delivery_body)
+        self.assertIn(">Suspicious<", payload.delivery_payload["html_body"])
 
     def test_renders_recurring_meeting_badge_when_metadata_supports_it(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")

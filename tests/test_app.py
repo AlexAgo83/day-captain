@@ -304,6 +304,22 @@ class DayCaptainApplicationTest(unittest.TestCase):
         self.assertIsNone(payload.weather)
         self.assertNotIn("Today's weather", payload.delivery_body)
 
+    def test_morning_digest_logs_weather_provider_failures(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(display_timezone="Europe/Paris"),
+            storage=InMemoryStorage(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+            weather_provider=StubWeatherProvider(error=ValueError("bad weather")),
+        )
+
+        with self.assertLogs("day_captain.app", level="WARNING") as captured:
+            payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertIsNone(payload.weather)
+        self.assertIn("continuing without weather capsule", "\n".join(captured.output))
+
     def test_morning_digest_includes_external_news_capsule_when_provider_returns_items(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         news_provider = StubExternalNewsProvider(
@@ -345,6 +361,71 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertEqual(payload.external_news, ())
         self.assertNotIn("External news", payload.delivery_body)
+
+    def test_morning_digest_marks_recent_item_as_still_open_when_repeated_next_day(self) -> None:
+        storage = InMemoryStorage()
+        first_now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        second_now = datetime(2026, 3, 10, 7, 30, tzinfo=timezone.utc)
+        message = MessageRecord(
+            graph_message_id="msg-repeat",
+            thread_id="thread-repeat",
+            subject="Action needed on roadmap",
+            from_address="pm@example.com",
+            to_addresses=("alex@example.com",),
+            user_id="alex@example.com",
+            received_at=datetime(2026, 3, 9, 7, 45, tzinfo=timezone.utc),
+            body_preview="Need your input for planning.",
+        )
+
+        first_app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            mail_collector=StaticMailCollector((message,)),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+        second_app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            mail_collector=StaticMailCollector((message,)),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        first_app.run_morning_digest(now=first_now, force=True)
+        second_payload = second_app.run_morning_digest(now=second_now, force=True)
+
+        self.assertEqual(second_payload.actions_to_take[0].card.continuity_state, "still_open")
+
+    def test_morning_digest_reports_recently_cleared_items_in_delivery_payload(self) -> None:
+        storage = InMemoryStorage()
+        first_now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        second_now = datetime(2026, 3, 10, 7, 30, tzinfo=timezone.utc)
+        message = MessageRecord(
+            graph_message_id="msg-cleared",
+            thread_id="thread-cleared",
+            subject="Action needed on roadmap",
+            from_address="pm@example.com",
+            to_addresses=("alex@example.com",),
+            user_id="alex@example.com",
+            received_at=datetime(2026, 3, 9, 7, 45, tzinfo=timezone.utc),
+            body_preview="Need your input for planning.",
+        )
+        first_app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            mail_collector=StaticMailCollector((message,)),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+        second_app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        first_app.run_morning_digest(now=first_now, force=True)
+        second_payload = second_app.run_morning_digest(now=second_now, force=True)
+
+        self.assertEqual(second_payload.delivery_payload["recent_memory"]["cleared"][0]["state"], "cleared")
 
     def test_weekend_repeat_run_stays_incremental(self) -> None:
         first_now = datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc)
@@ -477,6 +558,30 @@ class DayCaptainApplicationTest(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "awaiting delivery reconciliation"):
             app.run_morning_digest(now=now.replace(hour=9))
         self.assertEqual(len(delivery.calls), 1)
+
+    def test_build_application_fails_fast_when_local_graph_runtime_is_expected_but_missing(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Local Graph-backed runtime is incomplete"):
+            build_application(
+                settings=DayCaptainSettings(
+                    graph_send_enabled=True,
+                    delivery_mode="graph_send",
+                ),
+                storage=InMemoryStorage(),
+            )
+
+    def test_build_application_allows_explicit_stub_runtime_when_providers_are_injected(self) -> None:
+        app = build_application(
+            settings=DayCaptainSettings(
+                graph_send_enabled=True,
+                delivery_mode="graph_send",
+            ),
+            storage=InMemoryStorage(),
+            auth_provider=StubAuthProvider(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        self.assertIsNotNone(app)
 
     def test_pending_email_command_replay_does_not_send_duplicate_reply(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
