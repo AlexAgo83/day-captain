@@ -13,6 +13,7 @@ from day_captain.models import DigestOverview
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
 from day_captain.models import EmailCommandRecord
+from day_captain.models import ExternalNewsItem
 from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -56,6 +57,14 @@ class WeatherProvider(Protocol):
         current_time: datetime,
         display_timezone: str,
     ) -> Optional[WeatherSnapshot]:
+        ...
+
+
+class ExternalNewsProvider(Protocol):
+    def get_news(
+        self,
+        current_time: datetime,
+    ) -> Sequence[ExternalNewsItem]:
         ...
 
 
@@ -166,6 +175,7 @@ class DigestRenderer(Protocol):
         top_summary: str = "",
         top_summary_source: str = "none",
         weather: Optional[WeatherSnapshot] = None,
+        external_news: Sequence[ExternalNewsItem] = (),
         meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         ...

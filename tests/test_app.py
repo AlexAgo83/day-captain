@@ -18,6 +18,7 @@ from day_captain.config import DayCaptainSettings
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
+from day_captain.models import ExternalNewsItem
 from day_captain.models import WeatherSnapshot
 
 
@@ -66,6 +67,19 @@ class StubWeatherProvider:
         if self.error is not None:
             raise self.error
         return self.snapshot
+
+
+class StubExternalNewsProvider:
+    def __init__(self, items=(), error=None) -> None:
+        self.items = items
+        self.error = error
+        self.calls = []
+
+    def get_news(self, current_time):
+        self.calls.append(current_time)
+        if self.error is not None:
+            raise self.error
+        return self.items
 
 
 class DayCaptainApplicationTest(unittest.TestCase):
@@ -289,6 +303,48 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         self.assertIsNone(payload.weather)
         self.assertNotIn("Today's weather", payload.delivery_body)
+
+    def test_morning_digest_includes_external_news_capsule_when_provider_returns_items(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        news_provider = StubExternalNewsProvider(
+            items=(
+                ExternalNewsItem(
+                    headline="ECB signals slower cuts",
+                    summary="Markets are recalibrating rate expectations ahead of the next meeting.",
+                    source_name="Financial Times",
+                    source_url="https://example.com/ft/ecb",
+                ),
+            )
+        )
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=InMemoryStorage(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+            external_news_provider=news_provider,
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertEqual(len(payload.external_news), 1)
+        self.assertIn("External news", payload.delivery_body)
+        self.assertIn("Financial Times", payload.delivery_body)
+        self.assertEqual(payload.delivery_payload["external_news"][0]["headline"], "ECB signals slower cuts")
+
+    def test_morning_digest_omits_external_news_when_provider_fails(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=InMemoryStorage(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+            external_news_provider=StubExternalNewsProvider(error=ValueError("news failed")),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True)
+
+        self.assertEqual(payload.external_news, ())
+        self.assertNotIn("External news", payload.delivery_body)
 
     def test_weekend_repeat_run_stays_incremental(self) -> None:
         first_now = datetime(2026, 3, 8, 10, 0, tzinfo=timezone.utc)

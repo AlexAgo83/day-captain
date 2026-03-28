@@ -16,6 +16,7 @@ from day_captain.models import DigestEntry
 from day_captain.models import DigestOverview
 from day_captain.models import DigestPayload
 from day_captain.models import DigestRunRecord
+from day_captain.models import ExternalNewsItem
 from day_captain.models import FeedbackRecord
 from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
@@ -310,6 +311,11 @@ LANGUAGE_COPY = {
             "storm_risk": "Storm risk.",
             "snow_likely": "Snow likely.",
         },
+        "external_news": {
+            "label": "External news",
+            "source_prefix": "Source",
+            "link_label": "Open article",
+        },
         "sections": {
             "critical_topics": "Critical topics",
             "actions_to_take": "Actions to take",
@@ -435,6 +441,11 @@ LANGUAGE_COPY = {
             "rain_likely": "Pluie probable.",
             "storm_risk": "Risque d'orages.",
             "snow_likely": "Risque de neige.",
+        },
+        "external_news": {
+            "label": "Actualités externes",
+            "source_prefix": "Source",
+            "link_label": "Ouvrir l'article",
         },
         "sections": {
             "critical_topics": "Points critiques",
@@ -2201,6 +2212,7 @@ class StructuredDigestRenderer:
         top_summary: str = "",
         top_summary_source: str = "none",
         weather: Optional[WeatherSnapshot] = None,
+        external_news: Sequence[ExternalNewsItem] = (),
         meeting_horizon: Optional[Mapping[str, str]] = None,
     ) -> DigestPayload:
         sections = {name: [] for name in SECTION_NAMES}
@@ -2245,6 +2257,7 @@ class StructuredDigestRenderer:
             normalized_top_summary,
             command_mailbox,
             weather,
+            external_news,
             meeting_horizon or {},
         )
         delivery_html = self._build_delivery_html(
@@ -2255,6 +2268,7 @@ class StructuredDigestRenderer:
             normalized_top_summary,
             command_mailbox,
             weather,
+            external_news,
             meeting_horizon or {},
         )
         delivery_payload = {
@@ -2277,6 +2291,15 @@ class StructuredDigestRenderer:
             }
             if weather is not None
             else None,
+            "external_news": [
+                {
+                    "headline": item.headline,
+                    "summary": item.summary,
+                    "source_name": item.source_name,
+                    "source_url": item.source_url,
+                }
+                for item in external_news
+            ],
             "command_mailbox": command_mailbox,
             "meeting_horizon": dict(meeting_horizon or {}),
             "digest_language": self.digest_language,
@@ -2315,6 +2338,7 @@ class StructuredDigestRenderer:
             delivery_body=delivery_body,
             top_summary=normalized_top_summary,
             weather=weather,
+            external_news=tuple(external_news),
             delivery_payload=delivery_payload,
             critical_topics=tuple(sections["critical_topics"]),
             actions_to_take=tuple(sections["actions_to_take"]),
@@ -2352,6 +2376,7 @@ class StructuredDigestRenderer:
         top_summary: str,
         command_mailbox: str,
         weather: Optional[WeatherSnapshot],
+        external_news: Sequence[ExternalNewsItem],
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
@@ -2373,6 +2398,10 @@ class StructuredDigestRenderer:
         weather_lines = self._weather_body_lines(weather)
         if weather_lines:
             lines.extend(weather_lines)
+            lines.append("")
+        news_lines = self._external_news_body_lines(external_news)
+        if news_lines:
+            lines.extend(news_lines)
             lines.append("")
         if top_summary.strip():
             lines.append(localized["overview"]["label"])
@@ -2406,6 +2435,7 @@ class StructuredDigestRenderer:
         top_summary: str,
         command_mailbox: str,
         weather: Optional[WeatherSnapshot],
+        external_news: Sequence[ExternalNewsItem],
         meeting_horizon: Mapping[str, str],
     ) -> str:
         localized = _language_copy(self.digest_language)
@@ -2435,6 +2465,9 @@ class StructuredDigestRenderer:
         weather_html = self._weather_html(weather)
         if weather_html:
             parts.append(weather_html)
+        news_html = self._external_news_html(external_news)
+        if news_html:
+            parts.append(news_html)
         if top_summary.strip():
             parts.append(
                 "<section style=\"margin:10px 0 24px;padding:0 0 0 14px;border-left:3px solid #94a3b8;\">"
@@ -2741,6 +2774,59 @@ class StructuredDigestRenderer:
         if trend:
             return "{0}. {1}".format(headline, trend)
         return headline
+
+    def _external_news_body_lines(self, external_news: Sequence[ExternalNewsItem]) -> Sequence[str]:
+        if not external_news:
+            return ()
+        localized = _language_copy(self.digest_language)["external_news"]
+        lines = [str(localized["label"])]
+        for item in external_news:
+            lines.append("- {0}".format(item.headline))
+            if item.summary:
+                lines.append("  {0}".format(item.summary))
+            lines.append(
+                "  {0}: {1} ({2})".format(
+                    str(localized["source_prefix"]),
+                    item.source_name,
+                    item.source_url,
+                )
+            )
+        return tuple(lines)
+
+    def _external_news_html(self, external_news: Sequence[ExternalNewsItem]) -> str:
+        if not external_news:
+            return ""
+        localized = _language_copy(self.digest_language)["external_news"]
+        parts = [
+            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #dbe4ee;border-radius:12px;\">",
+            "<p style=\"margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>".format(
+                self._html_escape(str(localized["label"]))
+            ),
+        ]
+        for item in external_news:
+            parts.append("<div style=\"margin:0 0 10px;\">")
+            parts.append(
+                "<p style=\"margin:0 0 4px;font-size:14px;font-weight:600;color:#0f172a;\">{0}</p>".format(
+                    self._html_escape(item.headline)
+                )
+            )
+            if item.summary:
+                parts.append(
+                    "<p style=\"margin:0 0 4px;font-size:13px;color:#334155;\">{0}</p>".format(
+                        self._html_escape(item.summary)
+                    )
+                )
+            parts.append(
+                "<p style=\"margin:0;font-size:12px;color:#64748b;\">{0}: {1} · <a href=\"{2}\" style=\"color:#334155;text-decoration:none;\">{3}</a></p>".format(
+                    self._html_escape(str(localized["source_prefix"])),
+                    self._html_escape(item.source_name),
+                    self._html_escape(item.source_url),
+                    self._html_escape(str(localized["link_label"])),
+                )
+            )
+            parts.append("</div>")
+        parts.append("</section>")
+        return "".join(parts)
 
     def _weather_rain_text(self, weather: WeatherSnapshot, localized: Mapping[str, str]) -> str:
         kind = _weather_kind(weather.weather_code)

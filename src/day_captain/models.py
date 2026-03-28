@@ -112,6 +112,14 @@ class DigestEntry:
 
 
 @dataclass(frozen=True)
+class ExternalNewsItem:
+    headline: str
+    summary: str
+    source_name: str
+    source_url: str
+
+
+@dataclass(frozen=True)
 class WeatherSnapshot:
     forecast_date: date
     weather_code: int
@@ -134,6 +142,7 @@ class DigestPayload:
     delivery_body: str = ""
     top_summary: str = ""
     weather: Optional[WeatherSnapshot] = None
+    external_news: Sequence[ExternalNewsItem] = field(default_factory=tuple)
     delivery_payload: Mapping[str, Any] = field(default_factory=dict)
     critical_topics: Sequence[DigestEntry] = field(default_factory=tuple)
     actions_to_take: Sequence[DigestEntry] = field(default_factory=tuple)
@@ -257,6 +266,15 @@ def weather_snapshot_from_dict(payload: Mapping[str, Any]) -> WeatherSnapshot:
     )
 
 
+def external_news_item_from_dict(payload: Mapping[str, Any]) -> ExternalNewsItem:
+    return ExternalNewsItem(
+        headline=str(payload.get("headline") or ""),
+        summary=str(payload.get("summary") or ""),
+        source_name=str(payload.get("source_name") or ""),
+        source_url=str(payload.get("source_url") or ""),
+    )
+
+
 def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
     return DigestPayload(
         run_id=str(payload.get("run_id") or ""),
@@ -270,6 +288,9 @@ def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
         delivery_body=str(payload.get("delivery_body") or ""),
         top_summary=str(payload.get("top_summary") or ""),
         weather=weather_snapshot_from_dict(payload["weather"]) if payload.get("weather") else None,
+        external_news=tuple(
+            external_news_item_from_dict(item) for item in payload.get("external_news") or ()
+        ),
         delivery_payload=dict(payload.get("delivery_payload") or {}),
         critical_topics=tuple(
             digest_entry_from_dict(item) for item in payload.get("critical_topics") or ()
