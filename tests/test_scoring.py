@@ -216,6 +216,71 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].source_id, "msg-thread-2")
         self.assertIn("thread_collapsed", prioritized[0].reason_codes)
 
+    def test_collapses_duplicate_operational_alerts_across_aliases(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-alert-a",
+                thread_id="thread-alert-a",
+                subject="Action requise - le service risque d'etre suspendu",
+                from_address="no-reply@service.example",
+                to_addresses=("ops-team@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 40, tzinfo=timezone.utc),
+                body_preview="Le service sera suspendu pour defaut de paiement si le solde n'est pas regularise.",
+            ),
+            MessageRecord(
+                graph_message_id="msg-alert-b",
+                thread_id="thread-alert-b",
+                subject="Action requise - le service risque d'etre suspendu",
+                from_address="no-reply@service.example",
+                to_addresses=("finance-team@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 42, tzinfo=timezone.utc),
+                body_preview="Le service sera suspendu pour defaut de paiement si le solde n'est pas regularise.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].section_name, "critical_topics")
+        self.assertIn("alias_deduped", prioritized[0].reason_codes)
+        self.assertEqual(prioritized[0].context_metadata["grouping_kind"], "alias")
+        self.assertEqual(prioritized[0].context_metadata["grouped_message_count"], 2)
+        self.assertEqual(
+            prioritized[0].context_metadata["grouped_aliases"],
+            ["ops-team@example.com", "finance-team@example.com"],
+        )
+
+    def test_keeps_distinct_operational_alerts_separate_when_preview_differs(self) -> None:
+        now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-alert-account",
+                thread_id="thread-alert-account",
+                subject="Action requise - le service risque d'etre suspendu",
+                from_address="no-reply@service.example",
+                to_addresses=("ops-team@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 40, tzinfo=timezone.utc),
+                body_preview="Le service sera suspendu pour defaut de paiement si le solde n'est pas regularise.",
+            ),
+            MessageRecord(
+                graph_message_id="msg-alert-quota",
+                thread_id="thread-alert-quota",
+                subject="Action requise - le service risque d'etre suspendu",
+                from_address="no-reply@service.example",
+                to_addresses=("ops-team@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 42, tzinfo=timezone.utc),
+                body_preview="Le service sera suspendu si le quota de verification n'est pas augmente.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 2)
+        self.assertTrue(all("alias_deduped" not in item.reason_codes for item in prioritized))
+
     def test_filters_trivial_no_subject_messages_and_cleans_summary(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine()
@@ -329,6 +394,31 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertTrue(prioritized[0].summary.startswith("Vous êtes attendu sur ce point :"))
         self.assertIn("bank account", prioritized[0].summary)
         self.assertEqual(prioritized[0].context_metadata["target_recipient_display_name"], "Casey Morgan")
+        self.assertIn("direct_follow_up_signal", prioritized[0].reason_codes)
+
+    def test_direct_target_without_follow_up_signal_stays_out_of_actions(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-weekly-note",
+                thread_id="thread-weekly-note",
+                subject="Weekly coordination note",
+                from_address="teamlead@example.com",
+                to_addresses=("casey.morgan@example.com",),
+                user_id="casey.morgan@example.com",
+                received_at=datetime(2026, 3, 10, 7, 35, tzinfo=timezone.utc),
+                body_preview="Le point hebdomadaire reste prevu demain a 09:00 dans la salle habituelle.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertNotEqual(prioritized[0].section_name, "actions_to_take")
+        self.assertNotIn("direct_follow_up_signal", prioritized[0].reason_codes)
+        self.assertTrue(prioritized[0].summary.startswith("À noter :"))
+        self.assertEqual(prioritized[0].recommended_action, "Garder ce sujet en vue ; aucune action explicite n'est encore certaine.")
 
     def test_keeps_english_action_text_clear_in_french_digest(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
@@ -873,7 +963,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertNotIn("Contexte :", meeting_entry.summary)
         self.assertNotIn("meeting_related_context", meeting_entry.reason_codes)
 
-    def test_meeting_confidence_ignores_placeholder_body_preview(self) -> None:
+    def test_filters_placeholder_meeting_from_upcoming_section(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
         meetings = (
@@ -883,6 +973,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
                 start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
                 end_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
                 organizer_address="alex@example.com",
+                user_id="alex@example.com",
                 location="Microsoft Teams Meeting",
                 body_preview="*** CECI EST UN ESPACE RÉSERVÉ TEMPORAIRE *** Les modifications apportées à cet événement peuvent ne pas être conservées.",
             ),
@@ -890,8 +981,29 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         prioritized = engine.prioritize((), meetings, (), reference_time=now)
 
-        self.assertEqual(prioritized[0].confidence_score, 58)
-        self.assertIn("métadonnées de base du calendrier", prioritized[0].confidence_reason.lower())
+        self.assertEqual(prioritized, ())
+
+    def test_keeps_non_placeholder_private_work_block_visible(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        meetings = (
+            MeetingRecord(
+                graph_event_id="mtg-focus-block",
+                subject="Bloc de travail focus",
+                start_at=datetime(2026, 3, 10, 9, 0, tzinfo=timezone.utc),
+                end_at=datetime(2026, 3, 10, 10, 30, tzinfo=timezone.utc),
+                organizer_address="alex@example.com",
+                user_id="alex@example.com",
+                location="Bureau",
+                is_online_meeting=False,
+                body_preview="Temps reserve pour finaliser la revue technique avant midi.",
+            ),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 1)
+        self.assertEqual(prioritized[0].section_name, "upcoming_meetings")
 
     def test_meeting_context_marks_recurring_events_when_metadata_supports_it(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)

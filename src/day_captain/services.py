@@ -228,6 +228,69 @@ TRANSACTIONAL_ALERT_PATTERNS = (
     "risque d etre suspendu",
 )
 
+DIRECT_RECIPIENT_ACTION_PATTERNS = (
+    "can you",
+    "could you",
+    "please ",
+    "need you",
+    "need your",
+    "your input",
+    "for validation",
+    "to validate",
+    "to confirm",
+    "to review",
+    "to approve",
+    "merci de",
+    "merci d",
+    "pour validation",
+    "a valider",
+    "à valider",
+    "a confirmer",
+    "à confirmer",
+    "a approuver",
+    "à approuver",
+    "edit ",
+    "update ",
+    "confirm ",
+    "validate ",
+    "approve ",
+    "review ",
+    "reply ",
+    "send ",
+    "share ",
+    "fix ",
+    "complete ",
+    "fill ",
+    "sign ",
+    "modifier ",
+    "mettre a jour",
+    "mettre à jour",
+    "confirmer ",
+    "valider ",
+    "approuver ",
+    "repondre ",
+    "répondre ",
+    "envoyer ",
+    "partager ",
+    "corriger ",
+    "completer ",
+    "compléter ",
+    "signer ",
+)
+
+PLACEHOLDER_MEETING_SUBJECT_PATTERNS = (
+    "holding slot",
+    "hold slot",
+    "placeholder",
+    "reserved space",
+    "temporary reserved",
+    "mise en attente",
+    "creneau reserve",
+    "créneau réservé",
+    "espace reserve",
+    "espace réservé",
+)
+
 LOW_SIGNAL_WATCH_PATTERNS = (
     "how to ",
     "guide to ",
@@ -1476,6 +1539,53 @@ def _thread_context_payload(messages: Sequence[MessageRecord], display_timezone:
     }
 
 
+def _normalized_preview_fingerprint(preview: str, *, max_chars: int = 120) -> str:
+    cleaned = _clean_preview(preview)
+    if not cleaned:
+        return ""
+    normalized = re.sub(r"\s+", " ", _normalize_text(cleaned)).strip()
+    return normalized[:max_chars]
+
+
+def _time_bucket_key(value: datetime, *, minutes: int = 5) -> str:
+    timestamp = int(value.timestamp())
+    bucket = max(1, minutes * 60)
+    return str(timestamp // bucket)
+
+
+def _is_alias_dedupe_candidate(message: MessageRecord, entry: DigestEntry) -> bool:
+    reason_codes = set(entry.reason_codes)
+    sender = str(message.from_address or "").lower()
+    return "transactional_alert" in reason_codes or (
+        "critical_keyword" in reason_codes and _contains_any(sender, AUTOMATED_SENDERS)
+    )
+
+
+def _message_group_key(message: MessageRecord, entry: Optional[DigestEntry]) -> tuple[str, str]:
+    if entry is not None and _is_alias_dedupe_candidate(message, entry):
+        normalized_subject = _normalize_display_title(message.subject or "").lower()
+        preview_fingerprint = _normalized_preview_fingerprint(message.body_preview)
+        sender = str(message.from_address or "").strip().lower()
+        sender_domain = _domain_from_email(sender)
+        if normalized_subject and sender and preview_fingerprint:
+            return (
+                "alias",
+                "|".join(
+                    (
+                        sender_domain or sender,
+                        normalized_subject,
+                        preview_fingerprint,
+                        _time_bucket_key(message.received_at),
+                    )
+                ),
+            )
+    thread_id = str(message.thread_id or "").strip()
+    if thread_id:
+        return ("thread", thread_id)
+    subject = _normalize_display_title(message.subject or "")
+    return ("thread", subject.lower() or message.graph_message_id)
+
+
 def _message_thread_briefing(
     message: MessageRecord,
     cleaned_preview: str,
@@ -1484,6 +1594,7 @@ def _message_thread_briefing(
     *,
     duplicate_count: int = 1,
     thread_messages: Sequence[MessageRecord] = (),
+    grouping_kind: str = "thread",
 ) -> str:
     reinforced_preview = _thread_reinforced_preview(
         message,
@@ -1498,6 +1609,8 @@ def _message_thread_briefing(
     if duplicate_count <= 1:
         return summary
     copy = _language_copy(digest_language)["summary"]
+    if grouping_kind == "alias":
+        return summary
     base = _strip_known_summary_prefix(summary, digest_language)
     threaded = str(copy["thread_context"]).format(
         title=_normalize_display_title(message.subject or ""),
@@ -1534,7 +1647,7 @@ def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[s
     normalized_preview = _normalize_text(message.subject, message.body_preview)
     if "deliverable_shared" in reason_codes or "download" in normalized_preview or "telechargement" in normalized_preview or "téléchargement" in normalized_preview:
         return str(actions["deliverable"])
-    if "action_keyword" in reason_codes or "direct_target_recipient" in reason_codes or "flagged" in reason_codes:
+    if "action_keyword" in reason_codes or "direct_follow_up_signal" in reason_codes or "flagged" in reason_codes:
         if thread_input is not None and thread_input.action_owner == "other":
             owner = thread_input.action_owner_display_name or (
                 "someone else" if digest_language == "en" else "quelqu'un d'autre"
@@ -1576,6 +1689,12 @@ def _message_confidence(message: MessageRecord, reason_codes: Sequence[str], dup
             "Explicit request or urgency is visible in the latest thread update."
             if digest_language == "en"
             else "Une demande explicite ou une urgence apparaît dans la dernière mise à jour du fil."
+        )
+    if "alias_deduped" in reason_codes and duplicate_count > 1 and preview:
+        return 84, (
+            "Several matching alert copies were grouped into one operational item."
+            if digest_language == "en"
+            else "Plusieurs copies d'une même alerte ont été regroupées en un seul élément opérationnel."
         )
     if duplicate_count > 1 and preview:
         return 78, (
@@ -1681,6 +1800,19 @@ def _has_meaningful_meeting_body_preview(preview: str) -> bool:
         "changes made to this event might not be saved",
     )
     return not any(pattern in normalized for pattern in placeholder_patterns)
+
+
+def _looks_like_placeholder_meeting(meeting: MeetingRecord) -> bool:
+    if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting):
+        return False
+    if not _same_identity(meeting.organizer_address, meeting.user_id):
+        return False
+    if tuple(attendee for attendee in meeting.attendees if attendee):
+        return False
+    if _has_meaningful_meeting_body_preview(meeting.body_preview):
+        return False
+    normalized_subject = _normalize_text(meeting.subject)
+    return _contains_any(normalized_subject, PLACEHOLDER_MEETING_SUBJECT_PATTERNS)
 
 
 def _meeting_recommended_action(reason_codes: Sequence[str], digest_language: str, *, has_related_context: bool = False) -> str:
@@ -1939,48 +2071,43 @@ class DeterministicScoringEngine:
             preference.preference_key: preference.weight for preference in preferences
         }
         prioritized = []
-        thread_candidates = {}
-        thread_messages = {}
+        grouped_candidates = {}
+        grouped_messages = {}
         for message in messages:
             entry = self._score_message(message, preference_weights, now)
-            thread_key = self._thread_key(message)
-            thread_messages.setdefault(thread_key, []).append(message)
+            grouping_kind, group_key = _message_group_key(message, entry)
+            grouped_messages.setdefault((grouping_kind, group_key), []).append(message)
             if entry is not None:
-                existing = thread_candidates.get(thread_key)
+                existing = grouped_candidates.get((grouping_kind, group_key))
                 if existing is None:
-                    thread_candidates[thread_key] = (message, entry, 1)
+                    grouped_candidates[(grouping_kind, group_key)] = (message, entry, 1)
                 else:
                     kept_message, kept_entry, duplicate_count = existing
                     duplicate_count += 1
                     if self._message_rank(message, entry) > self._message_rank(kept_message, kept_entry):
-                        thread_candidates[thread_key] = (message, entry, duplicate_count)
+                        grouped_candidates[(grouping_kind, group_key)] = (message, entry, duplicate_count)
                     else:
-                        thread_candidates[thread_key] = (kept_message, kept_entry, duplicate_count)
-        for thread_key, (message, entry, duplicate_count) in thread_candidates.items():
+                        grouped_candidates[(grouping_kind, group_key)] = (kept_message, kept_entry, duplicate_count)
+        for (grouping_kind, group_key), (message, entry, duplicate_count) in grouped_candidates.items():
             prioritized.append(
                 self._finalize_message_entry(
                     message,
                     entry,
                     duplicate_count,
-                    thread_messages=tuple(thread_messages.get(thread_key) or (message,)),
+                    thread_messages=tuple(grouped_messages.get((grouping_kind, group_key)) or (message,)),
+                    grouping_kind=grouping_kind,
                 )
             )
         for meeting in meetings:
-            prioritized.append(
-                self._score_meeting(
-                    meeting,
-                    now,
-                    messages=messages,
-                    window_start=window_start,
-                )
+            entry = self._score_meeting(
+                meeting,
+                now,
+                messages=messages,
+                window_start=window_start,
             )
+            if entry is not None:
+                prioritized.append(entry)
         return tuple(sorted(prioritized, key=lambda item: (-item.score, item.title.lower())))
-
-    def _thread_key(self, message: MessageRecord) -> str:
-        if message.thread_id:
-            return message.thread_id
-        subject = _normalize_display_title(message.subject or "")
-        return subject.lower() or message.graph_message_id
 
     def _message_rank(self, message: MessageRecord, entry: DigestEntry) -> tuple:
         return (
@@ -1991,12 +2118,16 @@ class DeterministicScoringEngine:
             1 if message.has_attachments else 0,
         )
 
-    def _with_thread_reason(self, entry: DigestEntry, duplicate_count: int) -> DigestEntry:
+    def _with_group_reason(self, entry: DigestEntry, duplicate_count: int, grouping_kind: str) -> DigestEntry:
         if duplicate_count <= 1:
             return entry
+        if grouping_kind == "alias":
+            reason = "alias_deduped"
+        else:
+            reason = "thread_collapsed"
         return _with_digest_entry_updates(
             entry,
-            reason_codes=tuple(entry.reason_codes) + ("thread_collapsed",),
+            reason_codes=tuple(entry.reason_codes) + (reason,),
         )
 
     def _finalize_message_entry(
@@ -2006,14 +2137,15 @@ class DeterministicScoringEngine:
         duplicate_count: int,
         *,
         thread_messages: Sequence[MessageRecord],
+        grouping_kind: str,
     ) -> DigestEntry:
-        base_entry = self._with_thread_reason(entry, duplicate_count)
+        base_entry = self._with_group_reason(entry, duplicate_count, grouping_kind)
         thread_input = build_mail_thread_digest_input(
             message,
             thread_messages,
             display_timezone=self.display_timezone,
             action_detected=bool(
-                {"action_keyword", "direct_target_recipient", "flagged"} & set(base_entry.reason_codes)
+                {"action_keyword", "direct_follow_up_signal", "flagged"} & set(base_entry.reason_codes)
             ),
         )
         adjusted_reason_codes = tuple(base_entry.reason_codes)
@@ -2045,6 +2177,7 @@ class DeterministicScoringEngine:
             self.digest_language,
             duplicate_count=duplicate_count,
             thread_messages=thread_messages,
+            grouping_kind=grouping_kind,
         )
         summary = _message_summary_for_thread_input(summary, thread_input, self.digest_language)
         confidence_score, confidence_reason = _message_confidence(
@@ -2065,8 +2198,17 @@ class DeterministicScoringEngine:
                 "risk_level": thread_input.risk_level,
                 "risk_reasons": list(thread_input.risk_reasons),
                 "trust_signals": list(thread_input.trust_signals),
+                "grouping_kind": grouping_kind,
+                "grouped_message_count": duplicate_count,
             }
         )
+        if grouping_kind == "alias" and duplicate_count > 1:
+            grouped_aliases = []
+            for grouped_message in thread_messages:
+                for address in grouped_message.to_addresses:
+                    if address and address not in grouped_aliases:
+                        grouped_aliases.append(address)
+            context_metadata["grouped_aliases"] = grouped_aliases[:8]
         return _with_digest_entry_updates(
             adjusted_entry,
             summary=summary,
@@ -2142,9 +2284,12 @@ class DeterministicScoringEngine:
             reason_codes.append("attachment_present")
         target_in_to = _address_list_contains_identity(message.to_addresses, message.user_id)
         target_in_cc = _address_list_contains_identity(message.cc_addresses, message.user_id)
+        direct_follow_up_signal = _contains_any(combined_text, DIRECT_RECIPIENT_ACTION_PATTERNS)
         if target_in_to:
             score += 1.35
             reason_codes.append("direct_target_recipient")
+            if direct_follow_up_signal:
+                reason_codes.append("direct_follow_up_signal")
         elif target_in_cc:
             score += 0.3
             reason_codes.append("target_cc")
@@ -2219,10 +2364,7 @@ class DeterministicScoringEngine:
         elif (
             "action_keyword" in reason_codes
             or "flagged" in reason_codes
-            or (
-                "direct_target_recipient" in reason_codes
-                and not _is_low_signal_watch_message(subject, cleaned_preview)
-            )
+            or "direct_follow_up_signal" in reason_codes
         ):
             section_name = "actions_to_take"
         else:
@@ -2267,7 +2409,9 @@ class DeterministicScoringEngine:
         *,
         messages: Sequence[MessageRecord] = (),
         window_start: Optional[datetime] = None,
-    ) -> DigestEntry:
+    ) -> Optional[DigestEntry]:
+        if _looks_like_placeholder_meeting(meeting):
+            return None
         hours_until = (meeting.start_at - now).total_seconds() / 3600.0
         copy = _language_copy(self.digest_language)["summary"]
         local_start = meeting.start_at.astimezone(_display_zone(self.display_timezone))
@@ -2432,7 +2576,7 @@ class DeterministicScoringEngine:
         if "critical_keyword" in reason_codes:
             template = "Urgent : {text}" if mixed_english_source else str(copy["critical"])
             return _normalize_item_summary(message.subject or "", template.format(text=base), max_chars=190)
-        if "direct_target_recipient" in reason_codes:
+        if "direct_target_recipient" in reason_codes and "direct_follow_up_signal" in reason_codes:
             return _normalize_item_summary(message.subject or "", copy["direct_target"].format(text=base), max_chars=210)
         if "action_keyword" in reason_codes:
             template = "Action : {text}" if mixed_english_source else str(copy["action"])
@@ -3307,7 +3451,11 @@ class IdentityDigestWordingEngine:
         localized = _language_copy(self.digest_language)["summary"]
         rewritten = []
         for item in prioritized_items:
-            if item.source_kind != "message" or "direct_target_recipient" not in item.reason_codes:
+            if (
+                item.source_kind != "message"
+                or "direct_target_recipient" not in item.reason_codes
+                or "direct_follow_up_signal" not in item.reason_codes
+            ):
                 rewritten.append(item)
                 continue
             base = _strip_known_summary_prefix(item.summary, self.digest_language)
