@@ -26,6 +26,7 @@ Use this checklist before treating the Render-hosted Day Captain service as read
 
 ## Runtime and scheduling
 - Serve the hosted app with `gunicorn`, not the standard-library WSGI server.
+- On single-instance Render services, prefer `gunicorn --worker-class gthread --threads 4 --timeout 90 --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"` so `/healthz` can still answer while a digest job is running.
 - Keep weekday `morning-digest` scheduling separate from the Sunday-evening `weekly-digest` workflow.
 - Treat `.github/workflows/morning-digest-scheduler.yml` and `.github/workflows/weekly-digest-scheduler.yml` in this repo as manual example bootstraps, not the final production scheduler location.
 - Prefer a non-sleeping paid web service for production scheduling. Treat sleeping-service operation as a fallback mode only.
