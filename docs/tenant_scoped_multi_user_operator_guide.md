@@ -173,7 +173,7 @@ Example repository variable:
 ["alice@example.com", "bob@example.com"]
 ```
 
-The weekday scheduler issues one hosted `/jobs/morning-digest` call per listed target user. The shipped morning template targets `09:00 Europe/Paris` through a timezone-aware weekday gate, while the Sunday scheduler issues one hosted `/jobs/weekly-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the example workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
+The weekday scheduler issues one hosted `/jobs/morning-digest` call per listed target user. The shipped morning template targets `08:45 Europe/Paris` through a timezone-aware weekday gate, while the Sunday scheduler issues one hosted `/jobs/weekly-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the example workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
 - The Sunday scheduler should tolerate normal GitHub Actions cron jitter. Prefer the shared helper-backed gate from the copy-ready weekly workflow template instead of requiring an exact `20:30 Europe/Paris` process start.
 - The shipped weekly scheduler templates should stay aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` helper so new ops repos inherit the same gate semantics.
 

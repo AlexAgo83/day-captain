@@ -28,8 +28,8 @@ def should_run_weekday_morning_digest(
     now: Optional[datetime] = None,
     *,
     timezone_name: str = "Europe/Paris",
-    target_hour: int = 9,
-    target_minute: int = 0,
+    target_hour: int = 8,
+    target_minute: int = 45,
 ) -> bool:
     current_time = now or datetime.now(timezone.utc)
     if current_time.tzinfo is None:

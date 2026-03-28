@@ -44,7 +44,7 @@ Assumptions baked into that template:
 - the ops workflow installs the package from that `release` branch before calling the hosted helper scripts
 - the hosted service may sleep, so the workflow performs one readiness/wake-up pass before per-user fan-out
 - `DAY_CAPTAIN_TARGET_USERS_JSON` is mandatory in the ops repo so the scheduler never silently falls back to an ambiguous single-user trigger
-- the morning scheduler stays weekday-only and targets `09:00 Europe/Paris`, while the weekly scheduler is a separate Sunday-evening contract
+- the morning scheduler stays weekday-only and targets `08:45 Europe/Paris`, while the weekly scheduler is a separate Sunday-evening contract
 - the weekly scheduler gate should tolerate normal GitHub Actions cron jitter within the intended Sunday `20:30 Europe/Paris` hour instead of depending on an exact process start minute
 - the copy-ready weekly templates are expected to stay aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` helper
 
