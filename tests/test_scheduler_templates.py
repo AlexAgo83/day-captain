@@ -11,8 +11,8 @@ class MorningSchedulerTemplateTest(unittest.TestCase):
 
         self.assertIn("workflow_dispatch:", content)
         self.assertNotIn("\n  schedule:\n", content)
-        self.assertNotIn('cron: "0 7 * * 1-5"', content)
-        self.assertNotIn('cron: "0 8 * * 1-5"', content)
+        self.assertNotIn('cron: "45 6 * * 1-5"', content)
+        self.assertNotIn('cron: "45 7 * * 1-5"', content)
         self.assertNotIn("should_run_weekday_morning_digest", content)
 
     def test_docs_morning_ops_template_uses_shared_scheduler_helper(self) -> None:
@@ -20,8 +20,8 @@ class MorningSchedulerTemplateTest(unittest.TestCase):
 
         self.assertIn("from day_captain.scheduler import should_run_weekday_morning_digest", content)
         self.assertIn("should_run = should_run_weekday_morning_digest()", content)
-        self.assertIn('- cron: "0 7 * * 1-5"', content)
-        self.assertIn('- cron: "0 8 * * 1-5"', content)
+        self.assertIn('- cron: "45 6 * * 1-5"', content)
+        self.assertIn('- cron: "45 7 * * 1-5"', content)
 
 
 class WeeklySchedulerTemplateTest(unittest.TestCase):
