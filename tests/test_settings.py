@@ -301,13 +301,31 @@ class DayCaptainSettingsTest(unittest.TestCase):
         self.assertEqual(settings.resolved_graph_auth_mode(), "app_only")
 
     def test_validate_hosted_delegated_requires_graph_runtime_inputs(self) -> None:
-        with self.assertRaisesRegex(ValueError, "Hosted delegated Graph execution requires"):
+        with self.assertRaisesRegex(ValueError, "DAY_CAPTAIN_GRAPH_CLIENT_ID is required"):
             DayCaptainSettings(
                 environment="production",
                 job_secret="secret",
                 database_url="postgresql://db.example/day_captain",
                 graph_auth_mode="delegated",
             ).validate_hosted()
+
+        with self.assertRaisesRegex(ValueError, "DAY_CAPTAIN_GRAPH_REFRESH_TOKEN is required"):
+            DayCaptainSettings(
+                environment="production",
+                job_secret="secret",
+                database_url="postgresql://db.example/day_captain",
+                graph_auth_mode="delegated",
+                graph_client_id="client-id",
+            ).validate_hosted()
+
+        DayCaptainSettings(
+            environment="production",
+            job_secret="secret",
+            database_url="postgresql://db.example/day_captain",
+            graph_auth_mode="delegated",
+            graph_client_id="client-id",
+            graph_refresh_token="refresh-token",
+        ).validate_hosted()
 
     def test_external_news_is_enabled_only_with_flag_and_feed_url(self) -> None:
         disabled = DayCaptainSettings(external_news_enabled=False, external_news_feed_url="https://example.com/feed.xml")

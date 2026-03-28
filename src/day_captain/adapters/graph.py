@@ -278,7 +278,7 @@ class GraphDelegatedAuthProvider:
         tenant_id: str = "",
     ) -> AuthContext:
         access_token = self.access_token
-        cached_bundle = self.token_cache.load() if self.token_cache is not None else None
+        cached_bundle = None if access_token else (self.token_cache.load() if self.token_cache is not None else None)
         active_bundle = None
         if not access_token and cached_bundle is not None:
             requested_scopes = {str(scope) for scope in scopes}
@@ -307,8 +307,6 @@ class GraphDelegatedAuthProvider:
                     "Cached delegated Graph access token has expired and no usable refresh path is configured. "
                     "Re-authenticate or set DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."
                 )
-        elif cached_bundle is not None:
-            active_bundle = cached_bundle
         if not access_token:
             raise ValueError(
                 "No delegated Graph access token available. Run `day-captain auth login` or set DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."

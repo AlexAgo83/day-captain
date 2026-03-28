@@ -275,6 +275,30 @@ class AuthFlowTest(unittest.TestCase):
 
             self.assertEqual(context.user_id, "alice@example.com")
 
+    def test_graph_provider_ignores_stale_cached_identity_and_scopes_when_explicit_token_is_configured(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            cache = FileTokenCache(str(Path(tmpdir) / "auth.json"))
+            cache.save(
+                AuthTokenBundle(
+                    access_token="cached-access",
+                    refresh_token="refresh-token",
+                    expires_at=datetime.now(timezone.utc) + timedelta(hours=1),
+                    scopes=("Mail.Read",),
+                    user_id="stale-user@example.com",
+                )
+            )
+            provider = GraphDelegatedAuthProvider(
+                api_client=StaticApiClient(),
+                access_token="explicit-access",
+                token_cache=cache,
+            )
+
+            context = provider.authenticate(("Mail.Read", "Mail.Send"))
+
+            self.assertEqual(context.access_token, "explicit-access")
+            self.assertEqual(context.user_id, "user-123")
+            self.assertEqual(context.granted_scopes, ("Mail.Read", "Mail.Send"))
+
     def test_auth_status_and_logout_commands_use_cache(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             cache_path = str(Path(tmpdir) / "auth.json")
