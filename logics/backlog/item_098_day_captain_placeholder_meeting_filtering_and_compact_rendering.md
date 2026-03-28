@@ -1,10 +1,10 @@
 ## item_098_day_captain_placeholder_meeting_filtering_and_compact_rendering - Day Captain placeholder meeting filtering and compact rendering
-> From version: 1.9.0
+> From version: 1.9.0  
 > Schema version: 1.0
 > Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 5%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -46,18 +46,18 @@ flowchart LR
 - Req051 AC6 -> AC4. Proof: closure requires explicit placeholder and non-placeholder regression coverage.
 
 # Decision framing
-- Product framing: Required
-- Product signals: user segmentation, navigation and discoverability, engagement loop
-- Product follow-up: Create or link a product brief before implementation moves deeper into delivery.
-- Architecture framing: Required
-- Architecture signals: data model and persistence, contracts and integration, state and sync
-- Architecture follow-up: Create or link an architecture decision before irreversible implementation work starts.
+- Product framing: Not needed
+- Product signals: placeholder filtering is a bounded relevance correction inside the existing meeting briefing surface.
+- Product follow-up: No separate product brief is needed unless the work expands into a broader meeting taxonomy or planner behavior.
+- Architecture framing: Not needed
+- Architecture signals: the change stays within current meeting metadata and scoring heuristics.
+- Architecture follow-up: No ADR is expected unless placeholder detection becomes a reusable calendar-normalization subsystem.
 
 # Links
 - Product brief(s): (none yet)
 - Architecture decision(s): (none yet)
 - Request: `req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening`
-- Primary task(s): (none yet)
+- Primary task(s): `task_047_day_captain_remaining_digest_trust_fixes_orchestration`
 
 # AI Context
 - Summary: Reduce remaining digest trust issues by deduplicating alias copies of the same alert, filtering placeholder meetings, and requiring...

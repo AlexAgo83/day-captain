@@ -1,10 +1,10 @@
 ## item_097_day_captain_alias_level_operational_alert_dedupe - Day Captain alias level operational alert dedupe
-> From version: 1.9.0
+> From version: 1.9.0  
 > Schema version: 1.0
 > Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Understanding: 99%
+> Confidence: 97%
+> Progress: 5%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -48,18 +48,18 @@ flowchart LR
 - Req051 AC6 -> AC4. Proof: the item closes only with duplicate and non-duplicate regression coverage.
 
 # Decision framing
-- Product framing: Required
-- Product signals: user segmentation, navigation and discoverability, engagement loop
-- Product follow-up: Create or link a product brief before implementation moves deeper into delivery.
-- Architecture framing: Required
-- Architecture signals: data model and persistence, contracts and integration, state and sync
-- Architecture follow-up: Create or link an architecture decision before irreversible implementation work starts.
+- Product framing: Not needed
+- Product signals: bounded digest ranking adjustment already fully framed by the request and backlog item.
+- Product follow-up: No separate product brief is needed unless the grouping behavior expands into a broader inbox taxonomy.
+- Architecture framing: Not needed
+- Architecture signals: conservative grouping logic remains local to the existing scoring pipeline.
+- Architecture follow-up: No ADR is expected unless the dedupe key evolves into a reusable cross-source identity contract.
 
 # Links
 - Product brief(s): (none yet)
 - Architecture decision(s): (none yet)
 - Request: `req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening`
-- Primary task(s): (none yet)
+- Primary task(s): `task_047_day_captain_remaining_digest_trust_fixes_orchestration`
 
 # AI Context
 - Summary: Reduce remaining digest trust issues by deduplicating alias copies of the same alert, filtering placeholder meetings, and requiring...
