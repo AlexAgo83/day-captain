@@ -494,6 +494,57 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn(">Day Captain © 2026<", payload.delivery_payload["html_body"])
         self.assertIn("https://github.com/AlexAgo83/day-captain", payload.delivery_payload["html_body"])
 
+    def test_renders_processing_duration_below_footer_signature(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-5b",
+            generated_at=now,
+            window_start=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            command_mailbox="daycaptain@example.com",
+            generation_duration_seconds=12.3,
+        )
+
+        self.assertIn("Day Captain © 2026: https://github.com/AlexAgo83/day-captain", payload.delivery_body)
+        self.assertIn("Temps de génération: 12,3 s", payload.delivery_body)
+        self.assertLess(
+            payload.delivery_body.index("Day Captain © 2026: https://github.com/AlexAgo83/day-captain"),
+            payload.delivery_body.index("Temps de génération: 12,3 s"),
+        )
+        self.assertIn(">Day Captain © 2026<", payload.delivery_payload["html_body"])
+        self.assertIn("Temps de génération: 12,3 s", payload.delivery_payload["html_body"])
+        self.assertEqual(payload.delivery_payload["generation_duration_seconds"], 12.3)
+
+    def test_omits_meeting_open_action_when_no_source_link_exists(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-5c",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Point equipe sans lien",
+                    summary="Aujourd'hui, 10:00 | Lead | Teams",
+                    section_name="upcoming_meetings",
+                    source_kind="meeting",
+                    source_id="mtg-no-link",
+                    score=2.5,
+                ),
+            ),
+        )
+
+        self.assertNotIn("Ouvrir la réunion", payload.delivery_body)
+        self.assertNotIn("Open meeting", payload.delivery_body)
+        self.assertNotIn("Point equipe sans lien</a>", payload.delivery_payload["html_body"])
+
     def test_renders_external_news_capsule_between_weather_and_overview(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

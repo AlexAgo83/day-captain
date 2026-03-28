@@ -347,6 +347,21 @@ class DayCaptainApplicationTest(unittest.TestCase):
         self.assertIn("Financial Times", payload.delivery_body)
         self.assertEqual(payload.delivery_payload["external_news"][0]["headline"], "ECB signals slower cuts")
 
+    def test_morning_digest_captures_generation_duration_for_footer(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(target_users=("alex@example.com",)),
+            storage=InMemoryStorage(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now, force=True, target_user_id="alex@example.com")
+
+        self.assertIsInstance(payload.delivery_payload["generation_duration_seconds"], float)
+        self.assertGreaterEqual(payload.delivery_payload["generation_duration_seconds"], 0.0)
+        self.assertIn("Processing time:", payload.delivery_body)
+
     def test_morning_digest_omits_external_news_when_provider_fails(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         app = build_application(

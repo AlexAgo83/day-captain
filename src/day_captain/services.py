@@ -346,6 +346,7 @@ LANGUAGE_COPY = {
             "recall_today": "Recall today",
             "recall_week": "Recall week",
             "copyright": "Day Captain © {year}",
+            "processing_time": "Processing time",
         },
         "item_actions": {
             "open_mail": "Open in Outlook",
@@ -487,6 +488,7 @@ LANGUAGE_COPY = {
             "recall_today": "Rappel aujourd'hui",
             "recall_week": "Rappel semaine",
             "copyright": "Day Captain © {year}",
+            "processing_time": "Temps de génération",
         },
         "item_actions": {
             "open_mail": "Ouvrir dans Outlook",
@@ -662,6 +664,29 @@ def _weather_label(weather_code: int, language: str) -> str:
 
 def _format_temperature(value: float) -> str:
     return "{0}C".format(int(round(value)))
+
+
+def _format_processing_duration(value_seconds: Optional[float], language: str) -> str:
+    if value_seconds is None:
+        return ""
+    seconds = max(0.0, float(value_seconds))
+    if seconds < 1.0:
+        return "<1 s"
+    if seconds < 60.0:
+        rendered = "{0:.1f}".format(seconds).rstrip("0").rstrip(".")
+        if _normalize_language(language) == "fr":
+            rendered = rendered.replace(".", ",")
+        return "{0} s".format(rendered)
+    minutes = int(seconds // 60)
+    remaining_seconds = int(round(seconds - (minutes * 60)))
+    if remaining_seconds >= 60:
+        minutes += 1
+        remaining_seconds = 0
+    if minutes < 60:
+        return "{0} min {1:02d} s".format(minutes, remaining_seconds)
+    hours = minutes // 60
+    remaining_minutes = minutes % 60
+    return "{0} h {1:02d} min".format(hours, remaining_minutes)
 
 
 def _contains_any(text: str, patterns: Iterable[str]) -> bool:
@@ -2344,6 +2369,7 @@ class StructuredDigestRenderer:
         weather: Optional[WeatherSnapshot] = None,
         external_news: Sequence[ExternalNewsItem] = (),
         meeting_horizon: Optional[Mapping[str, str]] = None,
+        generation_duration_seconds: Optional[float] = None,
     ) -> DigestPayload:
         sections = {name: [] for name in SECTION_NAMES}
         for item in prioritized_items:
@@ -2389,6 +2415,7 @@ class StructuredDigestRenderer:
             weather,
             external_news,
             meeting_horizon or {},
+            generation_duration_seconds,
         )
         delivery_html = self._build_delivery_html(
             generated_at,
@@ -2400,7 +2427,9 @@ class StructuredDigestRenderer:
             weather,
             external_news,
             meeting_horizon or {},
+            generation_duration_seconds,
         )
+        normalized_generation_duration_seconds = None if generation_duration_seconds is None else round(max(0.0, float(generation_duration_seconds)), 3)
         delivery_payload = {
             "mode": delivery_mode,
             "run_id": run_id,
@@ -2433,6 +2462,7 @@ class StructuredDigestRenderer:
             "command_mailbox": command_mailbox,
             "meeting_horizon": dict(meeting_horizon or {}),
             "digest_language": self.digest_language,
+            "generation_duration_seconds": normalized_generation_duration_seconds,
             "sections": {
                 name: [self._entry_payload(item) for item in sections[name]]
                 for name in SECTION_NAMES
@@ -2527,6 +2557,7 @@ class StructuredDigestRenderer:
         weather: Optional[WeatherSnapshot],
         external_news: Sequence[ExternalNewsItem],
         meeting_horizon: Mapping[str, str],
+        generation_duration_seconds: Optional[float],
     ) -> str:
         localized = _language_copy(self.digest_language)
         generated_label = _format_localized_timestamp(generated_at, self.display_timezone, self.digest_language)
@@ -2569,7 +2600,7 @@ class StructuredDigestRenderer:
                 for item in items:
                     lines.extend(self._body_item_lines(item))
             lines.append("")
-        footer_lines = self._footer_body_lines(command_mailbox, generated_at)
+        footer_lines = self._footer_body_lines(command_mailbox, generated_at, generation_duration_seconds)
         if footer_lines:
             lines.extend(footer_lines)
             lines.append("")
@@ -2586,6 +2617,7 @@ class StructuredDigestRenderer:
         weather: Optional[WeatherSnapshot],
         external_news: Sequence[ExternalNewsItem],
         meeting_horizon: Mapping[str, str],
+        generation_duration_seconds: Optional[float],
     ) -> str:
         localized = _language_copy(self.digest_language)
         generated_label = _format_localized_timestamp(generated_at, self.display_timezone, self.digest_language)
@@ -2652,7 +2684,7 @@ class StructuredDigestRenderer:
                 for item in items:
                     parts.append(self._html_item(item))
             parts.append("</section>")
-        footer_html = self._footer_html(command_mailbox, generated_at)
+        footer_html = self._footer_html(command_mailbox, generated_at, generation_duration_seconds)
         if footer_html:
             parts.append(footer_html)
         parts.append("</div></body></html>")
@@ -3025,21 +3057,35 @@ class StructuredDigestRenderer:
             return str(localized["cooler"])
         return str(localized["same"])
 
-    def _footer_body_lines(self, command_mailbox: str, generated_at: datetime) -> Sequence[str]:
+    def _footer_body_lines(
+        self,
+        command_mailbox: str,
+        generated_at: datetime,
+        generation_duration_seconds: Optional[float],
+    ) -> Sequence[str]:
         mailbox = str(command_mailbox or "").strip()
         if "@" not in mailbox:
             return ()
         footer = _language_copy(self.digest_language)["footer"]
-        return (
+        lines = [
             str(footer["label"]),
             str(footer["hint"]),
             "- {0}: {1} (subject/body: recall)".format(footer["recall"], mailbox),
             "- {0}: {1} (subject/body: recall-today)".format(footer["recall_today"], mailbox),
             "- {0}: {1} (subject/body: recall-week)".format(footer["recall_week"], mailbox),
             "{0}: {1}".format(str(footer["copyright"]).format(year=generated_at.year), PROJECT_REPOSITORY_URL),
-        )
+        ]
+        duration_text = _format_processing_duration(generation_duration_seconds, self.digest_language)
+        if duration_text:
+            lines.append("{0}: {1}".format(str(footer["processing_time"]), duration_text))
+        return tuple(lines)
 
-    def _footer_html(self, command_mailbox: str, generated_at: datetime) -> str:
+    def _footer_html(
+        self,
+        command_mailbox: str,
+        generated_at: datetime,
+        generation_duration_seconds: Optional[float],
+    ) -> str:
         mailbox = str(command_mailbox or "").strip()
         if "@" not in mailbox:
             return ""
@@ -3076,6 +3122,14 @@ class StructuredDigestRenderer:
                 copyright_html,
             )
         )
+        duration_text = _format_processing_duration(generation_duration_seconds, self.digest_language)
+        if duration_text:
+            parts.append(
+                "<p style=\"margin:6px 0 0;font-size:12px;color:#94a3b8;\">{0}: {1}</p>".format(
+                    self._html_escape(str(footer["processing_time"])),
+                    self._html_escape(duration_text),
+                )
+            )
         parts.append("</section>")
         return "".join(parts)
 
