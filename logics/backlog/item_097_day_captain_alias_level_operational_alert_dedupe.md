@@ -1,10 +1,10 @@
 ## item_097_day_captain_alias_level_operational_alert_dedupe - Day Captain alias level operational alert dedupe
 > From version: 1.9.0  
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 99%
-> Confidence: 97%
-> Progress: 5%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -78,3 +78,4 @@ flowchart LR
 - Derived from request `req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening`.
 - Source file: `logics/request/req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening.md`.
 - Request context seeded into this backlog item from `logics/request/req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening.md`.
+- Closed on Saturday, March 28, 2026 through `task_047_day_captain_remaining_digest_trust_fixes_orchestration` after adding conservative alias-level operational alert grouping with non-merge safeguards.

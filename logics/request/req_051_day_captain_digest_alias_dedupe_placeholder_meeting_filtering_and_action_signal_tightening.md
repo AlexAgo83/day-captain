@@ -1,9 +1,9 @@
 ## req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening - Day Captain digest alias dedupe placeholder meeting filtering and action signal tightening
 > From version: 1.9.0
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
@@ -88,9 +88,11 @@ flowchart TD
 
 # Backlog
 
-- `item_097_day_captain_alias_level_operational_alert_dedupe`
-- `item_098_day_captain_placeholder_meeting_filtering_and_compact_rendering`
-- `item_099_day_captain_stronger_action_gating_for_informational_mail`
+- `item_097_day_captain_alias_level_operational_alert_dedupe` - Status: `Done`.
+- `item_098_day_captain_placeholder_meeting_filtering_and_compact_rendering` - Status: `Done`.
+- `item_099_day_captain_stronger_action_gating_for_informational_mail` - Status: `Done`.
+- `task_047_day_captain_remaining_digest_trust_fixes_orchestration` - Status: `Done`.
 # Notes
 - Created on Saturday, March 28, 2026 after live digest review identified duplicate alias alerts, placeholder calendar slots, and remaining false-positive action placement.
 - Examples are intentionally generic in this request to avoid embedding business-sensitive mailbox content in workflow docs.
+- Closed on Saturday, March 28, 2026 after shipping conservative alias-level alert dedupe, placeholder-meeting filtering, and stronger action gating with regression coverage.

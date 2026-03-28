@@ -1,10 +1,10 @@
 ## task_047_day_captain_remaining_digest_trust_fixes_orchestration - Day Captain remaining digest trust fixes orchestration
 > From version: 1.9.0
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 96%
-> Progress: 0%
+> Status: Done
+> Understanding: 100%
+> Confidence: 98%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -31,13 +31,13 @@ flowchart TD
 ```
 
 # Plan
-- [ ] 1. Confirm the shared digest-intelligence scope for alias dedupe, placeholder-meeting handling, and stronger action gating, including AC mapping across backlog items `097` to `099`.
-- [ ] 2. Add a conservative alias-level dedupe key for repeated operational alerts and render grouped duplicates without hiding distinct incidents.
-- [ ] 3. Filter or compact placeholder meetings using bounded metadata and preview signals, while preserving normal handling for non-placeholder meetings.
-- [ ] 4. Tighten `Actions to take` / `Actions a mener` routing so direct-recipient presence alone is not enough for informational mail, while preserving valid operational and transactional alerts.
-- [ ] 5. Validate the scoring and rendering paths together, then update the linked Logics docs so the request and backlog items reference this orchestration task.
-- [ ] CHECKPOINT: leave the current wave commit-ready and update the linked Logics docs before continuing.
-- [ ] FINAL: Capture validation results, close related docs if delivery is complete, and leave a report covering the three trust fixes.
+- [x] 1. Confirm the shared digest-intelligence scope for alias dedupe, placeholder-meeting handling, and stronger action gating, including AC mapping across backlog items `097` to `099`.
+- [x] 2. Add a conservative alias-level dedupe key for repeated operational alerts and render grouped duplicates without hiding distinct incidents.
+- [x] 3. Filter or compact placeholder meetings using bounded metadata and preview signals, while preserving normal handling for non-placeholder meetings.
+- [x] 4. Tighten `Actions to take` / `Actions a mener` routing so direct-recipient presence alone is not enough for informational mail, while preserving valid operational and transactional alerts.
+- [x] 5. Validate the scoring and rendering paths together, then update the linked Logics docs so the request and backlog items reference this orchestration task.
+- [x] CHECKPOINT: leave the current wave commit-ready and update the linked Logics docs before continuing.
+- [x] FINAL: Capture validation results, close related docs if delivery is complete, and leave a report covering the three trust fixes.
 
 # Delivery checkpoints
 - Each completed wave should leave the repository in a coherent, commit-ready state.
@@ -77,11 +77,18 @@ flowchart TD
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc --refs req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening item_097_day_captain_alias_level_operational_alert_dedupe item_098_day_captain_placeholder_meeting_filtering_and_compact_rendering item_099_day_captain_stronger_action_gating_for_informational_mail task_047_day_captain_remaining_digest_trust_fixes_orchestration
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated during completed waves and at closure.
-- [ ] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated during completed waves and at closure.
+- [x] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Saturday, March 28, 2026 by consolidating the three remaining digest-trust backlog items into one shared orchestration task.
+- Completed on Saturday, March 28, 2026.
+- Wave 1 commit: `7844cf8` - add conservative alias-level operational alert dedupe, filter placeholder meetings, and require `direct_follow_up_signal` before informational mail can enter the action section.
+- Validation:
+  - `PYTHONPATH=src python3 -m unittest tests.test_scoring tests.test_digest_renderer tests.test_llm`
+  - `PYTHONPATH=src python3 -m unittest discover -s tests`
+  - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+  - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc --refs req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening item_097_day_captain_alias_level_operational_alert_dedupe item_098_day_captain_placeholder_meeting_filtering_and_compact_rendering item_099_day_captain_stronger_action_gating_for_informational_mail task_047_day_captain_remaining_digest_trust_fixes_orchestration`
