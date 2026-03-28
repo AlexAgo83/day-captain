@@ -13,4 +13,6 @@ day_captain.sqlite3
 *.egg-info/
 
 logics/external/private/
+logics/.cache/
+logics/hybrid_assist*.jsonl
 tmp/
