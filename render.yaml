@@ -3,7 +3,7 @@ services:
     name: day-captain
     env: python
     buildCommand: pip install -e .
-    startCommand: gunicorn --timeout 90 --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"
+    startCommand: gunicorn --worker-class gthread --threads 4 --timeout 90 --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"
     healthCheckPath: /healthz
     envVars:
       - key: DAY_CAPTAIN_ENV

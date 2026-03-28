@@ -554,7 +554,7 @@ Hosted mode is wired for Postgres through `DAY_CAPTAIN_DATABASE_URL`.
 The repository includes [`render.yaml`](./render.yaml) for a first hosted deployment path:
 - Render web service
 - Render Postgres
-- `python -m day_captain serve`
+- `gunicorn --worker-class gthread --threads 4 --timeout 90 --bind 0.0.0.0:$PORT "day_captain.web:create_web_app()"`
 - `/healthz` healthcheck
 
 Expected hosted secrets/config include:
