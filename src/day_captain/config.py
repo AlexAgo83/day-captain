@@ -228,12 +228,15 @@ class DayCaptainSettings:
             return
         if not self.resolved_database_url():
             raise ValueError("DAY_CAPTAIN_DATABASE_URL is required in hosted environments for durable storage.")
-        if self.resolved_graph_auth_mode() == "delegated" and not (
-            self.graph_client_id or self.graph_access_token
-        ):
-            raise ValueError(
-                "Hosted delegated Graph execution requires DAY_CAPTAIN_GRAPH_CLIENT_ID or DAY_CAPTAIN_GRAPH_ACCESS_TOKEN."
-            )
+        if self.email_command_allowed_senders and self.resolved_graph_auth_mode() != "app_only":
+            raise ValueError("Hosted email-command recall requires app-only Graph auth.")
+        if self.resolved_graph_auth_mode() == "delegated":
+            if not self.graph_client_id:
+                raise ValueError("DAY_CAPTAIN_GRAPH_CLIENT_ID is required for hosted delegated Graph auth.")
+            if not self.graph_refresh_token:
+                raise ValueError(
+                    "DAY_CAPTAIN_GRAPH_REFRESH_TOKEN is required for hosted delegated Graph auth so unattended runs have a durable refresh path."
+                )
         if self.resolved_graph_auth_mode() == "app_only":
             if not self.graph_client_id:
                 raise ValueError("DAY_CAPTAIN_GRAPH_CLIENT_ID is required for hosted app-only auth.")
@@ -244,8 +247,6 @@ class DayCaptainSettings:
         if self.delivery_mode == "graph_send" and not self.graph_send_enabled:
             raise ValueError("DAY_CAPTAIN_GRAPH_SEND_ENABLED=true is required for hosted graph_send delivery.")
         if self.email_command_allowed_senders:
-            if self.resolved_graph_auth_mode() != "app_only":
-                raise ValueError("Hosted email-command recall requires app-only Graph auth.")
             if not self.graph_send_enabled:
                 raise ValueError(
                     "DAY_CAPTAIN_GRAPH_SEND_ENABLED=true is required for hosted email-command recall."
