@@ -27,7 +27,7 @@
 
 ```mermaid
 %% logics-kind: request
-%% logics-signature: request|day-captain-digest-alias-dedupe-placehol|collapse-duplicate-operati|ac1-near-identical-operational-alert
+%% logics-signature: request|day-captain-digest-alias-dedupe-placehol|collapse-duplicate-operational-alerts-re|ac1-near-identical-operational-alerts-de
 flowchart TD
     A[Collected mail and meetings] --> B[Normalize and score items]
     B --> C[Alias duplicate grouping]
@@ -87,8 +87,10 @@ flowchart TD
 - Skip when: Skip when the work is only about news configuration, broad spam handling, or unrelated delivery features.
 
 # Backlog
-- (none yet)
 
+- `item_097_day_captain_alias_level_operational_alert_dedupe`
+- `item_098_day_captain_placeholder_meeting_filtering_and_compact_rendering`
+- `item_099_day_captain_stronger_action_gating_for_informational_mail`
 # Notes
 - Created on Saturday, March 28, 2026 after live digest review identified duplicate alias alerts, placeholder calendar slots, and remaining false-positive action placement.
 - Examples are intentionally generic in this request to avoid embedding business-sensitive mailbox content in workflow docs.
