@@ -1,7 +1,7 @@
 ## req_047_day_captain_weather_failure_observability_and_degraded_path_logging - Day Captain weather failure observability and degraded path logging
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 97%
 > Complexity: Low

@@ -1,9 +1,9 @@
 ## task_043_day_captain_external_news_capsule_orchestration - Orchestrate the external-news capsule contract, rendering, and runtime fallback
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -21,10 +21,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Define the external-news capsule contract in the digest model and configuration surface, including bounded item count and omit behavior.
-- [ ] 2. Add text and HTML rendering for a clearly labeled external-news capsule with visible source attribution and links.
-- [ ] 3. Integrate a bounded provider path with clean timeout, empty-result, and malformed-result fallback behavior so the core digest still completes normally.
-- [ ] FINAL: Add regression coverage, update docs, and sync linked Logics artifacts.
+- [x] 1. Define the external-news capsule contract in the digest model and configuration surface, including bounded item count and omit behavior.
+- [x] 2. Add text and HTML rendering for a clearly labeled external-news capsule with visible source attribution and links.
+- [x] 3. Integrate a bounded provider path with clean timeout, empty-result, and malformed-result fallback behavior so the core digest still completes normally.
+- [x] FINAL: Add regression coverage, update docs, and sync linked Logics artifacts.
 
 # AC Traceability
 - Req038 AC1 -> Plan steps 1 and 2. Proof: the separate capsule contract is defined first and then rendered.
@@ -45,13 +45,13 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] External-news capsule contract is implemented and bounded.
-- [ ] Source-backed rendering works in both text and HTML output.
-- [ ] Provider failure does not break the core digest path.
-- [ ] Tests and docs cover the new contract and fallback behavior.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] External-news capsule contract is implemented and bounded.
+- [x] Source-backed rendering works in both text and HTML output.
+- [x] Provider failure does not break the core digest path.
+- [x] Tests and docs cover the new contract and fallback behavior.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 23, 2026 from product direction requesting a short external-news recap inside the daily digest.
-
+- Completed on Saturday, March 28, 2026 with bounded RSS-backed provider support, source-attributed rendering, fallback-safe runtime behavior, and regression coverage.

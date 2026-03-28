@@ -1,9 +1,9 @@
 ## item_090_day_captain_recent_digest_memory_and_cross_day_continuity_signals - Add recent digest memory and cross-day continuity signals
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -52,7 +52,7 @@ flowchart LR
 # Links
 - Request: `req_041_day_captain_recent_digest_memory_for_cross_day_context`
 - Related request(s): `req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation`
-- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Ready`)
+- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Done`)
 
 # Priority
 - Impact: High - bounded continuity can materially improve digest usefulness and trust.

@@ -1,9 +1,9 @@
 ## task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration - Orchestrate delivery recovery and delegated-auth contract corrections
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -22,10 +22,10 @@ flowchart LR
 ```
 
 # Plan
-- [ ] 1. Correct hosted delivery-state transitions so clearly pre-send Graph failures become `delivery_failed` and no longer block the next digest run.
-- [ ] 2. Tighten hosted delegated-auth validation so production-like configs must include a real unattended delegated token path.
-- [ ] 3. Fix delegated explicit-token versus cache precedence so stale cached scopes or user identity cannot shadow the configured runtime token.
-- [ ] FINAL: Add focused regression tests, update docs, and sync linked Logics artifacts.
+- [x] 1. Correct hosted delivery-state transitions so clearly pre-send Graph failures become `delivery_failed` and no longer block the next digest run.
+- [x] 2. Tighten hosted delegated-auth validation so production-like configs must include a real unattended delegated token path.
+- [x] 3. Fix delegated explicit-token versus cache precedence so stale cached scopes or user identity cannot shadow the configured runtime token.
+- [x] FINAL: Add focused regression tests, update docs, and sync linked Logics artifacts.
 
 # AC Traceability
 - Req039 AC1 -> Plan step 1. Proof: pre-send failure classification belongs to the delivery recovery step.
@@ -45,12 +45,13 @@ flowchart LR
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Clearly pre-send Graph delivery failures no longer leave stale `delivery_pending` runs.
-- [ ] Hosted delegated validation rejects non-runnable production-like auth shapes.
-- [ ] Explicit delegated tokens no longer inherit stale cached identity or scope metadata.
-- [ ] Tests and docs cover the new recovery and auth contracts.
-- [ ] Linked request/backlog/task docs updated.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Clearly pre-send Graph delivery failures no longer leave stale `delivery_pending` runs.
+- [x] Hosted delegated validation rejects non-runnable production-like auth shapes.
+- [x] Explicit delegated tokens no longer inherit stale cached identity or scope metadata.
+- [x] Tests and docs cover the new recovery and auth contracts.
+- [x] Linked request/backlog/task docs updated.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Monday, March 23, 2026 from a project audit focused on delivery recovery and delegated-auth correctness.
+- Completed on Saturday, March 28, 2026 with hosted delegated validation hardening, explicit-token/cache precedence fixes, and validated delivery recovery behavior.

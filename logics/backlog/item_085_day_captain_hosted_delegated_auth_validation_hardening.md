@@ -1,9 +1,9 @@
 ## item_085_day_captain_hosted_delegated_auth_validation_hardening - Tighten hosted delegated-auth validation to require a real unattended token path
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -43,7 +43,7 @@ flowchart LR
 
 # Links
 - Request: `req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections`
-- Primary task(s): `task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration` (`Ready`)
+- Primary task(s): `task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration` (`Done`)
 
 # Priority
 - Impact: High - false-positive hosted validation wastes operator time and causes avoidable production failures.
@@ -52,4 +52,3 @@ flowchart LR
 # Notes
 - Derived from `req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections`.
 - The core goal is alignment between what validation approves and what runtime can actually execute.
-

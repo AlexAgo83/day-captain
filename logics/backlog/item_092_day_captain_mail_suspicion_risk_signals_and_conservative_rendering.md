@@ -1,9 +1,9 @@
 ## item_092_day_captain_mail_suspicion_risk_signals_and_conservative_rendering - Add suspicious-mail risk signals and conservative digest handling
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Security
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -55,7 +55,7 @@ flowchart LR
 # Links
 - Request: `req_043_day_captain_mail_anti_scam_and_phishing_risk_signals`
 - Related request(s): `req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation`
-- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Ready`)
+- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Done`)
 
 # Priority
 - Impact: High - suspicious mails summarized as normal work can materially reduce trust in the assistant.

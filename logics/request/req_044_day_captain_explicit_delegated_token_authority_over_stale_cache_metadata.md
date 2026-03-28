@@ -1,7 +1,7 @@
 ## req_044_day_captain_explicit_delegated_token_authority_over_stale_cache_metadata - Day Captain explicit delegated token authority over stale cache metadata
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 96%
 > Complexity: Medium

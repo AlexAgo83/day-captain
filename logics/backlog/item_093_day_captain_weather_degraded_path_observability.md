@@ -1,9 +1,9 @@
 ## item_093_day_captain_weather_degraded_path_observability - Make weather degraded-path behavior observable without breaking digests
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 99%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Low
 > Theme: Observability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -45,7 +45,7 @@ flowchart LR
 
 # Links
 - Request: `req_047_day_captain_weather_failure_observability_and_degraded_path_logging`
-- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Ready`)
+- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - missing observability weakens diagnosability more than end-user product behavior.

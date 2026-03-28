@@ -1,10 +1,10 @@
 ## task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration - Orchestrate mail intelligence foundations and runtime clarity improvements
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 97%
 > Confidence: 94%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Architecture
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -26,13 +26,13 @@ flowchart TD
 ```
 
 # Plan
-- [ ] 1. Introduce structured mail-thread and agenda parsing foundations so the digest pipeline no longer depends directly on flat raw source records for core interpretation.
-- [ ] 2. Define and migrate toward a typed digest-card contract for renderer-critical semantics, reducing reliance on ad hoc `context_metadata` keys.
-- [ ] 3. Decompose the digest services concentration along coherent seams so scoring, rendering, and overview behavior no longer live in one oversized module.
-- [ ] 4. Add bounded recent digest memory and cross-day continuity signals using the last 2 to 3 completed runs as structured secondary context.
-- [ ] 5. Add bounded mail action-ownership interpretation and suspicious-mail risk signals so wording, confidence, and handling become more conservative when ownership or trust is weak.
-- [ ] 6. Improve runtime clarity around non-fatal weather degradation and local Graph-backed execution so failures are observable and stub runtime remains explicit rather than accidental.
-- [ ] FINAL: Run focused and broad regression coverage, update docs and linked Logics artifacts, and capture the final orchestration report.
+- [x] 1. Introduce structured mail-thread and agenda parsing foundations so the digest pipeline no longer depends directly on flat raw source records for core interpretation.
+- [x] 2. Define and migrate toward a typed digest-card contract for renderer-critical semantics, reducing reliance on ad hoc `context_metadata` keys.
+- [x] 3. Decompose the digest services concentration along coherent seams so scoring, rendering, and overview behavior no longer live in one oversized module.
+- [x] 4. Add bounded recent digest memory and cross-day continuity signals using the last 2 to 3 completed runs as structured secondary context.
+- [x] 5. Add bounded mail action-ownership interpretation and suspicious-mail risk signals so wording, confidence, and handling become more conservative when ownership or trust is weak.
+- [x] 6. Improve runtime clarity around non-fatal weather degradation and local Graph-backed execution so failures are observable and stub runtime remains explicit rather than accidental.
+- [x] FINAL: Run focused and broad regression coverage, update docs and linked Logics artifacts, and capture the final orchestration report.
 
 # Delivery checkpoints
 - Each completed wave should leave the repository in a coherent, commit-ready state.
@@ -82,11 +82,12 @@ flowchart TD
 - python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated during completed waves and at closure.
-- [ ] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated during completed waves and at closure.
+- [x] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - Created on Saturday, March 28, 2026 after consolidating the new audit-driven requests into a coherent backlog workstream.
+- Completed on Saturday, March 28, 2026 with typed digest cards, structured parsing helpers, recent-memory continuity, ownership and suspicion handling, weather observability, and explicit local runtime fail-fast behavior.

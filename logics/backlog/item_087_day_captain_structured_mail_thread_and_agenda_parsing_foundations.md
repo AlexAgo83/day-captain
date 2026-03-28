@@ -1,9 +1,9 @@
 ## item_087_day_captain_structured_mail_thread_and_agenda_parsing_foundations - Introduce structured mail-thread and agenda parsing foundations
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 97%
 > Confidence: 94%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -49,7 +49,7 @@ flowchart LR
 # Links
 - Request: `req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation`
 - Related request(s): `req_046_day_captain_typed_digest_contract_and_services_decomposition`
-- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Ready`)
+- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Done`)
 
 # Priority
 - Impact: High - this is the parsing foundation for several upcoming mail and agenda intelligence features.

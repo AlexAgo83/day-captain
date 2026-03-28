@@ -1,9 +1,9 @@
 ## item_089_day_captain_digest_services_decomposition_and_pipeline_seams - Decompose the digest services module along coherent pipeline seams
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 97%
 > Confidence: 93%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Architecture
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -48,7 +48,7 @@ flowchart TD
 # Links
 - Request: `req_046_day_captain_typed_digest_contract_and_services_decomposition`
 - Related request(s): `req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation`
-- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Ready`)
+- Primary task(s): `task_045_day_captain_mail_intelligence_and_runtime_clarity_orchestration` (`Done`)
 
 # Priority
 - Impact: High - structural concentration is the main architecture risk in the current codebase.

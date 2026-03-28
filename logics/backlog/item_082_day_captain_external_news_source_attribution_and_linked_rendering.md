@@ -1,9 +1,9 @@
 ## item_082_day_captain_external_news_source_attribution_and_linked_rendering - Render source-backed external news entries with low-noise linked presentation
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 96%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -46,7 +46,7 @@ flowchart LR
 
 # Links
 - Request: `req_038_day_captain_external_news_capsule_in_daily_digest`
-- Primary task(s): `task_043_day_captain_external_news_capsule_orchestration` (`Ready`)
+- Primary task(s): `task_043_day_captain_external_news_capsule_orchestration` (`Done`)
 
 # Priority
 - Impact: High - source attribution and clear rendering are the trust-critical part of this feature.
@@ -55,4 +55,3 @@ flowchart LR
 # Notes
 - Derived from `req_038_day_captain_external_news_capsule_in_daily_digest`.
 - This item is intentionally about rendering trust, not provider fetch logic.
-

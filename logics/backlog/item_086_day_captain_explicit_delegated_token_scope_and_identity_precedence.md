@@ -1,9 +1,9 @@
 ## item_086_day_captain_explicit_delegated_token_scope_and_identity_precedence - Make explicit delegated tokens authoritative over stale cache metadata
 > From version: 1.8.0
-> Status: Ready
+> Status: Done
 > Understanding: 100%
 > Confidence: 97%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,7 +44,7 @@ flowchart LR
 
 # Links
 - Request: `req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections`
-- Primary task(s): `task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration` (`Ready`)
+- Primary task(s): `task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration` (`Done`)
 
 # Priority
 - Impact: Medium - this is a subtle bug, but it can cause hard-to-diagnose auth and delivery failures.
@@ -53,4 +53,3 @@ flowchart LR
 # Notes
 - Derived from `req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections`.
 - The intent is to stop stale cache metadata from shadowing a deliberately supplied runtime token.
-

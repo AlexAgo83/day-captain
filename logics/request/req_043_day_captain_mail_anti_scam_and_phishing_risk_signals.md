@@ -1,7 +1,7 @@
 ## req_043_day_captain_mail_anti_scam_and_phishing_risk_signals - Day Captain mail anti-scam and phishing risk signals
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
 > Complexity: Medium

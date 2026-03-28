@@ -1,7 +1,7 @@
 ## req_041_day_captain_recent_digest_memory_for_cross_day_context - Day Captain recent digest memory for cross-day context
 > From version: 1.8.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 98%
 > Confidence: 95%
 > Complexity: Medium
