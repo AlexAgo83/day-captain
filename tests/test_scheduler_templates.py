@@ -19,7 +19,8 @@ class MorningSchedulerTemplateTest(unittest.TestCase):
         content = (ROOT / "docs" / "day_captain_ops_morning_digest_scheduler.yml").read_text()
 
         self.assertIn("from day_captain.scheduler import should_run_weekday_morning_digest", content)
-        self.assertIn("should_run = should_run_weekday_morning_digest()", content)
+        self.assertIn("GITHUB_EVENT_SCHEDULE", content)
+        self.assertIn('trigger_schedule=os.getenv("GITHUB_EVENT_SCHEDULE")', content)
         self.assertIn('- cron: "45 6 * * 1-5"', content)
         self.assertIn('- cron: "45 7 * * 1-5"', content)
 
