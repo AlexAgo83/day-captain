@@ -26,6 +26,16 @@ class SchedulerGateTest(unittest.TestCase):
 
         self.assertTrue(should_run_weekday_morning_digest(now))
 
+    def test_weekday_morning_digest_gate_accepts_jittered_run_from_matching_summer_cron(self) -> None:
+        now = datetime(2026, 3, 30, 7, 11, tzinfo=timezone.utc)  # 09:11 CEST actual runner start
+
+        self.assertTrue(should_run_weekday_morning_digest(now, trigger_schedule="45 6 * * 1-5"))
+
+    def test_weekday_morning_digest_gate_rejects_jittered_run_from_non_matching_summer_cron(self) -> None:
+        now = datetime(2026, 3, 30, 8, 12, tzinfo=timezone.utc)  # 10:12 CEST actual runner start
+
+        self.assertFalse(should_run_weekday_morning_digest(now, trigger_schedule="45 7 * * 1-5"))
+
     def test_weekday_morning_digest_gate_rejects_weekend(self) -> None:
         now = datetime(2026, 3, 8, 7, 45, tzinfo=timezone.utc)  # Sunday 08:45 CET
 

@@ -37,6 +37,7 @@ jobs:
         id: gate
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
+          GITHUB_EVENT_SCHEDULE: ${{ github.event.schedule }}
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
           import os
@@ -45,7 +46,9 @@ jobs:
           if os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch":
               print("should_run=true")
           else:
-              should_run = should_run_weekday_morning_digest()
+              should_run = should_run_weekday_morning_digest(
+                  trigger_schedule=os.getenv("GITHUB_EVENT_SCHEDULE")
+              )
               print("should_run=" + ("true" if should_run else "false"))
           PY
 
