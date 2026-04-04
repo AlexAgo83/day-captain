@@ -16,3 +16,11 @@ logics/external/private/
 logics/.cache/
 logics/hybrid_assist*.jsonl
 tmp/
+
+# Generated Logics runtime artifacts
+.env.local
+logics/.cache/hybrid_assist_audit.jsonl
+logics/.cache/hybrid_assist_measurements.jsonl
+logics/hybrid_assist_audit.jsonl
+logics/hybrid_assist_measurements.jsonl
+logics/mutation_audit.jsonl
