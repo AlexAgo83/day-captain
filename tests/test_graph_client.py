@@ -1,9 +1,12 @@
 from datetime import datetime
 from datetime import timezone
+import io
 import json
 from pathlib import Path
 import sys
 import unittest
+from unittest import mock
+from urllib import error
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
@@ -234,6 +237,61 @@ class GraphAdapterTest(unittest.TestCase):
 
         with self.assertRaisesRegex(GraphApiError, "timed out after 45 seconds"):
             client.get_object("/me", access_token="token")
+
+    def test_get_object_retries_transient_http_errors_before_succeeding(self) -> None:
+        responses = [
+            error.HTTPError(
+                url="https://graph.microsoft.com/v1.0/me",
+                code=504,
+                msg="Gateway Timeout",
+                hdrs=None,
+                fp=io.BytesIO(b'{"error":{"code":"UnknownError"}}'),
+            ),
+            FakeUrlopenResponse({"id": "user-123", "userPrincipalName": "alex@example.com"}),
+        ]
+        seen_timeouts = []
+
+        def opener(req, timeout=0):
+            seen_timeouts.append(timeout)
+            response = responses.pop(0)
+            if isinstance(response, Exception):
+                raise response
+            return response
+
+        client = GraphApiClient(
+            base_url="https://graph.microsoft.com/v1.0",
+            timeout_seconds=45,
+            opener=opener,
+        )
+
+        with mock.patch("day_captain.adapters.graph.time.sleep") as sleep_mock:
+            payload = client.get_object("/me", access_token="token")
+
+        self.assertEqual(payload["id"], "user-123")
+        self.assertEqual(seen_timeouts, [45, 45])
+        sleep_mock.assert_called_once()
+
+    def test_get_object_does_not_retry_non_retryable_http_errors(self) -> None:
+        def opener(req, timeout=0):
+            raise error.HTTPError(
+                url=req.full_url,
+                code=400,
+                msg="Bad Request",
+                hdrs=None,
+                fp=io.BytesIO(b'{"error":{"code":"BadRequest"}}'),
+            )
+
+        client = GraphApiClient(
+            base_url="https://graph.microsoft.com/v1.0",
+            timeout_seconds=45,
+            opener=opener,
+        )
+
+        with mock.patch("day_captain.adapters.graph.time.sleep") as sleep_mock:
+            with self.assertRaisesRegex(GraphApiError, "Graph request failed with 400"):
+                client.get_object("/me", access_token="token")
+
+        sleep_mock.assert_not_called()
 
     def test_mail_collector_reads_from_inbox_only(self) -> None:
         api_client = CollectionRecorderApiClient()

@@ -4,6 +4,7 @@ from datetime import datetime
 from datetime import timezone
 import json
 import socket
+import time
 from typing import Any
 from typing import Callable
 from typing import Dict
@@ -118,6 +119,8 @@ def normalize_meeting(payload: Mapping[str, Any]) -> MeetingRecord:
 
 
 class GraphApiClient:
+    _retryable_http_statuses = {429, 500, 502, 503, 504}
+
     def __init__(
         self,
         base_url: str,
@@ -130,6 +133,39 @@ class GraphApiClient:
         parsed_base_url = urlparse(self.base_url)
         self._trusted_scheme = str(parsed_base_url.scheme or "").lower()
         self._trusted_netloc = str(parsed_base_url.netloc or "").lower()
+
+    def _retry_delay_seconds(self, attempt_index: int) -> float:
+        return min(0.5 * (2 ** max(0, attempt_index - 1)), 2.0)
+
+    def _get_object_once(
+        self,
+        path: str,
+        access_token: str,
+        params: Optional[Mapping[str, Any]] = None,
+        headers: Optional[Mapping[str, str]] = None,
+    ) -> Mapping[str, Any]:
+        url = self._build_url(path, params=params)
+        request_headers = {
+            "Authorization": "Bearer {0}".format(access_token),
+            "Accept": "application/json",
+        }
+        if headers:
+            request_headers.update(headers)
+        req = request.Request(url, headers=request_headers, method="GET")
+        try:
+            with self._opener(req, timeout=self.timeout_seconds) as response:
+                raw = response.read().decode("utf-8")
+        except error.HTTPError as exc:
+            detail = exc.read().decode("utf-8", errors="replace")
+            raise GraphApiError("Graph request failed with {0}: {1}".format(exc.code, detail)) from exc
+        except (TimeoutError, socket.timeout) as exc:
+            raise GraphApiError(_graph_timeout_error_message(self.timeout_seconds)) from exc
+        except error.URLError as exc:
+            raise GraphApiError("Unable to reach Microsoft Graph: {0}".format(exc.reason)) from exc
+        payload = json.loads(raw or "{}")
+        if not isinstance(payload, dict):
+            raise GraphApiError("Expected Graph JSON object response.")
+        return payload
 
     def _validate_absolute_graph_url(self, candidate_url: str) -> str:
         parsed = urlparse(candidate_url)
@@ -164,28 +200,31 @@ class GraphApiClient:
         params: Optional[Mapping[str, Any]] = None,
         headers: Optional[Mapping[str, str]] = None,
     ) -> Mapping[str, Any]:
-        url = self._build_url(path, params=params)
-        request_headers = {
-            "Authorization": "Bearer {0}".format(access_token),
-            "Accept": "application/json",
-        }
-        if headers:
-            request_headers.update(headers)
-        req = request.Request(url, headers=request_headers, method="GET")
-        try:
-            with self._opener(req, timeout=self.timeout_seconds) as response:
-                raw = response.read().decode("utf-8")
-        except error.HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="replace")
-            raise GraphApiError("Graph request failed with {0}: {1}".format(exc.code, detail)) from exc
-        except (TimeoutError, socket.timeout) as exc:
-            raise GraphApiError(_graph_timeout_error_message(self.timeout_seconds)) from exc
-        except error.URLError as exc:
-            raise GraphApiError("Unable to reach Microsoft Graph: {0}".format(exc.reason)) from exc
-        payload = json.loads(raw or "{}")
-        if not isinstance(payload, dict):
-            raise GraphApiError("Expected Graph JSON object response.")
-        return payload
+        last_error: Optional[GraphApiError] = None
+        for attempt_index in range(1, 4):
+            try:
+                return self._get_object_once(
+                    path,
+                    access_token=access_token,
+                    params=params,
+                    headers=headers,
+                )
+            except GraphApiError as exc:
+                last_error = exc
+                message = str(exc)
+                retryable_status = False
+                if message.startswith("Graph request failed with "):
+                    status_fragment = message[len("Graph request failed with ") :].split(":", 1)[0]
+                    try:
+                        retryable_status = int(status_fragment) in self._retryable_http_statuses
+                    except ValueError:
+                        retryable_status = False
+                if not retryable_status or attempt_index >= 3:
+                    raise
+                time.sleep(self._retry_delay_seconds(attempt_index))
+        if last_error is not None:
+            raise last_error
+        raise GraphApiError("Graph request failed unexpectedly.")
 
     def post_object(
         self,
