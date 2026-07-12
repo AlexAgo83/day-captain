@@ -1,6 +1,6 @@
 ## prod_001_day_captain_operations_scheduler_reliability - Day Captain operations scheduler reliability
 > Date: 2026-07-12
-> Status: Active
+> Status: Settled
 > Related request: `req_054_day_captain_power_automate_scheduler_migration`
 > Related backlog: `item_106_document_the_power_automate_scheduler_flows`
 > Related task: `task_049_orchestrate_power_automate_scheduler_migration`
