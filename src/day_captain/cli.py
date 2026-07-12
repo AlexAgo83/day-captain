@@ -109,7 +109,8 @@ def build_parser() -> argparse.ArgumentParser:
 
     metrics = subparsers.add_parser("digest-metrics", help="Report content-free metrics from exported digest JSON.")
     metrics.add_argument("inputs", nargs="+", help="One or more exported DigestPayload JSON files.")
-    subparsers.add_parser("digest-replay", help="Run the built-in identity-free replay without delivery.")
+    replay = subparsers.add_parser("digest-replay", help="Run the built-in identity-free replay without delivery.")
+    replay.add_argument("--output-dir", help="Optional directory for synthetic daily/weekly HTML and text artifacts.")
 
     health = subparsers.add_parser(
         "check-hosted-health",
@@ -447,6 +448,12 @@ def main(argv: Optional[list] = None) -> int:
     if args.command == "digest-replay":
         payloads = run_synthetic_replay()
         metrics = digest_metrics(payloads)
+        if args.output_dir:
+            output_dir = Path(args.output_dir)
+            output_dir.mkdir(parents=True, exist_ok=True)
+            for name, payload in (("daily", payloads[0]), ("weekly", payloads[-1])):
+                (output_dir / f"{name}.html").write_text(str(payload.delivery_payload.get("html_body") or ""), encoding="utf-8")
+                (output_dir / f"{name}.txt").write_text(payload.delivery_body, encoding="utf-8")
         print(json.dumps({
             "cases": ["authentication_suppression", "noise", "owned_deadline", "transactional_failure", "continuity", "meeting_conflict"],
             "gate": candidate_gate(metrics),

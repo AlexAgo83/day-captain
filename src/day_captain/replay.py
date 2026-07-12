@@ -29,4 +29,5 @@ def run_synthetic_replay() -> Sequence[DigestPayload]:
     )
     first = app.run_morning_digest(now=now, delivery_mode="json", force=True)
     second = app.run_morning_digest(now=now + timedelta(hours=1), delivery_mode="json", force=True)
-    return (first, second)
+    weekly = app.run_weekly_digest(now=now + timedelta(days=6), delivery_mode="json")
+    return (first, second, weekly)
