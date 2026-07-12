@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 
-from day_captain.digest_metrics import digest_metrics
+from day_captain.digest_metrics import candidate_gate, digest_metrics
 from day_captain.models import DigestEntry, DigestPayload
 
 
@@ -29,4 +29,15 @@ def test_reports_only_versioned_aggregate_metrics() -> None:
         "external_news_items": 0,
         "sensitive_suppressions": 2,
         "repeated_unchanged_suppressions": 0,
+    }
+
+
+def test_candidate_gate_compares_per_brief_rates_to_versioned_baseline() -> None:
+    result = candidate_gate({"briefs": 2, "median_visible_characters": 1804, "generic_actions": 0})
+
+    assert result["baseline_version"] == "public-safe-baseline-v1"
+    assert result["passed"] is True
+    assert result["checks"] == {
+        "visible_length_reduction_at_least_40_percent": True,
+        "generic_action_reduction_at_least_80_percent": True,
     }

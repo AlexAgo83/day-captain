@@ -25,7 +25,7 @@ from day_captain.hosted_jobs import wait_for_hosted_health
 from day_captain.models import parse_datetime
 from day_captain.models import digest_payload_from_dict
 from day_captain.models import to_jsonable
-from day_captain.digest_metrics import digest_metrics
+from day_captain.digest_metrics import candidate_gate, digest_metrics
 from day_captain.replay import run_synthetic_replay
 from day_captain.web import serve
 
@@ -446,9 +446,11 @@ def main(argv: Optional[list] = None) -> int:
         return 0
     if args.command == "digest-replay":
         payloads = run_synthetic_replay()
+        metrics = digest_metrics(payloads)
         print(json.dumps({
             "cases": ["authentication_suppression", "noise", "owned_deadline", "transactional_failure", "continuity", "meeting_conflict"],
-            "metrics": digest_metrics(payloads),
+            "gate": candidate_gate(metrics),
+            "metrics": metrics,
         }, indent=2, sort_keys=True))
         return 0
 
