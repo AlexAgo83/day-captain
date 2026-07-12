@@ -781,7 +781,9 @@ class DayCaptainApplication:
         meetings, meeting_horizon = self._collect_meetings(auth_context, current_time)
         weather = self._get_weather(current_time)
         external_news = self._get_external_news(current_time)
+        collected_message_count = len(messages)
         messages = tuple(message for message in messages if not is_sensitive_authentication_message(message))
+        sensitive_suppression_count = collected_message_count - len(messages)
         messages = _scoped_messages(messages, scoped_tenant_id, scoped_user_id)
         meetings = _scoped_meetings(meetings, scoped_tenant_id, scoped_user_id)
         self.storage.upsert_messages(messages, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
@@ -846,6 +848,14 @@ class DayCaptainApplication:
                 delivery_payload={
                     **dict(payload.delivery_payload),
                     "recent_memory": {"cleared": list(cleared_recent_items)},
+                },
+            )
+        if sensitive_suppression_count:
+            payload = replace(
+                payload,
+                delivery_payload={
+                    **dict(payload.delivery_payload),
+                    "usefulness_metrics": {"sensitive_suppressions": sensitive_suppression_count},
                 },
             )
         run_record = DigestRunRecord(

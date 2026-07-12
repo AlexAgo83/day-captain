@@ -114,6 +114,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
         wording_engine.rewrite.assert_called_once_with(())
         self.assertNotIn(secret, repr(payload))
         self.assertNotIn(secret, repr(storage.get_latest_completed_run()))
+        self.assertEqual(payload.delivery_payload["usefulness_metrics"], {"sensitive_suppressions": 1})
 
     def test_morning_digest_returns_sections_and_persists_run(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

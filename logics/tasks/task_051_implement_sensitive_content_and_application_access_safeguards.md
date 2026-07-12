@@ -2,9 +2,9 @@
 > From version: 1.0.0
 > Schema version: 1.0
 > Status: In progress
-> Understanding: 98
-> Confidence: 95
-> Progress: 65
+> Understanding: 100
+> Confidence: 98
+> Progress: 100
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -24,13 +24,13 @@ The production audit found that authentication content can enter the digest pipe
 8. Add synthetic unit, integration, storage, rendering, and multi-user-isolation tests.
 
 # Definition of Done (DoD)
-- [ ] Sensitive authentication content is removed before every downstream boundary, including errors and debug artifacts.
-- [ ] Sensitivity and suspicious-mail risk are separate typed outcomes with regression fixtures.
-- [ ] Suspicious-mail warnings require the documented signal threshold.
-- [ ] Mailbox reads and sends are bounded by explicit authorization and fail closed outside it.
-- [ ] Suppression telemetry and test evidence contain no mailbox content, identity, secret, token, or URL.
-- [ ] Retention and operator-access expectations are documented next to the implementation.
-- [ ] Focused and full automated validation passes.
+- [x] Sensitive authentication content is removed before every downstream boundary, including errors and debug artifacts.
+- [x] Sensitivity and suspicious-mail risk are separate typed outcomes with regression fixtures.
+- [x] Suspicious-mail warnings require the documented signal threshold.
+- [x] Mailbox reads and sends are bounded by explicit authorization and fail closed outside it.
+- [x] Suppression telemetry and test evidence contain no mailbox content, identity, secret, token, or URL.
+- [x] Retention and operator-access expectations are documented next to the implementation.
+- [x] Focused and full automated validation passes.
 
 # Backlog
 - `item_114_protect_sensitive_mailbox_content_and_govern_application_access`
@@ -56,7 +56,7 @@ The production audit found that authentication content can enter the digest pipe
 - 2026-07-12: implementation started. A deterministic authentication-message filter now runs immediately after collection and before tenant scoping, persistence, scoring, LLM rewriting, memory, rendering, and run storage.
 - 2026-07-12: synthetic regression proof confirms a one-time-code secret is absent from message storage, wording-engine input, rendered payload, and persisted run. Focused app, scoring, and renderer suite: 121 passed.
 - 2026-07-12: suspicious-mail classification now ignores a single weak urgency cue while retaining warnings for one strong or multiple independent signals. Existing target-user authorization fails closed outside `DAY_CAPTAIN_TARGET_USERS`; operator documentation now records mailbox-evidence access and retention boundaries. Expanded focused suite: 152 passed.
-- Remaining: content-free suppression counters, full-suite validation, and closeout evidence.
+- 2026-07-12: added the allow-listed aggregate `sensitive_suppressions` metric; it contains only an integer count. Full suite: 265 passed. Task implementation is ready for closeout.
 
 # AI Context
 - Summary: Implement implement sensitive-content and application-access safeguards.
