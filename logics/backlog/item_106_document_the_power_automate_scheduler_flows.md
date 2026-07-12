@@ -1,10 +1,10 @@
 ## item_106_document_the_power_automate_scheduler_flows - Document the Power Automate scheduler flows
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: operations
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -34,6 +34,8 @@
 - request-AC1 -> This backlog slice. Proof: AC1: The runbook names the exact hosted endpoints, headers, and JSON payload fields used by each flow.
 - request-AC3 -> This backlog slice. Proof: AC2: The runbook defines schedule semantics in Europe/Paris without requiring duplicate UTC cron gates.
 - request-AC6 -> This backlog slice. Proof: AC3: The runbook defines where DAY_CAPTAIN_SERVICE_URL, DAY_CAPTAIN_JOB_SECRET, and target users live in Power Platform without exposing values.
+- request-AC4 -> This backlog slice. Evidence needed: The private ops repository no longer has active GitHub Actions schedule triggers for Day Captain once the Power Automate flows have live successful-run evidence; manual workflow_dispatch remains available for emergency one-off runs.
+- request-AC5 -> This backlog slice. Evidence needed: Live validation evidence records at least one successful Power Automate morning-digest run and one successful weekly-digest test or manual run, including run IDs/timestamps, target-user scope, and observed delivery timing without exposing mailbox content or secrets.
 
 # Decision framing
 - Product framing: Not needed
@@ -54,3 +56,9 @@
 # Priority
 - Priority: High
 - Rationale: This is the prerequisite for creating tenant flows safely; without it, cutover risks secret leakage, duplicate sends, or an untestable scheduler.
+
+# Tasks
+- `task_049_orchestrate_power_automate_scheduler_migration`
+
+# Notes
+- Task `task_049_orchestrate_power_automate_scheduler_migration` was finished via `logics-manager flow finish task` on 2026-07-12.

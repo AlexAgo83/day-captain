@@ -3,65 +3,9 @@
     "max_docs": 56,
     "max_docs_per_ref": 8
   },
-  "changed_paths": [
-    "logics/backlog/item_109_reduce_digest_noise_and_enforce_concise_section_budgets.md",
-    "logics/backlog/item_110_generate_concrete_owner_aware_actions_and_deadlines.md",
-    "logics/backlog/item_111_turn_recent_run_memory_into_a_differential_commitment_view.md",
-    "logics/backlog/item_112_make_upcoming_meetings_preparation_and_conflict_aware.md",
-    "logics/backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md",
-    "logics/product/prod_002_day_captain_actionable_differential_brief.md",
-    "logics/request/req_055_day_captain_production_digest_actionability_improvement.md",
-    "logics/scaffold/digest-actionability-improvement-2026-07.json",
-    "logics/tasks/task_050_orchestrate_production_digest_actionability_improvements.md"
-  ],
-  "command": "logics-manager sync context-pack req_055_day_captain_production_digest_actionability_improvement item_109_reduce_digest_noise_and_enforce_concise_section_budgets item_110_generate_concrete_owner_aware_actions_and_deadlines item_111_turn_recent_run_memory_into_a_differential_commitment_view item_112_make_upcoming_meetings_preparation_and_conflict_aware item_113_improve_digest_presentation_personalization_and_usefulness_telemetry task_050_orchestrate_production_digest_actionability_improvements --mode diff-first --profile deep --handoff",
-  "companion_docs": [
-    {
-      "kind": "product",
-      "linked_refs": {
-        "item": [
-          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
-          "item_110_generate_concrete_owner_aware_actions_and_deadlines",
-          "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
-          "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
-          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry"
-        ],
-        "prod": [
-          "prod_002_day_captain_actionable_differential_brief"
-        ],
-        "req": [
-          "req_055_day_captain_production_digest_actionability_improvement"
-        ],
-        "task": [
-          "task_050_orchestrate_production_digest_actionability_improvements"
-        ]
-      },
-      "path": "logics/product/prod_002_day_captain_actionable_differential_brief.md",
-      "ref": "prod_002_day_captain_actionable_differential_brief",
-      "sections": {
-        "Goals": [
-          "- Cut routine digest reading effort by reducing repeated and generic content.",
-          "- Prioritize concrete user-owned commitments, deadlines, delivery failures, and meeting preparation.",
-          "- Use stable thread continuity to explain changes across runs instead of repeating complete mailbox snapshots.",
-          "- Keep ambient context such as weather and external news subordinate to operational work.",
-          "- Measure whether surfaced cards lead to useful opens, recalls, feedback, or completed follow-up."
-        ],
-        "Key product decisions": [
-          "- Use structured input as the source of truth for generated docs.",
-          "- Keep generated write paths local and repo-bounded."
-        ],
-        "Overview": [
-          "Make each digest answer what changed, what the recipient personally needs to do, when it is due, and what can safely be ignored."
-        ],
-        "References": [
-          "- Product back-reference: `req_055_day_captain_production_digest_actionability_improvement`",
-          "- Task back-reference: `task_050_orchestrate_production_digest_actionability_improvements`"
-        ]
-      },
-      "status": "Proposed",
-      "title": "Day Captain actionable differential brief"
-    }
-  ],
+  "changed_paths": [],
+  "command": "logics-manager sync context-pack req_055_day_captain_production_digest_actionability_improvement item_109_reduce_digest_noise_and_enforce_concise_section_budgets item_110_generate_concrete_owner_aware_actions_and_deadlines item_111_turn_recent_run_memory_into_a_differential_commitment_view item_112_make_upcoming_meetings_preparation_and_conflict_aware item_113_improve_digest_presentation_personalization_and_usefulness_telemetry task_050_orchestrate_production_digest_actionability_improvements --mode diff-first --profile deep",
+  "companion_docs": [],
   "docs": [
     {
       "ai_context": {
@@ -105,7 +49,7 @@
           "- Make digest usefulness measurable so future tuning is based on user behavior rather than fixed heuristic scores."
         ]
       },
-      "status": "Draft",
+      "status": "Ready",
       "title": "Day Captain production digest actionability improvement"
     },
     {
@@ -351,8 +295,11 @@
           "- Orchestrate the scaffolded request chain and keep sibling implementation slices linked."
         ],
         "Validation": [
-          "- Run `python3 -m logics_manager lint --require-status`.",
-          "- Run scaffold command tests."
+          "- Run focused tests for each backlog slice.",
+          "- Run `python3 -m pytest`.",
+          "- Run `logics-manager flow validate req_055_day_captain_production_digest_actionability_improvement --explain`.",
+          "- Run `logics-manager lint --require-status`.",
+          "- Run `logics-manager audit --group-by-doc`."
         ]
       },
       "status": "Ready",
@@ -360,14 +307,14 @@
     }
   ],
   "estimates": {
-    "char_count": 15530,
-    "companion_doc_count": 1,
+    "char_count": 13873,
+    "companion_doc_count": 0,
     "doc_count": 7
   },
-  "generated_at": "2026-07-12T17:30:49Z",
+  "generated_at": "2026-07-12T17:35:46Z",
   "handoff": {
-    "companion_doc_count": 1,
-    "enabled": true,
+    "companion_doc_count": 0,
+    "enabled": false,
     "source_refs": [
       "req_055_day_captain_production_digest_actionability_improvement",
       "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
@@ -377,7 +324,7 @@
       "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
       "task_050_orchestrate_production_digest_actionability_improvements"
     ],
-    "validation_summary_count": 1
+    "validation_summary_count": 0
   },
   "mode": "diff-first",
   "profile": "deep",
@@ -457,14 +404,5 @@
     "state": "ready",
     "target_version": "1.9.5"
   },
-  "validation_summary": [
-    {
-      "items": [
-        "- Run `python3 -m logics_manager lint --require-status`.",
-        "- Run scaffold command tests."
-      ],
-      "path": "logics/tasks/task_050_orchestrate_production_digest_actionability_improvements.md",
-      "ref": "task_050_orchestrate_production_digest_actionability_improvements"
-    }
-  ]
+  "validation_summary": []
 }

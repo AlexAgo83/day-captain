@@ -1,7 +1,7 @@
 ## req_054_day_captain_power_automate_scheduler_migration - Day Captain Power Automate scheduler migration
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Draft
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
 > Complexity: Medium

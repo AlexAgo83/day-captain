@@ -1,8 +1,8 @@
 ## prod_001_day_captain_operations_scheduler_reliability - Day Captain operations scheduler reliability
 > Date: 2026-07-12
-> Status: Proposed
+> Status: Active
 > Related request: `req_054_day_captain_power_automate_scheduler_migration`
-> Related backlog: `item_106_document_the_power_automate_scheduler_flows`, `item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling`, `item_108_cut_over_production_scheduling_and_capture_live_evidence`
+> Related backlog: `item_106_document_the_power_automate_scheduler_flows`
 > Related task: `task_049_orchestrate_power_automate_scheduler_migration`
 > Related architecture: (none yet)
 > Reminder: Update status, linked refs, scope, decisions, success signals, and open questions when you edit this doc.
@@ -46,5 +46,5 @@ flowchart LR
 - Operators can see where secrets live, how to test the flows, and how to roll back without exposing mailbox content or secrets.
 
 # References
-- Product back-reference: `req_054_day_captain_power_automate_scheduler_migration`
+- Product back-reference: `item_106_document_the_power_automate_scheduler_flows`
 - Task back-reference: `task_049_orchestrate_power_automate_scheduler_migration`

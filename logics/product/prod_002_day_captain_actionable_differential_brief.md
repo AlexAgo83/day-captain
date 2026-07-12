@@ -1,6 +1,6 @@
 ## prod_002_day_captain_actionable_differential_brief - Day Captain actionable differential brief
 > Date: 2026-07-12
-> Status: Proposed
+> Status: Active
 > Related request: `req_055_day_captain_production_digest_actionability_improvement`
 > Related backlog: `item_109_reduce_digest_noise_and_enforce_concise_section_budgets`, `item_110_generate_concrete_owner_aware_actions_and_deadlines`, `item_111_turn_recent_run_memory_into_a_differential_commitment_view`, `item_112_make_upcoming_meetings_preparation_and_conflict_aware`, `item_113_improve_digest_presentation_personalization_and_usefulness_telemetry`
 > Related task: `task_050_orchestrate_production_digest_actionability_improvements`
@@ -9,6 +9,15 @@
 
 # Overview
 Make each digest answer what changed, what the recipient personally needs to do, when it is due, and what can safely be ignored.
+
+```mermaid
+flowchart LR
+    Mail[Mail and calendar signals] --> Filter[Noise and ownership filter]
+    Filter --> Memory[Thread continuity]
+    Memory --> Actions[Owned actions and deadlines]
+    Actions --> Brief[Concise differential brief]
+    Feedback[Usefulness feedback] --> Filter
+```
 
 # Goals
 - Cut routine digest reading effort by reducing repeated and generic content.
@@ -25,16 +34,23 @@ Make each digest answer what changed, what the recipient personally needs to do,
 - Persisting raw mailbox content in analytics or exposing production identities in fixtures and documentation.
 
 # Scope and guardrails
-- In: scaffolded request, product, backlog, orchestration task, validation, and handoff context.
-- Out: unrelated workflow docs and implementation of generated tasks.
+- In: signal selection, action ownership, deadline extraction, thread continuity, meeting preparation, concise rendering, ambient-content controls, and content-free usefulness measurement.
+- Out: autonomous replies or meeting changes, a separate task-management platform, a new ranking service, cross-user state sharing, covert read tracking, and raw mailbox content in telemetry.
 
 # Key product decisions
-- Use structured input as the source of truth for generated docs.
-- Keep generated write paths local and repo-bounded.
+- Reuse existing deterministic scoring, ownership, continuity, preference, feedback, and storage primitives before adding architecture.
+- Treat unread state as display metadata rather than priority.
+- Show only concrete user-owned or shared actions; represent other-owned work as waiting context.
+- Prefer stable thread identity and cross-run deltas over repeated mailbox snapshots.
+- Keep weather and relevant external news optional and subordinate to operational work.
+- Measure usefulness without storing message bodies, subjects, names, or addresses in telemetry.
 
 # Success signals
-- Generated docs pass lint and audit without broad manual rewrites.
-- Context-pack output can be handed to an implementation agent directly.
+- Routine briefs are materially shorter and contain fewer generic actions and unchanged repeated cards than the anonymized baseline.
+- Delivery failures, explicit deadlines, overdue commitments, and user-owned actions consistently outrank ambient or low-signal content.
+- Meeting preparation appears only when supported by a document, decision, commitment, question, or explicit request.
+- Daily and weekly briefs are distinguishable and operational content appears before optional weather or news.
+- Aggregate feedback shows whether users open, recall, suppress, or mark surfaced items useful without exposing mailbox content.
 
 # References
 - Product back-reference: `req_055_day_captain_production_digest_actionability_improvement`

@@ -1,10 +1,10 @@
 ## item_108_cut_over_production_scheduling_and_capture_live_evidence - Cut over production scheduling and capture live evidence
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: operations
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -55,3 +55,9 @@
 # Priority
 - Priority: High
 - Rationale: The user-facing drift remains until the live scheduler moves and evidence proves Power Automate can deliver both digest paths.
+
+# Tasks
+- `task_049_orchestrate_power_automate_scheduler_migration`
+
+# Notes
+- Task `task_049_orchestrate_power_automate_scheduler_migration` was finished via `logics-manager flow finish task` on 2026-07-12.

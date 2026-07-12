@@ -1,10 +1,10 @@
 ## item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling - Align Day Captain app and ops docs with Power Automate scheduling
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: documentation
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -34,6 +34,8 @@
 - request-AC2 -> This backlog slice. Proof: AC1: Operator docs no longer instruct production operators to rely on GitHub Actions schedule for routine morning or weekly digest delivery.
 - request-AC3 -> This backlog slice. Proof: AC2: Docs still provide a clear manual fallback path using workflow_dispatch or direct hosted HTTP calls.
 - request-AC6 -> This backlog slice. Proof: AC3: Docs explain that Power Automate calls the existing hosted endpoints and does not own digest generation logic.
+- request-AC4 -> This backlog slice. Evidence needed: The private ops repository no longer has active GitHub Actions schedule triggers for Day Captain once the Power Automate flows have live successful-run evidence; manual workflow_dispatch remains available for emergency one-off runs.
+- request-AC5 -> This backlog slice. Evidence needed: Live validation evidence records at least one successful Power Automate morning-digest run and one successful weekly-digest test or manual run, including run IDs/timestamps, target-user scope, and observed delivery timing without exposing mailbox content or secrets.
 
 # Decision framing
 - Product framing: Not needed
@@ -54,3 +56,9 @@
 # Priority
 - Priority: High
 - Rationale: Operators currently learn the old GitHub cron path from docs, so the documentation must change before or with the production cutover.
+
+# Tasks
+- `task_049_orchestrate_power_automate_scheduler_migration`
+
+# Notes
+- Task `task_049_orchestrate_power_automate_scheduler_migration` was finished via `logics-manager flow finish task` on 2026-07-12.
