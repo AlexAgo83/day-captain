@@ -2233,6 +2233,7 @@ class DeterministicScoringEngine:
                 "trust_signals": list(thread_input.trust_signals),
                 "grouping_kind": grouping_kind,
                 "grouped_message_count": duplicate_count,
+                "stable_thread_id": str(message.thread_id or message.graph_message_id),
             }
         )
         if grouping_kind == "alias" and duplicate_count > 1:

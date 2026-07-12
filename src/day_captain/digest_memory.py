@@ -11,6 +11,10 @@ from day_captain.models import DigestRunRecord
 
 
 def _item_key(item: DigestEntry) -> tuple[str, str]:
+    if item.source_kind == "message":
+        stable_thread_id = str(item.context_metadata.get("stable_thread_id") or "").strip()
+        if stable_thread_id:
+            return ("message_thread", stable_thread_id)
     return (item.source_kind, item.source_id)
 
 
@@ -66,6 +70,12 @@ def annotate_with_recent_memory(
                 elif item.section_name in {"critical_topics", "actions_to_take"}:
                     continuity_state = "still_open"
                     continuity_reason = "The item was surfaced recently and still looks active."
+        if continuity_state == "already_surfaced" and item.section_name in {
+            "watch_items",
+            "daily_presence",
+            "upcoming_meetings",
+        }:
+            continue
         existing = item.card or DigestCard()
         updated.append(
             _with_card(
