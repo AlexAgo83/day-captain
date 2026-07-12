@@ -806,7 +806,11 @@ class DayCaptainApplication:
             run_type=run_type,
         )
         prioritized_count_before_memory = len(prioritized_items)
-        prioritized_items, cleared_recent_items = annotate_with_recent_memory(prioritized_items, recent_runs)
+        prioritized_items, cleared_recent_items = annotate_with_recent_memory(
+            prioritized_items,
+            recent_runs,
+            reference_time=current_time,
+        )
         repeated_unchanged_suppressions = prioritized_count_before_memory - len(prioritized_items)
         run_id = uuid.uuid4().hex
         render_kwargs = {

@@ -2,9 +2,9 @@
 > From version: 1.0.0
 > Schema version: 1.0
 > Status: In progress
-> Understanding: 98
-> Confidence: 95
-> Progress: 90
+> Understanding: 99
+> Confidence: 96
+> Progress: 95
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -90,6 +90,7 @@
 - 2026-07-12: external news deduplicates repeated URLs/headlines before applying its configured limit. Digest payloads now expose aggregate repeated-unchanged suppression counts alongside sensitive suppressions. Full suite: 274 passed.
 - 2026-07-12: `hide_similar` feedback now creates a strong scoped negative preference that suppresses similar non-critical mail; sending the inverse value reverses it. Critical and transactional guardrails cannot be hidden this way. Full suite: 275 passed.
 - 2026-07-12: the identity-free replay now exercises the core task-050 ranking, action, continuity, security, and meeting-conflict paths without Graph delivery. Full suite: 276 passed.
+- 2026-07-12: continuity now emits explicit `waiting` for other-owned work and `overdue` when a supported explicit noon deadline has elapsed; cleared items already provide resolved signals and unchanged low-signal items are suppressed. Full suite: 278 passed.
 
 # AI Context
 - Summary: Orchestrate production digest actionability improvements

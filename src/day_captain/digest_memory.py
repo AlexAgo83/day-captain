@@ -3,6 +3,7 @@
 from dataclasses import replace
 from datetime import datetime
 from typing import Mapping
+from typing import Optional
 from typing import Sequence
 
 from day_captain.models import DigestCard
@@ -25,6 +26,7 @@ def _with_card(item: DigestEntry, *, card: DigestCard) -> DigestEntry:
 def annotate_with_recent_memory(
     items: Sequence[DigestEntry],
     recent_runs: Sequence[DigestRunRecord],
+    reference_time: Optional[datetime] = None,
 ) -> tuple[Sequence[DigestEntry], Sequence[Mapping[str, str]]]:
     current_by_key = {_item_key(item): item for item in items}
     latest_prior = recent_runs[0] if recent_runs else None
@@ -70,13 +72,21 @@ def annotate_with_recent_memory(
                 elif item.section_name in {"critical_topics", "actions_to_take"}:
                     continuity_state = "still_open"
                     continuity_reason = "The item was surfaced recently and still looks active."
+        card = item.card or DigestCard()
+        if card.action_owner == "other":
+            continuity_state = "waiting"
+            continuity_reason = "The next action belongs to another participant."
+        due_hint = str(item.context_metadata.get("due_hint") or "").lower()
+        if reference_time is not None and "before noon" in due_hint and reference_time.hour >= 12:
+            continuity_state = "overdue"
+            continuity_reason = "The explicit noon deadline has passed."
         if continuity_state == "already_surfaced" and item.section_name in {
             "watch_items",
             "daily_presence",
             "upcoming_meetings",
         }:
             continue
-        existing = item.card or DigestCard()
+        existing = card
         updated.append(
             _with_card(
                 item,

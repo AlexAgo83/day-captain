@@ -504,6 +504,8 @@ LANGUAGE_COPY = {
             "suspicious": "Suspicious",
             "seen_before": "Seen",
             "still_open": "Still open",
+            "waiting": "Waiting",
+            "overdue": "Overdue",
             "changed": "Changed",
             "meeting_cancelled": "Cancelled",
             "meeting_new": "New",
@@ -647,6 +649,8 @@ LANGUAGE_COPY = {
             "suspicious": "Suspect",
             "seen_before": "Déjà vu",
             "still_open": "Toujours ouvert",
+            "waiting": "En attente",
+            "overdue": "En retard",
             "changed": "Évolue",
             "meeting_cancelled": "Annulé",
             "meeting_new": "Nouvelle réunion",
@@ -3242,6 +3246,10 @@ class StructuredDigestRenderer:
                 labels.append((str(localized["still_open"]), "warning"))
             elif item.card.continuity_state == "changed":
                 labels.append((str(localized["changed"]), "info"))
+            elif item.card.continuity_state == "waiting":
+                labels.append((str(localized["waiting"]), "neutral"))
+            elif item.card.continuity_state == "overdue":
+                labels.append((str(localized["overdue"]), "warning"))
         recurrence_label = " ".join(
             str((item.card.recurrence_label if item.card is not None else "") or (item.context_metadata or {}).get("recurrence_label") or "").split()
         )
