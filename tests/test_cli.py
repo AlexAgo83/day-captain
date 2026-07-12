@@ -39,7 +39,8 @@ class ValidateConfigCommandTest(unittest.TestCase):
         result = _run_validate_command(type("Args", (), {"target_user": "alice@example.com"})(), settings)
 
         self.assertEqual(result["status"], "ok")
-        self.assertEqual(result["selected_target_user"], "alice@example.com")
+        self.assertTrue(result["selected_target_user_configured"])
+        self.assertNotIn("selected_target_user", result)
 
     def test_validate_config_raises_for_invalid_target(self) -> None:
         settings = DayCaptainSettings(

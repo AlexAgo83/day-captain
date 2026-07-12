@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 100
 > Confidence: 97
-> Progress: 97
+> Progress: 98
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -68,6 +68,7 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - 2026-07-12: native macOS Quick Look rendering exposed transparent-background dark rendering and missing UTF-8 metadata. The HTML now declares UTF-8 and an explicit white body/container background. Regenerated daily and weekly 1400px thumbnails show readable hierarchy, wrapping, cards, actions, and corrected copyright. Narrow behavior remains covered structurally by the 720px max-width/fluid container and documented 360px manual check; temporary artifacts were deleted.
 - 2026-07-12: daily and weekly CLI commands now accept `--live-test-recipient`. It is rejected outside `graph_send`; in Graph mode it marks the payload for the configured singleton/no-CC/no-BCC pre-send guard. No live send was executed. Focused CLI/app/web suite: 85 passed.
 - 2026-07-12: all local implementation and validation are complete (279 tests, deterministic replay, passing versioned gates, daily/weekly native visual render, fail-closed live-test path). Remaining DoD evidence requires a production release followed by the identical aggregate audit; this external mutation was not inferred from implementation authorization.
+- 2026-07-12: release branch deployed to Render at `e3eeafa`; public and protected health checks passed with app-only Graph and Postgres. The protected diagnostic exposed configured identities, so validation output was immediately reduced to content-free booleans/counts before further rollout. No digest was manually triggered because the scheduled 20:30 weekly run predated deployment and a retry would duplicate production mail.
 
 # AI Context
 - Summary: Implement run digest replay visual qa and safe rollout.
