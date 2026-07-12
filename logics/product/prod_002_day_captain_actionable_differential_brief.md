@@ -1,6 +1,6 @@
 ## prod_002_day_captain_actionable_differential_brief - Day Captain actionable differential brief
 > Date: 2026-07-12
-> Status: Accepted
+> Status: Validated
 > Related request: `req_055_day_captain_production_digest_actionability_improvement`
 > Related backlog: `item_109_reduce_digest_noise_and_enforce_concise_section_budgets`, `item_110_generate_concrete_owner_aware_actions_and_deadlines`, `item_111_turn_recent_run_memory_into_a_differential_commitment_view`, `item_112_make_upcoming_meetings_preparation_and_conflict_aware`, `item_113_improve_digest_presentation_personalization_and_usefulness_telemetry`
 > Related task: `task_050_orchestrate_production_digest_actionability_improvements`
