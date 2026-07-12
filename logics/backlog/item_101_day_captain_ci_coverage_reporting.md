@@ -1,10 +1,10 @@
 ## item_101_day_captain_ci_coverage_reporting - Day Captain CI coverage reporting
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
 > Confidence: 99
-> Progress: 100
+> Progress: 100%
 > Complexity: Low
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -41,6 +41,10 @@ flowchart LR
 
 # AC Traceability
 - Req053 AC2 → AC1 and AC2. Proof: this item owns the coverage tooling integration.
+- request-AC3 -> This backlog slice. Evidence needed: The currently oversized `services.py` functions are trimmed below the agreed line budget or have a documented exception; all existing tests pass unchanged.
+- request-AC4 -> This backlog slice. Evidence needed: No `.format()` call constructs SQL strings in `storage.py`; all existing parameterized-query protections are preserved.
+- request-AC5 -> This backlog slice. Evidence needed: A burst of more than N rapid requests to any `/jobs/*` endpoint within a sliding window returns HTTP 429 instead of queuing unbounded work; N and the window are operator-configurable.
+- request-AC6 -> This backlog slice. Evidence needed: The PostgreSQL storage adapter reuses connections across operations within a single job run rather than opening a new connection per query; SQLite behavior is unchanged.
 
 # Decision framing
 - Product framing: Not needed
@@ -50,7 +54,7 @@ flowchart LR
 - Product brief(s): (none yet)
 - Architecture decision(s): (none yet)
 - Request: `req_053_day_captain_technical_debt_and_runtime_hardening`
-- Primary task(s): (orchestration task to be linked)
+- Primary task(s): `task_048_day_captain_technical_debt_hardening_orchestration`
 
 # AI Context
 - Summary: Integrate coverage.py into CI, emit a coverage report, and enforce a minimum threshold.
@@ -69,3 +73,7 @@ flowchart LR
 # Notes
 - Derived from `req_053_day_captain_technical_debt_and_runtime_hardening`.
 - `coverage.py` is the de-facto standard; no additional dependency needed beyond a dev extra in `pyproject.toml`.
+- Task `task_048_day_captain_technical_debt_hardening_orchestration` was finished via `logics-manager flow finish task` on 2026-07-12.
+
+# Tasks
+- `task_048_day_captain_technical_debt_hardening_orchestration`

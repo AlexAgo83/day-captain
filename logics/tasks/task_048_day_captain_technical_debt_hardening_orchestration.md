@@ -1,10 +1,10 @@
 ## task_048_day_captain_technical_debt_hardening_orchestration - Day Captain technical debt hardening orchestration
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
 > Confidence: 98
-> Progress: 95
+> Progress: 100%
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -36,19 +36,19 @@ flowchart TD
 ```
 
 # Plan
-- [ ] 1. Python 3.11 migration (`item_100`): raise `requires-python` in `pyproject.toml`, drop Python 3.9 from CI matrix, verify CI passes on 3.11 and 3.12.
-- [ ] CHECKPOINT: commit Python version bump.
-- [ ] 2. Rate limiting (`item_104`): implement in-memory fixed-window limiter in `web.py`, add env var config and `.env.example` entries, add tests for 429 and window-reset paths. Defaults must allow current four-user Power Automate fan-out.
-- [ ] CHECKPOINT: commit rate limiting wave.
-- [ ] 3. SQL `.format()` cleanup (`item_103`): locate SQL-construction `.format()` calls in `storage.py`, replace with explicit constants or literal clause builders, verify all tests pass.
-- [ ] CHECKPOINT: commit SQL cleanup wave.
-- [ ] 4. Coverage reporting (`item_101`): integrate `coverage.py` into CI test run, emit summary, define minimum threshold in `pyproject.toml`.
-- [ ] CHECKPOINT: commit CI coverage integration.
-- [ ] 5. PostgreSQL connection pooling (`item_105`): implement connection reuse within a job run in `storage.py`, add lifecycle tests, verify SQLite is unaffected.
-- [ ] CHECKPOINT: commit connection pooling wave.
-- [ ] 6. services.py function-size guardrail (`item_102`): trim or justify only the few functions over 150 lines; avoid broad decomposition churn.
-- [ ] CHECKPOINT: commit services guardrail wave if code changes are actually needed.
-- [ ] FINAL: Run full validation suite, update all linked Logics docs, close backlog items and request.
+- [x] 1. Python 3.11 migration (`item_100`): raise `requires-python` in `pyproject.toml`, drop Python 3.9 from CI matrix, verify CI passes on 3.11 and 3.12.
+- [x] CHECKPOINT: commit Python version bump.
+- [x] 2. Rate limiting (`item_104`): implement in-memory fixed-window limiter in `web.py`, add env var config and `.env.example` entries, add tests for 429 and window-reset paths. Defaults must allow current four-user Power Automate fan-out.
+- [x] CHECKPOINT: commit rate limiting wave.
+- [x] 3. SQL `.format()` cleanup (`item_103`): locate SQL-construction `.format()` calls in `storage.py`, replace with explicit constants or literal clause builders, verify all tests pass.
+- [x] CHECKPOINT: commit SQL cleanup wave.
+- [x] 4. Coverage reporting (`item_101`): integrate `coverage.py` into CI test run, emit summary, define minimum threshold in `pyproject.toml`.
+- [x] CHECKPOINT: commit CI coverage integration.
+- [x] 5. PostgreSQL connection pooling (`item_105`): implement connection reuse within a job run in `storage.py`, add lifecycle tests, verify SQLite is unaffected.
+- [x] CHECKPOINT: commit connection pooling wave.
+- [x] 6. services.py function-size guardrail (`item_102`): trim or justify only the few functions over 150 lines; avoid broad decomposition churn.
+- [x] CHECKPOINT: commit services guardrail wave if code changes are actually needed.
+- [x] FINAL: Run full validation suite, update all linked Logics docs, close backlog items and request.
 
 # Delivery checkpoints
 - Each wave should leave the repository in a coherent, commit-ready state.
@@ -82,13 +82,16 @@ flowchart TD
 # Validation
 - `PYTHONPATH=src python3 -m unittest discover -s tests`
 - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
+- Validation passed: 283 pytest tests, 80% branch-aware coverage above 79% floor, Logics lint OK, workflow audit OK, and git diff check clean.
+- Finish workflow executed on 2026-07-12.
+- Linked backlog/request close verification passed.
 
 # Definition of Done (DoD)
-- [ ] Scope implemented and acceptance criteria covered.
-- [ ] Validation commands executed and results captured.
-- [ ] Linked request/backlog/task docs updated during completed waves and at closure.
-- [ ] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
-- [ ] Status is `Done` and progress is `100%`.
+- [x] Scope implemented and acceptance criteria covered.
+- [x] Validation commands executed and results captured.
+- [x] Linked request/backlog/task docs updated during completed waves and at closure.
+- [x] Each completed wave left a commit-ready checkpoint or an explicit exception is documented.
+- [x] Status is `Done` and progress is `100%`.
 
 # Report
 - 2026-07-12: wave 1 implemented. Package metadata now requires Python 3.11+ and CI targets 3.11/3.12 instead of EOL 3.9. Existing `Optional[...]` annotations were retained as ordinary typing style, not runtime compatibility shims.
@@ -97,3 +100,6 @@ flowchart TD
 - 2026-07-12: wave 4 implemented. CI runs unittest through branch-aware coverage.py and prints a missing-lines summary. Current measured coverage is 80%; `pyproject.toml` enforces a 79% floor to block significant regression without failing on rounding noise.
 - 2026-07-12: wave 5 implemented. PostgreSQL storage instances share the official psycopg process-local pool per DSN (max four connections); every existing operation checks out a connection context and returns it on success or error. SQLite remains unchanged.
 - 2026-07-12: wave 6 completed without decomposition churn. The only functions above 150 lines remain narrowly over budget (164/157/151), each has a local `ponytail:` cohesion justification, and an AST regression test rejects future unjustified oversized functions.
+- Finished on 2026-07-12.
+- Linked backlog item(s): `item_100_day_captain_python_3_9_eol_migration_to_3_11`, `item_101_day_captain_ci_coverage_reporting`, `item_102_day_captain_services_decomposition_large_functions`, `item_103_day_captain_replace_format_based_sql_construction_in_storage`, `item_104_day_captain_rate_limiting_on_job_endpoints`, `item_105_day_captain_postgresql_connection_pooling_in_storage_adapter`
+- Related request(s): `req_053_day_captain_technical_debt_and_runtime_hardening`

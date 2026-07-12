@@ -1,10 +1,10 @@
 ## item_105_day_captain_postgresql_connection_pooling_in_storage_adapter - Day Captain PostgreSQL connection pooling in storage adapter
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
 > Confidence: 97
-> Progress: 100
+> Progress: 100%
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,6 +44,7 @@ flowchart LR
 
 # AC Traceability
 - Req053 AC6 → AC1, AC2, AC3, AC5. Proof: this item owns the PostgreSQL connection lifecycle contract.
+- request-AC4 -> This backlog slice. Evidence needed: No `.format()` call constructs SQL strings in `storage.py`; all existing parameterized-query protections are preserved.
 
 # Decision framing
 - Product framing: Not needed
@@ -53,7 +54,7 @@ flowchart LR
 - Product brief(s): (none yet)
 - Architecture decision(s): (none yet)
 - Request: `req_053_day_captain_technical_debt_and_runtime_hardening`
-- Primary task(s): (orchestration task to be linked)
+- Primary task(s): `task_048_day_captain_technical_debt_hardening_orchestration`
 
 # AI Context
 - Summary: Reuse a single PostgreSQL connection per job run in the storage adapter instead of opening a new connection per operation; ensure clean close on completion and error.
@@ -73,3 +74,7 @@ flowchart LR
 # Notes
 - Derived from `req_053_day_captain_technical_debt_and_runtime_hardening`.
 - First verify whether `psycopg_pool` is already available through installed dependencies; add `psycopg-pool` only if the installed stack cannot cover this cleanly.
+- Task `task_048_day_captain_technical_debt_hardening_orchestration` was finished via `logics-manager flow finish task` on 2026-07-12.
+
+# Tasks
+- `task_048_day_captain_technical_debt_hardening_orchestration`

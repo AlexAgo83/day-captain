@@ -1,10 +1,10 @@
 ## item_104_day_captain_rate_limiting_on_job_endpoints - Day Captain rate limiting on job endpoints
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
 > Confidence: 98
-> Progress: 100
+> Progress: 100%
 > Complexity: Low
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
@@ -44,6 +44,8 @@ flowchart LR
 
 # AC Traceability
 - Req053 AC5 → AC1, AC2, AC3. Proof: this item owns the rate limiting contract for job endpoints.
+- request-AC4 -> This backlog slice. Evidence needed: No `.format()` call constructs SQL strings in `storage.py`; all existing parameterized-query protections are preserved.
+- request-AC6 -> This backlog slice. Evidence needed: The PostgreSQL storage adapter reuses connections across operations within a single job run rather than opening a new connection per query; SQLite behavior is unchanged.
 
 # Decision framing
 - Product framing: Not needed
@@ -53,7 +55,7 @@ flowchart LR
 - Product brief(s): (none yet)
 - Architecture decision(s): (none yet)
 - Request: `req_053_day_captain_technical_debt_and_runtime_hardening`
-- Primary task(s): (orchestration task to be linked)
+- Primary task(s): `task_048_day_captain_technical_debt_hardening_orchestration`
 
 # AI Context
 - Summary: Add an in-memory fixed-window rate limiter to all /jobs/* endpoints in web.py, returning HTTP 429 on burst with operator-configurable thresholds.
@@ -74,3 +76,7 @@ flowchart LR
 - Derived from `req_053_day_captain_technical_debt_and_runtime_hardening`.
 - Suggested default: at least 10 requests per 60-second window per endpoint so the current four-user Power Automate fan-out and a manual fallback retry do not trip the limiter.
 - The limiter must apply after secret validation to avoid leaking timing information on rejected requests.
+- Task `task_048_day_captain_technical_debt_hardening_orchestration` was finished via `logics-manager flow finish task` on 2026-07-12.
+
+# Tasks
+- `task_048_day_captain_technical_debt_hardening_orchestration`
