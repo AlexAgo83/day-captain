@@ -1,4 +1,5 @@
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 from pathlib import Path
 import sys
@@ -856,6 +857,20 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertIn("Signal de télétravail", prioritized[0].summary)
         self.assertEqual(prioritized[0].handling_bucket, "daily_presence")
         self.assertGreaterEqual(prioritized[0].confidence_score, 80)
+
+    def test_marks_overlapping_meetings_as_conflicts(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en")
+        meetings = (
+            MeetingRecord("meeting-1", "Customer call", now + timedelta(hours=1), now + timedelta(hours=2), "sales@example.com"),
+            MeetingRecord("meeting-2", "Project review", now + timedelta(hours=1, minutes=30), now + timedelta(hours=2, minutes=30), "pm@example.com"),
+        )
+
+        prioritized = engine.prioritize((), meetings, (), reference_time=now)
+
+        self.assertEqual(len(prioritized), 2)
+        self.assertTrue(all("meeting_conflict" in item.reason_codes for item in prioritized))
+        self.assertTrue(all("Resolve the calendar conflict" in item.recommended_action for item in prioritized))
 
     def test_thread_entries_include_context_and_confidence_metadata(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)

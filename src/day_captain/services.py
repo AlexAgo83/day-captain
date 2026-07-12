@@ -1861,6 +1861,19 @@ def _meeting_recommended_action(reason_codes: Sequence[str], digest_language: st
     return str(actions["meeting_watch"])
 
 
+def _meeting_schedule_pressure(meetings: Sequence[MeetingRecord]) -> Mapping[str, str]:
+    pressure = {}
+    ordered = sorted(meetings, key=lambda item: (item.start_at, item.end_at))
+    for current, following in zip(ordered, ordered[1:]):
+        if following.start_at < current.end_at:
+            pressure[current.graph_event_id] = "meeting_conflict"
+            pressure[following.graph_event_id] = "meeting_conflict"
+        elif following.start_at - current.end_at <= timedelta(minutes=15):
+            pressure.setdefault(current.graph_event_id, "meeting_tight_transition")
+            pressure.setdefault(following.graph_event_id, "meeting_tight_transition")
+    return pressure
+
+
 def _meeting_confidence(meeting: MeetingRecord, reason_codes: Sequence[str], has_related_context: bool, digest_language: str) -> tuple[int, str]:
     if _meeting_is_all_day(meeting) and _looks_like_presence_signal(meeting):
         return _presence_confidence(digest_language)
@@ -2104,6 +2117,7 @@ class DeterministicScoringEngine:
             preference.preference_key: preference.weight for preference in preferences
         }
         prioritized = []
+        meeting_pressure = _meeting_schedule_pressure(meetings)
         grouped_candidates = {}
         grouped_messages = {}
         for message in messages:
@@ -2139,6 +2153,23 @@ class DeterministicScoringEngine:
                 window_start=window_start,
             )
             if entry is not None:
+                pressure_reason = meeting_pressure.get(meeting.graph_event_id)
+                if pressure_reason:
+                    action = (
+                        "Resolve the calendar conflict before the meetings start."
+                        if pressure_reason == "meeting_conflict" and self.digest_language == "en"
+                        else "Résoudre le conflit d’agenda avant le début des réunions."
+                        if pressure_reason == "meeting_conflict"
+                        else "Allow transition time between these meetings."
+                        if self.digest_language == "en"
+                        else "Prévoir le temps de transition entre ces réunions."
+                    )
+                    entry = _with_digest_entry_updates(
+                        entry,
+                        score=round(entry.score + (1.5 if pressure_reason == "meeting_conflict" else 0.5), 2),
+                        recommended_action=action,
+                        reason_codes=tuple(entry.reason_codes) + (pressure_reason,),
+                    )
                 prioritized.append(entry)
         return tuple(sorted(prioritized, key=lambda item: (-item.score, item.title.lower())))
 
