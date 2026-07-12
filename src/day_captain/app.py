@@ -1232,7 +1232,11 @@ def build_application(
             display_timezone=resolved_settings.display_timezone,
             digest_language=resolved_settings.resolved_digest_language(),
         ),
-        digest_delivery=digest_delivery or GraphDigestDelivery(graph_client),
+        digest_delivery=digest_delivery
+        or GraphDigestDelivery(
+            graph_client,
+            authorized_live_test_recipient=resolved_settings.graph_live_test_recipient,
+        ),
         recall_provider=recall_provider or SnapshotRecallProvider(),
         feedback_processor=feedback_processor or PreferenceFeedbackProcessor(),
         weather_provider=weather_provider if weather_provider is not None else _build_weather_provider(resolved_settings),

@@ -499,14 +499,27 @@ class GraphCalendarCollector:
 
 
 class GraphDigestDelivery:
-    def __init__(self, api_client: GraphApiClient) -> None:
+    def __init__(self, api_client: GraphApiClient, authorized_live_test_recipient: str = "") -> None:
         self.api_client = api_client
+        self.authorized_live_test_recipient = str(authorized_live_test_recipient or "").strip().lower()
 
     def deliver_digest(self, auth_context: AuthContext, payload) -> None:
         graph_message = payload.delivery_payload.get("graph_message")
         if not isinstance(graph_message, dict):
             raise ValueError("graph_send delivery requires a `graph_message` payload.")
         message_payload = dict(graph_message)
+        live_test_recipient = str(payload.delivery_payload.get("live_test_recipient") or "").strip().lower()
+        if live_test_recipient:
+            if not self.authorized_live_test_recipient or live_test_recipient != self.authorized_live_test_recipient:
+                raise ValueError("Live test recipient is not explicitly authorized by configuration.")
+            recipients = message_payload.get("toRecipients") or []
+            addresses = [
+                str((recipient.get("emailAddress") or {}).get("address") or "").strip().lower()
+                for recipient in recipients
+                if isinstance(recipient, dict)
+            ]
+            if addresses != [live_test_recipient] or message_payload.get("ccRecipients") or message_payload.get("bccRecipients"):
+                raise ValueError("Live test delivery requires exactly one authorized recipient and no CC or BCC.")
         recipients = message_payload.get("toRecipients")
         if not isinstance(recipients, list) or not recipients:
             profile = self.api_client.get_object(auth_context.graph_root_path, access_token=auth_context.access_token)

@@ -439,6 +439,34 @@ class GraphAdapterTest(unittest.TestCase):
             "alex@example.com",
         )
 
+    def test_live_test_delivery_rejects_fan_out_before_graph_call(self) -> None:
+        api_client = DeliveryRecorderApiClient()
+        delivery = GraphDigestDelivery(api_client, authorized_live_test_recipient="test@example.com")
+        auth_context = AuthContext("token", ("Mail.Send",), "test@example.com")
+        payload = DigestPayload(
+            run_id="live-test",
+            generated_at=datetime(2026, 7, 12, tzinfo=timezone.utc),
+            window_start=datetime(2026, 7, 11, tzinfo=timezone.utc),
+            window_end=datetime(2026, 7, 12, tzinfo=timezone.utc),
+            delivery_mode="graph_send",
+            delivery_payload={
+                "live_test_recipient": "test@example.com",
+                "graph_message": {
+                    "subject": "Test",
+                    "body": {"contentType": "Text", "content": "Synthetic"},
+                    "toRecipients": [
+                        {"emailAddress": {"address": "test@example.com"}},
+                        {"emailAddress": {"address": "other@example.com"}},
+                    ],
+                },
+            },
+        )
+
+        with self.assertRaisesRegex(ValueError, "exactly one authorized recipient"):
+            delivery.deliver_digest(auth_context, payload)
+
+        self.assertEqual(api_client.calls, [])
+
 
 if __name__ == "__main__":
     unittest.main()

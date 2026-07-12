@@ -95,6 +95,7 @@ class DayCaptainSettings:
     target_users: Tuple[str, ...] = ()
     email_command_allowed_senders: Tuple[str, ...] = ()
     graph_send_enabled: bool = False
+    graph_live_test_recipient: str = ""
     graph_timeout_seconds: int = 30
     graph_scopes: Tuple[str, ...] = ("User.Read", "Mail.Read", "Calendars.Read")
     display_timezone: str = "UTC"
@@ -151,6 +152,7 @@ class DayCaptainSettings:
             target_users=_parse_csv(os.getenv("DAY_CAPTAIN_TARGET_USERS", "")),
             email_command_allowed_senders=_parse_csv(os.getenv("DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS", "")),
             graph_send_enabled=_parse_bool(os.getenv("DAY_CAPTAIN_GRAPH_SEND_ENABLED"), default=False),
+            graph_live_test_recipient=_normalize_email(os.getenv("DAY_CAPTAIN_GRAPH_LIVE_TEST_RECIPIENT", "")),
             graph_timeout_seconds=int(os.getenv("DAY_CAPTAIN_GRAPH_TIMEOUT_SECONDS", "30")),
             graph_scopes=_parse_scopes(os.getenv("DAY_CAPTAIN_GRAPH_SCOPES", "")),
             display_timezone=os.getenv("DAY_CAPTAIN_DISPLAY_TIMEZONE", "UTC"),
