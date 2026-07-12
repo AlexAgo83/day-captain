@@ -63,6 +63,7 @@ from day_captain.ports import WeatherProvider
 from day_captain.services import DeterministicScoringEngine
 from day_captain.services import DeterministicDigestOverviewEngine
 from day_captain.services import IdentityDigestWordingEngine
+from day_captain.services import is_sensitive_authentication_message
 from day_captain.services import LlmDigestOverviewEngine
 from day_captain.services import LlmDigestWordingEngine
 from day_captain.services import PreferenceFeedbackProcessor
@@ -780,6 +781,7 @@ class DayCaptainApplication:
         meetings, meeting_horizon = self._collect_meetings(auth_context, current_time)
         weather = self._get_weather(current_time)
         external_news = self._get_external_news(current_time)
+        messages = tuple(message for message in messages if not is_sensitive_authentication_message(message))
         messages = _scoped_messages(messages, scoped_tenant_id, scoped_user_id)
         meetings = _scoped_meetings(meetings, scoped_tenant_id, scoped_user_id)
         self.storage.upsert_messages(messages, tenant_id=scoped_tenant_id, user_id=scoped_user_id)

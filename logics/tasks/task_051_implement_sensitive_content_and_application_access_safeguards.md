@@ -1,13 +1,14 @@
 ## task_051_implement_sensitive_content_and_application_access_safeguards - Implement sensitive-content and application-access safeguards
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: In progress
 > Understanding: 98
 > Confidence: 95
 > Progress: 0
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
+> Owner: codex-work6
 
 # Context
 The production audit found that authentication content can enter the digest pipeline and that mailbox-access boundaries are not sufficiently explicit. This task establishes a fail-closed boundary before persistence, model processing, telemetry, and rendering. All implementation fixtures and evidence must remain synthetic and identity-free.
@@ -52,7 +53,9 @@ The production audit found that authentication content can enter the digest pipe
 - Run `logics-manager flow finish task task_051_implement_sensitive_content_and_application_access_safeguards.md` only after implementation evidence is attached.
 
 # Report
-- Development-ready specification; implementation has not started.
+- 2026-07-12: implementation started. A deterministic authentication-message filter now runs immediately after collection and before tenant scoping, persistence, scoring, LLM rewriting, memory, rendering, and run storage.
+- 2026-07-12: synthetic regression proof confirms a one-time-code secret is absent from message storage, wording-engine input, rendered payload, and persisted run. Focused app, scoring, and renderer suite: 121 passed.
+- Remaining: independent suspicious-risk thresholds, explicit mailbox authorization checks, content-free suppression counters, retention/operator-access documentation, full-suite validation, and closeout evidence.
 
 # AI Context
 - Summary: Implement implement sensitive-content and application-access safeguards.

@@ -20,6 +20,7 @@ from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
 from day_captain.models import ExternalNewsItem
 from day_captain.models import WeatherSnapshot
+from day_captain.services import IdentityDigestWordingEngine
 
 
 class RecordingDigestDelivery:
@@ -83,6 +84,37 @@ class StubExternalNewsProvider:
 
 
 class DayCaptainApplicationTest(unittest.TestCase):
+    def test_sensitive_authentication_message_never_reaches_downstream_boundaries(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        secret = "839214"
+        storage = InMemoryStorage()
+        wording_engine = mock.Mock(wraps=IdentityDigestWordingEngine())
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            digest_wording_engine=wording_engine,
+            mail_collector=StaticMailCollector(
+                (
+                    MessageRecord(
+                        graph_message_id="auth-message",
+                        thread_id="auth-thread",
+                        subject="Your one-time code",
+                        from_address="identity@example.test",
+                        received_at=now,
+                        body_preview=f"Use verification code {secret} to sign in.",
+                    ),
+                )
+            ),
+            calendar_collector=StaticCalendarCollector(()),
+        )
+
+        payload = app.run_morning_digest(now=now)
+
+        self.assertIsNone(storage.get_message("auth-message"))
+        wording_engine.rewrite.assert_called_once_with(())
+        self.assertNotIn(secret, repr(payload))
+        self.assertNotIn(secret, repr(storage.get_latest_completed_run()))
+
     def test_morning_digest_returns_sections_and_persists_run(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         storage = InMemoryStorage(

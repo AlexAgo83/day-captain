@@ -228,6 +228,23 @@ TRANSACTIONAL_ALERT_PATTERNS = (
     "risque d etre suspendu",
 )
 
+AUTHENTICATION_MESSAGE_PATTERNS = (
+    "authentication code",
+    "code de connexion",
+    "code de sécurité",
+    "code de verification",
+    "code de vérification",
+    "magic link",
+    "one-time code",
+    "one time code",
+    "password reset",
+    "réinitialisation de votre mot de passe",
+    "reset your password",
+    "sign-in code",
+    "temporary access pass",
+    "verification code",
+)
+
 DIRECT_RECIPIENT_ACTION_PATTERNS = (
     "can you",
     "could you",
@@ -807,6 +824,12 @@ def _format_processing_duration(value_seconds: Optional[float], language: str) -
 
 def _contains_any(text: str, patterns: Iterable[str]) -> bool:
     return any(pattern in text for pattern in patterns)
+
+
+def is_sensitive_authentication_message(message: MessageRecord) -> bool:
+    """Return whether a message must be dropped before any downstream processing."""
+    text = _normalize_text(message.subject, message.body_preview)
+    return _contains_any(text, AUTHENTICATION_MESSAGE_PATTERNS)
 
 
 def _language_hint_for_text(value: str) -> str:
