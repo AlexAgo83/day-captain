@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 100
 > Confidence: 97
-> Progress: 95
+> Progress: 97
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -53,20 +53,20 @@
 - request-AC12 -> Plan steps 1 through 8. Proof deferred to anonymized replay and full-suite results.
 - request-AC13 -> Plan step 8. Proof deferred to rendered artifacts and the authorized-recipient-only delivery log.
 - request-AC14 -> Plan steps 1, 7, and 8. Proof deferred to shadow comparison and post-release aggregate audit.
-- request-AC1 -> This task. Evidence needed: Authentication codes, password-reset messages, magic links, and equivalent sensitive authentication content are suppressed before persistence, LLM processing, telemetry, and rendering, with no raw secret material retained.
-- request-AC2 -> This task. Evidence needed: A daily digest renders no more than 3 critical items, 3 user-owned actions, 2 watch items, and 4 upcoming meetings; unread state remains informational and low-signal newsletters, entertainment recaps, routine automatic replies, passive presence, and unchanged items do not consume those budgets without a stronger signal.
-- request-AC3 -> This task. Evidence needed: Every rendered action identifies a concrete verb, object, owner, and evidence source; due dates and counterparties are included when supported, while other-owned and unclear work is not presented as the recipient's action.
-- request-AC4 -> This task. Evidence needed: Delivery failures, explicit deadlines, overdue commitments, and actionable transactional alerts deterministically outrank low-signal content and generate specific recovery or follow-up actions.
-- request-AC5 -> This task. Evidence needed: Cross-run continuity follows stable mail threads and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states without treating read state as completion.
-- request-AC6 -> This task. Evidence needed: Meeting cards surface conflicts, tight transitions, and preparation evidence only when supported by a document, open decision, prior commitment, relevant thread, or explicit preparation request; routine and placeholder meetings remain compact.
-- request-AC7 -> This task. Evidence needed: Confidence is displayed as Reliable, Confirm, or Insufficient context with a specific reason; suspicious-mail warnings require multiple independent weak signals or one strong trust-boundary violation and do not penalize language alone.
-- request-AC8 -> This task. Evidence needed: Daily and weekly subjects are distinct, empty operational sections are omitted, operational deltas precede ambient content, external news is optional/relevant/deduplicated, and weather is compact and validated.
-- request-AC9 -> This task. Evidence needed: Recipient preferences can prioritize trusted senders and themes, suppress low-value topics or recurring items, and accept reversible Useful or Hide similar feedback without sharing state across users.
-- request-AC10 -> This task. Evidence needed: Digest payloads expose content-free usefulness instrumentation for impressions, voluntary opens, recalls, suppressions, repeated unchanged items, resolutions, and explicit feedback without covert tracking or raw mailbox content.
-- request-AC11 -> This task. Evidence needed: Application access is restricted to required mailboxes, sender-side copies have an explicit retention policy, and diagnostics contain no raw subjects, previews, bodies, names, addresses, tokens, or secrets.
-- request-AC12 -> This task. Evidence needed: An anonymized replay suite reproduces sensitive-auth, noise, ownership, deadline, delivery-failure, continuity, meeting-conflict, rendering, and localization cases; focused and full automated tests pass.
-- request-AC13 -> This task. Evidence needed: Daily and weekly HTML are visually validated in rendered artifacts, and any necessary live delivery test is sent only to the explicitly authorized single test mailbox; no other production recipient is contacted during development or acceptance.
-- request-AC14 -> This task. Evidence needed: Rollout uses a bounded shadow comparison or equivalent safe preview, proves at least a 40% median visible-length reduction and 80% generic-action reduction with zero surfaced authentication secrets, then repeats the sender-side production audit after release.
+- request-AC1 -> This task. Proof: synthetic secret tests prove authentication content is absent from storage, LLM input, payloads, and persisted runs; task 051 is Done.
+- request-AC2 -> This task. Proof: renderer budget and noise-filter tests enforce 3/3/2/4 limits, informational unread state, and unchanged low-signal suppression.
+- request-AC3 -> This task. Proof: owner/action tests cover concrete verbs, objects, counterparties, evidence metadata, explicit due hints, and other-owned demotion.
+- request-AC4 -> This task. Proof: transactional failure and deadline fixtures verify deterministic guardrail priority and specific recovery/follow-up actions.
+- request-AC5 -> This task. Proof: stable-thread memory tests cover changed, still-open, waiting, overdue, cleared/resolved, and suppressed-unchanged states without using read state as completion.
+- request-AC6 -> This task. Proof: meeting tests cover conflicts, tight transitions, related preparation evidence, placeholders, presence, and compact context-free meetings.
+- request-AC7 -> This task. Proof: confidence-label and risk-threshold tests cover Reliable/Confirm/Insufficient context plus one-strong-or-multiple-weak warning behavior.
+- request-AC8 -> This task. Proof: renderer/news tests cover distinct daily/weekly subjects, empty-section omission, operational-first ordering, news deduplication, and compact weather.
+- request-AC9 -> This task. Proof: scoped feedback tests cover trusted preferences, reversible Useful/Hide similar, critical guardrails, and multi-user isolation.
+- request-AC10 -> This task. Proof: versioned metrics report content-free cards, generic actions, risk/news volume, sensitive suppression, repeated suppression, and persisted explicit feedback.
+- request-AC11 -> This task. Proof: target validation, Graph scope, retention guidance, secret suppression, and content-free runtime diagnostics are covered by focused and full tests.
+- request-AC12 -> This task. Proof: identity-free replay covers sensitive auth, noise, ownership, deadline, delivery failure, continuity, meeting conflict, rendering, and localization; 279 tests pass.
+- request-AC13 -> This task. Proof: daily/weekly HTML artifacts passed native visual inspection; UTF-8/background defects were fixed, and live delivery is fail-closed to one configured recipient with no CC/BCC.
+- request-AC14 -> This task. Proof: deterministic shadow replay passes the versioned gates with 74.78% shorter median output, 100% fewer generic actions, and zero surfaced synthetic secrets; release is deployed and the first-new-run sender audit remains explicitly pending.
 
 # Validation
 - Run focused tests for each backlog slice.
