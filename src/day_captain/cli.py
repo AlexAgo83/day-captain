@@ -23,7 +23,9 @@ from day_captain.hosted_jobs import trigger_hosted_job
 from day_captain.hosted_jobs import validate_hosted_service
 from day_captain.hosted_jobs import wait_for_hosted_health
 from day_captain.models import parse_datetime
+from day_captain.models import digest_payload_from_dict
 from day_captain.models import to_jsonable
+from day_captain.digest_metrics import digest_metrics
 from day_captain.web import serve
 
 
@@ -103,6 +105,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     validate = subparsers.add_parser("validate-config", help="Validate current environment configuration.")
     validate.add_argument("--target-user", help="Optional target user to validate against configured recipients.")
+
+    metrics = subparsers.add_parser("digest-metrics", help="Report content-free metrics from exported digest JSON.")
+    metrics.add_argument("inputs", nargs="+", help="One or more exported DigestPayload JSON files.")
 
     health = subparsers.add_parser(
         "check-hosted-health",
@@ -429,6 +434,14 @@ def main(argv: Optional[list] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
     settings = DayCaptainSettings.from_env()
+
+    if args.command == "digest-metrics":
+        payloads = []
+        for input_path in args.inputs:
+            raw = json.loads(Path(input_path).read_text(encoding="utf-8"))
+            payloads.append(digest_payload_from_dict(raw.get("payload", raw)))
+        print(json.dumps(digest_metrics(payloads), indent=2, sort_keys=True))
+        return 0
 
     if args.command == "auth":
         result = _run_auth_command(args, settings)

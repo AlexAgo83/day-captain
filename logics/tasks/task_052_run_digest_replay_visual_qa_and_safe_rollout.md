@@ -1,13 +1,14 @@
 ## task_052_run_digest_replay_visual_qa_and_safe_rollout - Run digest replay visual QA and safe rollout
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: In progress
 > Understanding: 98
 > Confidence: 95
-> Progress: 0
+> Progress: 20
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
+> Owner: codex-work6
 
 # Context
 The stable production baseline contains 118 anonymized briefs. This task turns that baseline into repeatable usefulness, rendering, and delivery gates. Production recipients must never be used for testing: any live delivery is optional and must be restricted to one explicitly authorized test mailbox.
@@ -56,7 +57,8 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - Run `logics-manager flow finish task task_052_run_digest_replay_visual_qa_and_safe_rollout.md` only after implementation evidence is attached.
 
 # Report
-- Development-ready specification; implementation has not started.
+- 2026-07-12: implementation started. Added `day-captain digest-metrics` for one or more exported preview payloads. Metric definitions are versioned (`1.0`) and report only aggregate visible length, card count, generic actions, risk warnings, news volume, and sensitive suppressions.
+- 2026-07-12: synthetic unit/CLI validation passes (16 tests). No Graph collection or delivery path is reachable from the metrics command.
 
 # AI Context
 - Summary: Implement run digest replay visual qa and safe rollout.
