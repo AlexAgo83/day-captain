@@ -7,6 +7,7 @@
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Add a direct open link for calendar meetings in the digest, similarly to the open link already shown for emails.
@@ -56,8 +57,8 @@ flowchart TD
 - The request depends on the existing meeting `source_url` contract being preserved or normalized before rendering.
 
 # References
-- Digest renderer and meeting card output: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Digest payload and entry contract: [models.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/models.py)
+- Digest renderer and meeting card output: [services.py](../../src/day_captain/services.py)
+- Digest payload and entry contract: [models.py](../../src/day_captain/models.py)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

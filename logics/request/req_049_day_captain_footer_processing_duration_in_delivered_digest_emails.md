@@ -7,6 +7,7 @@
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Show the digest processing duration in the delivered email footer.
@@ -58,8 +59,8 @@ flowchart TD
 - If the measurement point is chosen too early, the number may under-report expensive render or LLM work.
 
 # References
-- Footer rendering: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Application orchestration and run lifecycle: [app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
+- Footer rendering: [services.py](../../src/day_captain/services.py)
+- Application orchestration and run lifecycle: [app.py](../../src/day_captain/app.py)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

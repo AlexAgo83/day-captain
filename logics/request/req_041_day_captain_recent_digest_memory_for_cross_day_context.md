@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Add a short-term memory of the last 2 to 3 digest runs so Day Captain can keep bounded cross-day context instead of treating each new brief as if it started from zero.
@@ -89,10 +90,10 @@ flowchart TD
 - Skip when: The work is only about recall, historical browsing, or a general purpose long-term memory system over old digests.
 
 # References
-- Stored digest run model: [src/day_captain/models.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/models.py)
-- Digest run storage and scoped persistence: [src/day_captain/adapters/storage.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/adapters/storage.py)
-- Current run orchestration and persistence path: [src/day_captain/app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
-- Existing structured parsing direction: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
+- Stored digest run model: [src/day_captain/models.py](../../src/day_captain/models.py)
+- Digest run storage and scoped persistence: [src/day_captain/adapters/storage.py](../../src/day_captain/adapters/storage.py)
+- Current run orchestration and persistence path: [src/day_captain/app.py](../../src/day_captain/app.py)
+- Existing structured parsing direction: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](../../logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
 
 # AC Traceability
 - AC1 -> `item_090_day_captain_recent_digest_memory_and_cross_day_continuity_signals`. Proof: this item adds the bounded recent-memory window for the same tenant and user scope.

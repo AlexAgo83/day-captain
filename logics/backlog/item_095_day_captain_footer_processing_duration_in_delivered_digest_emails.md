@@ -8,6 +8,7 @@
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Problem
 - Show the digest processing duration in the delivered email footer.
@@ -38,11 +39,11 @@ flowchart LR
 - AC5: Tests cover timing capture/propagation and footer rendering.
 
 # AC Traceability
-- AC1 -> Scope: Delivered digest emails include a processing-duration line directly below `Day Captain © 2026` in the footer.. Proof: implemented in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py) and covered by [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
-- AC2 -> Scope: The displayed value reflects the current digest generation duration, measured from run start until the delivery content is ready, and does not depend on downstream mailbox delivery latency.. Proof: bounded timing capture now starts in [app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py) before collection/auth work and is injected before delivery.
-- AC3 -> Scope: Both text and HTML rendering paths display the same duration information in a readable operator-facing format.. Proof: the footer line is rendered in both body and HTML in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py) and verified in [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
-- AC4 -> Scope: If timing metadata is unavailable, the digest still renders safely without breaking footer layout or delivery.. Proof: the renderer keeps the duration optional and only renders the line when a value is present in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py).
-- AC5 -> Scope: Tests cover timing capture/propagation and footer rendering.. Proof: covered by [test_app.py](/Users/alexandreagostini/Documents/day-captain/tests/test_app.py) and [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
+- AC1 -> Scope: Delivered digest emails include a processing-duration line directly below `Day Captain © 2026` in the footer.. Proof: implemented in [services.py](../../src/day_captain/services.py) and covered by [test_digest_renderer.py](../../tests/test_digest_renderer.py).
+- AC2 -> Scope: The displayed value reflects the current digest generation duration, measured from run start until the delivery content is ready, and does not depend on downstream mailbox delivery latency.. Proof: bounded timing capture now starts in [app.py](../../src/day_captain/app.py) before collection/auth work and is injected before delivery.
+- AC3 -> Scope: Both text and HTML rendering paths display the same duration information in a readable operator-facing format.. Proof: the footer line is rendered in both body and HTML in [services.py](../../src/day_captain/services.py) and verified in [test_digest_renderer.py](../../tests/test_digest_renderer.py).
+- AC4 -> Scope: If timing metadata is unavailable, the digest still renders safely without breaking footer layout or delivery.. Proof: the renderer keeps the duration optional and only renders the line when a value is present in [services.py](../../src/day_captain/services.py).
+- AC5 -> Scope: Tests cover timing capture/propagation and footer rendering.. Proof: covered by [test_app.py](../../tests/test_app.py) and [test_digest_renderer.py](../../tests/test_digest_renderer.py).
 
 # Decision framing
 - Product framing: Not needed
@@ -65,8 +66,8 @@ flowchart LR
 - Skip when: The work is about broader performance instrumentation, dashboards, or transport latency measurement.
 
 # References
-- `Footer rendering: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)`
-- `Application orchestration and run lifecycle: [app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)`
+- `Footer rendering: [services.py](../../src/day_captain/services.py)`
+- `Application orchestration and run lifecycle: [app.py](../../src/day_captain/app.py)`
 - `logics/skills/logics-ui-steering/SKILL.md`
 
 # Priority

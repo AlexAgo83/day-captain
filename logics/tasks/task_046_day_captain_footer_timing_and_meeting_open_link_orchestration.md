@@ -8,6 +8,7 @@
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Context
 - Derived from backlog items `item_095_day_captain_footer_processing_duration_in_delivered_digest_emails` and `item_096_day_captain_meeting_cards_direct_open_link_in_digest`.
@@ -66,9 +67,9 @@ flowchart TD
 - Skip when: The work expands into broader performance instrumentation, meeting workflow redesign, or unrelated digest intelligence changes.
 
 # References
-- Footer and card rendering: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Application orchestration and run lifecycle: [app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
-- Digest payload and entry contract: [models.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/models.py)
+- Footer and card rendering: [services.py](../../src/day_captain/services.py)
+- Application orchestration and run lifecycle: [app.py](../../src/day_captain/app.py)
+- Digest payload and entry contract: [models.py](../../src/day_captain/models.py)
 
 # Validation
 - python3 -m pytest -q tests/test_app.py tests/test_digest_renderer.py

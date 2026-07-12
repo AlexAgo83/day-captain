@@ -21,8 +21,8 @@ Your private ops repo should contain:
 - optional Power Automate runbook if inbound email-command recall is operated outside GitHub Actions
 
 Routine production scheduling should be owned by Power Automate, not GitHub Actions. Use these copy-ready templates only as manual fallback or rollback material in the private ops repo:
-- [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) -> `.github/workflows/morning-digest.yml`
-- [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) -> `.github/workflows/weekly-digest.yml`
+- [`day_captain_ops_morning_digest_scheduler.yml`](../docs/day_captain_ops_morning_digest_scheduler.yml) -> `.github/workflows/morning-digest.yml`
+- [`day_captain_ops_weekly_digest_scheduler.yml`](../docs/day_captain_ops_weekly_digest_scheduler.yml) -> `.github/workflows/weekly-digest.yml`
 
 ## Primary Power Automate pattern
 
@@ -45,8 +45,8 @@ Routine production scheduling should be owned by Power Automate, not GitHub Acti
 ## Copy-ready fallback workflows
 
 Copy:
-- [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) into the private ops repo as `.github/workflows/morning-digest.yml`
-- [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) into the private ops repo as `.github/workflows/weekly-digest.yml`
+- [`day_captain_ops_morning_digest_scheduler.yml`](../docs/day_captain_ops_morning_digest_scheduler.yml) into the private ops repo as `.github/workflows/morning-digest.yml`
+- [`day_captain_ops_weekly_digest_scheduler.yml`](../docs/day_captain_ops_weekly_digest_scheduler.yml) into the private ops repo as `.github/workflows/weekly-digest.yml`
 
 Assumptions baked into that template:
 
@@ -85,14 +85,14 @@ If you set `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`, also ensure:
 - run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
 - if using a dedicated sender mailbox, confirm the hosted env also sets `DAY_CAPTAIN_GRAPH_SENDER_USER_ID=daycaptain@example.com` and verify delivery is sent from that mailbox while the selected target mailbox remains the data source
 - if using inbound email-command recall, run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user alice@example.com --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --timeout-seconds 90 --expect-graph-auth-mode app_only --expect-storage-backend postgres --check-email-command --email-command-sender alice@example.com --email-command-text recall-week`
-- if the release includes digest-readability changes, review [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md) and explicitly perform the final live Outlook rendering check before calling the rollout complete
+- if the release includes digest-readability changes, review [`digest_rendering_validation.md`](../docs/digest_rendering_validation.md) and explicitly perform the final live Outlook rendering check before calling the rollout complete
 - trigger one hosted job manually for each target user with `day-captain trigger-hosted-job --job morning-digest`
 - trigger one hosted weekly job manually with `day-captain trigger-hosted-job --job weekly-digest`
 - trigger one hosted `email-command-recall` job manually if that surface is enabled and confirm duplicate suppression by replaying the same `command_message_id`
 - confirm delivery and persistence before enabling Power Automate recurrence
 - record successful Power Automate run IDs and delivery timestamps before disabling GitHub Actions schedules
 - if the hosted plan can sleep, document the warm-up path and timeout policy in the private ops workflow before enabling cron
-- if inbound email-command recall is bridged through Power Automate, keep [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md) alongside the private repo runbook and document the mailbox permission propagation caveat
+- if inbound email-command recall is bridged through Power Automate, keep [`power_automate_shared_mailbox_recall_setup.md`](../docs/power_automate_shared_mailbox_recall_setup.md) alongside the private repo runbook and document the mailbox permission propagation caveat
 - if a hosted run remains `delivery_pending`, treat it as possible post-send uncertainty and reconcile before retrying from ops
 - if a hosted run is `delivery_failed`, treat it as a pre-send failure and retry only after fixing the underlying Graph or configuration issue
 

@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Ensure that when an explicit delegated Graph access token is supplied at runtime, Day Captain treats that token as the authoritative execution source rather than inheriting stale scope or identity metadata from an unrelated cached bundle.
@@ -68,8 +69,8 @@ flowchart TD
 - Skip when: The issue is only app-only auth, delivery transport, or general hosted validation unrelated to token precedence.
 
 # References
-- Delegated auth implementation: [src/day_captain/adapters/graph.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/adapters/graph.py)
-- Existing broader auth/runtime correction request: [logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md)
+- Delegated auth implementation: [src/day_captain/adapters/graph.py](../../src/day_captain/adapters/graph.py)
+- Existing broader auth/runtime correction request: [logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md](../../logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Tighten hosted delegated-auth validation so production-like config checks only pass when the delegated execution path is actually unattended and usable at runtime.
@@ -67,8 +68,8 @@ flowchart TD
 - Skip when: The issue is only explicit-token precedence, app-only auth, or runtime delivery behavior.
 
 # References
-- Hosted validation implementation: [src/day_captain/config.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/config.py)
-- Existing broader auth/runtime correction request: [logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md)
+- Hosted validation implementation: [src/day_captain/config.py](../../src/day_captain/config.py)
+- Existing broader auth/runtime correction request: [logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md](../../logics/request/req_039_day_captain_delivery_recovery_and_delegated_auth_contract_corrections.md)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

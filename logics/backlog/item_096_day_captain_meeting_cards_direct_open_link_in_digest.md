@@ -8,6 +8,7 @@
 > Complexity: Low
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Problem
 - Add a direct open link for calendar meetings in the digest, similarly to the open link already shown for emails.
@@ -37,10 +38,10 @@ flowchart LR
 - AC4: Tests cover both the positive path and the no-URL fallback path.
 
 # AC Traceability
-- AC1 -> Scope: Meeting cards in the delivered digest expose a direct open action when a usable calendar source URL is available.. Proof: implemented in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py) and covered by the existing positive-path renderer tests in [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
-- AC2 -> Scope: The action is rendered in both text and HTML digests with wording consistent with the existing mail open-link affordance.. Proof: the renderer uses the same `item_actions` contract for mail and meeting items in [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py).
-- AC3 -> Scope: When no reliable meeting URL is available, the digest omits the action gracefully without broken placeholders or malformed layout.. Proof: explicit no-link fallback coverage was added in [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
-- AC4 -> Scope: Tests cover both the positive path and the no-URL fallback path.. Proof: covered in [test_digest_renderer.py](/Users/alexandreagostini/Documents/day-captain/tests/test_digest_renderer.py).
+- AC1 -> Scope: Meeting cards in the delivered digest expose a direct open action when a usable calendar source URL is available.. Proof: implemented in [services.py](../../src/day_captain/services.py) and covered by the existing positive-path renderer tests in [test_digest_renderer.py](../../tests/test_digest_renderer.py).
+- AC2 -> Scope: The action is rendered in both text and HTML digests with wording consistent with the existing mail open-link affordance.. Proof: the renderer uses the same `item_actions` contract for mail and meeting items in [services.py](../../src/day_captain/services.py).
+- AC3 -> Scope: When no reliable meeting URL is available, the digest omits the action gracefully without broken placeholders or malformed layout.. Proof: explicit no-link fallback coverage was added in [test_digest_renderer.py](../../tests/test_digest_renderer.py).
+- AC4 -> Scope: Tests cover both the positive path and the no-URL fallback path.. Proof: covered in [test_digest_renderer.py](../../tests/test_digest_renderer.py).
 
 # Decision framing
 - Product framing: Not needed
@@ -63,8 +64,8 @@ flowchart LR
 - Skip when: The work is about online join links, RSVP workflows, or broader digest redesign.
 
 # References
-- `Digest renderer and meeting card output: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)`
-- `Digest payload and entry contract: [models.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/models.py)`
+- `Digest renderer and meeting card output: [services.py](../../src/day_captain/services.py)`
+- `Digest payload and entry contract: [models.py](../../src/day_captain/models.py)`
 - `logics/skills/logics-ui-steering/SKILL.md`
 
 # Priority

@@ -8,6 +8,7 @@
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Problem
 - The upcoming meetings section can still show holding slots or placeholder events as if they were real meetings worth briefing.
@@ -66,8 +67,8 @@ flowchart LR
 - Skip when: Skip when the work is only about news configuration, broad spam handling, or unrelated delivery features.
 
 # References
-- Meeting scoring and rendering logic: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Meeting collection entrypoint: [app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
+- Meeting scoring and rendering logic: [services.py](../../src/day_captain/services.py)
+- Meeting collection entrypoint: [app.py](../../src/day_captain/app.py)
 
 # Priority
 - Impact: Medium - placeholder meetings pollute the agenda and reduce confidence in the briefing.

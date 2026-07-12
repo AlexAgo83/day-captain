@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Security
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Add a bounded anti-scam and anti-phishing analysis layer for surfaced mail so Day Captain can flag suspicious messages before presenting them as trustworthy operational items.
@@ -94,10 +95,10 @@ flowchart TD
 - Skip when: The work is only about promotional mail, generic noise filtering, or enterprise-grade mail security controls outside the digest product.
 
 # References
-- Existing promotional-mail detection direction: [logics/request/req_036_day_captain_promotional_mail_detection_and_digest_deprioritization.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_036_day_captain_promotional_mail_detection_and_digest_deprioritization.md)
-- Current mail scoring and heuristics: [src/day_captain/services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Current Graph mail normalization contract: [src/day_captain/adapters/graph.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/adapters/graph.py)
-- Current structured parsing direction: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
+- Existing promotional-mail detection direction: [logics/request/req_036_day_captain_promotional_mail_detection_and_digest_deprioritization.md](../../logics/request/req_036_day_captain_promotional_mail_detection_and_digest_deprioritization.md)
+- Current mail scoring and heuristics: [src/day_captain/services.py](../../src/day_captain/services.py)
+- Current Graph mail normalization contract: [src/day_captain/adapters/graph.py](../../src/day_captain/adapters/graph.py)
+- Current structured parsing direction: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](../../logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
 
 # AC Traceability
 - AC1 -> `item_092_day_captain_mail_suspicion_risk_signals_and_conservative_rendering`. Proof: this item adds explicit suspicious-mail risk signaling for surfaced or borderline candidates.

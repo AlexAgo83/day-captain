@@ -7,6 +7,7 @@
 > Complexity: High
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Context
 - Derived from backlog items `item_015_day_captain_weekend_digest_window_from_friday`, `item_016_day_captain_isolation_and_delivery_reliability_hardening`, `item_017_day_captain_ops_scheduler_weekday_only_delivery`, and `item_018_day_captain_sunday_evening_weekly_digest`.
@@ -98,8 +99,8 @@ flowchart LR
 - The weekend and scheduling tranche is now implemented and documented:
   - first weekend `morning-digest` fallback now starts at Friday `00:00` in `DAY_CAPTAIN_DISPLAY_TIMEZONE`, while repeated weekend runs stay incremental
   - a new `weekly-digest` application flow now exists with CLI, hosted HTTP, and hosted trigger support
-  - the app repo now includes an example [`weekly-digest-scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/.github/workflows/weekly-digest-scheduler.yml) workflow
-  - the ops bootstrap docs now include a dedicated [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) template
+  - the app repo now includes an example [`weekly-digest-scheduler.yml`](../../.github/workflows/weekly-digest-scheduler.yml) workflow
+  - the ops bootstrap docs now include a dedicated [`day_captain_ops_weekly_digest_scheduler.yml`](../../docs/day_captain_ops_weekly_digest_scheduler.yml) template
   - the private ops repo now has a separate `.github/workflows/weekly-digest.yml` scheduler, keeping weekday `morning-digest` auto-send distinct from the Sunday-evening weekly recap
   - README and operator docs now describe the split between weekday `morning-digest`, manual weekend access, and Sunday `weekly-digest`
 - Remaining closure work:

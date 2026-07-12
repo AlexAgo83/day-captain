@@ -48,7 +48,7 @@ This guide covers the bounded operator-managed multi-user model shipped in Day C
   - single-user deployments must explicitly list allowed senders through `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
   - multi-user deployments may authorize helper senders only through explicit `sender=target` mappings in `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
 - Duplicate suppression is keyed by inbound `command_message_id`, so replaying the same inbound message should not regenerate a second digest.
-- The first recommended transport bridge is Power Automate on top of the shared mailbox trigger. See [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md).
+- The first recommended transport bridge is Power Automate on top of the shared mailbox trigger. See [`power_automate_shared_mailbox_recall_setup.md`](../docs/power_automate_shared_mailbox_recall_setup.md).
 
 ## Manual validation
 

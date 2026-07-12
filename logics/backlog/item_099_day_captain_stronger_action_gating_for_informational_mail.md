@@ -8,6 +8,7 @@
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Problem
 - The current scoring model still gives enough weight to direct-recipient presence that some low-value informational mail can surface in `Actions to take` / `Actions a mener`.
@@ -67,7 +68,7 @@ flowchart LR
 - Skip when: Skip when the work is only about news configuration, broad spam handling, or unrelated delivery features.
 
 # References
-- Digest scoring and section routing logic: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
+- Digest scoring and section routing logic: [services.py](../../src/day_captain/services.py)
 
 # Priority
 - Impact: High - false-positive actions directly distort the operator's priorities inside the digest.

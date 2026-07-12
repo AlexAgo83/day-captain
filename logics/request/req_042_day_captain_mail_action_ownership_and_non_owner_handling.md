@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Improve mail interpretation so Day Captain does not confuse `this topic concerns the user` with `the user is expected to act on this point`.
@@ -86,10 +87,10 @@ flowchart TD
 - Skip when: The work is only about direct-recipient detection, generic mail scoring, or broad UI redesign without ownership semantics.
 
 # References
-- Existing recipient-aware umbrella request: [logics/request/req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology.md)
-- Existing direct-address relevance item: [logics/backlog/item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance.md](/Users/alexandreagostini/Documents/day-captain/logics/backlog/item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance.md)
-- Current structured parsing direction: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
-- Current scoring and wording implementation concentration: [src/day_captain/services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
+- Existing recipient-aware umbrella request: [logics/request/req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology.md](../../logics/request/req_031_day_captain_recipient_aware_digest_identity_mail_summaries_language_coherence_and_meeting_chronology.md)
+- Existing direct-address relevance item: [logics/backlog/item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance.md](../../logics/backlog/item_058_day_captain_recipient_aware_digest_identity_and_direct_address_relevance.md)
+- Current structured parsing direction: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](../../logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
+- Current scoring and wording implementation concentration: [src/day_captain/services.py](../../src/day_captain/services.py)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

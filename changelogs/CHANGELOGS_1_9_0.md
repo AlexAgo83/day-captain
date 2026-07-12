@@ -28,4 +28,4 @@
 - `python3 -m pytest -q`
 - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
 - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- `python3 /Users/alexandreagostini/Documents/cdx-logics-vscode/logics/skills/logics-version-release-manager/scripts/publish_version_release.py --version 1.9.0 --notes-file changelogs/CHANGELOGS_1_9_0.md --dry-run`
+- `python3 logics/skills/logics-version-release-manager/scripts/publish_version_release.py --version 1.9.0 --notes-file changelogs/CHANGELOGS_1_9_0.md --dry-run`

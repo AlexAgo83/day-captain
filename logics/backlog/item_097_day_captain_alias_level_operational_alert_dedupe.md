@@ -8,6 +8,7 @@
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Problem
 - Near-identical operational alerts delivered to several aliases currently surface as separate digest entries because grouping mostly relies on `thread_id`.
@@ -68,7 +69,7 @@ flowchart LR
 - Skip when: Skip when the work is only about news configuration, broad spam handling, or unrelated delivery features.
 
 # References
-- Digest scoring and grouping logic: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
+- Digest scoring and grouping logic: [services.py](../../src/day_captain/services.py)
 
 # Priority
 - Impact: High - duplicate critical alerts directly reduce trust and waste the limited attention budget of the digest.

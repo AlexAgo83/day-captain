@@ -7,6 +7,7 @@
 > Complexity: High
 > Theme: UX
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Restructure Day Captain so mailbox and calendar ingestion no longer jumps almost directly from flat source records to scored digest entries.
@@ -89,10 +90,10 @@ flowchart TD
 - Skip when: The work is only about copy polish, score tuning, delivery reliability, or isolated rendering tweaks that do not require a structural parsing contract.
 
 # References
-- Current source models: [src/day_captain/models.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/models.py)
-- Current scoring and rendering concentration: [src/day_captain/services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Current digest orchestration pipeline: [src/day_captain/app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
-- Existing direction on per-thread and per-meeting briefings with confidence: [logics/request/req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring.md)
+- Current source models: [src/day_captain/models.py](../../src/day_captain/models.py)
+- Current scoring and rendering concentration: [src/day_captain/services.py](../../src/day_captain/services.py)
+- Current digest orchestration pipeline: [src/day_captain/app.py](../../src/day_captain/app.py)
+- Existing direction on per-thread and per-meeting briefings with confidence: [logics/request/req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring.md](../../logics/request/req_033_day_captain_per_thread_and_per_meeting_assistant_briefings_with_confidence_scoring.md)
 
 # AC Traceability
 - AC1 -> `item_087_day_captain_structured_mail_thread_and_agenda_parsing_foundations`. Proof: this item introduces the explicit structured parsing layer between raw records and downstream digest behavior.

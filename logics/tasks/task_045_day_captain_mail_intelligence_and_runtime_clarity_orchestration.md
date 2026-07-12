@@ -8,6 +8,7 @@
 > Complexity: High
 > Theme: Architecture
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Context
 - Derived from backlog items `item_087_day_captain_structured_mail_thread_and_agenda_parsing_foundations`, `item_088_day_captain_typed_digest_card_contract_and_renderer_migration`, `item_089_day_captain_digest_services_decomposition_and_pipeline_seams`, `item_090_day_captain_recent_digest_memory_and_cross_day_continuity_signals`, `item_091_day_captain_mail_action_ownership_and_non_owner_wording`, `item_092_day_captain_mail_suspicion_risk_signals_and_conservative_rendering`, `item_093_day_captain_weather_degraded_path_observability`, and `item_094_day_captain_local_graph_fail_fast_and_explicit_stub_runtime_contract`.
@@ -71,10 +72,10 @@ flowchart TD
 - Skip when: The work is only a single narrow bug fix or one isolated backlog item with no cross-cutting dependencies.
 
 # References
-- Main digest orchestration path: [src/day_captain/app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
-- Main digest logic concentration: [src/day_captain/services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Protocol boundaries: [src/day_captain/ports.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/ports.py)
-- Existing auth/runtime orchestration task: [logics/tasks/task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration.md](/Users/alexandreagostini/Documents/day-captain/logics/tasks/task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration.md)
+- Main digest orchestration path: [src/day_captain/app.py](../../src/day_captain/app.py)
+- Main digest logic concentration: [src/day_captain/services.py](../../src/day_captain/services.py)
+- Protocol boundaries: [src/day_captain/ports.py](../../src/day_captain/ports.py)
+- Existing auth/runtime orchestration task: [logics/tasks/task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration.md](../../logics/tasks/task_044_day_captain_delivery_recovery_and_delegated_auth_contract_orchestration.md)
 
 # Validation
 - python3 -m pytest -q

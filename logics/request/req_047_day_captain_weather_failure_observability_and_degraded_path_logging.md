@@ -7,6 +7,7 @@
 > Complexity: Low
 > Theme: Observability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Preserve the current graceful weather fallback behavior while adding enough observability that operators can tell when the weather capsule is missing because of config error, provider failure, or payload drift.
@@ -66,8 +67,8 @@ flowchart TD
 - Skip when: The work is about weather copy, rendering polish, or provider expansion.
 
 # References
-- Weather fallback path: [src/day_captain/app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
-- Weather provider: [src/day_captain/adapters/weather.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/adapters/weather.py)
+- Weather fallback path: [src/day_captain/app.py](../../src/day_captain/app.py)
+- Weather provider: [src/day_captain/adapters/weather.py](../../src/day_captain/adapters/weather.py)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

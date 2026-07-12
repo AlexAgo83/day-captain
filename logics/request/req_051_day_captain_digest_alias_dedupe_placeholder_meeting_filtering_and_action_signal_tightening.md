@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Product Quality
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Collapse duplicate operational alerts received through multiple aliases so the digest shows one coherent item instead of several near-identical entries.
@@ -67,8 +68,8 @@ flowchart TD
 - This request depends on the current message normalization, meeting metadata, and section-routing pipeline remaining explainable and testable.
 
 # References
-- Current digest scoring and grouping logic: [services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Digest horizon and meeting collection entrypoint: [app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
+- Current digest scoring and grouping logic: [services.py](../../src/day_captain/services.py)
+- Digest horizon and meeting collection entrypoint: [app.py](../../src/day_captain/app.py)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

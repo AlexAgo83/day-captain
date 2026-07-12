@@ -7,6 +7,7 @@
 > Complexity: High
 > Theme: Architecture
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Reduce the concentration of digest semantics in `services.py` by introducing clearer module boundaries and typed contracts between scoring, wording, and rendering.
@@ -70,9 +71,9 @@ flowchart TD
 - Skip when: The work is only a small feature, wording tweak, or isolated bug fix that does not require structural change.
 
 # References
-- Main concentrated module: [src/day_captain/services.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/services.py)
-- Current protocol boundaries: [src/day_captain/ports.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/ports.py)
-- Related structured parsing request: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
+- Main concentrated module: [src/day_captain/services.py](../../src/day_captain/services.py)
+- Current protocol boundaries: [src/day_captain/ports.py](../../src/day_captain/ports.py)
+- Related structured parsing request: [logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md](../../logics/request/req_040_day_captain_structured_mail_and_calendar_parsing_and_digest_presentation.md)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

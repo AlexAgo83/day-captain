@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Replaced machine-specific absolute paths with repository-relative links.
 
 # Needs
 - Reduce misleading local success cases where Day Captain assembles with stub auth and static collectors instead of surfacing a real Graph/runtime misconfiguration.
@@ -68,9 +69,9 @@ flowchart TD
 - Skip when: The work is only about tests, auth provider internals, or hosted-only runtime safeguards.
 
 # References
-- Local runtime assembly: [src/day_captain/app.py](/Users/alexandreagostini/Documents/day-captain/src/day_captain/app.py)
-- Existing hosted fail-fast direction: [logics/request/req_034_day_captain_hosted_runtime_fail_fast_and_identity_normalization.md](/Users/alexandreagostini/Documents/day-captain/logics/request/req_034_day_captain_hosted_runtime_fail_fast_and_identity_normalization.md)
-- Project status note about hosted hardening focus: [README.md](/Users/alexandreagostini/Documents/day-captain/README.md)
+- Local runtime assembly: [src/day_captain/app.py](../../src/day_captain/app.py)
+- Existing hosted fail-fast direction: [logics/request/req_034_day_captain_hosted_runtime_fail_fast_and_identity_normalization.md](../../logics/request/req_034_day_captain_hosted_runtime_fail_fast_and_identity_normalization.md)
+- Project status note about hosted hardening focus: [README.md](../../README.md)
 
 # Definition of Ready (DoR)
 - [x] Problem statement is explicit and user impact is clear.

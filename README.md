@@ -222,7 +222,7 @@ The delivered digest now supports:
 - weekend meeting fallback to Monday and next-day meeting fallback when no meetings remain for the current day
 - first-run `morning-digest` mail fallback to Friday `00:00` in `DAY_CAPTAIN_DISPLAY_TIMEZONE` on Saturday, Sunday, and Monday; repeated runs stay incremental
 
-For the current local-preview and final Outlook validation workflow, see [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
+For the current local-preview and final Outlook validation workflow, see [`digest_rendering_validation.md`](docs/digest_rendering_validation.md).
 
 ## Microsoft auth setup
 
@@ -329,7 +329,7 @@ Hosted `email-command-recall` contract:
 
 In hosted app-only mode, Day Captain targets explicit `/users/{id}` routes for mailbox reads, calendar reads, and `sendMail` instead of relying on a permanent `/me` identity. When several users are configured, each run must choose one explicit target user. If `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` is set, reads still target the selected mailbox but `sendMail` is routed through the dedicated sender mailbox instead.
 
-For the first inbound email-command bridge, the recommended operator path is currently Power Automate against the shared mailbox trigger rather than a custom Graph webhook. See [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md).
+For the first inbound email-command bridge, the recommended operator path is currently Power Automate against the shared mailbox trigger rather than a custom Graph webhook. See [`power_automate_shared_mailbox_recall_setup.md`](docs/power_automate_shared_mailbox_recall_setup.md).
 
 ## Local usage
 
@@ -358,7 +358,7 @@ PYTHONPATH=src python3 -m day_captain morning-digest \
   --output-text tmp/day-captain-preview.txt
 ```
 
-That preview flow is documented in [`digest_rendering_validation.md`](/Users/alexandreagostini/Documents/day-captain/docs/digest_rendering_validation.md).
+That preview flow is documented in [`digest_rendering_validation.md`](docs/digest_rendering_validation.md).
 In development, this can also be used as a layout-only stub preview before live Graph auth is configured.
 Use `--preview` when you want a guaranteed no-send local render; `--output-html` and `--output-text` only control file export.
 
