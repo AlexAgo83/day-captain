@@ -2,9 +2,9 @@
 > From version: 1.9.3
 > Schema version: 1.0
 > Status: In progress
-> Understanding: 98
-> Confidence: 95
-> Progress: 15
+> Understanding: 99
+> Confidence: 96
+> Progress: 35
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -92,3 +92,4 @@ flowchart TD
 
 # Report
 - 2026-07-12: wave 1 implemented. Package metadata now requires Python 3.11+ and CI targets 3.11/3.12 instead of EOL 3.9. Existing `Optional[...]` annotations were retained as ordinary typing style, not runtime compatibility shims.
+- 2026-07-12: wave 2 implemented. Authenticated `/jobs/*` requests use a standard-library per-endpoint fixed-window limiter, defaulting to 20 requests per 60 seconds. Excess requests return 429 with `Retry-After`; window reset is covered by tests.

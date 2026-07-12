@@ -5,6 +5,8 @@ from datetime import datetime
 from hmac import compare_digest
 import json
 import logging
+from threading import Lock
+from time import monotonic
 from typing import Callable
 from typing import Iterable
 from typing import Optional
@@ -19,6 +21,12 @@ from day_captain.models import to_jsonable
 JsonDict = dict
 StartResponse = Callable[[str, Iterable[tuple]], None]
 logger = logging.getLogger(__name__)
+
+
+class RateLimitExceeded(RuntimeError):
+    def __init__(self, retry_after: int) -> None:
+        super().__init__("rate_limited")
+        self.retry_after = retry_after
 
 
 def _parse_datetime(value: Optional[str]) -> Optional[datetime]:
@@ -50,8 +58,11 @@ def _parse_bool(value, *, field_name: str) -> bool:
 
 
 class DayCaptainWebApp:
-    def __init__(self, settings: DayCaptainSettings) -> None:
+    def __init__(self, settings: DayCaptainSettings, clock=monotonic) -> None:
         self.settings = settings
+        self._clock = clock
+        self._rate_limit_windows = {}
+        self._rate_limit_lock = Lock()
 
     def __call__(self, environ, start_response: StartResponse):
         method = environ.get("REQUEST_METHOD", "GET").upper()
@@ -65,6 +76,7 @@ class DayCaptainWebApp:
                 return self._json_response(start_response, 200, health_payload)
             if path == "/jobs/morning-digest" and method == "POST":
                 self._require_secret(environ)
+                self._enforce_rate_limit(path)
                 payload = self._read_json(environ)
                 self.settings.require_target_user_if_needed(str(payload.get("target_user_id") or ""))
                 app = build_application(settings=self.settings)
@@ -77,6 +89,7 @@ class DayCaptainWebApp:
                 return self._json_response(start_response, 200, self._job_ack("morning_digest", result))
             if path == "/jobs/weekly-digest" and method == "POST":
                 self._require_secret(environ)
+                self._enforce_rate_limit(path)
                 payload = self._read_json(environ)
                 self.settings.require_target_user_if_needed(str(payload.get("target_user_id") or ""))
                 app = build_application(settings=self.settings)
@@ -88,6 +101,7 @@ class DayCaptainWebApp:
                 return self._json_response(start_response, 200, self._job_ack("weekly_digest", result))
             if path == "/jobs/recall-digest" and method == "POST":
                 self._require_secret(environ)
+                self._enforce_rate_limit(path)
                 payload = self._read_json(environ)
                 self.settings.require_target_user_if_needed(str(payload.get("target_user_id") or ""))
                 app = build_application(settings=self.settings)
@@ -99,6 +113,7 @@ class DayCaptainWebApp:
                 return self._json_response(start_response, 200, self._job_ack("recall_digest", result))
             if path == "/jobs/email-command-recall" and method == "POST":
                 self._require_secret(environ)
+                self._enforce_rate_limit(path)
                 payload = self._read_json(environ)
                 app = build_application(settings=self.settings)
                 result = app.process_email_command_recall(
@@ -113,6 +128,13 @@ class DayCaptainWebApp:
             return self._json_response(start_response, 404, {"error": "not_found"})
         except PermissionError as exc:
             return self._json_response(start_response, 401, {"error": str(exc)})
+        except RateLimitExceeded as exc:
+            return self._json_response(
+                start_response,
+                429,
+                {"error": "rate_limited"},
+                extra_headers=(("Retry-After", str(exc.retry_after)),),
+            )
         except LookupError as exc:
             return self._json_response(start_response, 404, {"error": str(exc)})
         except ValueError as exc:
@@ -133,6 +155,19 @@ class DayCaptainWebApp:
         candidate = str(environ.get("HTTP_X_DAY_CAPTAIN_SECRET", "") or "")
         return compare_digest(candidate, self.settings.job_secret)
 
+    def _enforce_rate_limit(self, path: str) -> None:
+        limit = max(1, self.settings.job_rate_limit_requests)
+        window_seconds = max(1, self.settings.job_rate_limit_window_seconds)
+        now = self._clock()
+        with self._rate_limit_lock:
+            window_start, count = self._rate_limit_windows.get(path, (now, 0))
+            if now - window_start >= window_seconds:
+                window_start, count = now, 0
+            if count >= limit:
+                retry_after = max(1, int(window_seconds - (now - window_start) + 0.999))
+                raise RateLimitExceeded(retry_after)
+            self._rate_limit_windows[path] = (window_start, count + 1)
+
     def _read_json(self, environ) -> JsonDict:
         content_length = environ.get("CONTENT_LENGTH") or "0"
         try:
@@ -147,12 +182,13 @@ class DayCaptainWebApp:
             raise ValueError("Request body must be a JSON object.")
         return payload
 
-    def _json_response(self, start_response: StartResponse, status_code: int, payload) -> list:
+    def _json_response(self, start_response: StartResponse, status_code: int, payload, extra_headers=()) -> list:
         body = json.dumps(to_jsonable(payload), indent=2, sort_keys=True).encode("utf-8")
         headers = [
             ("Content-Type", "application/json"),
             ("Content-Length", str(len(body))),
         ]
+        headers.extend(extra_headers)
         start_response("{0} {1}".format(status_code, _status_text(status_code)), headers)
         return [body]
 
@@ -199,6 +235,7 @@ def _status_text(status_code: int) -> str:
         200: "OK",
         400: "Bad Request",
         401: "Unauthorized",
+        429: "Too Many Requests",
         404: "Not Found",
         500: "Internal Server Error",
     }.get(status_code, "OK")

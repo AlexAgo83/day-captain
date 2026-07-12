@@ -80,6 +80,8 @@ class DayCaptainSettings:
     http_host: str = "0.0.0.0"
     http_port: int = 8000
     job_secret: str = ""
+    job_rate_limit_requests: int = 20
+    job_rate_limit_window_seconds: int = 60
     delivery_mode: str = "json"
     default_lookback_hours: int = 24
     graph_auth_mode: str = "delegated"
@@ -137,6 +139,8 @@ class DayCaptainSettings:
             http_host=os.getenv("DAY_CAPTAIN_HTTP_HOST", "0.0.0.0"),
             http_port=int(os.getenv("PORT", os.getenv("DAY_CAPTAIN_HTTP_PORT", "8000"))),
             job_secret=os.getenv("DAY_CAPTAIN_JOB_SECRET", ""),
+            job_rate_limit_requests=int(os.getenv("DAY_CAPTAIN_JOB_RATE_LIMIT_REQUESTS", "20")),
+            job_rate_limit_window_seconds=int(os.getenv("DAY_CAPTAIN_JOB_RATE_LIMIT_WINDOW_SECONDS", "60")),
             delivery_mode=os.getenv("DAY_CAPTAIN_DELIVERY_MODE", "json"),
             default_lookback_hours=int(os.getenv("DAY_CAPTAIN_DEFAULT_LOOKBACK_HOURS", "24")),
             graph_auth_mode=_normalize_graph_auth_mode(os.getenv("DAY_CAPTAIN_GRAPH_AUTH_MODE", "delegated")),

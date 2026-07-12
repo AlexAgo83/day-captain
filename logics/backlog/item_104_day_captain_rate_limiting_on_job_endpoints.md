@@ -1,10 +1,10 @@
 ## item_104_day_captain_rate_limiting_on_job_endpoints - Day Captain rate limiting on job endpoints
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 95
-> Confidence: 90
-> Progress: 0
+> Status: In progress
+> Understanding: 100
+> Confidence: 98
+> Progress: 100
 > Complexity: Low
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.

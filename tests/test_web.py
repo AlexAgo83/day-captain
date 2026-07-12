@@ -12,6 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from day_captain.config import DayCaptainSettings
 from day_captain.models import DigestPayload
 from day_captain.web import _parse_datetime
+from day_captain.web import DayCaptainWebApp
 from day_captain.web import create_web_app
 
 
@@ -71,6 +72,28 @@ class FakeHostedApp:
 
 
 class DayCaptainWebAppTest(unittest.TestCase):
+    def test_job_rate_limit_returns_429_and_resets_after_window(self) -> None:
+        now = [100.0]
+        settings = DayCaptainSettings(
+            job_secret="secret",
+            job_rate_limit_requests=1,
+            job_rate_limit_window_seconds=10,
+        )
+        app = DayCaptainWebApp(settings, clock=lambda: now[0])
+        fake_app = FakeHostedApp()
+
+        with mock.patch("day_captain.web.build_application", return_value=fake_app):
+            first = self._request(app, "POST", "/jobs/morning-digest", payload={})
+            limited = self._request(app, "POST", "/jobs/morning-digest", payload={})
+            now[0] += 10
+            reset = self._request(app, "POST", "/jobs/morning-digest", payload={})
+
+        self.assertEqual(first["status"], "200 OK")
+        self.assertEqual(limited["status"], "429 Too Many Requests")
+        self.assertEqual(dict(limited["headers"])["Retry-After"], "10")
+        self.assertEqual(reset["status"], "200 OK")
+        self.assertEqual(len(fake_app.calls), 2)
+
     def _request(self, app, method, path, payload=None, secret="secret"):
         body = b""
         if payload is not None:
