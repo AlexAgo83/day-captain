@@ -84,6 +84,17 @@ class StubExternalNewsProvider:
 
 
 class DayCaptainApplicationTest(unittest.TestCase):
+    def test_live_test_recipient_requires_graph_send(self) -> None:
+        app = build_application(settings=DayCaptainSettings(), storage=InMemoryStorage())
+
+        with self.assertRaisesRegex(ValueError, "requires graph_send"):
+            app.run_morning_digest(
+                now=datetime(2026, 7, 12, tzinfo=timezone.utc),
+                delivery_mode="json",
+                live_test_recipient="test@example.com",
+                force=True,
+            )
+
     def test_sensitive_authentication_message_never_reaches_downstream_boundaries(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         secret = "839214"

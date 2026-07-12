@@ -769,6 +769,7 @@ class DayCaptainApplication:
         target_user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
         before_delivery=None,
+        live_test_recipient: str = "",
     ) -> DigestPayload:
         generation_started_at = perf_counter()
         auth_context = self.auth_provider.authenticate(
@@ -859,6 +860,13 @@ class DayCaptainApplication:
                     "recent_memory": {"cleared": list(cleared_recent_items)},
                 },
             )
+        if live_test_recipient:
+            if delivery_mode != "graph_send":
+                raise ValueError("live_test_recipient requires graph_send delivery.")
+            payload = replace(
+                payload,
+                delivery_payload={**dict(payload.delivery_payload), "live_test_recipient": live_test_recipient},
+            )
         if sensitive_suppression_count or repeated_unchanged_suppressions:
             payload = replace(
                 payload,
@@ -909,6 +917,7 @@ class DayCaptainApplication:
         force: bool = False,
         target_user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
+        live_test_recipient: str = "",
     ) -> DigestPayload:
         current_time = _coerce_datetime(now)
         scoped_tenant_id = self._resolve_tenant_id(tenant_id)
@@ -935,6 +944,7 @@ class DayCaptainApplication:
             window_start=window_start,
             delivery_mode=delivery_mode or self.settings.delivery_mode,
             run_type="morning_digest",
+            live_test_recipient=live_test_recipient,
             target_user_id=scoped_user_id,
             tenant_id=scoped_tenant_id,
         )
@@ -945,6 +955,7 @@ class DayCaptainApplication:
         delivery_mode: Optional[str] = None,
         target_user_id: Optional[str] = None,
         tenant_id: Optional[str] = None,
+        live_test_recipient: str = "",
     ) -> DigestPayload:
         current_time = _coerce_datetime(now)
         scoped_tenant_id = self._resolve_tenant_id(tenant_id)
@@ -960,6 +971,7 @@ class DayCaptainApplication:
             window_start=window_start,
             delivery_mode=delivery_mode or self.settings.delivery_mode,
             run_type="weekly_digest",
+            live_test_recipient=live_test_recipient,
             target_user_id=scoped_user_id,
             tenant_id=scoped_tenant_id,
         )

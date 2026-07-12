@@ -60,6 +60,7 @@ def build_parser() -> argparse.ArgumentParser:
     morning.add_argument("--target-user", help="Configured mailbox/user to run.")
     morning.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
     morning.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
+    morning.add_argument("--live-test-recipient", help="Mark a graph_send as a guarded single-recipient live test.")
 
     weekly = subparsers.add_parser("weekly-digest", help="Run the weekly digest flow.")
     weekly.add_argument("--now", help="ISO datetime override for the run clock.")
@@ -68,6 +69,7 @@ def build_parser() -> argparse.ArgumentParser:
     weekly.add_argument("--target-user", help="Configured mailbox/user to run.")
     weekly.add_argument("--output-html", help="Optional file path where the rendered HTML digest will be written.")
     weekly.add_argument("--output-text", help="Optional file path where the rendered text digest will be written.")
+    weekly.add_argument("--live-test-recipient", help="Mark a graph_send as a guarded single-recipient live test.")
 
     serve_parser = subparsers.add_parser("serve", help="Run the Day Captain HTTP service.")
     serve_parser.add_argument("--host", help="Override the configured bind host.")
@@ -493,12 +495,14 @@ def main(argv: Optional[list] = None) -> int:
             delivery_mode=_resolved_delivery_mode(args, explicit_delivery_mode=args.delivery_mode),
             force=args.force,
             target_user_id=args.target_user,
+            live_test_recipient=args.live_test_recipient,
         )
     elif args.command == "weekly-digest":
         result = app.run_weekly_digest(
             now=_parse_datetime(args.now),
             delivery_mode=_resolved_delivery_mode(args, explicit_delivery_mode=args.delivery_mode),
             target_user_id=args.target_user,
+            live_test_recipient=args.live_test_recipient,
         )
     elif args.command == "recall-digest":
         result = app.recall_digest(
