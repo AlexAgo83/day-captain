@@ -1,0 +1,470 @@
+{
+  "budgets": {
+    "max_docs": 56,
+    "max_docs_per_ref": 8
+  },
+  "changed_paths": [
+    "logics/backlog/item_109_reduce_digest_noise_and_enforce_concise_section_budgets.md",
+    "logics/backlog/item_110_generate_concrete_owner_aware_actions_and_deadlines.md",
+    "logics/backlog/item_111_turn_recent_run_memory_into_a_differential_commitment_view.md",
+    "logics/backlog/item_112_make_upcoming_meetings_preparation_and_conflict_aware.md",
+    "logics/backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md",
+    "logics/product/prod_002_day_captain_actionable_differential_brief.md",
+    "logics/request/req_055_day_captain_production_digest_actionability_improvement.md",
+    "logics/scaffold/digest-actionability-improvement-2026-07.json",
+    "logics/tasks/task_050_orchestrate_production_digest_actionability_improvements.md"
+  ],
+  "command": "logics-manager sync context-pack req_055_day_captain_production_digest_actionability_improvement item_109_reduce_digest_noise_and_enforce_concise_section_budgets item_110_generate_concrete_owner_aware_actions_and_deadlines item_111_turn_recent_run_memory_into_a_differential_commitment_view item_112_make_upcoming_meetings_preparation_and_conflict_aware item_113_improve_digest_presentation_personalization_and_usefulness_telemetry task_050_orchestrate_production_digest_actionability_improvements --mode diff-first --profile deep --handoff",
+  "companion_docs": [
+    {
+      "kind": "product",
+      "linked_refs": {
+        "item": [
+          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
+          "item_110_generate_concrete_owner_aware_actions_and_deadlines",
+          "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
+          "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
+          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/product/prod_002_day_captain_actionable_differential_brief.md",
+      "ref": "prod_002_day_captain_actionable_differential_brief",
+      "sections": {
+        "Goals": [
+          "- Cut routine digest reading effort by reducing repeated and generic content.",
+          "- Prioritize concrete user-owned commitments, deadlines, delivery failures, and meeting preparation.",
+          "- Use stable thread continuity to explain changes across runs instead of repeating complete mailbox snapshots.",
+          "- Keep ambient context such as weather and external news subordinate to operational work.",
+          "- Measure whether surfaced cards lead to useful opens, recalls, feedback, or completed follow-up."
+        ],
+        "Key product decisions": [
+          "- Use structured input as the source of truth for generated docs.",
+          "- Keep generated write paths local and repo-bounded."
+        ],
+        "Overview": [
+          "Make each digest answer what changed, what the recipient personally needs to do, when it is due, and what can safely be ignored."
+        ],
+        "References": [
+          "- Product back-reference: `req_055_day_captain_production_digest_actionability_improvement`",
+          "- Task back-reference: `task_050_orchestrate_production_digest_actionability_improvements`"
+        ]
+      },
+      "status": "Proposed",
+      "title": "Day Captain actionable differential brief"
+    }
+  ],
+  "docs": [
+    {
+      "ai_context": {
+        "keywords": "request-chain-scaffold, day captain production digest actionability improvement, development-ready",
+        "skip when": "The change is unrelated to this scaffolded request chain.",
+        "summary": "Day Captain production digest actionability improvement",
+        "use when": "You need to implement or review the scaffolded workflow for Day Captain production digest actionability improvement."
+      },
+      "kind": "request",
+      "linked_refs": {
+        "item": [
+          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
+          "item_110_generate_concrete_owner_aware_actions_and_deadlines",
+          "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
+          "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
+          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ]
+      },
+      "path": "logics/request/req_055_day_captain_production_digest_actionability_improvement.md",
+      "ref": "req_055_day_captain_production_digest_actionability_improvement",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: A daily digest renders no more than 3 critical items, 3 user-owned actions, 2 watch items, and 4 upcoming meetings, with deterministic ordering and focused regression coverage.",
+          "- AC2: Unread state is informational only; newsletters, entertainment recaps, routine automatic replies, and already-surfaced unchanged items do not gain action priority without a stronger signal.",
+          "- AC3: Every rendered action identifies a concrete next step and owner; user-owned actions are separated from shared work and work owned by another participant.",
+          "- AC4: Delivery failures, explicit deadlines, overdue commitments, and actionable transactional alerts outrank low-signal messages and produce specific recommended actions.",
+          "- AC5: Cross-run continuity follows stable mail threads where available and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states.",
+          "- AC6: Meeting cards surface conflicts and preparation evidence only when the system has a document, open decision, prior commitment, relevant thread, or explicit preparation request."
+        ],
+        "Needs": [
+          "- Turn production digests from long mailbox summaries into concise, differential, user-owned action briefs.",
+          "- Reduce repeated, generic, and low-signal cards while preserving delivery failures, explicit requests, deadlines, and meeting preparation needs.",
+          "- Use the existing scoring, ownership, continuity, rendering, feedback, and storage primitives before introducing new architecture.",
+          "- Make digest usefulness measurable so future tuning is based on user behavior rather than fixed heuristic scores."
+        ]
+      },
+      "status": "Draft",
+      "title": "Day Captain production digest actionability improvement"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, reduce digest noise and enforce concise section budgets, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Reduce digest noise and enforce concise section budgets",
+        "use when": "Implementing the scaffolded slice for Reduce digest noise and enforce concise section budgets."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_109_reduce_digest_noise_and_enforce_concise_section_budgets.md",
+      "ref": "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Renderer tests prove the daily section budgets and deterministic truncation order.",
+          "- AC2: A non-actionable unread newsletter is filtered while a flagged or transactional unread message remains eligible.",
+          "- AC3: A delivery-failure fixture is critical and recommends correcting the failed recipient before resending.",
+          "- AC4: Empty operational sections are omitted and ambient capsules never precede the action summary.",
+          "- AC5: Full tests pass without weakening tenant or user scoping."
+        ],
+        "Problem": [
+          "- The renderer currently applies a broad per-section limit that still allows long briefs with many similarly weighted cards.",
+          "- Unread messages, recurring entertainment newsletters, automatic replies, and low-signal watch items can consume space that should belong to explicit work.",
+          "- Empty sections and ambient information add reading cost even when there is no operational content."
+        ]
+      },
+      "status": "Ready",
+      "title": "Reduce digest noise and enforce concise section budgets"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, generate concrete owner-aware actions and deadlines, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Generate concrete owner-aware actions and deadlines",
+        "use when": "Implementing the scaffolded slice for Generate concrete owner-aware actions and deadlines."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_110_generate_concrete_owner_aware_actions_and_deadlines"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_110_generate_concrete_owner_aware_actions_and_deadlines.md",
+      "ref": "item_110_generate_concrete_owner_aware_actions_and_deadlines",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Fixtures for user, shared, other, and unclear ownership land in the expected section and display the owner correctly.",
+          "- AC2: Explicit send, call, validate, correct-recipient, and follow-up-after-return requests render concrete next steps.",
+          "- AC3: A generic fallback is omitted when no concrete action can be derived.",
+          "- AC4: Due dates sort actionable entries before undated work and overdue items receive a visible warning.",
+          "- AC5: One internal message containing a normal shared link is not marked suspicious, while a fixture with multiple independent risk signals is."
+        ],
+        "Problem": [
+          "- Generic actions such as reply, confirm, examine, or prepare do not tell the recipient what outcome is expected.",
+          "- Requests owned by another participant can be presented as if the digest recipient owns them.",
+          "- Deadline language and automatic-reply return dates are not consistently turned into scheduling signals."
+        ]
+      },
+      "status": "Ready",
+      "title": "Generate concrete owner-aware actions and deadlines"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, turn recent-run memory into a differential commitment view, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Turn recent-run memory into a differential commitment view",
+        "use when": "Implementing the scaffolded slice for Turn recent-run memory into a differential commitment view."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_111_turn_recent_run_memory_into_a_differential_commitment_view"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_111_turn_recent_run_memory_into_a_differential_commitment_view.md",
+      "ref": "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: A new message in an existing thread is classified as changed or still open rather than new.",
+          "- AC2: An unchanged non-critical item is suppressed on the next run and counted in the delta header.",
+          "- AC3: A disappeared prior item is represented as cleared/resolved without rendering its old full card.",
+          "- AC4: Daily and weekly memories remain independent and multi-user isolation tests pass.",
+          "- AC5: Read state alone never marks an item resolved."
+        ],
+        "Problem": [
+          "- Continuity currently keys message entries by source message ID, so a new reply in the same thread can bypass recent-memory matching.",
+          "- Already-surfaced unchanged cards remain visible, while cleared items are recorded in payload metadata but not explained to the recipient.",
+          "- The current states do not fully represent waiting, overdue, resolved, or intentionally suppressed work."
+        ]
+      },
+      "status": "Ready",
+      "title": "Turn recent-run memory into a differential commitment view"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, make upcoming meetings preparation and conflict aware, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Make upcoming meetings preparation and conflict aware",
+        "use when": "Implementing the scaffolded slice for Make upcoming meetings preparation and conflict aware."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_112_make_upcoming_meetings_preparation_and_conflict_aware"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_112_make_upcoming_meetings_preparation_and_conflict_aware.md",
+      "ref": "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: A context-free meeting renders without a recommended preparation action.",
+          "- AC2: A meeting with a linked request or document renders the specific preparation evidence.",
+          "- AC3: Overlapping meetings and sub-15-minute transitions produce a visible conflict or tight-transition warning.",
+          "- AC4: Placeholder and all-day presence fixtures do not become preparation tasks."
+        ],
+        "Problem": [
+          "- Meeting cards often repeat generic preparation advice even when no preparation evidence exists.",
+          "- Overlapping or tightly adjacent meetings are not clearly elevated as scheduling conflicts.",
+          "- Related mail context is available but does not consistently yield decisions, documents, commitments, or questions."
+        ]
+      },
+      "status": "Ready",
+      "title": "Make upcoming meetings preparation and conflict aware"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, improve digest presentation personalization and usefulness telemetry, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Improve digest presentation personalization and usefulness telemetry",
+        "use when": "Implementing the scaffolded slice for Improve digest presentation personalization and usefulness telemetry."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md",
+      "ref": "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Daily and weekly subjects are distinct in French and English renderer tests.",
+          "- AC2: Operational delta and action content appears before weather and news.",
+          "- AC3: Invalid weather is omitted with a safe diagnostic and valid extreme weather remains visible.",
+          "- AC4: Daily external news is absent or limited to one configured relevant theme match.",
+          "- AC5: Feedback and aggregate telemetry contain identifiers and event types but no raw mailbox content or production identity."
+        ],
+        "Problem": [
+          "- Daily and weekly emails can have identical subjects and visually similar cards despite very different operational impact.",
+          "- Weather and external news lack validation and relevance controls.",
+          "- The product cannot currently demonstrate which cards were useful or repeatedly ignored."
+        ]
+      },
+      "status": "Ready",
+      "title": "Improve digest presentation personalization and usefulness telemetry"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-task, request-chain-scaffold, orchestration",
+        "skip when": "Working on one isolated sibling slice.",
+        "summary": "Orchestrate production digest actionability improvements",
+        "use when": "Coordinating implementation of a scaffolded request chain."
+      },
+      "kind": "task",
+      "linked_refs": {
+        "item": [
+          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
+          "item_110_generate_concrete_owner_aware_actions_and_deadlines",
+          "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
+          "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
+          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/tasks/task_050_orchestrate_production_digest_actionability_improvements.md",
+      "ref": "task_050_orchestrate_production_digest_actionability_improvements",
+      "schema_version": "1.0",
+      "sections": {
+        "Context": [
+          "- Orchestrate the scaffolded request chain and keep sibling implementation slices linked."
+        ],
+        "Validation": [
+          "- Run `python3 -m logics_manager lint --require-status`.",
+          "- Run scaffold command tests."
+        ]
+      },
+      "status": "Ready",
+      "title": "Orchestrate production digest actionability improvements"
+    }
+  ],
+  "estimates": {
+    "char_count": 15530,
+    "companion_doc_count": 1,
+    "doc_count": 7
+  },
+  "generated_at": "2026-07-12T17:30:49Z",
+  "handoff": {
+    "companion_doc_count": 1,
+    "enabled": true,
+    "source_refs": [
+      "req_055_day_captain_production_digest_actionability_improvement",
+      "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
+      "item_110_generate_concrete_owner_aware_actions_and_deadlines",
+      "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
+      "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
+      "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
+      "task_050_orchestrate_production_digest_actionability_improvements"
+    ],
+    "validation_summary_count": 1
+  },
+  "mode": "diff-first",
+  "profile": "deep",
+  "ref": "req_055_day_captain_production_digest_actionability_improvement,item_109_reduce_digest_noise_and_enforce_concise_section_budgets,item_110_generate_concrete_owner_aware_actions_and_deadlines,item_111_turn_recent_run_memory_into_a_differential_commitment_view,item_112_make_upcoming_meetings_preparation_and_conflict_aware,item_113_improve_digest_presentation_personalization_and_usefulness_telemetry,task_050_orchestrate_production_digest_actionability_improvements",
+  "refs": [
+    "req_055_day_captain_production_digest_actionability_improvement",
+    "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
+    "item_110_generate_concrete_owner_aware_actions_and_deadlines",
+    "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
+    "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
+    "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
+    "task_050_orchestrate_production_digest_actionability_improvements"
+  ],
+  "release": {
+    "blocking_reasons": [],
+    "configured": true,
+    "contract_path": "logics/release/contract.json",
+    "guidance": [
+      "Release readiness must come from project-owned evidence, not conversational memory.",
+      "Use release status or validate before preparing or claiming release readiness.",
+      "Publication-oriented actions are explicit operator actions and are separate from safe read/validate actions."
+    ],
+    "next_action": "Release evidence is complete.",
+    "publication_actions": [
+      "GitHub release publication",
+      "external publication"
+    ],
+    "required_gates": [
+      {
+        "blocking_reason": null,
+        "id": "version_metadata",
+        "required": true,
+        "state": "preparing",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "changelog",
+        "required": true,
+        "state": "preparing",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "local_validation",
+        "required": true,
+        "state": "local_validation",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "git_push",
+        "required": true,
+        "state": "pushed",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "ci",
+        "required": true,
+        "state": "ci_verification",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "production_deployment",
+        "required": true,
+        "state": "external_publication",
+        "status": "passed"
+      }
+    ],
+    "safe_actions": [
+      "logics-manager release status",
+      "logics-manager release plan <version>",
+      "logics-manager release validate <version>"
+    ],
+    "state": "ready",
+    "target_version": "1.9.5"
+  },
+  "validation_summary": [
+    {
+      "items": [
+        "- Run `python3 -m logics_manager lint --require-status`.",
+        "- Run scaffold command tests."
+      ],
+      "path": "logics/tasks/task_050_orchestrate_production_digest_actionability_improvements.md",
+      "ref": "task_050_orchestrate_production_digest_actionability_improvements"
+    }
+  ]
+}

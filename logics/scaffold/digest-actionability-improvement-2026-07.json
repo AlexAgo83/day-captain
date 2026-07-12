@@ -1,0 +1,242 @@
+{
+  "title": "Day Captain production digest actionability improvement",
+  "references": [
+    "src/day_captain/services.py",
+    "src/day_captain/digest_parsing.py",
+    "src/day_captain/digest_memory.py",
+    "src/day_captain/models.py",
+    "src/day_captain/app.py",
+    "src/day_captain/config.py",
+    "tests/test_digest_renderer.py",
+    "tests/test_digest_parsing.py",
+    "tests/test_digest_memory.py",
+    "tests/test_app.py"
+  ],
+  "request": {
+    "complexity": "High",
+    "theme": "UX",
+    "needs": [
+      "Turn production digests from long mailbox summaries into concise, differential, user-owned action briefs.",
+      "Reduce repeated, generic, and low-signal cards while preserving delivery failures, explicit requests, deadlines, and meeting preparation needs.",
+      "Use the existing scoring, ownership, continuity, rendering, feedback, and storage primitives before introducing new architecture.",
+      "Make digest usefulness measurable so future tuning is based on user behavior rather than fixed heuristic scores."
+    ],
+    "context": [
+      "A read-only audit of 22 production briefs spanning roughly one month found bodies between about 7,200 and 12,400 characters, with up to 12 mail cards and 6 meetings in one brief.",
+      "The audit found 106 cards using the same confidence score, 33 instances of a generic reply-or-confirm action, 19 generic meeting-preparation prompts, and one recurring entertainment newsletter surfaced in 19 briefs.",
+      "Daily and weekly briefs can currently share the same subject, empty sections consume space, external news can dominate the brief, and operational delivery failures do not always outrank low-signal content.",
+      "The codebase already stores action ownership, confidence metadata, continuity state, recent completed runs, cleared items, user preferences, and related meeting context, but the final selection and rendering do not fully exploit them.",
+      "All production evidence in this corpus is anonymized. No mailbox addresses, personal names, client names, suppliers, or message contents are included."
+    ],
+    "acceptance_criteria": [
+      "AC1: A daily digest renders no more than 3 critical items, 3 user-owned actions, 2 watch items, and 4 upcoming meetings, with deterministic ordering and focused regression coverage.",
+      "AC2: Unread state is informational only; newsletters, entertainment recaps, routine automatic replies, and already-surfaced unchanged items do not gain action priority without a stronger signal.",
+      "AC3: Every rendered action identifies a concrete next step and owner; user-owned actions are separated from shared work and work owned by another participant.",
+      "AC4: Delivery failures, explicit deadlines, overdue commitments, and actionable transactional alerts outrank low-signal messages and produce specific recommended actions.",
+      "AC5: Cross-run continuity follows stable mail threads where available and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states.",
+      "AC6: Meeting cards surface conflicts and preparation evidence only when the system has a document, open decision, prior commitment, relevant thread, or explicit preparation request.",
+      "AC7: Confidence is displayed as a small evidence-based category rather than a pseudo-precise number, and suspicious-mail warnings require multiple independent risk signals or a strong trust-boundary violation.",
+      "AC8: Daily and weekly subjects are distinct, empty operational sections are omitted, external news is optional and bounded, weather values are validated, and operational work appears before ambient information.",
+      "AC9: Digest payloads expose anonymized usefulness instrumentation for card impressions, opens, recalls, suppressions, repeated unchanged items, and user feedback without storing message bodies in telemetry.",
+      "AC10: Existing multi-user isolation, Graph delivery, recall, feedback, storage compatibility, and security guardrails remain covered by the full test suite."
+    ]
+  },
+  "product": {
+    "title": "Day Captain actionable differential brief",
+    "overview": "Make each digest answer what changed, what the recipient personally needs to do, when it is due, and what can safely be ignored.",
+    "goals": [
+      "Cut routine digest reading effort by reducing repeated and generic content.",
+      "Prioritize concrete user-owned commitments, deadlines, delivery failures, and meeting preparation.",
+      "Use stable thread continuity to explain changes across runs instead of repeating complete mailbox snapshots.",
+      "Keep ambient context such as weather and external news subordinate to operational work.",
+      "Measure whether surfaced cards lead to useful opens, recalls, feedback, or completed follow-up."
+    ],
+    "non_goals": [
+      "Building a general-purpose task-management platform.",
+      "Automatically sending replies, accepting meetings, or completing commitments on behalf of a user.",
+      "Replacing Microsoft Graph, the existing delivery adapter, or the current storage abstraction.",
+      "Adding a new machine-learning service solely for ranking or confidence calibration.",
+      "Persisting raw mailbox content in analytics or exposing production identities in fixtures and documentation."
+    ]
+  },
+  "backlog_items": [
+    {
+      "title": "Reduce digest noise and enforce concise section budgets",
+      "priority": "High",
+      "complexity": "Medium",
+      "theme": "UX",
+      "request_acs": ["AC1", "AC2", "AC4", "AC8", "AC10"],
+      "problem": [
+        "The renderer currently applies a broad per-section limit that still allows long briefs with many similarly weighted cards.",
+        "Unread messages, recurring entertainment newsletters, automatic replies, and low-signal watch items can consume space that should belong to explicit work.",
+        "Empty sections and ambient information add reading cost even when there is no operational content."
+      ],
+      "scope_in": [
+        "Apply daily section budgets of 3 critical items, 3 actions, 2 watch items, and 4 meetings; define a bounded weekly variant if weekly review needs more capacity.",
+        "Remove unread state as a scoring bonus while preserving its badge.",
+        "Filter recurring entertainment recaps, routine newsletters, bulk reports, and automatic replies unless flagged, transactional, deadline-bearing, or explicitly actionable.",
+        "Classify non-delivery reports and equivalent transactional failures as critical and generate a recipient-specific correction/resend action.",
+        "Omit empty critical/action/watch sections and place weather and external news after operational sections.",
+        "Default external news to at most one relevant item and allow it to be disabled without changing digest generation."
+      ],
+      "scope_out": [
+        "Deleting unread metadata from collected messages.",
+        "Adding a new ranking service or external classifier.",
+        "Removing manual flags or transactional security guardrails."
+      ],
+      "acceptance_criteria": [
+        "AC1: Renderer tests prove the daily section budgets and deterministic truncation order.",
+        "AC2: A non-actionable unread newsletter is filtered while a flagged or transactional unread message remains eligible.",
+        "AC3: A delivery-failure fixture is critical and recommends correcting the failed recipient before resending.",
+        "AC4: Empty operational sections are omitted and ambient capsules never precede the action summary.",
+        "AC5: Full tests pass without weakening tenant or user scoping."
+      ]
+    },
+    {
+      "title": "Generate concrete owner-aware actions and deadlines",
+      "priority": "High",
+      "complexity": "High",
+      "theme": "Intelligence",
+      "request_acs": ["AC3", "AC4", "AC7", "AC10"],
+      "problem": [
+        "Generic actions such as reply, confirm, examine, or prepare do not tell the recipient what outcome is expected.",
+        "Requests owned by another participant can be presented as if the digest recipient owns them.",
+        "Deadline language and automatic-reply return dates are not consistently turned into scheduling signals."
+      ],
+      "scope_in": [
+        "Only place entries in actions_to_take when ownership is user or shared; route other-owned work to watch_items with an explicit waiting-on label.",
+        "Extract a bounded verb, object, counterparty, and due date from the latest meaningful thread text using deterministic patterns and existing LLM rewriting only as an optional refinement.",
+        "Render specific actions such as send a named deliverable, call a contact, validate a document, correct a recipient, or follow up after an automatic-reply return date.",
+        "Suppress recommended_action when the system cannot identify a useful next step instead of emitting a generic fallback.",
+        "Extend DigestCard with due_at and due_source only if existing context_metadata cannot carry the fields safely.",
+        "Replace numeric confidence display with Reliable, Confirm, or Insufficient context plus one short evidence reason.",
+        "Require multiple independent suspicious signals for internal-domain messages unless a strong trust-boundary violation is present."
+      ],
+      "scope_out": [
+        "Automatically executing the extracted action.",
+        "Guaranteeing natural-language deadline extraction for every language or phrasing.",
+        "Removing internal numeric scores used for deterministic ordering."
+      ],
+      "acceptance_criteria": [
+        "AC1: Fixtures for user, shared, other, and unclear ownership land in the expected section and display the owner correctly.",
+        "AC2: Explicit send, call, validate, correct-recipient, and follow-up-after-return requests render concrete next steps.",
+        "AC3: A generic fallback is omitted when no concrete action can be derived.",
+        "AC4: Due dates sort actionable entries before undated work and overdue items receive a visible warning.",
+        "AC5: One internal message containing a normal shared link is not marked suspicious, while a fixture with multiple independent risk signals is."
+      ]
+    },
+    {
+      "title": "Turn recent-run memory into a differential commitment view",
+      "priority": "High",
+      "complexity": "High",
+      "theme": "Intelligence",
+      "request_acs": ["AC2", "AC5", "AC9", "AC10"],
+      "problem": [
+        "Continuity currently keys message entries by source message ID, so a new reply in the same thread can bypass recent-memory matching.",
+        "Already-surfaced unchanged cards remain visible, while cleared items are recorded in payload metadata but not explained to the recipient.",
+        "The current states do not fully represent waiting, overdue, resolved, or intentionally suppressed work."
+      ],
+      "scope_in": [
+        "Use stable thread identity from context metadata for mail memory keys, falling back to source ID only when no thread identifier exists.",
+        "Suppress already_surfaced unchanged items by default unless critical, overdue, flagged, or explicitly retained by preference.",
+        "Keep changed and still_open items visible only with a concise explanation of what changed or why the commitment remains open.",
+        "Add waiting, overdue, and resolved continuity semantics using the existing continuity fields where possible.",
+        "Render a compact delta header with counts for new actions, changed items, deadlines, suppressed unchanged items, and cleared items.",
+        "Surface cleared items as a compact resolved-since-last-brief summary rather than full cards.",
+        "Keep memory isolated by tenant, user, and run type so weekly execution cannot consume the morning cursor or continuity state."
+      ],
+      "scope_out": [
+        "Creating a full task database separate from digest runs.",
+        "Inferring task completion solely because a message became read.",
+        "Sharing continuity state across users."
+      ],
+      "acceptance_criteria": [
+        "AC1: A new message in an existing thread is classified as changed or still open rather than new.",
+        "AC2: An unchanged non-critical item is suppressed on the next run and counted in the delta header.",
+        "AC3: A disappeared prior item is represented as cleared/resolved without rendering its old full card.",
+        "AC4: Daily and weekly memories remain independent and multi-user isolation tests pass.",
+        "AC5: Read state alone never marks an item resolved."
+      ]
+    },
+    {
+      "title": "Make upcoming meetings preparation and conflict aware",
+      "priority": "Medium",
+      "complexity": "Medium",
+      "theme": "Calendar",
+      "request_acs": ["AC6", "AC10"],
+      "problem": [
+        "Meeting cards often repeat generic preparation advice even when no preparation evidence exists.",
+        "Overlapping or tightly adjacent meetings are not clearly elevated as scheduling conflicts.",
+        "Related mail context is available but does not consistently yield decisions, documents, commitments, or questions."
+      ],
+      "scope_in": [
+        "Only render a meeting action when related context contains an explicit preparation request, document, open decision, prior commitment, or unresolved question.",
+        "Detect overlaps and gaps shorter than 15 minutes after meeting collection and render a critical conflict summary.",
+        "Summarize at most one prior decision, one open commitment, one relevant document, and one question for each preparation-worthy meeting.",
+        "Keep placeholder and presence events out of preparation actions while preserving useful location context.",
+        "Prefer concrete wording over generic keep-in-view or prepare-key-points fallbacks."
+      ],
+      "scope_out": [
+        "Automatically rescheduling meetings.",
+        "Fetching new document content beyond context already available to the application.",
+        "Generating preparation content when no supporting evidence exists."
+      ],
+      "acceptance_criteria": [
+        "AC1: A context-free meeting renders without a recommended preparation action.",
+        "AC2: A meeting with a linked request or document renders the specific preparation evidence.",
+        "AC3: Overlapping meetings and sub-15-minute transitions produce a visible conflict or tight-transition warning.",
+        "AC4: Placeholder and all-day presence fixtures do not become preparation tasks."
+      ]
+    },
+    {
+      "title": "Improve digest presentation personalization and usefulness telemetry",
+      "priority": "Medium",
+      "complexity": "Medium",
+      "theme": "UX",
+      "request_acs": ["AC7", "AC8", "AC9", "AC10"],
+      "problem": [
+        "Daily and weekly emails can have identical subjects and visually similar cards despite very different operational impact.",
+        "Weather and external news lack validation and relevance controls.",
+        "The product cannot currently demonstrate which cards were useful or repeatedly ignored."
+      ],
+      "scope_in": [
+        "Pass run type into rendering and use distinct localized daily and weekly subject formats.",
+        "Render a top delta summary before all optional ambient content and give delivery failures, deadlines, and user-owned actions stronger visual hierarchy.",
+        "Validate weather min/max ordering, absolute bounds, and implausible day-over-day changes; omit invalid values and log a content-free diagnostic.",
+        "Filter external news by configured product themes and limit it to one item in daily mode; allow a larger but bounded weekly selection.",
+        "Add Useful and Hide similar item feedback actions using the existing feedback path where feasible.",
+        "Record content-free telemetry for impressions, opens, recall actions, suppressions, unchanged repeats, and explicit feedback.",
+        "Expose aggregate usefulness metrics by run type and user without retaining raw subjects, previews, bodies, names, or addresses in telemetry."
+      ],
+      "scope_out": [
+        "Tracking pixels or covert read tracking.",
+        "Sending mailbox content to an external analytics platform.",
+        "A dashboard beyond a bounded export or operator-readable aggregate in this delivery slice."
+      ],
+      "acceptance_criteria": [
+        "AC1: Daily and weekly subjects are distinct in French and English renderer tests.",
+        "AC2: Operational delta and action content appears before weather and news.",
+        "AC3: Invalid weather is omitted with a safe diagnostic and valid extreme weather remains visible.",
+        "AC4: Daily external news is absent or limited to one configured relevant theme match.",
+        "AC5: Feedback and aggregate telemetry contain identifiers and event types but no raw mailbox content or production identity."
+      ]
+    }
+  ],
+  "orchestration_task": {
+    "title": "Orchestrate production digest actionability improvements",
+    "plan": [
+      "Capture anonymized baseline fixtures and metrics that reproduce the production audit findings without copying real mailbox content or identities.",
+      "Deliver the concise section budgets, unread-score removal, noise filters, transactional failure priority, empty-section omission, and ambient-content ordering as the first low-risk slice.",
+      "Implement owner-aware concrete actions, automatic-reply handling, deadline extraction, confidence categories, and stricter suspicious-mail evidence rules.",
+      "Change recent memory to use stable thread identity, suppress unchanged cards, render delta counts, and expose cleared items as compact resolved signals.",
+      "Add evidence-based meeting preparation and conflict detection without creating actions for context-free meetings or presence events.",
+      "Differentiate daily and weekly presentation, validate weather, constrain relevant external news, and add content-free usefulness feedback and metrics.",
+      "Run focused tests after each slice, then the full test suite, Logics flow validation, lint, and audit before closeout; record before/after brief-size and repetition metrics."
+    ]
+  },
+  "context_pack": {
+    "out": "logics/context-packs/digest-actionability-improvement-2026-07.json",
+    "mode": "diff-first",
+    "profile": "deep"
+  }
+}

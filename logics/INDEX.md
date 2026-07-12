@@ -9,6 +9,7 @@ _None_
 | Doc | Title | Status | Owner | Progress | Path |
 |---|---|---|---|---|---|
 | [prod_001_day_captain_operations_scheduler_reliability](product/prod_001_day_captain_operations_scheduler_reliability.md) | Day Captain operations scheduler reliability | Proposed |  |  | product/prod_001_day_captain_operations_scheduler_reliability.md |
+| [prod_002_day_captain_actionable_differential_brief](product/prod_002_day_captain_actionable_differential_brief.md) | Day Captain actionable differential brief | Proposed |  |  | product/prod_002_day_captain_actionable_differential_brief.md |
 
 ## Requests
 
@@ -68,6 +69,7 @@ _None_
 | [req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening](request/req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening.md) | Day Captain digest alias dedupe placeholder meeting filtering and action signal tightening | Done |  |  | request/req_051_day_captain_digest_alias_dedupe_placeholder_meeting_filtering_and_action_signal_tightening.md |
 | [req_053_day_captain_technical_debt_and_runtime_hardening](request/req_053_day_captain_technical_debt_and_runtime_hardening.md) | Day Captain technical debt and runtime hardening | Ready |  |  | request/req_053_day_captain_technical_debt_and_runtime_hardening.md |
 | [req_054_day_captain_power_automate_scheduler_migration](request/req_054_day_captain_power_automate_scheduler_migration.md) | Day Captain Power Automate scheduler migration | Draft |  |  | request/req_054_day_captain_power_automate_scheduler_migration.md |
+| [req_055_day_captain_production_digest_actionability_improvement](request/req_055_day_captain_production_digest_actionability_improvement.md) | Day Captain production digest actionability improvement | Draft |  |  | request/req_055_day_captain_production_digest_actionability_improvement.md |
 
 ## Backlog
 
@@ -182,6 +184,11 @@ _None_
 | [item_106_document_the_power_automate_scheduler_flows](backlog/item_106_document_the_power_automate_scheduler_flows.md) | Document the Power Automate scheduler flows | Ready |  | 0% | backlog/item_106_document_the_power_automate_scheduler_flows.md |
 | [item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling](backlog/item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling.md) | Align Day Captain app and ops docs with Power Automate scheduling | Ready |  | 0% | backlog/item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling.md |
 | [item_108_cut_over_production_scheduling_and_capture_live_evidence](backlog/item_108_cut_over_production_scheduling_and_capture_live_evidence.md) | Cut over production scheduling and capture live evidence | Ready |  | 0% | backlog/item_108_cut_over_production_scheduling_and_capture_live_evidence.md |
+| [item_109_reduce_digest_noise_and_enforce_concise_section_budgets](backlog/item_109_reduce_digest_noise_and_enforce_concise_section_budgets.md) | Reduce digest noise and enforce concise section budgets | Ready |  | 0% | backlog/item_109_reduce_digest_noise_and_enforce_concise_section_budgets.md |
+| [item_110_generate_concrete_owner_aware_actions_and_deadlines](backlog/item_110_generate_concrete_owner_aware_actions_and_deadlines.md) | Generate concrete owner-aware actions and deadlines | Ready |  | 0% | backlog/item_110_generate_concrete_owner_aware_actions_and_deadlines.md |
+| [item_111_turn_recent_run_memory_into_a_differential_commitment_view](backlog/item_111_turn_recent_run_memory_into_a_differential_commitment_view.md) | Turn recent-run memory into a differential commitment view | Ready |  | 0% | backlog/item_111_turn_recent_run_memory_into_a_differential_commitment_view.md |
+| [item_112_make_upcoming_meetings_preparation_and_conflict_aware](backlog/item_112_make_upcoming_meetings_preparation_and_conflict_aware.md) | Make upcoming meetings preparation and conflict aware | Ready |  | 0% | backlog/item_112_make_upcoming_meetings_preparation_and_conflict_aware.md |
+| [item_113_improve_digest_presentation_personalization_and_usefulness_telemetry](backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md) | Improve digest presentation personalization and usefulness telemetry | Ready |  | 0% | backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md |
 
 ## Tasks
 
@@ -236,4 +243,5 @@ _None_
 | [task_046_day_captain_footer_timing_and_meeting_open_link_orchestration](tasks/task_046_day_captain_footer_timing_and_meeting_open_link_orchestration.md) | Orchestrate footer timing and meeting open-link delivery refinements | Done |  | 100% | tasks/task_046_day_captain_footer_timing_and_meeting_open_link_orchestration.md |
 | [task_047_day_captain_remaining_digest_trust_fixes_orchestration](tasks/task_047_day_captain_remaining_digest_trust_fixes_orchestration.md) | Day Captain remaining digest trust fixes orchestration | Done |  | 100% | tasks/task_047_day_captain_remaining_digest_trust_fixes_orchestration.md |
 | [task_048_day_captain_technical_debt_hardening_orchestration](tasks/task_048_day_captain_technical_debt_hardening_orchestration.md) | Day Captain technical debt hardening orchestration | Ready |  | 0 | tasks/task_048_day_captain_technical_debt_hardening_orchestration.md |
-| [task_049_orchestrate_power_automate_scheduler_migration](tasks/task_049_orchestrate_power_automate_scheduler_migration.md) | Orchestrate Power Automate scheduler migration | In progress | codex | 95 | tasks/task_049_orchestrate_power_automate_scheduler_migration.md |
+| [task_049_orchestrate_power_automate_scheduler_migration](tasks/task_049_orchestrate_power_automate_scheduler_migration.md) | Orchestrate Power Automate scheduler migration | In progress | codex | 98 | tasks/task_049_orchestrate_power_automate_scheduler_migration.md |
+| [task_050_orchestrate_production_digest_actionability_improvements](tasks/task_050_orchestrate_production_digest_actionability_improvements.md) | Orchestrate production digest actionability improvements | Ready |  | 0% | tasks/task_050_orchestrate_production_digest_actionability_improvements.md |
