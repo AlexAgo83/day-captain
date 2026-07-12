@@ -107,6 +107,35 @@ class FeedbackLearningTest(unittest.TestCase):
             self.assertEqual(len([item for item in alice_preferences if item.preference_key == "sender:pm@example.com"]), 1)
             self.assertEqual(len([item for item in bob_preferences if item.preference_key == "sender:pm@example.com"]), 0)
 
+    def test_hide_similar_suppresses_and_can_be_reversed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = str(Path(tmpdir) / "day_captain.sqlite3")
+            message = MessageRecord(
+                graph_message_id="msg-hide",
+                thread_id="thread-hide",
+                subject="Roadmap input",
+                from_address="pm@example.com",
+                to_addresses=("alex@example.com",),
+                received_at=datetime(2026, 3, 7, 7, 50, tzinfo=timezone.utc),
+                body_preview="Please review the planning note.",
+            )
+            app = build_application(
+                settings=DayCaptainSettings(sqlite_path=path),
+                storage=SQLiteStorage(path),
+                auth_provider=StubAuthProvider(),
+                mail_collector=StaticMailCollector((message,)),
+                calendar_collector=StaticCalendarCollector(()),
+            )
+            first = app.run_morning_digest(now=datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc), force=True)
+
+            app.record_feedback(first.run_id, "message", "msg-hide", "hide_similar", "true", datetime(2026, 3, 7, 8, 5, tzinfo=timezone.utc))
+            hidden = app.run_morning_digest(now=datetime(2026, 3, 7, 9, 0, tzinfo=timezone.utc), force=True)
+            app.record_feedback(first.run_id, "message", "msg-hide", "hide_similar", "false", datetime(2026, 3, 7, 9, 5, tzinfo=timezone.utc))
+            restored = app.run_morning_digest(now=datetime(2026, 3, 7, 10, 0, tzinfo=timezone.utc), force=True)
+
+            self.assertEqual(hidden.actions_to_take, ())
+            self.assertTrue(restored.actions_to_take)
+
 
 if __name__ == "__main__":
     unittest.main()

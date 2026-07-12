@@ -2361,6 +2361,8 @@ class DeterministicScoringEngine:
         if preference_bonus:
             score += preference_bonus
             reason_codes.append("preference_signal")
+        if preference_bonus <= -1.5 and not _contains_any(combined_text, CRITICAL_PATTERNS + TRANSACTIONAL_ALERT_PATTERNS):
+            return None
 
         if message.is_unread:
             reason_codes.append("unread")
@@ -3868,6 +3870,8 @@ class PreferenceFeedbackProcessor:
             return 0.75 if value in positive else -0.75
         if signal in {"not_useful", "dismissed"}:
             return -0.75 if value in positive else 0.0
+        if signal == "hide_similar":
+            return -1.5 if value in positive else 1.5 if value in negative else 0.0
         if value in positive:
             return 0.5
         if value in negative:

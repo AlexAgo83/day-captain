@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 98
 > Confidence: 95
-> Progress: 75
+> Progress: 85
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -88,6 +88,7 @@
 - 2026-07-12: text and HTML rendering omit empty operational sections and place optional weather/news after the overview and populated operational sections. Full suite remains 271 passed.
 - 2026-07-12: confidence labels are now decision-oriented (`Reliable`/`Confirm`/`Insufficient context`, localized in French) while retaining the existing item-specific confidence reasons. Full suite remains 271 passed.
 - 2026-07-12: external news deduplicates repeated URLs/headlines before applying its configured limit. Digest payloads now expose aggregate repeated-unchanged suppression counts alongside sensitive suppressions. Full suite: 274 passed.
+- 2026-07-12: `hide_similar` feedback now creates a strong scoped negative preference that suppresses similar non-critical mail; sending the inverse value reverses it. Critical and transactional guardrails cannot be hidden this way. Full suite: 275 passed.
 
 # AI Context
 - Summary: Orchestrate production digest actionability improvements
