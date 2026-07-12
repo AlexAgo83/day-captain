@@ -3,7 +3,7 @@
 > Schema version: 1.0
 > Status: In progress
 > Understanding: 100
-> Confidence: 98
+> Confidence: 99
 > Progress: 99
 > Complexity: High
 > Theme: Implementation delivery
@@ -55,6 +55,7 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - Run `logics-manager flow validate task_052_run_digest_replay_visual_qa_and_safe_rollout --strict`.
 - Run `logics-manager lint --require-status`, `logics-manager audit`, and refresh the request context pack.
 - Run `logics-manager flow finish task task_052_run_digest_replay_visual_qa_and_safe_rollout.md` only after implementation evidence is attached.
+- 2026-07-12 live delivery evidence: Graph `/me` was confirmed as the explicitly authorized test mailbox before sending. Run `live-test-run-id` used the live-test guard and inbox verification found exactly one matching delivery, one To recipient, zero CC, and zero BCC. No mailbox content was retained as evidence.
 
 # Report
 - 2026-07-12: implementation started. Added `day-captain digest-metrics` for one or more exported preview payloads. Metric definitions are versioned (`1.0`) and report only aggregate visible length, card count, generic actions, risk warnings, news volume, and sensitive suppressions.
@@ -70,6 +71,7 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - 2026-07-12: all local implementation and validation are complete (279 tests, deterministic replay, passing versioned gates, daily/weekly native visual render, fail-closed live-test path). Remaining DoD evidence requires a production release followed by the identical aggregate audit; this external mutation was not inferred from implementation authorization.
 - 2026-07-12: release branch deployed to Render at `e3eeafa`; public and protected health checks passed with app-only Graph and Postgres. The protected diagnostic exposed configured identities, so validation output was immediately reduced to content-free booleans/counts before further rollout. No digest was manually triggered because the scheduled 20:30 weekly run predated deployment and a retry would duplicate production mail.
 - 2026-07-12: CI passed on Python 3.9/3.11 and Render serves the final content-free diagnostic schema from release commit `6d8f1f5` (code fix `9f74903`). A read-only app-only Sent Items count from the rollout boundary returned zero, confirming the rollout itself contacted no recipient. The first comparable new-release production sample is the scheduled Monday 08:45 run; post-release metric comparison remains pending until then.
+- 2026-07-12: the optional delegated live test was executed after confirming the authenticated Graph profile. The fail-closed guard restricted the envelope to the single configured test mailbox; a content-free inbox check confirmed one received message with one To recipient and no CC/BCC. Pixel-level Outlook review remains pending user inspection, and the temporary command output was deleted.
 
 # AI Context
 - Summary: Implement run digest replay visual qa and safe rollout.
