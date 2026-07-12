@@ -377,6 +377,14 @@ SECTION_PRIORITY = {
     "daily_presence": 1,
 }
 
+SECTION_LIMITS = {
+    "critical_topics": 3,
+    "actions_to_take": 3,
+    "watch_items": 2,
+    "daily_presence": 1,
+    "upcoming_meetings": 4,
+}
+
 THREAD_CONTEXT_MESSAGE_LIMIT = 12
 THREAD_CONTEXT_PREVIEW_LIMIT = 180
 MEETING_CONTEXT_MESSAGE_LIMIT = 3
@@ -2297,7 +2305,6 @@ class DeterministicScoringEngine:
             reason_codes.append("preference_signal")
 
         if message.is_unread:
-            score += 0.4
             reason_codes.append("unread")
         if _message_is_flagged(message):
             score += 1.75
@@ -2650,9 +2657,11 @@ class StructuredDigestRenderer:
                         -item.score,
                         item.title.lower(),
                     ),
-                )[:5]
+                )[: SECTION_LIMITS[name]]
             else:
-                sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[:5]
+                sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[
+                    : SECTION_LIMITS[name]
+                ]
 
         localized = _language_copy(self.digest_language)
         normalized_top_summary = _normalize_top_summary(top_summary)

@@ -14,6 +14,35 @@ from day_captain.services import StructuredDigestRenderer
 
 
 class StructuredDigestRendererTest(unittest.TestCase):
+    def test_enforces_concise_section_budgets(self) -> None:
+        renderer = StructuredDigestRenderer()
+        items = tuple(
+            DigestEntry(
+                title=f"Item {section} {index}",
+                summary="Summary",
+                section_name=section,
+                source_kind="message" if section != "upcoming_meetings" else "meeting",
+                source_id=f"{section}-{index}",
+                score=float(10 - index),
+            )
+            for section in ("critical_topics", "actions_to_take", "watch_items", "upcoming_meetings")
+            for index in range(6)
+        )
+
+        payload = renderer.render(
+            run_id="budget-run",
+            generated_at=datetime(2026, 7, 12, tzinfo=timezone.utc),
+            window_start=datetime(2026, 7, 11, tzinfo=timezone.utc),
+            window_end=datetime(2026, 7, 12, tzinfo=timezone.utc),
+            delivery_mode="json",
+            prioritized_items=items,
+        )
+
+        self.assertEqual(len(payload.critical_topics), 3)
+        self.assertEqual(len(payload.actions_to_take), 3)
+        self.assertEqual(len(payload.watch_items), 2)
+        self.assertEqual(len(payload.upcoming_meetings), 4)
+
     def test_builds_delivery_body_and_graph_send_payload(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
