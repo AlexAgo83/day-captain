@@ -457,7 +457,7 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
         self.assertEqual(rewritten[0].summary, "Le fil confirme un retour attendu avant midi.")
         self.assertEqual(rewritten[0].recommended_action, "Répondre avec la validation finale.")
         self.assertEqual(rewritten[0].confidence_score, 84)
-        self.assertEqual(rewritten[0].confidence_label, "Élevée")
+        self.assertEqual(rewritten[0].confidence_label, "Fiable")
         self.assertEqual(rewritten[0].confidence_reason, "La demande est explicite dans la dernière réponse.")
 
     def test_rewrite_demotes_promotional_message_when_provider_marks_it(self) -> None:
