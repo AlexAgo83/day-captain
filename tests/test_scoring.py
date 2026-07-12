@@ -466,6 +466,26 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertFalse(prioritized[0].card.action_expected_from_user)
         self.assertIn("belong to Jordan", prioritized[0].recommended_action)
 
+    def test_generates_specific_owned_action_with_explicit_due_hint(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en")
+        message = MessageRecord(
+            graph_message_id="specific-action",
+            thread_id="specific-thread",
+            subject="Roadmap decision",
+            from_address="project.lead@example.com",
+            to_addresses=("alex@example.com",),
+            user_id="alex@example.com",
+            received_at=now,
+            body_preview="Please confirm the selected option before noon.",
+        )
+
+        item = engine.prioritize((message,), (), (), reference_time=now)[0]
+
+        self.assertEqual(item.recommended_action, "Reply to Project Lead about Roadmap decision before noon.")
+        self.assertEqual(item.context_metadata["due_hint"], "before noon")
+        self.assertEqual(item.card.action_owner, "user")
+
     def test_marks_sensitive_urgent_mail_as_suspicious_and_conservative(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")

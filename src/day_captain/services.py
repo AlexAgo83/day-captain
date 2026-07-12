@@ -1676,7 +1676,12 @@ def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[s
     if "promotional_candidate" in reason_codes:
         return str(actions["watch"])
     if "critical_keyword" in reason_codes:
-        return str(actions["critical"])
+        title = _normalize_display_title(message.subject or "this issue")
+        return (
+            f"Resolve {title} and update {_humanize_identifier(message.from_address)}."
+            if digest_language == "en"
+            else f"Résoudre {title} et informer {_humanize_identifier(message.from_address)}."
+        )
     normalized_preview = _normalize_text(message.subject, message.body_preview)
     if "deliverable_shared" in reason_codes or "download" in normalized_preview or "telechargement" in normalized_preview or "téléchargement" in normalized_preview:
         return str(actions["deliverable"])
@@ -1688,8 +1693,26 @@ def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[s
             return str(actions["reply_other"]).format(owner=owner)
         if thread_input is not None and thread_input.action_owner == "shared":
             return str(actions["reply_shared"])
-        return str(actions["reply"])
+        title = _normalize_display_title(message.subject or ("this request" if digest_language == "en" else "cette demande"))
+        sender = _humanize_identifier(message.from_address)
+        due_hint = _explicit_due_hint(message.subject, message.body_preview)
+        suffix = f" {due_hint}." if due_hint else "."
+        return (
+            f"Reply to {sender} about {title}{suffix}"
+            if digest_language == "en"
+            else f"Répondre à {sender} au sujet de {title}{suffix}"
+        )
     return str(actions["watch"])
+
+
+def _explicit_due_hint(subject: str, preview: str) -> str:
+    text = " ".join((subject or "", preview or ""))
+    match = re.search(
+        r"\b(before\s+(?:noon|midday|end of day|eod|tomorrow)|by\s+(?:tomorrow|(?:mon|tues|wednes|thurs|fri|satur|sun)day|\d{1,2}(?:[:h]\d{2})?)|avant\s+(?:midi|demain|la fin de journée|\d{1,2}(?:h\d{0,2})?)|d['’]ici\s+(?:demain|ce soir))\b",
+        text,
+        flags=re.IGNORECASE,
+    )
+    return " ".join(match.group(1).split()) if match else ""
 
 
 def _message_confidence(message: MessageRecord, reason_codes: Sequence[str], duplicate_count: int, preview: str, digest_language: str, thread_input=None) -> tuple[int, str]:
@@ -2265,6 +2288,7 @@ class DeterministicScoringEngine:
                 "grouping_kind": grouping_kind,
                 "grouped_message_count": duplicate_count,
                 "stable_thread_id": str(message.thread_id or message.graph_message_id),
+                "due_hint": _explicit_due_hint(message.subject, message.body_preview),
             }
         )
         if grouping_kind == "alias" and duplicate_count > 1:
