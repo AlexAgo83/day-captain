@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 98
 > Confidence: 95
-> Progress: 15
+> Progress: 20
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -81,6 +81,7 @@
 - 2026-07-12: development-ready corpus expanded from an anonymized aggregate audit of stable production briefs across four recipient profiles. Implementation has not started; progress remains 0%.
 - 2026-07-12: orchestration and security sibling task started. First checkpoint suppresses deterministic authentication messages at the earliest shared application boundary; 121 focused tests pass. Remaining implementation is tracked in tasks 050 through 052.
 - 2026-07-12: security sibling task 051 completed with 265 passing tests. The first actionability slice now enforces renderer budgets of 3 critical, 3 user-action, 2 watch, 1 presence, and 4 meeting cards, and unread state no longer adds ranking score. Focused scoring/renderer suite: 67 passed.
+- 2026-07-12: daily and weekly runs now pass their explicit run type into rendering and use distinct localized subjects. Full suite: 267 passed.
 
 # AI Context
 - Summary: Orchestrate production digest actionability improvements

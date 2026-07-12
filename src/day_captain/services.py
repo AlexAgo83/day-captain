@@ -438,7 +438,8 @@ QUOTE_BOUNDARY_PREFIXES = (
 LANGUAGE_COPY = {
     "en": {
         "digest_title": "Your Day Captain brief",
-        "subject": "Your Day Captain brief for {date}",
+        "subject": "Your Day Captain daily brief for {date}",
+        "subject_weekly": "Your Day Captain weekly brief for {date}",
         "prepared": "As of {date}",
         "coverage_label": "Window",
         "coverage_separator": ": ",
@@ -580,7 +581,8 @@ LANGUAGE_COPY = {
     },
     "fr": {
         "digest_title": "Votre brief Day Captain",
-        "subject": "Votre brief Day Captain du {date}",
+        "subject": "Votre brief quotidien Day Captain du {date}",
+        "subject_weekly": "Votre brief hebdomadaire Day Captain du {date}",
         "prepared": "À jour au {date}",
         "coverage_label": "Périmètre",
         "coverage_separator": " : ",
@@ -2627,6 +2629,7 @@ class StructuredDigestRenderer:
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        run_type: str = "morning_digest",
         tenant_id: str = "",
         user_id: str = "",
         command_mailbox: str = "",
@@ -2665,7 +2668,8 @@ class StructuredDigestRenderer:
 
         localized = _language_copy(self.digest_language)
         normalized_top_summary = _normalize_top_summary(top_summary)
-        delivery_subject = localized["subject"].format(
+        subject_template = localized["subject_weekly"] if run_type == "weekly_digest" else localized["subject"]
+        delivery_subject = subject_template.format(
             date=_format_day_label(
                 _local_date(generated_at, self.display_timezone),
                 self.digest_language,

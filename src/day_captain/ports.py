@@ -178,6 +178,7 @@ class DigestRenderer(Protocol):
         window_end: datetime,
         delivery_mode: str,
         prioritized_items: Sequence[DigestEntry],
+        run_type: str = "morning_digest",
         tenant_id: str = "",
         user_id: str = "",
         command_mailbox: str = "",

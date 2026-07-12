@@ -77,7 +77,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("As of", payload.delivery_body)
         self.assertIn("Window: From Fri 06 Mar 2026 at 09:00 to Sat 07 Mar 2026 at 09:00 CET", payload.delivery_body)
         self.assertIn("Sat 07 Mar 2026 at 09:00 CET", payload.delivery_body)
-        self.assertEqual(payload.delivery_subject, "Your Day Captain brief for Sat 07 Mar")
+        self.assertEqual(payload.delivery_subject, "Your Day Captain daily brief for Sat 07 Mar")
         self.assertEqual(payload.top_summary, "Budget review is the main priority this morning.")
         self.assertEqual(payload.delivery_payload["top_summary_source"], "llm")
         self.assertEqual(payload.delivery_payload["command_mailbox"], "daycaptain@example.com")
@@ -118,7 +118,21 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Périmètre : Du sam. 07 mars 2026 à 09:00 au dim. 08 mars 2026 à 09:00 CET", payload.delivery_body)
         self.assertIn("Points critiques", payload.delivery_body)
         self.assertIn("Aperçu des réunions de lundi.", payload.delivery_body)
-        self.assertEqual(payload.delivery_subject, "Votre brief Day Captain du dim. 08 mars")
+        self.assertEqual(payload.delivery_subject, "Votre brief quotidien Day Captain du dim. 08 mars")
+
+    def test_weekly_digest_uses_distinct_subject(self) -> None:
+        renderer = StructuredDigestRenderer(digest_language="en")
+        payload = renderer.render(
+            run_id="weekly-run",
+            generated_at=datetime(2026, 7, 12, tzinfo=timezone.utc),
+            window_start=datetime(2026, 7, 5, tzinfo=timezone.utc),
+            window_end=datetime(2026, 7, 12, tzinfo=timezone.utc),
+            delivery_mode="json",
+            prioritized_items=(),
+            run_type="weekly_digest",
+        )
+
+        self.assertEqual(payload.delivery_subject, "Your Day Captain weekly brief for Sun 12 Jul")
 
     def test_compacts_meeting_entries_in_text_and_html(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
