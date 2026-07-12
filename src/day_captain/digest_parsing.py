@@ -197,7 +197,7 @@ def build_mail_thread_digest_input(
         risk_reasons.append("attachment_with_sensitive_request")
     if risk_score >= 3:
         risk_level = "high"
-    elif risk_score >= 1:
+    elif risk_score >= 2:
         risk_level = "medium"
     else:
         risk_level = "low"

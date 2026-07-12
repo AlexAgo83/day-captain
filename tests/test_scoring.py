@@ -489,6 +489,25 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].section_name, "watch_items")
         self.assertEqual(prioritized[0].recommended_action, "Verify the sender before acting.")
 
+    def test_does_not_warn_for_one_weak_urgency_signal(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
+        message = MessageRecord(
+            graph_message_id="msg-urgent",
+            thread_id="thread-urgent",
+            subject="Urgent project update",
+            from_address="colleague@example.com",
+            to_addresses=("alex@example.com",),
+            user_id="alex@example.com",
+            received_at=now,
+            body_preview="Please review the project update.",
+        )
+
+        prioritized = engine.prioritize((message,), (), (), reference_time=now)
+
+        self.assertEqual(prioritized[0].card.risk_level, "low")
+        self.assertNotIn("suspicious_mail", prioritized[0].reason_codes)
+
     def test_populates_typed_card_for_recurring_meeting(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")

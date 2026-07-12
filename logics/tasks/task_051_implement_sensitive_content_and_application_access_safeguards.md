@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 98
 > Confidence: 95
-> Progress: 20
+> Progress: 65
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -55,7 +55,8 @@ The production audit found that authentication content can enter the digest pipe
 # Report
 - 2026-07-12: implementation started. A deterministic authentication-message filter now runs immediately after collection and before tenant scoping, persistence, scoring, LLM rewriting, memory, rendering, and run storage.
 - 2026-07-12: synthetic regression proof confirms a one-time-code secret is absent from message storage, wording-engine input, rendered payload, and persisted run. Focused app, scoring, and renderer suite: 121 passed.
-- Remaining: independent suspicious-risk thresholds, explicit mailbox authorization checks, content-free suppression counters, retention/operator-access documentation, full-suite validation, and closeout evidence.
+- 2026-07-12: suspicious-mail classification now ignores a single weak urgency cue while retaining warnings for one strong or multiple independent signals. Existing target-user authorization fails closed outside `DAY_CAPTAIN_TARGET_USERS`; operator documentation now records mailbox-evidence access and retention boundaries. Expanded focused suite: 152 passed.
+- Remaining: content-free suppression counters, full-suite validation, and closeout evidence.
 
 # AI Context
 - Summary: Implement implement sensitive-content and application-access safeguards.

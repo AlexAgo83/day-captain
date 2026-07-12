@@ -209,6 +209,14 @@ After adding or changing users, validate:
 - feedback recorded against one user changes only that user's preferences
 - persisted rows for messages, meetings, runs, feedback, and preferences stay partitioned by `tenant_id` and `user_id`
 
+## Mailbox evidence and retention
+
+- Treat configured target users and the dedicated sender as the complete authorized mailbox set; requests for any other target must fail before Graph collection or delivery.
+- Authentication codes, password-reset messages, magic links, and equivalent authentication content are dropped before storage or model processing.
+- Do not copy mailbox subjects, previews, bodies, identities, URLs, tokens, or secrets into logs, tickets, fixtures, screenshots, or telemetry.
+- Keep aggregate audit exports only for the duration of the audit, restrict them to the operator performing it, and delete them immediately after aggregate content-free metrics are recorded.
+- Microsoft 365 retention for the sender mailbox remains an administrator policy; Day Captain does not create a second content archive.
+
 ## Rollout note
 
 Use this model for bounded operator-managed deployments. It is not a self-service tenant administration system.
