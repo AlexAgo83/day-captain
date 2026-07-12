@@ -1,13 +1,14 @@
 ## task_048_day_captain_technical_debt_hardening_orchestration - Day Captain technical debt hardening orchestration
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 95
-> Confidence: 90
-> Progress: 0
+> Status: In progress
+> Understanding: 98
+> Confidence: 95
+> Progress: 15
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Owner: codex-work6
 
 # Context
 - Derived from backlog items `item_100` through `item_105`, all owned by `req_053_day_captain_technical_debt_and_runtime_hardening`.
@@ -90,3 +91,4 @@ flowchart TD
 - [ ] Status is `Done` and progress is `100%`.
 
 # Report
+- 2026-07-12: wave 1 implemented. Package metadata now requires Python 3.11+ and CI targets 3.11/3.12 instead of EOL 3.9. Existing `Optional[...]` annotations were retained as ordinary typing style, not runtime compatibility shims.
