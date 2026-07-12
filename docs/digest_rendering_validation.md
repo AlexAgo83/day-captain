@@ -12,7 +12,7 @@ Use this workflow when you want to review the current digest presentation before
 
 1. Load the local environment and run a digest with preview export enabled.
 2. Review the generated `.html` file in a browser and the `.txt` file in a plain-text editor.
-3. Confirm the top summary remains complete and readable, sections feel balanced, meetings are compact, and empty states stay light.
+3. Review once near 720px and once at a narrow mobile width near 360px. Confirm the top summary remains complete, populated sections feel balanced, meetings are compact, and empty sections are absent.
 
 Example:
 
@@ -57,7 +57,7 @@ python3 -m day_captain morning-digest --preview --force \
 That run produced a stub preview with:
 - the compact header enabled
 - the `In brief` summary block enabled
-- light empty states enabled
+- empty operational sections omitted
 - the weekend Monday meeting fallback visible in both text and HTML output
 
 ## What to check locally
@@ -74,6 +74,9 @@ That run produced a stub preview with:
   - flagged items remain more visible than ordinary messages without overwhelming the full digest
   - surfaced mail items clearly show whether the latest message is unread or already read
   - surfaced mail items show a low-prominence received timestamp without cluttering the card
+  - empty operational sections are omitted instead of rendering placeholder cards
+  - optional weather and external news appear after operational sections
+  - daily output contains at most 3 critical, 3 action, 2 watch, 1 presence, and 4 meeting cards
 - footer:
   - if quick actions are present, the `mailto:` links point to the intended Day Captain mailbox
   - the command subjects are prefilled as `recall`, `recall-today`, or `recall-week`
@@ -86,13 +89,14 @@ That run produced a stub preview with:
 - meetings:
   - each meeting line emphasizes title, time, organizer, and location quickly
   - the section does not expand into a tall report for a single meeting
-- empty states:
-  - empty sections stay explicit
-  - the copy feels lighter than a status report
+- narrow viewport:
+  - cards and metadata wrap without horizontal scrolling
+  - action links remain reachable and do not overlap content
+  - long subjects, counterparties, and confidence reasons remain readable
 
-## Real Outlook validation
+## Optional real Outlook validation
 
-The local preview is only a preflight step. Before closing the readability slice, validate one real Outlook delivery:
+Synthetic preview is the default gate. If a real Outlook delivery is still necessary, configure exactly one `DAY_CAPTAIN_GRAPH_LIVE_TEST_RECIPIENT`; the delivery guard rejects every different, multiple, CC, or BCC recipient before Graph is called.
 
 1. Send or recall a digest into the real target mailbox.
 2. Open it in Outlook using the actual mailbox view used day to day.
@@ -105,6 +109,6 @@ The local preview is only a preflight step. Before closing the readability slice
    - unread/read mail status is easy to spot at a glance
    - received timestamps stay visible but secondary
    - source-open controls use the expected desktop/web fallback behavior on the actual Outlook client
-   - empty states remain light and readable
+   - no empty operational section is reintroduced by Outlook
 
 If Outlook introduces a regression that the local preview did not reveal, treat Outlook as the source of truth and adjust the renderer accordingly.
