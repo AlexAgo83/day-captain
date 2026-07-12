@@ -5,6 +5,7 @@ from datetime import date
 from datetime import timezone
 import json
 import sqlite3
+from threading import Lock
 from typing import Any
 from typing import Mapping
 from typing import Optional
@@ -13,9 +14,11 @@ from zoneinfo import ZoneInfo
 
 try:
     import psycopg
+    from psycopg_pool import ConnectionPool
     from psycopg.rows import dict_row
 except ImportError:  # pragma: no cover - exercised only when psycopg isn't installed
     psycopg = None
+    ConnectionPool = None
     dict_row = None
 
 from day_captain.models import DigestPayload
@@ -49,6 +52,23 @@ _TABLE_COUNT_QUERIES = {
     "scoped_feedback": "SELECT COUNT(*) AS count FROM scoped_feedback",
     "scoped_preferences": "SELECT COUNT(*) AS count FROM scoped_preferences",
 }
+_POSTGRES_POOLS = {}
+_POSTGRES_POOLS_LOCK = Lock()
+
+
+def _postgres_pool(database_url: str):
+    with _POSTGRES_POOLS_LOCK:
+        pool = _POSTGRES_POOLS.get(database_url)
+        if pool is None:
+            pool = ConnectionPool(
+                conninfo=database_url,
+                min_size=0,
+                max_size=4,
+                kwargs={"row_factory": dict_row},
+                open=True,
+            )
+            _POSTGRES_POOLS[database_url] = pool
+        return pool
 
 
 def _query_with_where(prefix: str, where_clauses: Sequence[str], suffix: str) -> str:
@@ -1022,11 +1042,12 @@ class PostgresStorage:
         default_tenant_id: str = DEFAULT_TENANT_ID,
         default_user_id: str = DEFAULT_USER_ID,
     ) -> None:
-        if psycopg is None or dict_row is None:
+        if psycopg is None or ConnectionPool is None or dict_row is None:
             raise RuntimeError(
                 "Postgres storage requires the `psycopg` package to be installed."
             )
         self.database_url = database_url
+        self._pool = _postgres_pool(database_url)
         self.default_tenant_id = _normalize_scope_value(default_tenant_id, DEFAULT_TENANT_ID)
         self.default_user_id = _normalize_scope_value(default_user_id, DEFAULT_USER_ID)
         self._ensure_schema()
@@ -1038,7 +1059,7 @@ class PostgresStorage:
         )
 
     def _connect(self):
-        return psycopg.connect(self.database_url, row_factory=dict_row)
+        return self._pool.connection()
 
     def _table_exists(self, connection, table_name: str) -> bool:
         row = connection.execute(

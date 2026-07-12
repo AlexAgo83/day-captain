@@ -1,10 +1,10 @@
 ## item_105_day_captain_postgresql_connection_pooling_in_storage_adapter - Day Captain PostgreSQL connection pooling in storage adapter
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 90
-> Confidence: 88
-> Progress: 0
+> Status: In progress
+> Understanding: 100
+> Confidence: 97
+> Progress: 100
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.

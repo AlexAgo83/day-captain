@@ -11,6 +11,7 @@ from unittest import mock
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from day_captain.adapters.storage import PostgresStorage
+from day_captain.adapters import storage as storage_module
 from day_captain.adapters.storage import SQLiteStorage
 from day_captain.models import DigestEntry
 from day_captain.models import DigestCard
@@ -306,6 +307,31 @@ class _FakePostgresConnection:
 
 
 class PostgresStorageTest(unittest.TestCase):
+    def test_postgres_storages_share_process_pool_for_same_database(self) -> None:
+        storage_module._POSTGRES_POOLS.clear()
+        fake_pool = mock.Mock()
+        with mock.patch.object(storage_module, "ConnectionPool", return_value=fake_pool) as pool_cls, mock.patch.object(
+            PostgresStorage, "_ensure_schema"
+        ):
+            first = PostgresStorage("postgresql://db.example/app")
+            second = PostgresStorage("postgresql://db.example/app")
+
+        self.assertIs(first._pool, second._pool)
+        pool_cls.assert_called_once()
+
+    def test_postgres_connection_returns_to_pool_on_query_error(self) -> None:
+        storage = PostgresStorage.__new__(PostgresStorage)
+        storage.default_tenant_id = "common"
+        storage.default_user_id = "alice@example.com"
+        manager = mock.MagicMock()
+        manager.__enter__.return_value.execute.side_effect = RuntimeError("query failed")
+        storage._pool = mock.Mock(connection=mock.Mock(return_value=manager))
+
+        with self.assertRaisesRegex(RuntimeError, "query failed"):
+            storage.get_latest_run(tenant_id="common", user_id="alice@example.com")
+
+        manager.__exit__.assert_called_once()
+
     def test_get_latest_completed_run_for_day_uses_fetched_rows(self) -> None:
         generated_at = datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc)
         payload = DigestPayload(
