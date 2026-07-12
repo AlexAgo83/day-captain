@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 99
 > Confidence: 97
-> Progress: 50
+> Progress: 65
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -94,3 +94,4 @@ flowchart TD
 - 2026-07-12: wave 1 implemented. Package metadata now requires Python 3.11+ and CI targets 3.11/3.12 instead of EOL 3.9. Existing `Optional[...]` annotations were retained as ordinary typing style, not runtime compatibility shims.
 - 2026-07-12: wave 2 implemented. Authenticated `/jobs/*` requests use a standard-library per-endpoint fixed-window limiter, defaulting to 20 requests per 60 seconds. Excess requests return 429 with `Retry-After`; window reset is covered by tests.
 - 2026-07-12: wave 3 implemented. All SQL-building `.format()` calls were removed from `adapters/storage.py`; scoped table counts use an explicit allow-list and dynamic WHERE clauses use one literal-only join helper while preserving bound placeholders.
+- 2026-07-12: wave 4 implemented. CI runs unittest through branch-aware coverage.py and prints a missing-lines summary. Current measured coverage is 80%; `pyproject.toml` enforces a 79% floor to block significant regression without failing on rounding noise.
