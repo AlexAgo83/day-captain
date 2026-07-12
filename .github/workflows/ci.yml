@@ -33,6 +33,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install -e ".[dev]"
+          python -m pip install logics-manager
 
       - name: Run unit tests
         run: python -m unittest discover -s tests
@@ -41,7 +42,7 @@ jobs:
         run: python -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force
 
       - name: Lint Logics docs
-        run: python logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
+        run: logics-manager lint --require-status
 
       - name: Audit Logics workflow
-        run: python logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
+        run: logics-manager audit --group-by-doc
