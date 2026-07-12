@@ -41,6 +41,18 @@ SECTION_NAMES = (
 DEFAULT_TENANT_ID = "default-tenant"
 DEFAULT_USER_ID = "default-user"
 
+_TABLE_COUNT_QUERIES = {
+    "scoped_messages": "SELECT COUNT(*) AS count FROM scoped_messages",
+    "scoped_meetings": "SELECT COUNT(*) AS count FROM scoped_meetings",
+    "scoped_digest_runs": "SELECT COUNT(*) AS count FROM scoped_digest_runs",
+    "scoped_feedback": "SELECT COUNT(*) AS count FROM scoped_feedback",
+    "scoped_preferences": "SELECT COUNT(*) AS count FROM scoped_preferences",
+}
+
+
+def _query_with_where(prefix: str, where_clauses: Sequence[str], suffix: str) -> str:
+    return prefix + " AND ".join(where_clauses) + suffix
+
 
 def _json_dumps(value: Any) -> str:
     return json.dumps(to_jsonable(value), sort_keys=True)
@@ -95,7 +107,7 @@ class SQLiteStorage:
         return row is not None
 
     def _table_is_empty(self, connection: sqlite3.Connection, table_name: str) -> bool:
-        row = connection.execute("SELECT COUNT(*) AS count FROM {0}".format(table_name)).fetchone()
+        row = connection.execute(_TABLE_COUNT_QUERIES[table_name]).fetchone()
         return row is not None and int(row["count"]) == 0
 
     def _ensure_schema(self) -> None:
@@ -768,14 +780,14 @@ class SQLiteStorage:
             params.append(scoped_user_id)
         with self._connect() as connection:
             row = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchone()
         if row is None:
@@ -803,14 +815,14 @@ class SQLiteStorage:
             params.append(run_type)
         with self._connect() as connection:
             row = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchone()
         if row is None:
@@ -840,14 +852,14 @@ class SQLiteStorage:
         params.append(max(0, int(limit)))
         with self._connect() as connection:
             rows = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
                 LIMIT ?
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchall()
         return tuple(self._row_to_run(row) for row in rows)
@@ -871,13 +883,13 @@ class SQLiteStorage:
             params.append(scoped_user_id)
         with self._connect() as connection:
             rows = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchall()
         zone = _display_zone(display_timezone)
@@ -1039,7 +1051,7 @@ class PostgresStorage:
         return row is not None
 
     def _table_is_empty(self, connection, table_name: str) -> bool:
-        row = connection.execute("SELECT COUNT(*) AS count FROM {0}".format(table_name)).fetchone()
+        row = connection.execute(_TABLE_COUNT_QUERIES[table_name]).fetchone()
         return row is not None and int(row["count"]) == 0
 
     def _ensure_schema(self) -> None:
@@ -1727,14 +1739,14 @@ class PostgresStorage:
             params.append(scoped_user_id)
         with self._connect() as connection:
             row = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchone()
         if row is None:
@@ -1762,14 +1774,14 @@ class PostgresStorage:
             params.append(run_type)
         with self._connect() as connection:
             row = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
                 LIMIT 1
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchone()
         if row is None:
@@ -1799,14 +1811,14 @@ class PostgresStorage:
         params.append(max(0, int(limit)))
         with self._connect() as connection:
             rows = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
                 LIMIT %s
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchall()
         return tuple(self._row_to_run(row) for row in rows)
@@ -1830,13 +1842,13 @@ class PostgresStorage:
             params.append(scoped_user_id)
         with self._connect() as connection:
             rows = connection.execute(
-                """
+                _query_with_where("""
                 SELECT tenant_id, user_id, run_id, run_type, status, generated_at, window_start, window_end,
                        delivery_mode, summary_json
                 FROM scoped_digest_runs
-                WHERE {0}
+                WHERE """, where_clauses, """
                 ORDER BY generated_at DESC
-                """.format(" AND ".join(where_clauses)),
+                """),
                 tuple(params),
             ).fetchall()
         zone = _display_zone(display_timezone)

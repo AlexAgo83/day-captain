@@ -1,10 +1,10 @@
 ## item_103_day_captain_replace_format_based_sql_construction_in_storage - Day Captain replace format-based SQL construction in storage
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 98%
-> Confidence: 97%
-> Progress: 0%
+> Status: In progress
+> Understanding: 100
+> Confidence: 99
+> Progress: 100
 > Complexity: Low
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
