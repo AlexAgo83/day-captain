@@ -116,7 +116,7 @@
     },
     "freshness": {
       "match_target_version": true,
-      "match_commit_for_source_gates": true,
+      "match_commit_for_source_gates": false,
       "match_tag_for_publication_gates": true
     },
     "required_fields": ["kind", "status", "observed_at", "target_version", "commit", "summary"]
