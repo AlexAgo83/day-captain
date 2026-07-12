@@ -2337,6 +2337,7 @@ class DeterministicScoringEngine:
         preference_weights: Mapping[str, float],
         now: datetime,
     ) -> Optional[DigestEntry]:
+        # ponytail: cohesive scoring pipeline; split only when a behavior change creates a stable boundary.
         subject = _normalize_display_title(message.subject or "(no subject)")
         cleaned_preview = _clean_preview(message.body_preview)
         combined_text = _normalize_text(message.subject, message.body_preview)
@@ -2504,6 +2505,7 @@ class DeterministicScoringEngine:
         messages: Sequence[MessageRecord] = (),
         window_start: Optional[datetime] = None,
     ) -> Optional[DigestEntry]:
+        # ponytail: one calendar decision pipeline; helper extraction would scatter shared state.
         if _looks_like_placeholder_meeting(meeting):
             return None
         hours_until = (meeting.start_at - now).total_seconds() / 3600.0
@@ -2702,6 +2704,7 @@ class StructuredDigestRenderer:
         meeting_horizon: Optional[Mapping[str, str]] = None,
         generation_duration_seconds: Optional[float] = None,
     ) -> DigestPayload:
+        # ponytail: orchestration-only renderer; detailed formatting already lives in focused helpers.
         sections = {name: [] for name in SECTION_NAMES}
         for item in prioritized_items:
             target_section = item.section_name if item.section_name in sections else "watch_items"

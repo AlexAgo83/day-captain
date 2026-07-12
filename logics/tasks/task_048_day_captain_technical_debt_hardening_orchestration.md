@@ -2,9 +2,9 @@
 > From version: 1.9.3
 > Schema version: 1.0
 > Status: In progress
-> Understanding: 99
-> Confidence: 97
-> Progress: 85
+> Understanding: 100
+> Confidence: 98
+> Progress: 95
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
@@ -96,3 +96,4 @@ flowchart TD
 - 2026-07-12: wave 3 implemented. All SQL-building `.format()` calls were removed from `adapters/storage.py`; scoped table counts use an explicit allow-list and dynamic WHERE clauses use one literal-only join helper while preserving bound placeholders.
 - 2026-07-12: wave 4 implemented. CI runs unittest through branch-aware coverage.py and prints a missing-lines summary. Current measured coverage is 80%; `pyproject.toml` enforces a 79% floor to block significant regression without failing on rounding noise.
 - 2026-07-12: wave 5 implemented. PostgreSQL storage instances share the official psycopg process-local pool per DSN (max four connections); every existing operation checks out a connection context and returns it on success or error. SQLite remains unchanged.
+- 2026-07-12: wave 6 completed without decomposition churn. The only functions above 150 lines remain narrowly over budget (164/157/151), each has a local `ponytail:` cohesion justification, and an AST regression test rejects future unjustified oversized functions.
