@@ -1,0 +1,169 @@
+{
+  "title": "Day Captain Power Automate scheduler migration",
+  "references": [
+    "day-captain-ops/.github/workflows/morning-digest.yml",
+    "day-captain-ops/.github/workflows/weekly-digest.yml",
+    "day-captain-ops/README.md",
+    "src/day_captain/web.py",
+    "src/day_captain/hosted_jobs.py",
+    "docs/tenant_scoped_multi_user_operator_guide.md",
+    "docs/private_ops_repo_bootstrap.md",
+    "neighboring cts/docs/rh-recruit-power-automate-flow.md",
+    "neighboring cts/docs/rh-recruit-retention-anonymization-flow.md"
+  ],
+  "request": {
+    "complexity": "Medium",
+    "theme": "operations",
+    "needs": [
+      "Replace the production GitHub Actions cron scheduler with Power Automate so weekday morning and Sunday weekly digests run at stable Europe/Paris wall-clock times.",
+      "Stop relying on GitHub Actions schedule timing, checkout, Python setup, and package installation before the hosted job trigger.",
+      "Keep the existing hosted Day Captain job endpoints and job secret contract instead of moving digest business logic into Power Automate."
+    ],
+    "context": [
+      "The current production scheduler lives in the private day-captain-ops repository and uses GitHub Actions schedules for morning-digest and weekly-digest.",
+      "Operators observed severe schedule drift, with digest emails arriving around noon instead of the intended morning slot.",
+      "The app already exposes protected hosted endpoints: POST /jobs/morning-digest and POST /jobs/weekly-digest with X-Day-Captain-Secret.",
+      "The neighboring CTS project already documents scheduled Power Automate flows with recurrence triggers, concurrency limited to one run, HTTP actions, secret handling, and live validation evidence.",
+      "Power Automate HTTP actions may require a Premium or trial entitlement; if unavailable, GitHub Actions remains the fallback scheduler."
+    ],
+    "acceptance_criteria": [
+      "AC1: A Power Automate runbook exists for the Day Captain scheduler with separate morning and weekly flows, exact Europe/Paris schedule semantics, concurrency set to one, target-user fan-out, warm-up/health behavior, retry policy, and failure notification rules.",
+      "AC2: Production scheduler documentation names Power Automate as the primary scheduler and GitHub Actions workflow_dispatch as the manual fallback only.",
+      "AC3: The migration preserves the existing hosted HTTP contract: GET /healthz for warm-up/readiness and POST /jobs/morning-digest or /jobs/weekly-digest with X-Day-Captain-Secret and per-user JSON payloads.",
+      "AC4: The private ops repository no longer has active GitHub Actions schedule triggers for Day Captain once the Power Automate flows have live successful-run evidence; manual workflow_dispatch remains available for emergency one-off runs.",
+      "AC5: Live validation evidence records at least one successful Power Automate morning-digest run and one successful weekly-digest test or manual run, including run IDs/timestamps, target-user scope, and observed delivery timing without exposing mailbox content or secrets.",
+      "AC6: Rollback guidance exists and is tested enough for an operator to temporarily re-enable GitHub Actions schedule triggers if Power Automate entitlement, connection, or recurrence execution fails."
+    ]
+  },
+  "product": {
+    "title": "Day Captain operations scheduler reliability",
+    "overview": "Move production digest scheduling from best-effort GitHub Actions cron to tenant-owned Power Automate recurrence while keeping Day Captain's hosted job API as the execution boundary.",
+    "goals": [
+      "Deliver weekday morning digests at the intended Europe/Paris wall-clock time with less scheduler drift.",
+      "Reduce scheduler latency by removing Git checkout, Python setup, and local package installation from routine production triggers.",
+      "Keep secrets in operational control planes and out of the application repository.",
+      "Keep the migration operationally reversible during rollout."
+    ],
+    "non_goals": [
+      "Rewriting Day Captain digest generation, Graph ingestion, delivery, or storage logic inside Power Automate.",
+      "Changing the hosted job authentication mechanism beyond the existing X-Day-Captain-Secret contract.",
+      "Changing digest content, delivery mode, target-user identity resolution, or cursor behavior.",
+      "Replacing Render hosting or the hosted web service architecture."
+    ]
+  },
+  "backlog_items": [
+    {
+      "title": "Document the Power Automate scheduler flows",
+      "priority": "High",
+      "complexity": "Medium",
+      "theme": "operations",
+      "request_acs": [
+        "AC1",
+        "AC3",
+        "AC6"
+      ],
+      "problem": [
+        "The current scheduler behavior is encoded in GitHub Actions YAML and app docs, but there is no Day Captain Power Automate runbook that an operator or another IA can execute safely.",
+        "Without a runbook, secrets, retry policy, target-user fan-out, and failure behavior can drift between the intended migration and the live tenant flow."
+      ],
+      "scope_in": [
+        "Add an ops-facing runbook that mirrors the proven CTS style for scheduled Power Automate flows.",
+        "Specify two flows: weekday morning digest and Sunday weekly digest.",
+        "Specify recurrence timezone, concurrency, health warm-up, HTTP actions, target-user list source, secure secret handling, retry policy, alerting, manual test procedure, and rollback criteria.",
+        "Keep all payloads content-free and secret-free in docs."
+      ],
+      "scope_out": [
+        "Creating the live Power Automate flows in this documentation slice.",
+        "Changing hosted job endpoint code.",
+        "Adding a custom scheduler service."
+      ],
+      "acceptance_criteria": [
+        "AC1: The runbook names the exact hosted endpoints, headers, and JSON payload fields used by each flow.",
+        "AC2: The runbook defines schedule semantics in Europe/Paris without requiring duplicate UTC cron gates.",
+        "AC3: The runbook defines where DAY_CAPTAIN_SERVICE_URL, DAY_CAPTAIN_JOB_SECRET, and target users live in Power Platform without exposing values.",
+        "AC4: The runbook includes a rollback section for temporarily restoring GitHub Actions schedule triggers."
+      ]
+    },
+    {
+      "title": "Align Day Captain app and ops docs with Power Automate scheduling",
+      "priority": "High",
+      "complexity": "Medium",
+      "theme": "documentation",
+      "request_acs": [
+        "AC2",
+        "AC3",
+        "AC6"
+      ],
+      "problem": [
+        "Application docs currently present the private GitHub Actions scheduler as the production path.",
+        "The private ops README also describes GitHub schedules as the active scheduler, which will be misleading after the cutover."
+      ],
+      "scope_in": [
+        "Update the application operator docs to describe Power Automate as the primary production scheduler.",
+        "Update the private ops README to clarify which GitHub workflows remain manual fallback surfaces.",
+        "Keep existing helper scripts and workflow templates documented as fallback/debug tools where still useful.",
+        "Update any scheduler-template language that would cause future operators to recreate the GitHub cron path as primary."
+      ],
+      "scope_out": [
+        "Removing tests that protect existing scheduler helper behavior unless the corresponding template is intentionally retired.",
+        "Changing digest business logic or hosted HTTP response shape.",
+        "Moving production secrets into tracked files."
+      ],
+      "acceptance_criteria": [
+        "AC1: Operator docs no longer instruct production operators to rely on GitHub Actions schedule for routine morning or weekly digest delivery.",
+        "AC2: Docs still provide a clear manual fallback path using workflow_dispatch or direct hosted HTTP calls.",
+        "AC3: Docs explain that Power Automate calls the existing hosted endpoints and does not own digest generation logic.",
+        "AC4: Documentation validation and Logics lint pass after the updates."
+      ]
+    },
+    {
+      "title": "Cut over production scheduling and capture live evidence",
+      "priority": "High",
+      "complexity": "Medium",
+      "theme": "operations",
+      "request_acs": [
+        "AC4",
+        "AC5",
+        "AC6"
+      ],
+      "problem": [
+        "The migration is not complete until the live scheduler is Power Automate and GitHub Actions schedules are disabled.",
+        "Cutover without evidence could hide missed runs, duplicate runs, or a broken fallback."
+      ],
+      "scope_in": [
+        "Create or update the live Power Automate flows from the runbook.",
+        "Run controlled manual tests for morning and weekly endpoints against the hosted service.",
+        "Disable active GitHub Actions schedule triggers after Power Automate evidence exists, while preserving manual workflow_dispatch.",
+        "Record live run IDs, timestamps, target-user scope, delivery outcome, and rollback state in the relevant Logics task notes."
+      ],
+      "scope_out": [
+        "Changing Power Automate to inspect mailbox or calendar content directly.",
+        "Sending digest content to Power Automate logs.",
+        "Deleting the private ops repository."
+      ],
+      "acceptance_criteria": [
+        "AC1: At least one live Power Automate run reaches the hosted morning-digest endpoint and delivery is confirmed without exposing digest content.",
+        "AC2: Weekly-digest is validated by a safe manual Power Automate run or the first scheduled Sunday run, with evidence recorded.",
+        "AC3: GitHub Actions schedule triggers are removed or commented out only after live Power Automate evidence exists.",
+        "AC4: workflow_dispatch remains available and documented as fallback.",
+        "AC5: The task closeout records rollback instructions and the final scheduler owner."
+      ]
+    }
+  ],
+  "orchestration_task": {
+    "title": "Orchestrate Power Automate scheduler migration",
+    "plan": [
+      "Confirm the current production scheduler state in day-captain-ops and identify any drift from the application docs.",
+      "Create the Day Captain Power Automate scheduler runbook from the existing hosted endpoint contract and CTS flow pattern.",
+      "Update app and ops documentation so Power Automate is primary and GitHub Actions is fallback-only.",
+      "Create and manually test the live morning and weekly Power Automate flows with concurrency one and secret-safe logging.",
+      "After live success evidence, remove active GitHub Actions schedule triggers while preserving workflow_dispatch.",
+      "Validate docs and Logics corpus, record run evidence, and close the migration task only after fallback instructions are clear."
+    ]
+  },
+  "context_pack": {
+    "out": "logics/context-packs/power-automate-scheduler-migration-2026-07.json",
+    "mode": "summary-only",
+    "profile": "normal"
+  }
+}

@@ -1,23 +1,23 @@
 ## item_104_day_captain_rate_limiting_on_job_endpoints - Day Captain rate limiting on job endpoints
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Draft
-> Understanding: 95%
-> Confidence: 90%
-> Progress: 0%
+> Status: Ready
+> Understanding: 95
+> Confidence: 90
+> Progress: 0
 > Complexity: Low
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
 
 # Problem
 - The `/jobs/morning-digest`, `/jobs/weekly-digest`, `/jobs/recall-digest`, and `/jobs/email-command-recall` endpoints are protected by a shared secret (`X-Day-Captain-Secret`) but have no rate limiting.
-- A misconfigured scheduler, a credential leak, or a retry loop could produce a burst of requests that queues unbounded digest work against the Graph API and LLM provider.
+- A misconfigured Power Automate flow, fallback scheduler, credential leak, or retry loop could produce a burst of requests that queues unbounded digest work against the Graph API and LLM provider.
 - The current protection model relies entirely on secret correctness; a rate limit provides defense-in-depth at the HTTP layer.
 
 # Scope
 - In:
   - implement a per-endpoint fixed-window rate limiter in `web.py` using only the standard library
-  - make the window size and request limit operator-configurable via environment variables with safe defaults
+  - make the window size and request limit operator-configurable via environment variables with safe defaults that permit the current Power Automate fan-out
   - return HTTP 429 with a `Retry-After` header when the limit is exceeded
   - add tests covering the 429 response path and the window-reset behavior
 - Out:
@@ -72,5 +72,5 @@ flowchart LR
 
 # Notes
 - Derived from `req_053_day_captain_technical_debt_and_runtime_hardening`.
-- Suggested default: 5 requests per 60-second window per endpoint.
+- Suggested default: at least 10 requests per 60-second window per endpoint so the current four-user Power Automate fan-out and a manual fallback retry do not trip the limiter.
 - The limiter must apply after secret validation to avoid leaking timing information on rejected requests.

@@ -1,52 +1,53 @@
-## item_102_day_captain_services_decomposition_large_functions - Day Captain services decomposition large functions
+## item_102_day_captain_services_decomposition_large_functions - Day Captain services function size guardrail
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Draft
-> Understanding: 90%
-> Confidence: 85%
+> Status: Ready
+> Understanding: 95%
+> Confidence: 90%
 > Progress: 0%
-> Complexity: High
+> Complexity: Low
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
 
 # Problem
-- `services.py` is a single 3,806-line module. Several functions span hundreds of lines, making local reasoning expensive and individual unit testing impractical.
-- Long functions mix orchestration logic with low-level computation, so a bug in one leaf concern requires reading the entire call chain.
-- The existing test suite exercises the module at integration depth; targeted unit tests for isolated scoring steps are hard to write without prior extraction.
+- `services.py` is a large module, but the original audit overstated the function-size problem.
+- Current inspection found only three functions slightly above 150 lines: `_score_message` (163), `render` (153), and `_score_meeting` (151).
+- A broad decomposition wave would be churn. The useful debt item is a small guardrail: trim or justify those few oversized functions and avoid making the module worse.
 
 # Scope
 - In:
-  - identify all functions exceeding 150 lines in `services.py`
-  - extract logical sub-units into focused, named helpers within the same module or a sibling module
-  - ensure all existing tests pass unchanged after extraction (behavior-preserving refactor only)
-  - add targeted unit tests for at least the three largest extracted helpers
+  - identify functions exceeding 150 lines in `services.py`
+  - extract only obvious, behavior-preserving helper blocks from the oversized functions
+  - add targeted unit tests only for extracted helpers that contain real branching or parsing logic
+  - keep all existing tests passing unchanged after extraction
 - Out:
   - changing any scoring weights, thresholds, or observable behavior
-  - splitting `services.py` into multiple top-level packages (module structure change is a separate decision)
+  - splitting `services.py` into multiple top-level packages
+  - touching functions already under the line budget
   - refactoring `app.py` or adapter modules
 
 ```mermaid
 %% logics-kind: backlog
-%% logics-signature: backlog|day-captain-services-decomposition-large|req-053-day-captain-technical-debt-and-r|services-py-is-a-single-3-806-line|ac1-no-single-function-in-services-py
+%% logics-signature: backlog|day-captain-services-function-size-guard|req-053-day-captain-technical-debt-and-r|services-py-is-a-large-module-but|ac1-no-single-function-in-services-py
 flowchart LR
-    Request[Req 053 technical debt] --> Problem[services.py 3806 lines, large functions]
-    Problem --> Scope[Extract helpers, preserve behavior]
-    Scope --> Acceptance[AC1 no function exceeds 150 lines]
+    Request[Req 053 technical debt] --> Problem[Three functions slightly exceed budget]
+    Problem --> Scope[Trim only obvious helper blocks]
+    Scope --> Acceptance[AC1 no unjustified oversized function]
     Acceptance --> Tasks[Execution task]
 ```
 
 # Acceptance criteria
-- AC1: No single function in `services.py` or its extracted sibling(s) exceeds 150 lines after decomposition.
-- AC2: All existing tests pass unchanged — no test modifications to make them pass on the refactored code.
-- AC3: At least three of the largest extracted helpers have dedicated unit tests.
+- AC1: No single function in `services.py` exceeds 150 lines unless a short `ponytail:` comment justifies why splitting it would add more complexity than it removes.
+- AC2: All existing tests pass unchanged; no test modifications are made just to preserve behavior after refactor.
+- AC3: Extracted helpers with meaningful branching have dedicated unit tests.
 - AC4: Public API of `services.py` (exported names consumed by `app.py`) is unchanged; callers require no modification.
 
 # AC Traceability
-- Req053 AC3 → AC1, AC2, AC4. Proof: this item owns the behavior-preserving decomposition contract.
+- Req053 AC3 -> AC1, AC2, AC4. Proof: this item owns the behavior-preserving services.py size guardrail.
 
 # Decision framing
 - Product framing: Not needed
-- Architecture framing: Not needed — intra-module refactor only; module boundary decisions are deferred.
+- Architecture framing: Not needed - intra-module cleanup only; broad module-boundary decisions are explicitly out of scope.
 
 # Links
 - Product brief(s): (none yet)
@@ -55,20 +56,20 @@ flowchart LR
 - Primary task(s): (orchestration task to be linked)
 
 # AI Context
-- Summary: Split the largest functions in services.py into focused helpers without changing behavior; add unit tests for extracted units.
-- Keywords: services.py, decomposition, refactor, large functions, unit tests, behavior-preserving
-- Use when: Work targets the internal structure of services.py or individual testability of scoring helpers.
-- Skip when: Work targets scoring weights, observable digest behavior, or delivery.
+- Summary: Trim or justify the few services.py functions that exceed the line budget; avoid broad decomposition churn.
+- Keywords: services.py, function size, refactor, line budget, unit tests, behavior-preserving
+- Use when: Work targets the internal size or readability of the few oversized services.py functions.
+- Skip when: Work targets scoring weights, observable digest behavior, delivery, or broad module restructuring.
 
 # References
 - Main scoring module: [services.py](src/day_captain/services.py)
 - Application orchestration: [app.py](src/day_captain/app.py)
 
 # Priority
-- Impact: High — current size makes every future change to scoring logic expensive.
-- Urgency: Low — no immediate breakage; urgency grows with each new feature touching the module.
+- Impact: Low - the module is large, but current oversized functions are only slightly over budget.
+- Urgency: Low - do this opportunistically when touching scoring or rendering code.
 
 # Notes
 - Derived from `req_053_day_captain_technical_debt_and_runtime_hardening`.
-- The 150-line budget is a starting suggestion; the execution task should confirm or adjust before implementation.
-- Highest-complexity item in the batch — tackle last, after simpler items de-risk the CI environment.
+- Downgraded after re-inspection on 2026-07-12; broad decomposition is explicitly out of scope.
+- Tackle last, or opportunistically when a nearby scoring/rendering change already needs tests.

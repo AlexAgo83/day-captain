@@ -11,6 +11,8 @@ day_captain.sqlite3
 *.sqlite
 *.db
 *.egg-info/
+__pycache__/
+*.pyc
 
 logics/external/private/
 logics/.cache/

@@ -1,5 +1,6 @@
 ## spec_000_day_captain_v1_digest_contract - Day Captain V1 digest contract and service architecture
 > From version: 0.1.0
+> Status: Archived
 > Understanding: 97%
 > Confidence: 94%
 

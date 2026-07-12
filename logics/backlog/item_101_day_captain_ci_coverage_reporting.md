@@ -1,7 +1,7 @@
 ## item_101_day_captain_ci_coverage_reporting - Day Captain CI coverage reporting
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Draft
+> Status: Ready
 > Understanding: 95%
 > Confidence: 95%
 > Progress: 0%

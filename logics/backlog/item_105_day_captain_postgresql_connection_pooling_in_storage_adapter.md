@@ -1,33 +1,33 @@
 ## item_105_day_captain_postgresql_connection_pooling_in_storage_adapter - Day Captain PostgreSQL connection pooling in storage adapter
 > From version: 1.9.3
 > Schema version: 1.0
-> Status: Draft
-> Understanding: 90%
-> Confidence: 88%
-> Progress: 0%
+> Status: Ready
+> Understanding: 90
+> Confidence: 88
+> Progress: 0
 > Complexity: Medium
 > Theme: Engineering Quality
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
 
 # Problem
-- The storage adapter opens a new PostgreSQL connection for each operation within a job run, creating per-query TCP handshake overhead and risking connection limit exhaustion under concurrent multi-user load.
+- The PostgreSQL adapter opens a new connection in each storage method via `_connect()`, creating per-query TCP handshake overhead and risking connection limit exhaustion under concurrent multi-user load.
 - On Render's starter PostgreSQL tier the default connection limit is low (typically 25); multiple simultaneous digest runs can approach this ceiling.
 - SQLite is unaffected (file-based, no TCP overhead) and must not be changed by this item.
 
 # Scope
 - In:
-  - introduce a connection reuse strategy for the PostgreSQL adapter within the lifetime of a single job run (e.g. pass a single connection through the call chain, or use `psycopg`'s connection pool for the process)
+  - introduce the smallest viable connection reuse strategy for the PostgreSQL adapter, preferably process-local pooling through the existing `psycopg` stack if available
   - ensure connections are closed or returned to the pool on job completion and on all error paths
   - SQLite adapter behavior must remain unchanged
   - add tests for connection lifecycle: opened once per run, closed on completion, closed on exception
 - Out:
-  - connection pooling across concurrent HTTP requests (gunicorn worker isolation makes this complex; defer to a later item)
+  - cross-worker pooling beyond a single gunicorn worker process
   - changing the storage protocol or adapter interface signature visible to `app.py`
   - upgrading the `psycopg` dependency version
 
 ```mermaid
 %% logics-kind: backlog
-%% logics-signature: backlog|day-captain-postgresql-connection-poolin|req-053-day-captain-technical-debt-and-r|the-storage-adapter-opens-a-new|ac1-the-postgresql-storage-adapter-opens
+%% logics-signature: backlog|day-captain-postgresql-connection-poolin|req-053-day-captain-technical-debt-and-r|the-postgresql-adapter-opens-a-new|ac1-the-postgresql-storage-adapter-avoid
 flowchart LR
     Request[Req 053 technical debt] --> Problem[New PG connection per operation]
     Problem --> Scope[Reuse connection within job run]
@@ -36,8 +36,8 @@ flowchart LR
 ```
 
 # Acceptance criteria
-- AC1: The PostgreSQL storage adapter opens at most one connection per job run and reuses it across all operations within that run.
-- AC2: The connection is explicitly closed (or returned to pool) when the job run completes, including on error paths.
+- AC1: The PostgreSQL storage adapter avoids opening a fresh TCP connection for every storage method call during normal hosted job execution.
+- AC2: Connections are explicitly closed or returned to a pool on completion and error paths.
 - AC3: SQLite adapter behavior is unchanged — no regression on local or test runs.
 - AC4: Tests verify that the connection is opened once and closed on both happy path and exception path.
 - AC5: The storage adapter interface (ports protocol) requires no changes; callers in `app.py` are unaffected.
@@ -67,9 +67,9 @@ flowchart LR
 - Application orchestration: [app.py](src/day_captain/app.py)
 
 # Priority
-- Impact: Medium — reduces DB connection overhead and prevents limit exhaustion under multi-user load.
+- Impact: Medium — reduces DB connection overhead and prevents limit exhaustion under Power Automate multi-user fan-out.
 - Urgency: Low — no immediate limit hit observed; risk grows as tenant count increases.
 
 # Notes
 - Derived from `req_053_day_captain_technical_debt_and_runtime_hardening`.
-- Evaluate whether the existing `psycopg[binary]` dependency is sufficient or whether `psycopg-pool` needs to be added as an optional extra.
+- First verify whether `psycopg_pool` is already available through installed dependencies; add `psycopg-pool` only if the installed stack cannot cover this cleanly.

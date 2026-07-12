@@ -12,18 +12,29 @@ Use a separate private repository, for example `day-captain-ops`, for production
 
 Your private ops repo should contain:
 
-- the production GitHub Actions workflow
-- repository secrets such as `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET`
-- optional repository variable `DAY_CAPTAIN_TARGET_USERS_JSON`
+- manual fallback GitHub Actions workflows
+- fallback repository secrets such as `DAY_CAPTAIN_SERVICE_URL` and `DAY_CAPTAIN_JOB_SECRET`
+- optional fallback repository variable `DAY_CAPTAIN_TARGET_USERS_JSON`
 - optional secrets or variables for `DAY_CAPTAIN_GRAPH_SENDER_USER_ID` and `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`
 - deployment-specific notes or runbooks
+- the Power Automate scheduler runbook from [`power_automate_scheduler_setup.md`](power_automate_scheduler_setup.md)
 - optional Power Automate runbook if inbound email-command recall is operated outside GitHub Actions
 
-Use these copy-ready templates in the private ops repo:
+Routine production scheduling should be owned by Power Automate, not GitHub Actions. Use these copy-ready templates only as manual fallback or rollback material in the private ops repo:
 - [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) -> `.github/workflows/morning-digest.yml`
 - [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) -> `.github/workflows/weekly-digest.yml`
 
-## Recommended workflow pattern
+## Primary Power Automate pattern
+
+1. Store `DAY_CAPTAIN_SERVICE_URL`, `DAY_CAPTAIN_JOB_SECRET`, and target users in Power Platform-managed configuration.
+2. Configure `Day Captain - Morning Digest` with a weekday `08:45 Europe/Paris` recurrence.
+3. Configure `Day Captain - Weekly Digest` with a Sunday `20:30 Europe/Paris` recurrence.
+4. Warm the hosted service once with authenticated `GET /healthz`.
+5. Fan out one hosted POST per explicit target user.
+6. Keep Power Automate HTTP secret inputs and outputs secure, keep owner failure alerts enabled, and keep notifications content-free.
+7. Do not clone flows with literal secrets between tenants; move the job secret into tenant-managed Power Platform configuration before reusing the pattern elsewhere.
+
+## Manual fallback workflow pattern
 
 1. Check out the Day Captain repo, or vendor the trigger script into the ops repo.
 2. Use `scripts/check_hosted_health.py` for readiness/wake-up, `scripts/validate_hosted_service.py` for manual validation runs, and `scripts/trigger_hosted_digest.py` for routine trigger-only workflows.
@@ -31,7 +42,7 @@ Use these copy-ready templates in the private ops repo:
 4. If the hosted service can sleep, run one standalone readiness step with `scripts/check_hosted_health.py --wake-service` before the real trigger fan-out.
 5. Keep the workflow output free of digest content.
 
-## Copy-ready workflows
+## Copy-ready fallback workflows
 
 Copy:
 - [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) into the private ops repo as `.github/workflows/morning-digest.yml`
@@ -47,6 +58,8 @@ Assumptions baked into that template:
 - the morning scheduler stays weekday-only and targets `08:45 Europe/Paris`, while the weekly scheduler is a separate Sunday-evening contract
 - the weekly scheduler gate should tolerate normal GitHub Actions cron jitter within the intended Sunday `20:30 Europe/Paris` hour instead of depending on an exact process start minute
 - the copy-ready weekly templates are expected to stay aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` helper
+
+After Power Automate has live evidence for both jobs, remove the `schedule:` blocks from these workflows and keep `workflow_dispatch` only.
 
 ## Suggested repository variables
 
@@ -65,7 +78,7 @@ If you set `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`, also ensure:
 - single-target deployments may use bare helper senders such as `assistant@example.com`
 - multi-user deployments must use explicit `sender=target` mappings such as `assistant@example.com=alice@example.com`
 
-## Validation before enabling cron
+## Validation before enabling Power Automate recurrence
 
 - run `PYTHONPATH=src python3 -m day_captain validate-config --target-user alice@example.com`
 - run `DAY_CAPTAIN_SERVICE_URL=... DAY_CAPTAIN_JOB_SECRET=... PYTHONPATH=src python3 -m day_captain check-hosted-health --wake-service --wake-timeout-seconds 45 --wake-max-attempts 6 --wake-delay-seconds 10 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
@@ -76,7 +89,8 @@ If you set `DAY_CAPTAIN_EMAIL_COMMAND_ALLOWED_SENDERS`, also ensure:
 - trigger one hosted job manually for each target user with `day-captain trigger-hosted-job --job morning-digest`
 - trigger one hosted weekly job manually with `day-captain trigger-hosted-job --job weekly-digest`
 - trigger one hosted `email-command-recall` job manually if that surface is enabled and confirm duplicate suppression by replaying the same `command_message_id`
-- confirm delivery and persistence before enabling the scheduled trigger
+- confirm delivery and persistence before enabling Power Automate recurrence
+- record successful Power Automate run IDs and delivery timestamps before disabling GitHub Actions schedules
 - if the hosted plan can sleep, document the warm-up path and timeout policy in the private ops workflow before enabling cron
 - if inbound email-command recall is bridged through Power Automate, keep [`power_automate_shared_mailbox_recall_setup.md`](/Users/alexandreagostini/Documents/day-captain/docs/power_automate_shared_mailbox_recall_setup.md) alongside the private repo runbook and document the mailbox permission propagation caveat
 - if a hosted run remains `delivery_pending`, treat it as possible post-send uncertainty and reconcile before retrying from ops

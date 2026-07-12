@@ -31,7 +31,7 @@ flowchart LR
     UserCommand[Email Command: recall or recall-week] --> SenderMailbox
     SenderMailbox --> CommandTrigger[Power Automate Shared Mailbox Trigger]
     CommandTrigger --> App
-    Scheduler[GitHub Actions or manual hosted trigger] --> Web[HTTP or CLI Entry]
+    Scheduler[Power Automate recurrence or manual hosted trigger] --> Web[HTTP or CLI Entry]
     Web --> App
     App --> Storage[(SQLite or Postgres)]
     Feedback[Feedback and Preferences] --> Storage
@@ -76,7 +76,7 @@ Current operating model:
 
 Recommended repository split:
 - `day-captain`: application source code
-- `day-captain-ops`: private GitHub repository for production scheduling, deployment orchestration, and secrets
+- `day-captain-ops`: private operations repository for scheduler runbooks, fallback workflows, deployment orchestration, and secrets
 
 Planned operating model:
 - one Microsoft 365 company tenant

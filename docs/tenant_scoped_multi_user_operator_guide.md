@@ -157,31 +157,34 @@ PYTHONPATH=src python3 -m day_captain trigger-hosted-job \
 
 ## Scheduling model
 
-The GitHub Actions scheduler supports two modes:
+Production scheduling should use Power Automate recurrence. It calls the hosted Day Captain job endpoints directly, using `Europe/Paris` schedule semantics without GitHub cron jitter, checkout, Python setup, or package installation.
 
-- Manual one-off override with `workflow_dispatch` input `target_user_id`
-- Scheduled fan-out from repository variable `DAY_CAPTAIN_TARGET_USERS_JSON`
+Use [`power_automate_scheduler_setup.md`](power_automate_scheduler_setup.md) as the scheduler runbook.
 
-In production, run that scheduler from a private ops repository rather than from the application repository.
+The production Power Automate scheduler has two flows:
 
-Use the ready-to-copy template in [`day_captain_ops_morning_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_morning_digest_scheduler.yml) as the base workflow for that private repo.
-Use [`day_captain_ops_weekly_digest_scheduler.yml`](/Users/alexandreagostini/Documents/day-captain/docs/day_captain_ops_weekly_digest_scheduler.yml) as the separate Sunday-evening weekly recap workflow.
+- `Day Captain - Morning Digest`: Monday-Friday at `08:45 Europe/Paris`, calling `/jobs/morning-digest`.
+- `Day Captain - Weekly Digest`: Sunday at `20:30 Europe/Paris`, calling `/jobs/weekly-digest`.
 
-Example repository variable:
+Each flow:
 
-```json
-["alice@example.com", "bob@example.com"]
-```
+- warms the hosted service with authenticated `GET /healthz`
+- fans out over explicit target users from a tenant-managed JSON array
+- sends one content-free POST per target user
+- keeps concurrency at one run
+- leaves digest generation, Graph access, storage, and delivery inside Day Captain
 
-The weekday scheduler issues one hosted `/jobs/morning-digest` call per listed target user. The shipped morning template targets `08:45 Europe/Paris` through a timezone-aware weekday gate, while the Sunday scheduler issues one hosted `/jobs/weekly-digest` call per listed target user. If `DAY_CAPTAIN_TARGET_USERS_JSON` is unset, the example workflow falls back to a single request without `target_user_id`, which is compatible with single-user deployments.
-- The Sunday scheduler should tolerate normal GitHub Actions cron jitter. Prefer the shared helper-backed gate from the copy-ready weekly workflow template instead of requiring an exact `20:30 Europe/Paris` process start.
-- The shipped weekly scheduler templates should stay aligned with the shared `day_captain.scheduler.should_run_sunday_weekly_digest` helper so new ops repos inherit the same gate semantics.
+Keep the private GitHub Actions workflows as manual fallback only:
+
+- `workflow_dispatch` can trigger a one-off target user override.
+- `schedule:` blocks should be removed only after successful Power Automate morning and weekly run evidence is recorded.
+- The copy-ready GitHub scheduler templates remain useful for rollback and debugging, not as the primary production scheduler.
 
 ## Sleeping-service fallback
 
 If the hosted web service is on a plan that can sleep:
 
-- use the private ops workflow to call `GET /healthz` as a warm-up step before the real trigger
+- use Power Automate to call authenticated `GET /healthz` as a warm-up step before the real trigger
 - for multi-user schedules, do that warm-up once before the per-user fan-out rather than once per user
 - use trigger-only job calls for the weekday and Sunday schedules, and keep full `validate-hosted-service` runs for manual validation or rollout checks
 - allow bounded retries before `POST /jobs/morning-digest`
@@ -189,7 +192,7 @@ If the hosted web service is on a plan that can sleep:
 - use longer timeout settings than for an always-on deployment
 - keep this as a fallback mode only; prefer a paid always-on service for routine production delivery
 
-Use [`private_ops_repo_bootstrap.md`](/Users/alexandreagostini/Documents/day-captain/docs/private_ops_repo_bootstrap.md) as the starting point for that private repo.
+Use [`private_ops_repo_bootstrap.md`](private_ops_repo_bootstrap.md) as the starting point for private ops fallback docs.
 
 ## Isolation checks
 

@@ -1,0 +1,209 @@
+{
+  "budgets": {
+    "max_docs": 20,
+    "max_docs_per_ref": 4
+  },
+  "changed_paths": [],
+  "command": "logics-manager sync context-pack req_054_day_captain_power_automate_scheduler_migration item_106_document_the_power_automate_scheduler_flows item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling item_108_cut_over_production_scheduling_and_capture_live_evidence task_049_orchestrate_power_automate_scheduler_migration --mode summary-only --profile normal",
+  "companion_docs": [],
+  "docs": [
+    {
+      "ai_context": {
+        "keywords": "request-chain-scaffold, day captain power automate scheduler migration, development-ready",
+        "skip when": "The change is unrelated to this scaffolded request chain.",
+        "summary": "Day Captain Power Automate scheduler migration",
+        "use when": "You need to implement or review the scaffolded workflow for Day Captain Power Automate scheduler migration."
+      },
+      "kind": "request",
+      "linked_refs": {
+        "item": [
+          "item_106_document_the_power_automate_scheduler_flows",
+          "item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling",
+          "item_108_cut_over_production_scheduling_and_capture_live_evidence"
+        ],
+        "prod": [
+          "prod_001_day_captain_operations_scheduler_reliability"
+        ],
+        "req": [
+          "req_054_day_captain_power_automate_scheduler_migration"
+        ]
+      },
+      "path": "logics/request/req_054_day_captain_power_automate_scheduler_migration.md",
+      "ref": "req_054_day_captain_power_automate_scheduler_migration",
+      "schema_version": "1.0",
+      "status": "Draft",
+      "title": "Day Captain Power Automate scheduler migration"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, document the power automate scheduler flows, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Document the Power Automate scheduler flows",
+        "use when": "Implementing the scaffolded slice for Document the Power Automate scheduler flows."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_106_document_the_power_automate_scheduler_flows"
+        ],
+        "prod": [
+          "prod_001_day_captain_operations_scheduler_reliability"
+        ],
+        "req": [
+          "req_054_day_captain_power_automate_scheduler_migration"
+        ],
+        "task": [
+          "task_049_orchestrate_power_automate_scheduler_migration"
+        ]
+      },
+      "path": "logics/backlog/item_106_document_the_power_automate_scheduler_flows.md",
+      "ref": "item_106_document_the_power_automate_scheduler_flows",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Document the Power Automate scheduler flows"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, align day captain app and ops docs with power automate scheduling, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Align Day Captain app and ops docs with Power Automate scheduling",
+        "use when": "Implementing the scaffolded slice for Align Day Captain app and ops docs with Power Automate scheduling."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling"
+        ],
+        "prod": [
+          "prod_001_day_captain_operations_scheduler_reliability"
+        ],
+        "req": [
+          "req_054_day_captain_power_automate_scheduler_migration"
+        ],
+        "task": [
+          "task_049_orchestrate_power_automate_scheduler_migration"
+        ]
+      },
+      "path": "logics/backlog/item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling.md",
+      "ref": "item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Align Day Captain app and ops docs with Power Automate scheduling"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, cut over production scheduling and capture live evidence, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Cut over production scheduling and capture live evidence",
+        "use when": "Implementing the scaffolded slice for Cut over production scheduling and capture live evidence."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_108_cut_over_production_scheduling_and_capture_live_evidence"
+        ],
+        "prod": [
+          "prod_001_day_captain_operations_scheduler_reliability"
+        ],
+        "req": [
+          "req_054_day_captain_power_automate_scheduler_migration"
+        ],
+        "task": [
+          "task_049_orchestrate_power_automate_scheduler_migration"
+        ]
+      },
+      "path": "logics/backlog/item_108_cut_over_production_scheduling_and_capture_live_evidence.md",
+      "ref": "item_108_cut_over_production_scheduling_and_capture_live_evidence",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Cut over production scheduling and capture live evidence"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-task, request-chain-scaffold, orchestration",
+        "skip when": "Working on one isolated sibling slice.",
+        "summary": "Orchestrate Power Automate scheduler migration",
+        "use when": "Coordinating implementation of a scaffolded request chain."
+      },
+      "kind": "task",
+      "linked_refs": {
+        "item": [
+          "item_106_document_the_power_automate_scheduler_flows",
+          "item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling",
+          "item_108_cut_over_production_scheduling_and_capture_live_evidence"
+        ],
+        "prod": [
+          "prod_001_day_captain_operations_scheduler_reliability"
+        ],
+        "req": [
+          "req_054_day_captain_power_automate_scheduler_migration"
+        ],
+        "spec": [
+          "spec_000_day_captain_v1_digest_contract"
+        ],
+        "task": [
+          "task_049_orchestrate_power_automate_scheduler_migration"
+        ]
+      },
+      "path": "logics/tasks/task_049_orchestrate_power_automate_scheduler_migration.md",
+      "ref": "task_049_orchestrate_power_automate_scheduler_migration",
+      "schema_version": "1.0",
+      "status": "In progress",
+      "title": "Orchestrate Power Automate scheduler migration"
+    }
+  ],
+  "estimates": {
+    "char_count": 4947,
+    "companion_doc_count": 0,
+    "doc_count": 5
+  },
+  "generated_at": "2026-07-12T16:53:57Z",
+  "handoff": {
+    "companion_doc_count": 0,
+    "enabled": false,
+    "source_refs": [
+      "req_054_day_captain_power_automate_scheduler_migration",
+      "item_106_document_the_power_automate_scheduler_flows",
+      "item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling",
+      "item_108_cut_over_production_scheduling_and_capture_live_evidence",
+      "task_049_orchestrate_power_automate_scheduler_migration"
+    ],
+    "validation_summary_count": 0
+  },
+  "mode": "summary-only",
+  "profile": "normal",
+  "ref": "req_054_day_captain_power_automate_scheduler_migration,item_106_document_the_power_automate_scheduler_flows,item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling,item_108_cut_over_production_scheduling_and_capture_live_evidence,task_049_orchestrate_power_automate_scheduler_migration",
+  "refs": [
+    "req_054_day_captain_power_automate_scheduler_migration",
+    "item_106_document_the_power_automate_scheduler_flows",
+    "item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling",
+    "item_108_cut_over_production_scheduling_and_capture_live_evidence",
+    "task_049_orchestrate_power_automate_scheduler_migration"
+  ],
+  "release": {
+    "blocking_reasons": [
+      "Missing logics/release/contract.json."
+    ],
+    "configured": false,
+    "contract_path": "logics/release/contract.json",
+    "guidance": [
+      "Release readiness must come from project-owned evidence, not conversational memory.",
+      "Use release status or validate before preparing or claiming release readiness.",
+      "Publication-oriented actions are explicit operator actions and are separate from safe read/validate actions."
+    ],
+    "next_action": "Run logics-manager release discover --write, then review and promote logics/release/contract.draft.json to logics/release/contract.json.",
+    "publication_actions": [
+      "GitHub release publication",
+      "external publication"
+    ],
+    "required_gates": [],
+    "safe_actions": [
+      "logics-manager release status",
+      "logics-manager release plan <version>",
+      "logics-manager release validate <version>"
+    ],
+    "state": "not_configured",
+    "target_version": null
+  },
+  "validation_summary": []
+}
