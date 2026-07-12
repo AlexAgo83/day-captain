@@ -1,10 +1,10 @@
 ## task_051_implement_sensitive_content_and_application_access_safeguards - Implement sensitive-content and application-access safeguards
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
 > Confidence: 98
-> Progress: 100
+> Progress: 100%
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -51,12 +51,17 @@ The production audit found that authentication content can enter the digest pipe
 - Run `logics-manager flow validate task_051_implement_sensitive_content_and_application_access_safeguards --strict`.
 - Run `logics-manager lint --require-status` and `logics-manager audit`.
 - Run `logics-manager flow finish task task_051_implement_sensitive_content_and_application_access_safeguards.md` only after implementation evidence is attached.
+- Finish workflow executed on 2026-07-12.
+- Linked backlog/request close verification passed.
 
 # Report
 - 2026-07-12: implementation started. A deterministic authentication-message filter now runs immediately after collection and before tenant scoping, persistence, scoring, LLM rewriting, memory, rendering, and run storage.
 - 2026-07-12: synthetic regression proof confirms a one-time-code secret is absent from message storage, wording-engine input, rendered payload, and persisted run. Focused app, scoring, and renderer suite: 121 passed.
 - 2026-07-12: suspicious-mail classification now ignores a single weak urgency cue while retaining warnings for one strong or multiple independent signals. Existing target-user authorization fails closed outside `DAY_CAPTAIN_TARGET_USERS`; operator documentation now records mailbox-evidence access and retention boundaries. Expanded focused suite: 152 passed.
 - 2026-07-12: added the allow-listed aggregate `sensitive_suppressions` metric; it contains only an integer count. Full suite: 265 passed. Task implementation is ready for closeout.
+- Finished on 2026-07-12.
+- Linked backlog item(s): `item_114_protect_sensitive_mailbox_content_and_govern_application_access`
+- Related request(s): `req_055_day_captain_production_digest_actionability_improvement`
 
 # AI Context
 - Summary: Implement implement sensitive-content and application-access safeguards.
