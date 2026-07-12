@@ -3,8 +3,8 @@
 > Schema version: 1.0
 > Status: In progress
 > Understanding: 98
-> Confidence: 95
-> Progress: 90
+> Confidence: 96
+> Progress: 95
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -65,6 +65,7 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - 2026-07-12: added the built-in `day-captain digest-replay` command. It uses only `.test` identities, forces JSON delivery, covers authentication suppression, noise, owned deadline, transactional failure, continuity, and meeting conflict, and emits byte-identical aggregate output across repeated runs. Full suite: 276 passed.
 - 2026-07-12: replay now evaluates a versioned `public-safe-baseline-v1` gate against the baseline aggregate baseline. Candidate replay reports 1,804 median visible characters (66.93% reduction) and zero generic actions (100% reduction), passing the 40%/80% gates; synthetic secret absence remains asserted by the replay test.
 - 2026-07-12: replay now includes distinct daily and weekly payloads and can export `daily.html`, `daily.txt`, `weekly.html`, and `weekly.txt` through `--output-dir`. The three-brief candidate reports 1,376 median visible characters (74.78% reduction), zero generic actions, and all gates passing. Temporary artifact export was exercised and deleted.
+- 2026-07-12: native macOS Quick Look rendering exposed transparent-background dark rendering and missing UTF-8 metadata. The HTML now declares UTF-8 and an explicit white body/container background. Regenerated daily and weekly 1400px thumbnails show readable hierarchy, wrapping, cards, actions, and corrected copyright. Narrow behavior remains covered structurally by the 720px max-width/fluid container and documented 360px manual check; temporary artifacts were deleted.
 
 # AI Context
 - Summary: Implement run digest replay visual qa and safe rollout.

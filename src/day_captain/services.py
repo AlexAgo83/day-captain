@@ -2956,8 +2956,8 @@ class StructuredDigestRenderer:
         )
         coverage_label = str(localized.get("coverage_label") or "")
         parts = [
-            "<html><body style=\"margin:0;padding:0;background:transparent;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
-            "<div style=\"max-width:720px;margin:0 auto;padding:18px 18px 28px;\">",
+            "<html><head><meta charset=\"utf-8\"></head><body style=\"margin:0;padding:0;background:#ffffff;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
+            "<div style=\"max-width:720px;margin:0 auto;padding:18px 18px 28px;background:#ffffff;\">",
             "<section style=\"margin:0 0 22px;padding:0 0 14px;border-bottom:1px solid #dbe4ee;\">",
             "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
             "<p style=\"margin:0 0 8px;font-size:14px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
