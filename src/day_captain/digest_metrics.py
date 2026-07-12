@@ -18,7 +18,7 @@ GENERIC_ACTIONS = (
 
 def digest_metrics(payloads: Sequence[DigestPayload]) -> Mapping[str, object]:
     visible_lengths = []
-    card_count = generic_actions = risk_warnings = news_items = sensitive_suppressions = 0
+    card_count = generic_actions = risk_warnings = news_items = sensitive_suppressions = repeated_suppressions = 0
     for payload in payloads:
         entries = tuple(payload.critical_topics) + tuple(payload.actions_to_take) + tuple(payload.watch_items) + tuple(payload.daily_presence) + tuple(payload.upcoming_meetings)
         visible_lengths.append(len(payload.delivery_body))
@@ -30,6 +30,7 @@ def digest_metrics(payloads: Sequence[DigestPayload]) -> Mapping[str, object]:
         news_items += len(payload.external_news)
         metrics = payload.delivery_payload.get("usefulness_metrics") or {}
         sensitive_suppressions += int(metrics.get("sensitive_suppressions") or 0)
+        repeated_suppressions += int(metrics.get("repeated_unchanged_suppressions") or 0)
     ordered_lengths = sorted(visible_lengths)
     median_length = ordered_lengths[len(ordered_lengths) // 2] if ordered_lengths else 0
     return {
@@ -41,4 +42,5 @@ def digest_metrics(payloads: Sequence[DigestPayload]) -> Mapping[str, object]:
         "risk_warnings": risk_warnings,
         "external_news_items": news_items,
         "sensitive_suppressions": sensitive_suppressions,
+        "repeated_unchanged_suppressions": repeated_suppressions,
     }

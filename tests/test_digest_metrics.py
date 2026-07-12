@@ -28,4 +28,5 @@ def test_reports_only_versioned_aggregate_metrics() -> None:
         "risk_warnings": 0,
         "external_news_items": 0,
         "sensitive_suppressions": 2,
+        "repeated_unchanged_suppressions": 0,
     }

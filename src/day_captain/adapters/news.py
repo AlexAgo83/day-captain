@@ -75,6 +75,7 @@ class RssExternalNewsProvider:
             raise ExternalNewsProviderError("Expected RSS channel payload from external news provider.")
         feed_title = _xml_text(channel, "title")
         items = []
+        seen = set()
         for item in channel.findall("item"):
             headline = _xml_text(item, "title")
             source_url = _xml_text(item, "link")
@@ -82,6 +83,10 @@ class RssExternalNewsProvider:
             summary = _truncate_summary(_xml_text(item, "description"))
             if not headline or not source_url or not source_name:
                 continue
+            identity = (source_url.rstrip("/").lower(), " ".join(headline.lower().split()))
+            if identity[0] in seen or identity[1] in seen:
+                continue
+            seen.update(identity)
             items.append(
                 ExternalNewsItem(
                     headline=headline,

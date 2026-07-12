@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 98
 > Confidence: 92
-> Progress: 45
+> Progress: 50
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -61,6 +61,7 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - 2026-07-12: synthetic unit/CLI validation passes (16 tests). No Graph collection or delivery path is reachable from the metrics command.
 - 2026-07-12: Graph delivery now has an optional fail-closed live-test marker. The marker must match `DAY_CAPTAIN_GRAPH_LIVE_TEST_RECIPIENT`, contain exactly one To recipient, and contain no CC/BCC; invalid fan-out fails before any Graph call. Focused Graph/settings/app suite: 87 passed.
 - 2026-07-12: rendering validation documentation now defines desktop (~720px) and narrow (~360px) checks, operational ordering, section budgets, empty-section omission, and the optional single-recipient Outlook path. No local browser automation is installed, so screenshot evidence remains pending rather than adding a new dependency.
+- 2026-07-12: versioned metrics now include repeated-unchanged suppression counts, and RSS news is deterministically deduplicated before reporting. Full suite: 274 passed.
 
 # AI Context
 - Summary: Implement run digest replay visual qa and safe rollout.

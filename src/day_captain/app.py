@@ -805,7 +805,9 @@ class DayCaptainApplication:
             user_id=scoped_user_id,
             run_type=run_type,
         )
+        prioritized_count_before_memory = len(prioritized_items)
         prioritized_items, cleared_recent_items = annotate_with_recent_memory(prioritized_items, recent_runs)
+        repeated_unchanged_suppressions = prioritized_count_before_memory - len(prioritized_items)
         run_id = uuid.uuid4().hex
         render_kwargs = {
             "run_id": run_id,
@@ -853,12 +855,15 @@ class DayCaptainApplication:
                     "recent_memory": {"cleared": list(cleared_recent_items)},
                 },
             )
-        if sensitive_suppression_count:
+        if sensitive_suppression_count or repeated_unchanged_suppressions:
             payload = replace(
                 payload,
                 delivery_payload={
                     **dict(payload.delivery_payload),
-                    "usefulness_metrics": {"sensitive_suppressions": sensitive_suppression_count},
+                    "usefulness_metrics": {
+                        "sensitive_suppressions": sensitive_suppression_count,
+                        "repeated_unchanged_suppressions": repeated_unchanged_suppressions,
+                    },
                 },
             )
         run_record = DigestRunRecord(

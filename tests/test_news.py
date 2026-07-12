@@ -64,3 +64,17 @@ class ExternalNewsProviderTest(unittest.TestCase):
 
         with self.assertRaises(ExternalNewsProviderError):
             provider.get_news(datetime(2026, 3, 9))
+
+    def test_rss_provider_deduplicates_repeated_headlines(self) -> None:
+        xml = b"""<rss><channel><title>Feed</title>
+        <item><title>Same story</title><link>https://example.com/one</link></item>
+        <item><title>Same story</title><link>https://example.com/two</link></item>
+        </channel></rss>"""
+        provider = RssExternalNewsProvider(
+            "https://example.com/feed.xml",
+            opener=lambda request, timeout=0: _StaticResponse(xml),
+        )
+
+        items = provider.get_news(datetime(2026, 7, 12))
+
+        self.assertEqual(len(items), 1)
