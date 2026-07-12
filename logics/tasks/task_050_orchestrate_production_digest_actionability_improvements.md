@@ -4,7 +4,7 @@
 > Status: In progress
 > Understanding: 98
 > Confidence: 95
-> Progress: 50
+> Progress: 60
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -85,6 +85,7 @@
 - 2026-07-12: recent-memory matching now follows stable mail thread identity even when Graph message IDs change. Unchanged watch, routine meeting, and presence cards are suppressed before rendering, while critical and user-action items remain visible as still open. Focused continuity/app/scoring suite: 100 passed.
 - 2026-07-12: meeting scoring now detects overlaps and transitions of 15 minutes or less, raises their priority, and emits a specific conflict or transition action. Context-free meetings retain compact watch wording instead of invented preparation. Full suite: 270 passed.
 - 2026-07-12: user-owned mail actions now name a concrete reply/resolve verb, normalized object, counterparty, and any explicitly stated due hint. Other-owned and shared actions retain separate wording. Full suite: 271 passed.
+- 2026-07-12: text and HTML rendering omit empty operational sections and place optional weather/news after the overview and populated operational sections. Full suite remains 271 passed.
 
 # AI Context
 - Summary: Orchestrate production digest actionability improvements

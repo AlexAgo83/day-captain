@@ -2903,6 +2903,22 @@ class StructuredDigestRenderer:
             ),
             "",
         ]
+        if top_summary.strip():
+            lines.append(localized["overview"]["label"])
+            lines.append(top_summary.strip())
+            lines.append("")
+        labels = localized["sections"]
+        for name in SECTION_NAMES:
+            items = sections[name]
+            if not items:
+                continue
+            lines.append(labels[name])
+            meeting_note = self._meeting_note(name, meeting_horizon)
+            if meeting_note:
+                lines.append(meeting_note)
+            for item in items:
+                lines.extend(self._body_item_lines(item))
+            lines.append("")
         weather_lines = self._weather_body_lines(weather)
         if weather_lines:
             lines.extend(weather_lines)
@@ -2910,23 +2926,6 @@ class StructuredDigestRenderer:
         news_lines = self._external_news_body_lines(external_news)
         if news_lines:
             lines.extend(news_lines)
-            lines.append("")
-        if top_summary.strip():
-            lines.append(localized["overview"]["label"])
-            lines.append(top_summary.strip())
-            lines.append("")
-        labels = localized["sections"]
-        for name in SECTION_NAMES:
-            lines.append(labels[name])
-            meeting_note = self._meeting_note(name, meeting_horizon)
-            if meeting_note:
-                lines.append(meeting_note)
-            items = sections[name]
-            if not items:
-                lines.append(self._empty_state(name, meeting_horizon))
-            else:
-                for item in items:
-                    lines.extend(self._body_item_lines(item))
             lines.append("")
         footer_lines = self._footer_body_lines(command_mailbox, generated_at, generation_duration_seconds)
         if footer_lines:
@@ -2971,12 +2970,6 @@ class StructuredDigestRenderer:
             ),
             "</section>",
         ]
-        weather_html = self._weather_html(weather)
-        if weather_html:
-            parts.append(weather_html)
-        news_html = self._external_news_html(external_news)
-        if news_html:
-            parts.append(news_html)
         if top_summary.strip():
             parts.append(
                 "<section style=\"margin:10px 0 24px;padding:0 0 0 14px;border-left:3px solid #94a3b8;\">"
@@ -2993,6 +2986,9 @@ class StructuredDigestRenderer:
             )
         labels = localized["sections"]
         for name in SECTION_NAMES:
+            items = sections[name]
+            if not items:
+                continue
             parts.append(
                 "<section style=\"margin:0 0 16px;\"><h2 style=\"margin:0 0 8px;font-size:19px;color:#0f172a;\">{0}</h2>".format(
                     self._html_escape(labels[name])
@@ -3001,17 +2997,15 @@ class StructuredDigestRenderer:
             meeting_note = self._meeting_note(name, meeting_horizon)
             if meeting_note:
                 parts.append("<p style=\"margin:0 0 8px;font-size:13px;color:#64748b;\">{0}</p>".format(self._html_escape(meeting_note)))
-            items = sections[name]
-            if not items:
-                parts.append(
-                    "<div style=\"margin:0;padding:10px 12px;border:1px dashed #cbd5e1;border-radius:10px;color:#64748b;\">{0}</div>".format(
-                        self._html_escape(self._empty_state(name, meeting_horizon))
-                    )
-                )
-            else:
-                for item in items:
-                    parts.append(self._html_item(item))
+            for item in items:
+                parts.append(self._html_item(item))
             parts.append("</section>")
+        weather_html = self._weather_html(weather)
+        if weather_html:
+            parts.append(weather_html)
+        news_html = self._external_news_html(external_news)
+        if news_html:
+            parts.append(news_html)
         footer_html = self._footer_html(command_mailbox, generated_at, generation_duration_seconds)
         if footer_html:
             parts.append(footer_html)

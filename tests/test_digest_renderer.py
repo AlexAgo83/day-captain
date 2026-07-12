@@ -90,7 +90,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
         self.assertIn("<html>", payload.delivery_payload["html_body"])
         self.assertIn("In brief", payload.delivery_payload["html_body"])
-        self.assertIn("No meetings are lined up for today.", payload.delivery_body)
+        self.assertNotIn("No meetings are lined up for today.", payload.delivery_body)
         self.assertIn("Quick actions", payload.delivery_body)
         self.assertIn("Use these buttons to ask Day Captain for this brief again, today's brief, or this week's brief.", payload.delivery_body)
         self.assertIn("subject/body: recall", payload.delivery_body)
@@ -116,8 +116,8 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Votre brief Day Captain", payload.delivery_body)
         self.assertIn("À jour au", payload.delivery_body)
         self.assertIn("Périmètre : Du sam. 07 mars 2026 à 09:00 au dim. 08 mars 2026 à 09:00 CET", payload.delivery_body)
-        self.assertIn("Points critiques", payload.delivery_body)
-        self.assertIn("Aperçu des réunions de lundi.", payload.delivery_body)
+        self.assertNotIn("Points critiques", payload.delivery_body)
+        self.assertNotIn("Aperçu des réunions de lundi.", payload.delivery_body)
         self.assertEqual(payload.delivery_subject, "Votre brief quotidien Day Captain du dim. 08 mars")
 
     def test_weekly_digest_uses_distinct_subject(self) -> None:
@@ -486,7 +486,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
 
         self.assertIn("Today's weather", payload.delivery_body)
         self.assertIn("Paris: Rain, 13C max / 6C min. Rain likely. Warmer than yesterday.", payload.delivery_body)
-        self.assertLess(payload.delivery_body.index("Today's weather"), payload.delivery_body.index("In brief"))
+        self.assertGreater(payload.delivery_body.index("Today's weather"), payload.delivery_body.index("In brief"))
         self.assertIn("Today's weather", payload.delivery_payload["html_body"])
         self.assertIn("Paris: Rain, 13C max / 6C min. Rain likely. Warmer than yesterday.", payload.delivery_payload["html_body"])
         self.assertEqual(payload.delivery_payload["weather"]["location_name"], "Paris")
@@ -621,7 +621,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("External news", payload.delivery_body)
         self.assertIn("Source: Financial Times (https://example.com/ft/ecb)", payload.delivery_body)
         self.assertLess(payload.delivery_body.index("Today's weather"), payload.delivery_body.index("External news"))
-        self.assertLess(payload.delivery_body.index("External news"), payload.delivery_body.index("In brief"))
+        self.assertGreater(payload.delivery_body.index("External news"), payload.delivery_body.index("In brief"))
         self.assertIn("Open article", payload.delivery_payload["html_body"])
         self.assertEqual(payload.delivery_payload["external_news"][0]["source_name"], "Financial Times")
 
