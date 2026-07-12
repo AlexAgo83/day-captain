@@ -26,6 +26,7 @@ from day_captain.models import parse_datetime
 from day_captain.models import digest_payload_from_dict
 from day_captain.models import to_jsonable
 from day_captain.digest_metrics import digest_metrics
+from day_captain.replay import run_synthetic_replay
 from day_captain.web import serve
 
 
@@ -108,6 +109,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     metrics = subparsers.add_parser("digest-metrics", help="Report content-free metrics from exported digest JSON.")
     metrics.add_argument("inputs", nargs="+", help="One or more exported DigestPayload JSON files.")
+    subparsers.add_parser("digest-replay", help="Run the built-in identity-free replay without delivery.")
 
     health = subparsers.add_parser(
         "check-hosted-health",
@@ -441,6 +443,13 @@ def main(argv: Optional[list] = None) -> int:
             raw = json.loads(Path(input_path).read_text(encoding="utf-8"))
             payloads.append(digest_payload_from_dict(raw.get("payload", raw)))
         print(json.dumps(digest_metrics(payloads), indent=2, sort_keys=True))
+        return 0
+    if args.command == "digest-replay":
+        payloads = run_synthetic_replay()
+        print(json.dumps({
+            "cases": ["authentication_suppression", "noise", "owned_deadline", "transactional_failure", "continuity", "meeting_conflict"],
+            "metrics": digest_metrics(payloads),
+        }, indent=2, sort_keys=True))
         return 0
 
     if args.command == "auth":
