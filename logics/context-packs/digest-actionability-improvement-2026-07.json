@@ -1,10 +1,15 @@
 {
   "budgets": {
-    "max_docs": 56,
+    "max_docs": 88,
     "max_docs_per_ref": 8
   },
-  "changed_paths": [],
-  "command": "logics-manager sync context-pack req_055_day_captain_production_digest_actionability_improvement item_109_reduce_digest_noise_and_enforce_concise_section_budgets item_110_generate_concrete_owner_aware_actions_and_deadlines item_111_turn_recent_run_memory_into_a_differential_commitment_view item_112_make_upcoming_meetings_preparation_and_conflict_aware item_113_improve_digest_presentation_personalization_and_usefulness_telemetry task_050_orchestrate_production_digest_actionability_improvements --mode diff-first --profile deep",
+  "changed_paths": [
+    "logics/backlog/item_114_protect_sensitive_mailbox_content_and_govern_application_access.md",
+    "logics/backlog/item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout.md",
+    "logics/tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md",
+    "logics/tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md"
+  ],
+  "command": "logics-manager sync context-pack req_055_day_captain_production_digest_actionability_improvement item_109_reduce_digest_noise_and_enforce_concise_section_budgets item_110_generate_concrete_owner_aware_actions_and_deadlines item_111_turn_recent_run_memory_into_a_differential_commitment_view item_112_make_upcoming_meetings_preparation_and_conflict_aware item_113_improve_digest_presentation_personalization_and_usefulness_telemetry item_114_protect_sensitive_mailbox_content_and_govern_application_access item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout task_050_orchestrate_production_digest_actionability_improvements task_051_implement_sensitive_content_and_application_access_safeguards task_052_run_digest_replay_visual_qa_and_safe_rollout --mode diff-first --profile deep",
   "companion_docs": [],
   "docs": [
     {
@@ -21,7 +26,9 @@
           "item_110_generate_concrete_owner_aware_actions_and_deadlines",
           "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
           "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
-          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry"
+          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
+          "item_114_protect_sensitive_mailbox_content_and_govern_application_access",
+          "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout"
         ],
         "prod": [
           "prod_002_day_captain_actionable_differential_brief"
@@ -35,12 +42,12 @@
       "schema_version": "1.0",
       "sections": {
         "Acceptance criteria": [
-          "- AC1: A daily digest renders no more than 3 critical items, 3 user-owned actions, 2 watch items, and 4 upcoming meetings, with deterministic ordering and focused regression coverage.",
-          "- AC2: Unread state is informational only; newsletters, entertainment recaps, routine automatic replies, and already-surfaced unchanged items do not gain action priority without a stronger signal.",
-          "- AC3: Every rendered action identifies a concrete next step and owner; user-owned actions are separated from shared work and work owned by another participant.",
-          "- AC4: Delivery failures, explicit deadlines, overdue commitments, and actionable transactional alerts outrank low-signal messages and produce specific recommended actions.",
-          "- AC5: Cross-run continuity follows stable mail threads where available and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states.",
-          "- AC6: Meeting cards surface conflicts and preparation evidence only when the system has a document, open decision, prior commitment, relevant thread, or explicit preparation request."
+          "- AC1: Authentication codes, password-reset messages, magic links, and equivalent sensitive authentication content are suppressed before persistence, LLM processing, telemetry, and rendering, with no raw secret material retained.",
+          "- AC2: A daily digest renders no more than 3 critical items, 3 user-owned actions, 2 watch items, and 4 upcoming meetings; unread state remains informational and low-signal newsletters, entertainment recaps, routine automatic replies, passive presence, and unchanged items do not consume those budgets without a stronger signal.",
+          "- AC3: Every rendered action identifies a concrete verb, object, owner, and evidence source; due dates and counterparties are included when supported, while other-owned and unclear work is not presented as the recipient's action.",
+          "- AC4: Delivery failures, explicit deadlines, overdue commitments, and actionable transactional alerts deterministically outrank low-signal content and generate specific recovery or follow-up actions.",
+          "- AC5: Cross-run continuity follows stable mail threads and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states without treating read state as completion.",
+          "- AC6: Meeting cards surface conflicts, tight transitions, and preparation evidence only when supported by a document, open decision, prior commitment, relevant thread, or explicit preparation request; routine and placeholder meetings remain compact."
         ],
         "Needs": [
           "- Turn production digests from long mailbox summaries into concise, differential, user-owned action briefs.",
@@ -83,7 +90,8 @@
           "- AC2: A non-actionable unread newsletter is filtered while a flagged or transactional unread message remains eligible.",
           "- AC3: A delivery-failure fixture is critical and recommends correcting the failed recipient before resending.",
           "- AC4: Empty operational sections are omitted and ambient capsules never precede the action summary.",
-          "- AC5: Full tests pass without weakening tenant or user scoping."
+          "- AC5: Full tests pass without weakening tenant or user scoping.",
+          "- AC6: A routine automatic reply becomes a deferred follow-up only when a usable return date or alternate contact exists."
         ],
         "Problem": [
           "- The renderer currently applies a broad per-section limit that still allows long briefs with many similarly weighted cards.",
@@ -125,7 +133,8 @@
           "- AC2: Explicit send, call, validate, correct-recipient, and follow-up-after-return requests render concrete next steps.",
           "- AC3: A generic fallback is omitted when no concrete action can be derived.",
           "- AC4: Due dates sort actionable entries before undated work and overdue items receive a visible warning.",
-          "- AC5: One internal message containing a normal shared link is not marked suspicious, while a fixture with multiple independent risk signals is."
+          "- AC5: One internal message containing a normal shared link is not marked suspicious, while a fixture with multiple independent risk signals is.",
+          "- AC6: Decision and information fixtures do not become generic reply actions, and low-information previews do not produce invented actions."
         ],
         "Problem": [
           "- Generic actions such as reply, confirm, examine, or prepare do not tell the recipient what outcome is expected.",
@@ -167,7 +176,8 @@
           "- AC2: An unchanged non-critical item is suppressed on the next run and counted in the delta header.",
           "- AC3: A disappeared prior item is represented as cleared/resolved without rendering its old full card.",
           "- AC4: Daily and weekly memories remain independent and multi-user isolation tests pass.",
-          "- AC5: Read state alone never marks an item resolved."
+          "- AC5: Read state alone never marks an item resolved.",
+          "- AC6: An alias or new message ID with the same stable thread/content identity does not create a duplicate new card."
         ],
         "Problem": [
           "- Continuity currently keys message entries by source message ID, so a new reply in the same thread can bypass recent-memory matching.",
@@ -208,7 +218,9 @@
           "- AC1: A context-free meeting renders without a recommended preparation action.",
           "- AC2: A meeting with a linked request or document renders the specific preparation evidence.",
           "- AC3: Overlapping meetings and sub-15-minute transitions produce a visible conflict or tight-transition warning.",
-          "- AC4: Placeholder and all-day presence fixtures do not become preparation tasks."
+          "- AC4: Placeholder and all-day presence fixtures do not become preparation tasks.",
+          "- AC5: An unchanged recurring meeting remains compact, while a moved meeting reports its new time and any conflict delta without requiring reconfirmation by default.",
+          "- AC6: A preparation card contains at most one decision, one commitment, one document, and one open question."
         ],
         "Problem": [
           "- Meeting cards often repeat generic preparation advice even when no preparation evidence exists.",
@@ -250,7 +262,8 @@
           "- AC2: Operational delta and action content appears before weather and news.",
           "- AC3: Invalid weather is omitted with a safe diagnostic and valid extreme weather remains visible.",
           "- AC4: Daily external news is absent or limited to one configured relevant theme match.",
-          "- AC5: Feedback and aggregate telemetry contain identifiers and event types but no raw mailbox content or production identity."
+          "- AC5: Feedback and aggregate telemetry contain identifiers and event types but no raw mailbox content or production identity.",
+          "- AC6: Repeated news does not reappear, and daily mode contains zero news by default or at most one explicitly enabled relevant item."
         ],
         "Problem": [
           "- Daily and weekly emails can have identical subjects and visually similar cards despite very different operational impact.",
@@ -260,6 +273,86 @@
       },
       "status": "Ready",
       "title": "Improve digest presentation personalization and usefulness telemetry"
+    },
+    {
+      "ai_context": {
+        "keywords": "backlog-groom, request, protect sensitive mailbox content and govern application access, bounded slice",
+        "skip when": "Skip when the change is unrelated to this delivery slice or its linked request.",
+        "summary": "Protect sensitive mailbox content and govern application access",
+        "use when": "Use when implementing or reviewing the delivery slice for Protect sensitive mailbox content and govern application access."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_114_protect_sensitive_mailbox_content_and_govern_application_access"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_051_implement_sensitive_content_and_application_access_safeguards"
+        ]
+      },
+      "path": "logics/backlog/item_114_protect_sensitive_mailbox_content_and_govern_application_access.md",
+      "ref": "item_114_protect_sensitive_mailbox_content_and_govern_application_access",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Synthetic authentication-code, password-reset, and magic-link messages are suppressed before storage, LLM, telemetry, and rendering; tests prove raw secret text is absent from every downstream artifact.",
+          "- AC2: A content-free suppression event can be counted without recording subject, preview, body, sender, recipient, code, token, or URL.",
+          "- AC3: Internal collaboration links and foreign-language reply prefixes alone do not trigger verification, while fixtures with multiple independent weak signals or one strong violation do.",
+          "- AC4: Sensitivity and suspicious-mail risk are represented independently so a trusted sensitive message is suppressed rather than mislabeled suspicious.",
+          "- AC5: Application-access verification documents the bounded sender/target mailbox scope and fails closed when a mailbox falls outside the authorized scope.",
+          "- AC6: Sender-mailbox retention and operator-access expectations are documented and test evidence contains no production content or identity."
+        ],
+        "Problem": [
+          "- Authentication-code and equivalent sensitive messages can currently enter the normal collection, persistence, scoring, optional LLM, telemetry, and rendering path.",
+          "- Suspicious-mail warnings are over-triggered by normal links, foreign-language prefixes, internal conversations, automatic replies, and expected invoices, which erodes trust in genuine warnings.",
+          "- The app-only identity can read multiple production mailboxes and the sender mailbox retains personalized copies, so access scope, diagnostics, and retention need explicit guardrails."
+        ]
+      },
+      "status": "Ready",
+      "title": "Protect sensitive mailbox content and govern application access"
+    },
+    {
+      "ai_context": {
+        "keywords": "backlog-groom, request, validate digest usefulness with replay visual qa and safe rollout, bounded slice",
+        "skip when": "Skip when the change is unrelated to this delivery slice or its linked request.",
+        "summary": "Validate digest usefulness with replay visual QA and safe rollout",
+        "use when": "Use when implementing or reviewing the delivery slice for Validate digest usefulness with replay visual QA and safe rollout."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_052_run_digest_replay_visual_qa_and_safe_rollout"
+        ]
+      },
+      "path": "logics/backlog/item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout.md",
+      "ref": "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Synthetic replay covers every request acceptance area and contains no real name, address, subject, preview, body, client, supplier, token, or secret.",
+          "- AC2: A repeatable report compares visible length, rendered cards, generic actions, unchanged repetitions, risk warnings, news volume, ownership, deadlines, conflicts, and sensitive suppressions.",
+          "- AC3: Candidate daily output achieves at least 40% lower median visible length and 80% fewer generic actions than baseline, with zero surfaced authentication secrets and no loss of critical delivery-failure fixtures.",
+          "- AC4: Representative daily and weekly HTML passes documented visual inspection at desktop and narrow widths, with operational hierarchy, readable cards, distinct subjects, valid links, and no redundant empty sections.",
+          "- AC5: Shadow comparison or equivalent preview runs without delivering to production recipients and produces bounded anonymized differences.",
+          "- AC6: Any live delivery test asserts exactly one authorized recipient before send, reaches only that mailbox, and is verified in Outlook; tests fail closed for every other address or fan-out payload."
+        ],
+        "Problem": [
+          "- The production audit provides a measurable baseline, but the repository does not yet have a single anonymized replay suite that reproduces the observed noise, security, ownership, continuity, calendar, and rendering failures.",
+          "- Automated payload assertions do not prove that the final HTML is readable in a real mail client or that daily and weekly editions are visually distinguishable.",
+          "- A direct production rollout could disturb real recipients, so comparison, visual QA, and any live delivery test need an explicit single-recipient safety boundary."
+        ]
+      },
+      "status": "Ready",
+      "title": "Validate digest usefulness with replay visual QA and safe rollout"
     },
     {
       "ai_context": {
@@ -292,26 +385,103 @@
       "schema_version": "1.0",
       "sections": {
         "Context": [
-          "- Orchestrate the scaffolded request chain and keep sibling implementation slices linked."
+          "- Orchestrate the production-audit-driven request chain, coordinate the security and rollout sibling tasks, and preserve a single measurable baseline across all implementation slices."
         ],
         "Validation": [
           "- Run focused tests for each backlog slice.",
           "- Run `python3 -m pytest`.",
+          "- Render representative daily and weekly HTML outputs and inspect them visually at desktop and narrow viewport widths.",
+          "- If a live Graph delivery test is necessary, send only to the explicitly authorized test mailbox and verify the final Outlook rendering there.",
           "- Run `logics-manager flow validate req_055_day_captain_production_digest_actionability_improvement --explain`.",
-          "- Run `logics-manager lint --require-status`.",
-          "- Run `logics-manager audit --group-by-doc`."
+          "- Run `logics-manager lint --require-status`."
         ]
       },
       "status": "Ready",
       "title": "Orchestrate production digest actionability improvements"
+    },
+    {
+      "ai_context": {
+        "keywords": "task, implementation, backlog, runtime, python",
+        "skip when": "The work is still at the request or backlog shaping stage.",
+        "summary": "Implement implement sensitive-content and application-access safeguards.",
+        "use when": "You need a bounded implementation task for a backlog item."
+      },
+      "kind": "task",
+      "linked_refs": {
+        "item": [
+          "item_114_protect_sensitive_mailbox_content_and_govern_application_access"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_051_implement_sensitive_content_and_application_access_safeguards"
+        ]
+      },
+      "path": "logics/tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md",
+      "ref": "task_051_implement_sensitive_content_and_application_access_safeguards",
+      "schema_version": "1.0",
+      "sections": {
+        "Context": [
+          "The production audit found that authentication content can enter the digest pipeline and that mailbox-access boundaries are not sufficiently explicit. This task establishes a fail-closed boundary before persistence, model processing, telemetry, and rendering. All implementation fixtures and evidence must remain synthetic and identity-free."
+        ],
+        "Validation": [
+          "- Run focused detector, ingestion, storage, rendering, Graph-scope, and multi-user-isolation tests with synthetic fixtures.",
+          "- Search generated artifacts and captured logs for fixture secrets and assert zero matches.",
+          "- Run the complete project test suite.",
+          "- Run `logics-manager flow validate task_051_implement_sensitive_content_and_application_access_safeguards --strict`.",
+          "- Run `logics-manager lint --require-status` and `logics-manager audit`.",
+          "- Run `logics-manager flow finish task task_051_implement_sensitive_content_and_application_access_safeguards.md` only after implementation evidence is attached."
+        ]
+      },
+      "status": "Ready",
+      "title": "Implement sensitive-content and application-access safeguards"
+    },
+    {
+      "ai_context": {
+        "keywords": "task, implementation, backlog, runtime, python",
+        "skip when": "The work is still at the request or backlog shaping stage.",
+        "summary": "Implement run digest replay visual qa and safe rollout.",
+        "use when": "You need a bounded implementation task for a backlog item."
+      },
+      "kind": "task",
+      "linked_refs": {
+        "item": [
+          "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_052_run_digest_replay_visual_qa_and_safe_rollout"
+        ]
+      },
+      "path": "logics/tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md",
+      "ref": "task_052_run_digest_replay_visual_qa_and_safe_rollout",
+      "schema_version": "1.0",
+      "sections": {
+        "Context": [
+          "The stable production baseline contains 118 anonymized briefs. This task turns that baseline into repeatable usefulness, rendering, and delivery gates. Production recipients must never be used for testing: any live delivery is optional and must be restricted to one explicitly authorized test mailbox."
+        ],
+        "Validation": [
+          "- Run the synthetic replay and metrics command twice and confirm deterministic metric output.",
+          "- Render representative daily and weekly HTML at desktop and narrow widths; inspect hierarchy, wrapping, links, empty states, and card subjects.",
+          "- Exercise recipient-guard tests for the authorized singleton and rejected alternate, CC/BCC, list, and multi-recipient payloads.",
+          "- If live delivery is used, capture content-free proof that exactly one authorized mailbox received and rendered the message.",
+          "- Run focused tests and the complete project test suite.",
+          "- Run `logics-manager flow validate task_052_run_digest_replay_visual_qa_and_safe_rollout --strict`."
+        ]
+      },
+      "status": "Ready",
+      "title": "Run digest replay visual QA and safe rollout"
     }
   ],
   "estimates": {
-    "char_count": 13873,
+    "char_count": 24692,
     "companion_doc_count": 0,
-    "doc_count": 7
+    "doc_count": 11
   },
-  "generated_at": "2026-07-12T17:35:46Z",
+  "generated_at": "2026-07-12T18:07:02Z",
   "handoff": {
     "companion_doc_count": 0,
     "enabled": false,
@@ -322,13 +492,17 @@
       "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
       "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
       "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
-      "task_050_orchestrate_production_digest_actionability_improvements"
+      "item_114_protect_sensitive_mailbox_content_and_govern_application_access",
+      "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout",
+      "task_050_orchestrate_production_digest_actionability_improvements",
+      "task_051_implement_sensitive_content_and_application_access_safeguards",
+      "task_052_run_digest_replay_visual_qa_and_safe_rollout"
     ],
     "validation_summary_count": 0
   },
   "mode": "diff-first",
   "profile": "deep",
-  "ref": "req_055_day_captain_production_digest_actionability_improvement,item_109_reduce_digest_noise_and_enforce_concise_section_budgets,item_110_generate_concrete_owner_aware_actions_and_deadlines,item_111_turn_recent_run_memory_into_a_differential_commitment_view,item_112_make_upcoming_meetings_preparation_and_conflict_aware,item_113_improve_digest_presentation_personalization_and_usefulness_telemetry,task_050_orchestrate_production_digest_actionability_improvements",
+  "ref": "req_055_day_captain_production_digest_actionability_improvement,item_109_reduce_digest_noise_and_enforce_concise_section_budgets,item_110_generate_concrete_owner_aware_actions_and_deadlines,item_111_turn_recent_run_memory_into_a_differential_commitment_view,item_112_make_upcoming_meetings_preparation_and_conflict_aware,item_113_improve_digest_presentation_personalization_and_usefulness_telemetry,item_114_protect_sensitive_mailbox_content_and_govern_application_access,item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout,task_050_orchestrate_production_digest_actionability_improvements,task_051_implement_sensitive_content_and_application_access_safeguards,task_052_run_digest_replay_visual_qa_and_safe_rollout",
   "refs": [
     "req_055_day_captain_production_digest_actionability_improvement",
     "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
@@ -336,7 +510,11 @@
     "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
     "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
     "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
-    "task_050_orchestrate_production_digest_actionability_improvements"
+    "item_114_protect_sensitive_mailbox_content_and_govern_application_access",
+    "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout",
+    "task_050_orchestrate_production_digest_actionability_improvements",
+    "task_051_implement_sensitive_content_and_application_access_safeguards",
+    "task_052_run_digest_replay_visual_qa_and_safe_rollout"
   ],
   "release": {
     "blocking_reasons": [],

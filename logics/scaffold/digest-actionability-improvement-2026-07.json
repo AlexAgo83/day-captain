@@ -22,8 +22,9 @@
       "Make digest usefulness measurable so future tuning is based on user behavior rather than fixed heuristic scores."
     ],
     "context": [
-      "A read-only audit of 22 production briefs spanning roughly one month found bodies between about 7,200 and 12,400 characters, with up to 12 mail cards and 6 meetings in one brief.",
-      "The audit found 106 cards using the same confidence score, 33 instances of a generic reply-or-confirm action, 19 generic meeting-preparation prompts, and one recurring entertainment newsletter surfaced in 19 briefs.",
+      "A read-only audit of stable production briefs found a median of about 5,455 visible characters and 9 rendered cards per brief.",
+      "The audit found 869 generic actions, 46 sender-verification warnings, 354 external-news articles, repeated low-signal content, and no material month-over-month improvement.",
+      "The audit also found that temporary authentication content can surface, requiring suppression before persistence, model processing, telemetry, diagnostics, and rendering.",
       "Daily and weekly briefs can currently share the same subject, empty sections consume space, external news can dominate the brief, and operational delivery failures do not always outrank low-signal content.",
       "The codebase already stores action ownership, confidence metadata, continuity state, recent completed runs, cleared items, user preferences, and related meeting context, but the final selection and rendering do not fully exploit them.",
       "All production evidence in this corpus is anonymized. No mailbox addresses, personal names, client names, suppliers, or message contents are included."
@@ -38,7 +39,11 @@
       "AC7: Confidence is displayed as a small evidence-based category rather than a pseudo-precise number, and suspicious-mail warnings require multiple independent risk signals or a strong trust-boundary violation.",
       "AC8: Daily and weekly subjects are distinct, empty operational sections are omitted, external news is optional and bounded, weather values are validated, and operational work appears before ambient information.",
       "AC9: Digest payloads expose anonymized usefulness instrumentation for card impressions, opens, recalls, suppressions, repeated unchanged items, and user feedback without storing message bodies in telemetry.",
-      "AC10: Existing multi-user isolation, Graph delivery, recall, feedback, storage compatibility, and security guardrails remain covered by the full test suite."
+      "AC10: Existing multi-user isolation, Graph delivery, recall, feedback, storage compatibility, and security guardrails remain covered by the full test suite.",
+      "AC11: Application access is least-privileged and explicitly bounded by authorized mailbox scope; retention and operator diagnostics contain no mailbox content or identity.",
+      "AC12: Identity-free replay fixtures and focused plus full automated tests cover every acceptance area, including critical delivery failures and sensitive suppression.",
+      "AC13: Representative daily and weekly HTML passes desktop and narrow-width visual QA; any necessary live test is fail-closed to exactly one explicitly authorized test mailbox.",
+      "AC14: Shadow comparison, versioned baseline targets, and a post-release aggregate audit demonstrate improvement without delivering to production recipients or persisting mailbox content."
     ]
   },
   "product": {
@@ -50,6 +55,8 @@
       "Use stable thread continuity to explain changes across runs instead of repeating complete mailbox snapshots.",
       "Keep ambient context such as weather and external news subordinate to operational work.",
       "Measure whether surfaced cards lead to useful opens, recalls, feedback, or completed follow-up."
+      ,"Prevent sensitive authentication content from crossing storage, model, telemetry, diagnostic, or rendering boundaries."
+      ,"Make rendered-email quality and safe delivery behavior explicit release gates."
     ],
     "non_goals": [
       "Building a general-purpose task-management platform.",
@@ -220,6 +227,68 @@
         "AC4: Daily external news is absent or limited to one configured relevant theme match.",
         "AC5: Feedback and aggregate telemetry contain identifiers and event types but no raw mailbox content or production identity."
       ]
+    },
+    {
+      "title": "Protect sensitive mailbox content and govern application access",
+      "priority": "High",
+      "complexity": "High",
+      "theme": "Security",
+      "request_acs": ["AC7", "AC10", "AC11", "AC12"],
+      "problem": [
+        "Authentication codes, reset links, and magic links can enter downstream digest processing.",
+        "Sensitivity and suspicious-mail risk can be conflated, producing misleading warnings.",
+        "Mailbox authorization, retention, and diagnostic boundaries need explicit fail-closed behavior."
+      ],
+      "scope_in": [
+        "Suppress authentication secrets before persistence, model processing, telemetry, diagnostics, and rendering.",
+        "Represent sensitivity independently from suspicious-mail risk and require multiple weak signals or one strong violation for warnings.",
+        "Enforce explicit authorized mailbox scope for reads and sends, with content-free diagnostics and documented retention expectations.",
+        "Cover storage, rendering, Graph scope, and multi-user isolation with synthetic fixtures."
+      ],
+      "scope_out": [
+        "Persisting production mailbox content as security evidence.",
+        "Replacing the existing Graph integration or authentication platform.",
+        "Treating every internal link or foreign-language reply prefix as suspicious."
+      ],
+      "acceptance_criteria": [
+        "AC1: Synthetic authentication secrets are absent from every downstream artifact.",
+        "AC2: Suppression telemetry records only allow-listed content-free fields.",
+        "AC3: Sensitivity and suspicious-mail risk remain independent outcomes.",
+        "AC4: Mailbox access outside explicit authorization fails before read or send.",
+        "AC5: Focused and full tests expose no credentials, identity, or mailbox content."
+      ]
+    },
+    {
+      "title": "Validate digest usefulness with replay visual QA and safe rollout",
+      "priority": "High",
+      "complexity": "High",
+      "theme": "Quality",
+      "request_acs": ["AC1", "AC2", "AC3", "AC4", "AC5", "AC6", "AC7", "AC8", "AC9", "AC10", "AC11", "AC12", "AC13", "AC14"],
+      "problem": [
+        "Usefulness improvements need a repeatable comparison against the baseline anonymized baseline.",
+        "Automated tests do not prove that daily and weekly HTML remains readable across viewport widths.",
+        "Live delivery validation needs a technical guard against disturbing any production recipient."
+      ],
+      "scope_in": [
+        "Create identity-free replay fixtures and versioned metrics for baseline and candidate output.",
+        "Render and visually inspect representative daily and weekly HTML at desktop and narrow widths.",
+        "Run shadow comparison without production delivery.",
+        "Fail closed unless an optional live test has exactly one explicitly authorized test mailbox and no CC, BCC, list, alias, or fan-out.",
+        "Repeat the aggregate audit after release with identical content-free metric definitions."
+      ],
+      "scope_out": [
+        "Sending test messages to normal digest recipients.",
+        "Embedding production identities or mailbox content in fixtures or screenshots.",
+        "Declaring rollout success from visual inspection alone."
+      ],
+      "acceptance_criteria": [
+        "AC1: Replay covers every request acceptance area with synthetic data.",
+        "AC2: Candidate daily output reduces median visible length by at least 40% and generic actions by at least 80%.",
+        "AC3: Daily and weekly HTML passes documented desktop and narrow-width visual QA.",
+        "AC4: Shadow mode cannot deliver to production recipients.",
+        "AC5: Any live test is constrained to one explicitly authorized mailbox and verified in Outlook.",
+        "AC6: A post-release audit reproduces the comparison without persisted mailbox content."
+      ]
     }
   ],
   "orchestration_task": {
@@ -231,6 +300,8 @@
       "Change recent memory to use stable thread identity, suppress unchanged cards, render delta counts, and expose cleared items as compact resolved signals.",
       "Add evidence-based meeting preparation and conflict detection without creating actions for context-free meetings or presence events.",
       "Differentiate daily and weekly presentation, validate weather, constrain relevant external news, and add content-free usefulness feedback and metrics.",
+      "Implement sensitive-content suppression, independent risk classification, explicit mailbox authorization, and content-free retention and diagnostics.",
+      "Run synthetic replay, desktop and narrow-width visual QA for daily and weekly HTML, shadow comparison, and the fail-closed single-mailbox live-test gate.",
       "Run focused tests after each slice, then the full test suite, Logics flow validation, lint, and audit before closeout; record before/after brief-size and repetition metrics."
     ]
   },

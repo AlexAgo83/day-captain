@@ -9,7 +9,7 @@ _None_
 | Doc | Title | Status | Owner | Progress | Path |
 |---|---|---|---|---|---|
 | [prod_001_day_captain_operations_scheduler_reliability](product/prod_001_day_captain_operations_scheduler_reliability.md) | Day Captain operations scheduler reliability | Active |  |  | product/prod_001_day_captain_operations_scheduler_reliability.md |
-| [prod_002_day_captain_actionable_differential_brief](product/prod_002_day_captain_actionable_differential_brief.md) | Day Captain actionable differential brief | Active |  |  | product/prod_002_day_captain_actionable_differential_brief.md |
+| [prod_002_day_captain_actionable_differential_brief](product/prod_002_day_captain_actionable_differential_brief.md) | Day Captain actionable differential brief | Accepted |  |  | product/prod_002_day_captain_actionable_differential_brief.md |
 
 ## Requests
 
@@ -189,6 +189,8 @@ _None_
 | [item_111_turn_recent_run_memory_into_a_differential_commitment_view](backlog/item_111_turn_recent_run_memory_into_a_differential_commitment_view.md) | Turn recent-run memory into a differential commitment view | Ready |  | 0 | backlog/item_111_turn_recent_run_memory_into_a_differential_commitment_view.md |
 | [item_112_make_upcoming_meetings_preparation_and_conflict_aware](backlog/item_112_make_upcoming_meetings_preparation_and_conflict_aware.md) | Make upcoming meetings preparation and conflict aware | Ready |  | 0 | backlog/item_112_make_upcoming_meetings_preparation_and_conflict_aware.md |
 | [item_113_improve_digest_presentation_personalization_and_usefulness_telemetry](backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md) | Improve digest presentation personalization and usefulness telemetry | Ready |  | 0 | backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md |
+| [item_114_protect_sensitive_mailbox_content_and_govern_application_access](backlog/item_114_protect_sensitive_mailbox_content_and_govern_application_access.md) | Protect sensitive mailbox content and govern application access | Ready |  | 0 | backlog/item_114_protect_sensitive_mailbox_content_and_govern_application_access.md |
+| [item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout](backlog/item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout.md) | Validate digest usefulness with replay visual QA and safe rollout | Ready |  | 0 | backlog/item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout.md |
 
 ## Tasks
 
@@ -245,3 +247,5 @@ _None_
 | [task_048_day_captain_technical_debt_hardening_orchestration](tasks/task_048_day_captain_technical_debt_hardening_orchestration.md) | Day Captain technical debt hardening orchestration | Ready |  | 0 | tasks/task_048_day_captain_technical_debt_hardening_orchestration.md |
 | [task_049_orchestrate_power_automate_scheduler_migration](tasks/task_049_orchestrate_power_automate_scheduler_migration.md) | Orchestrate Power Automate scheduler migration | Done | codex | 100% | tasks/task_049_orchestrate_power_automate_scheduler_migration.md |
 | [task_050_orchestrate_production_digest_actionability_improvements](tasks/task_050_orchestrate_production_digest_actionability_improvements.md) | Orchestrate production digest actionability improvements | Ready |  | 0 | tasks/task_050_orchestrate_production_digest_actionability_improvements.md |
+| [task_051_implement_sensitive_content_and_application_access_safeguards](tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md) | Implement sensitive-content and application-access safeguards | Ready |  | 0 | tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md |
+| [task_052_run_digest_replay_visual_qa_and_safe_rollout](tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md) | Run digest replay visual QA and safe rollout | Ready |  | 0 | tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md |
