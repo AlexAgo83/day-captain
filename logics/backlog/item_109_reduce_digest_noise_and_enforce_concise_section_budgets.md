@@ -1,10 +1,10 @@
 ## item_109_reduce_digest_noise_and_enforce_concise_section_budgets - Reduce digest noise and enforce concise section budgets
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 98
-> Confidence: 95
-> Progress: 0
+> Status: In progress
+> Understanding: 100
+> Confidence: 98
+> Progress: 100
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.

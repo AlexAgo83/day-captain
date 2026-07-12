@@ -1,10 +1,10 @@
 ## item_111_turn_recent_run_memory_into_a_differential_commitment_view - Turn recent-run memory into a differential commitment view
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
-> Understanding: 98
-> Confidence: 95
-> Progress: 0
+> Status: In progress
+> Understanding: 100
+> Confidence: 98
+> Progress: 100
 > Complexity: High
 > Theme: Intelligence
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
