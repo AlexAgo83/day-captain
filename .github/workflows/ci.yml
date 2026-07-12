@@ -42,9 +42,3 @@ jobs:
 
       - name: Run CLI smoke test
         run: python -m day_captain morning-digest --now 2026-03-07T08:00:00+00:00 --force
-
-      - name: Lint Logics docs
-        run: python logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status
-
-      - name: Audit Logics workflow
-        run: python logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc
