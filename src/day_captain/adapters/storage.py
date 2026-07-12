@@ -45,6 +45,7 @@ _TABLE_COUNT_QUERIES = {
     "scoped_messages": "SELECT COUNT(*) AS count FROM scoped_messages",
     "scoped_meetings": "SELECT COUNT(*) AS count FROM scoped_meetings",
     "scoped_digest_runs": "SELECT COUNT(*) AS count FROM scoped_digest_runs",
+    "scoped_digest_items": "SELECT COUNT(*) AS count FROM scoped_digest_items",
     "scoped_feedback": "SELECT COUNT(*) AS count FROM scoped_feedback",
     "scoped_preferences": "SELECT COUNT(*) AS count FROM scoped_preferences",
 }
