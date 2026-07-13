@@ -1,10 +1,10 @@
 ## item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout - Validate digest usefulness with replay visual QA and safe rollout
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
-> Confidence: 98
-> Progress: 99
+> Confidence: 100
+> Progress: 100%
 > Complexity: High
 > Theme: Operator workflow and runtime integration
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -40,24 +40,20 @@
 - AC8: A post-release aggregate audit uses the same metric definitions and records regressions or improvements without persisting mailbox content.
 
 # AC Traceability
-- request-AC10 -> This backlog slice. Proof deferred to repeatable content-free usefulness metrics.
-- request-AC12 -> This backlog slice. Proof deferred to anonymized replay and automated validation.
-- request-AC13 -> This backlog slice. Proof deferred to visual artifacts and the authorized-recipient-only delivery evidence.
-- request-AC14 -> This backlog slice. Proof deferred to shadow comparison, target metrics, and the post-release aggregate audit.
-- request-AC1 -> This backlog slice. Evidence needed: Authentication codes, password-reset messages, magic links, and equivalent sensitive authentication content are suppressed before persistence, LLM processing, telemetry, and rendering, with no raw secret material retained.
-- request-AC2 -> This backlog slice. Evidence needed: A daily digest renders no more than 3 critical items, 3 user-owned actions, 2 watch items, and 4 upcoming meetings; unread state remains informational and low-signal newsletters, entertainment recaps, routine automatic replies, passive presence, and unchanged items do not consume those budgets without a stronger signal.
-- request-AC3 -> This backlog slice. Evidence needed: Every rendered action identifies a concrete verb, object, owner, and evidence source; due dates and counterparties are included when supported, while other-owned and unclear work is not presented as the recipient's action.
-- request-AC4 -> This backlog slice. Evidence needed: Delivery failures, explicit deadlines, overdue commitments, and actionable transactional alerts deterministically outrank low-signal content and generate specific recovery or follow-up actions.
-- request-AC5 -> This backlog slice. Evidence needed: Cross-run continuity follows stable mail threads and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states without treating read state as completion.
-- request-AC6 -> This backlog slice. Evidence needed: Meeting cards surface conflicts, tight transitions, and preparation evidence only when supported by a document, open decision, prior commitment, relevant thread, or explicit preparation request; routine and placeholder meetings remain compact.
-- request-AC7 -> This backlog slice. Evidence needed: Confidence is displayed as Reliable, Confirm, or Insufficient context with a specific reason; suspicious-mail warnings require multiple independent weak signals or one strong trust-boundary violation and do not penalize language alone.
-- request-AC8 -> This backlog slice. Evidence needed: Daily and weekly subjects are distinct, empty operational sections are omitted, operational deltas precede ambient content, external news is optional/relevant/deduplicated, and weather is compact and validated.
-- request-AC9 -> This backlog slice. Evidence needed: Recipient preferences can prioritize trusted senders and themes, suppress low-value topics or recurring items, and accept reversible Useful or Hide similar feedback without sharing state across users.
-- request-AC10 -> This backlog slice. Evidence needed: Digest payloads expose content-free usefulness instrumentation for impressions, voluntary opens, recalls, suppressions, repeated unchanged items, resolutions, and explicit feedback without covert tracking or raw mailbox content.
-- request-AC11 -> This backlog slice. Evidence needed: Application access is restricted to required mailboxes, sender-side copies have an explicit retention policy, and diagnostics contain no raw subjects, previews, bodies, names, addresses, tokens, or secrets.
-- request-AC12 -> This backlog slice. Evidence needed: An anonymized replay suite reproduces sensitive-auth, noise, ownership, deadline, delivery-failure, continuity, meeting-conflict, rendering, and localization cases; focused and full automated tests pass.
-- request-AC13 -> This backlog slice. Evidence needed: Daily and weekly HTML are visually validated in rendered artifacts, and any necessary live delivery test is sent only to the explicitly authorized single test mailbox; no other production recipient is contacted during development or acceptance.
-- request-AC14 -> This backlog slice. Evidence needed: Rollout uses a bounded shadow comparison or equivalent safe preview, proves at least a 40% median visible-length reduction and 80% generic-action reduction with zero surfaced authentication secrets, then repeats the sender-side production audit after release.
+- request-AC1 -> This backlog slice. Proof: synthetic secret tests cover suppression before storage, LLM input, telemetry, and rendering; the production audit found zero authentication-content markers.
+- request-AC2 -> This backlog slice. Proof: renderer tests enforce the 3/3/2/4 section budgets, informational unread state, and low-signal suppression.
+- request-AC3 -> This backlog slice. Proof: owner/action fixtures cover concrete verbs, objects, counterparties, evidence metadata, due hints, and other-owned demotion.
+- request-AC4 -> This backlog slice. Proof: transactional-failure and deadline fixtures verify deterministic priority and specific recovery actions.
+- request-AC5 -> This backlog slice. Proof: continuity tests cover changed, still-open, waiting, overdue, resolved, and suppressed-unchanged states by stable thread identity.
+- request-AC6 -> This backlog slice. Proof: meeting tests cover conflicts, tight transitions, evidence-backed preparation, placeholders, presence, and compact context-free meetings.
+- request-AC7 -> This backlog slice. Proof: confidence and risk-threshold tests cover decision-oriented labels and strong-or-multiple-weak warning behavior.
+- request-AC8 -> This backlog slice. Proof: renderer and news tests cover distinct editions, empty-section omission, operational-first ordering, news deduplication, and compact weather.
+- request-AC9 -> This backlog slice. Proof: scoped feedback tests cover trusted preferences, reversible Useful/Hide similar behavior, critical guardrails, and multi-user isolation.
+- request-AC10 -> This backlog slice. Proof: versioned content-free metrics report cards, generic actions, warnings, news, sensitive suppression, repeated suppression, and explicit feedback.
+- request-AC11 -> This backlog slice. Proof: target validation, Graph scope, retention guidance, secret suppression, and content-free runtime diagnostics passed focused and full validation.
+- request-AC12 -> This backlog slice. Proof: identity-free replay covers security, noise, ownership, deadlines, delivery failure, continuity, meetings, rendering, and localization; the full suite passes.
+- request-AC13 -> This backlog slice. Proof: daily and weekly HTML passed visual inspection, the guarded live test reached one authorized mailbox only, and the scheduled delivery was confirmed readable in Outlook.
+- request-AC14 -> This backlog slice. Proof: shadow replay passed its gates and the four-brief post-release audit measured 47.20% shorter output, 100% fewer generic actions, and zero authentication-content markers.
 
 # Decision framing
 - Product framing: Not needed
@@ -87,6 +83,7 @@
 - Hybrid rationale: Derived from request `req_055_day_captain_production_digest_actionability_improvement` and kept bounded to one coherent delivery slice.
 - Source file: `logics/request/req_055_day_captain_production_digest_actionability_improvement.md`.
 - Generated locally by logics-manager.
+- Task `task_052_run_digest_replay_visual_qa_and_safe_rollout` was finished via `logics-manager flow finish task` on 2026-07-13.
 
 # Tasks
 - `task_052_run_digest_replay_visual_qa_and_safe_rollout`

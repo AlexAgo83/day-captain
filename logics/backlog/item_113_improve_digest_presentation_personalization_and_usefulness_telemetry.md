@@ -1,10 +1,10 @@
 ## item_113_improve_digest_presentation_personalization_and_usefulness_telemetry - Improve digest presentation personalization and usefulness telemetry
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
-> Confidence: 98
-> Progress: 100
+> Confidence: 100
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -50,10 +50,10 @@
 - request-AC10 -> This backlog slice. Proof: AC4: Daily external news is absent or limited to one configured relevant theme match.
 - request-AC5 -> This backlog slice. Evidence needed: Cross-run continuity follows stable mail threads and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states without treating read state as completion.
 - request-AC6 -> This backlog slice. Evidence needed: Meeting cards surface conflicts, tight transitions, and preparation evidence only when supported by a document, open decision, prior commitment, relevant thread, or explicit preparation request; routine and placeholder meetings remain compact.
-- request-AC11 -> This backlog slice. Evidence needed: Application access is restricted to required mailboxes, sender-side copies have an explicit retention policy, and diagnostics contain no raw subjects, previews, bodies, names, addresses, tokens, or secrets.
-- request-AC12 -> This backlog slice. Evidence needed: An anonymized replay suite reproduces sensitive-auth, noise, ownership, deadline, delivery-failure, continuity, meeting-conflict, rendering, and localization cases; focused and full automated tests pass.
-- request-AC13 -> This backlog slice. Evidence needed: Daily and weekly HTML are visually validated in rendered artifacts, and any necessary live delivery test is sent only to the explicitly authorized single test mailbox; no other production recipient is contacted during development or acceptance.
-- request-AC14 -> This backlog slice. Evidence needed: Rollout uses a bounded shadow comparison or equivalent safe preview, proves at least a 40% median visible-length reduction and 80% generic-action reduction with zero surfaced authentication secrets, then repeats the sender-side production audit after release.
+- request-AC11 -> This backlog slice. Proof: Graph scope and retention guidance, secret suppression, and content-free runtime diagnostics passed focused and full validation.
+- request-AC12 -> This backlog slice. Proof: identity-free replay covers security, noise, ownership, deadlines, delivery failure, continuity, meetings, rendering, and localization; 283 tests pass.
+- request-AC13 -> This backlog slice. Proof: daily and weekly HTML passed visual inspection, the guarded live test reached one authorized mailbox only, and the scheduled delivery was confirmed readable in Outlook.
+- request-AC14 -> This backlog slice. Proof: shadow replay passed its gates and the four-brief post-release audit measured 47.20% shorter output, 100% fewer generic actions, and zero authentication-content markers.
 
 # Decision framing
 - Product framing: Not needed
@@ -74,3 +74,9 @@
 # Priority
 - Priority: Medium
 - Rationale: Medium because presentation and measurement should follow the higher-priority selection, ownership, and continuity corrections they evaluate.
+
+# Tasks
+- `task_050_orchestrate_production_digest_actionability_improvements`
+
+# Notes
+- Task `task_050_orchestrate_production_digest_actionability_improvements` was finished via `logics-manager flow finish task` on 2026-07-13.

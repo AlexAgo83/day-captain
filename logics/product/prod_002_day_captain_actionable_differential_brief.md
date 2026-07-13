@@ -2,7 +2,7 @@
 > Date: 2026-07-12
 > Status: Settled
 > Related request: `req_055_day_captain_production_digest_actionability_improvement`
-> Related backlog: `item_109_reduce_digest_noise_and_enforce_concise_section_budgets`, `item_110_generate_concrete_owner_aware_actions_and_deadlines`, `item_111_turn_recent_run_memory_into_a_differential_commitment_view`, `item_112_make_upcoming_meetings_preparation_and_conflict_aware`, `item_113_improve_digest_presentation_personalization_and_usefulness_telemetry`
+> Related backlog: `item_109_reduce_digest_noise_and_enforce_concise_section_budgets`
 > Related task: `task_050_orchestrate_production_digest_actionability_improvements`
 > Related architecture: (none yet)
 > Reminder: Update status, linked refs, scope, decisions, success signals, and open questions when you edit this doc.
@@ -58,5 +58,5 @@ flowchart LR
 - Replay and aggregate audits demonstrate at least 40% shorter median briefs, 80% fewer generic actions, zero surfaced authentication secrets, and no regression in multi-user isolation or critical delivery-failure handling.
 
 # References
-- Product back-reference: `req_055_day_captain_production_digest_actionability_improvement`
+- Product back-reference: `item_109_reduce_digest_noise_and_enforce_concise_section_budgets`
 - Task back-reference: `task_050_orchestrate_production_digest_actionability_improvements`

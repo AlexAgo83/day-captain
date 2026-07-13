@@ -1,15 +1,10 @@
 {
   "budgets": {
-    "max_docs": 88,
+    "max_docs": 8,
     "max_docs_per_ref": 8
   },
-  "changed_paths": [
-    "logics/backlog/item_114_protect_sensitive_mailbox_content_and_govern_application_access.md",
-    "logics/backlog/item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout.md",
-    "logics/tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md",
-    "logics/tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md"
-  ],
-  "command": "logics-manager sync context-pack req_055_day_captain_production_digest_actionability_improvement item_109_reduce_digest_noise_and_enforce_concise_section_budgets item_110_generate_concrete_owner_aware_actions_and_deadlines item_111_turn_recent_run_memory_into_a_differential_commitment_view item_112_make_upcoming_meetings_preparation_and_conflict_aware item_113_improve_digest_presentation_personalization_and_usefulness_telemetry item_114_protect_sensitive_mailbox_content_and_govern_application_access item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout task_050_orchestrate_production_digest_actionability_improvements task_051_implement_sensitive_content_and_application_access_safeguards task_052_run_digest_replay_visual_qa_and_safe_rollout --mode diff-first --profile deep",
+  "changed_paths": [],
+  "command": "logics-manager sync context-pack req_055_day_captain_production_digest_actionability_improvement --mode full --profile deep",
   "companion_docs": [],
   "docs": [
     {
@@ -56,7 +51,7 @@
           "- Make digest usefulness measurable so future tuning is based on user behavior rather than fixed heuristic scores."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Day Captain production digest actionability improvement"
     },
     {
@@ -99,7 +94,7 @@
           "- Empty sections and ambient information add reading cost even when there is no operational content."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Reduce digest noise and enforce concise section budgets"
     },
     {
@@ -142,7 +137,7 @@
           "- Deadline language and automatic-reply return dates are not consistently turned into scheduling signals."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Generate concrete owner-aware actions and deadlines"
     },
     {
@@ -185,7 +180,7 @@
           "- The current states do not fully represent waiting, overdue, resolved, or intentionally suppressed work."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Turn recent-run memory into a differential commitment view"
     },
     {
@@ -228,7 +223,7 @@
           "- Related mail context is available but does not consistently yield decisions, documents, commitments, or questions."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Make upcoming meetings preparation and conflict aware"
     },
     {
@@ -271,7 +266,7 @@
           "- The product cannot currently demonstrate which cards were useful or repeatedly ignored."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Improve digest presentation personalization and usefulness telemetry"
     },
     {
@@ -311,7 +306,7 @@
           "- The app-only identity can read multiple production mailboxes and the sender mailbox retains personalized copies, so access scope, diagnostics, and retention need explicit guardrails."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Protect sensitive mailbox content and govern application access"
     },
     {
@@ -351,170 +346,29 @@
           "- A direct production rollout could disturb real recipients, so comparison, visual QA, and any live delivery test need an explicit single-recipient safety boundary."
         ]
       },
-      "status": "Ready",
+      "status": "Done",
       "title": "Validate digest usefulness with replay visual QA and safe rollout"
-    },
-    {
-      "ai_context": {
-        "keywords": "scaffolded-task, request-chain-scaffold, orchestration",
-        "skip when": "Working on one isolated sibling slice.",
-        "summary": "Orchestrate production digest actionability improvements",
-        "use when": "Coordinating implementation of a scaffolded request chain."
-      },
-      "kind": "task",
-      "linked_refs": {
-        "item": [
-          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
-          "item_110_generate_concrete_owner_aware_actions_and_deadlines",
-          "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
-          "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
-          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry"
-        ],
-        "prod": [
-          "prod_002_day_captain_actionable_differential_brief"
-        ],
-        "req": [
-          "req_055_day_captain_production_digest_actionability_improvement"
-        ],
-        "task": [
-          "task_050_orchestrate_production_digest_actionability_improvements"
-        ]
-      },
-      "path": "logics/tasks/task_050_orchestrate_production_digest_actionability_improvements.md",
-      "ref": "task_050_orchestrate_production_digest_actionability_improvements",
-      "schema_version": "1.0",
-      "sections": {
-        "Context": [
-          "- Orchestrate the production-audit-driven request chain, coordinate the security and rollout sibling tasks, and preserve a single measurable baseline across all implementation slices."
-        ],
-        "Validation": [
-          "- Run focused tests for each backlog slice.",
-          "- Run `python3 -m pytest`.",
-          "- Render representative daily and weekly HTML outputs and inspect them visually at desktop and narrow viewport widths.",
-          "- If a live Graph delivery test is necessary, send only to the explicitly authorized test mailbox and verify the final Outlook rendering there.",
-          "- Run `logics-manager flow validate req_055_day_captain_production_digest_actionability_improvement --explain`.",
-          "- Run `logics-manager lint --require-status`."
-        ]
-      },
-      "status": "Ready",
-      "title": "Orchestrate production digest actionability improvements"
-    },
-    {
-      "ai_context": {
-        "keywords": "task, implementation, backlog, runtime, python",
-        "skip when": "The work is still at the request or backlog shaping stage.",
-        "summary": "Implement implement sensitive-content and application-access safeguards.",
-        "use when": "You need a bounded implementation task for a backlog item."
-      },
-      "kind": "task",
-      "linked_refs": {
-        "item": [
-          "item_114_protect_sensitive_mailbox_content_and_govern_application_access"
-        ],
-        "req": [
-          "req_055_day_captain_production_digest_actionability_improvement"
-        ],
-        "task": [
-          "task_051_implement_sensitive_content_and_application_access_safeguards"
-        ]
-      },
-      "path": "logics/tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md",
-      "ref": "task_051_implement_sensitive_content_and_application_access_safeguards",
-      "schema_version": "1.0",
-      "sections": {
-        "Context": [
-          "The production audit found that authentication content can enter the digest pipeline and that mailbox-access boundaries are not sufficiently explicit. This task establishes a fail-closed boundary before persistence, model processing, telemetry, and rendering. All implementation fixtures and evidence must remain synthetic and identity-free."
-        ],
-        "Validation": [
-          "- Run focused detector, ingestion, storage, rendering, Graph-scope, and multi-user-isolation tests with synthetic fixtures.",
-          "- Search generated artifacts and captured logs for fixture secrets and assert zero matches.",
-          "- Run the complete project test suite.",
-          "- Run `logics-manager flow validate task_051_implement_sensitive_content_and_application_access_safeguards --strict`.",
-          "- Run `logics-manager lint --require-status` and `logics-manager audit`.",
-          "- Run `logics-manager flow finish task task_051_implement_sensitive_content_and_application_access_safeguards.md` only after implementation evidence is attached."
-        ]
-      },
-      "status": "Ready",
-      "title": "Implement sensitive-content and application-access safeguards"
-    },
-    {
-      "ai_context": {
-        "keywords": "task, implementation, backlog, runtime, python",
-        "skip when": "The work is still at the request or backlog shaping stage.",
-        "summary": "Implement run digest replay visual qa and safe rollout.",
-        "use when": "You need a bounded implementation task for a backlog item."
-      },
-      "kind": "task",
-      "linked_refs": {
-        "item": [
-          "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout"
-        ],
-        "req": [
-          "req_055_day_captain_production_digest_actionability_improvement"
-        ],
-        "task": [
-          "task_052_run_digest_replay_visual_qa_and_safe_rollout"
-        ]
-      },
-      "path": "logics/tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md",
-      "ref": "task_052_run_digest_replay_visual_qa_and_safe_rollout",
-      "schema_version": "1.0",
-      "sections": {
-        "Context": [
-          "The stable production baseline contains 118 anonymized briefs. This task turns that baseline into repeatable usefulness, rendering, and delivery gates. Production recipients must never be used for testing: any live delivery is optional and must be restricted to one explicitly authorized test mailbox."
-        ],
-        "Validation": [
-          "- Run the synthetic replay and metrics command twice and confirm deterministic metric output.",
-          "- Render representative daily and weekly HTML at desktop and narrow widths; inspect hierarchy, wrapping, links, empty states, and card subjects.",
-          "- Exercise recipient-guard tests for the authorized singleton and rejected alternate, CC/BCC, list, and multi-recipient payloads.",
-          "- If live delivery is used, capture content-free proof that exactly one authorized mailbox received and rendered the message.",
-          "- Run focused tests and the complete project test suite.",
-          "- Run `logics-manager flow validate task_052_run_digest_replay_visual_qa_and_safe_rollout --strict`."
-        ]
-      },
-      "status": "Ready",
-      "title": "Run digest replay visual QA and safe rollout"
     }
   ],
   "estimates": {
-    "char_count": 24692,
+    "char_count": 19034,
     "companion_doc_count": 0,
-    "doc_count": 11
+    "doc_count": 8
   },
-  "generated_at": "2026-07-12T18:07:02Z",
+  "generated_at": "2026-07-13T07:05:14Z",
   "handoff": {
     "companion_doc_count": 0,
     "enabled": false,
     "source_refs": [
-      "req_055_day_captain_production_digest_actionability_improvement",
-      "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
-      "item_110_generate_concrete_owner_aware_actions_and_deadlines",
-      "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
-      "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
-      "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
-      "item_114_protect_sensitive_mailbox_content_and_govern_application_access",
-      "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout",
-      "task_050_orchestrate_production_digest_actionability_improvements",
-      "task_051_implement_sensitive_content_and_application_access_safeguards",
-      "task_052_run_digest_replay_visual_qa_and_safe_rollout"
+      "req_055_day_captain_production_digest_actionability_improvement"
     ],
     "validation_summary_count": 0
   },
-  "mode": "diff-first",
+  "mode": "full",
   "profile": "deep",
-  "ref": "req_055_day_captain_production_digest_actionability_improvement,item_109_reduce_digest_noise_and_enforce_concise_section_budgets,item_110_generate_concrete_owner_aware_actions_and_deadlines,item_111_turn_recent_run_memory_into_a_differential_commitment_view,item_112_make_upcoming_meetings_preparation_and_conflict_aware,item_113_improve_digest_presentation_personalization_and_usefulness_telemetry,item_114_protect_sensitive_mailbox_content_and_govern_application_access,item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout,task_050_orchestrate_production_digest_actionability_improvements,task_051_implement_sensitive_content_and_application_access_safeguards,task_052_run_digest_replay_visual_qa_and_safe_rollout",
+  "ref": "req_055_day_captain_production_digest_actionability_improvement",
   "refs": [
-    "req_055_day_captain_production_digest_actionability_improvement",
-    "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
-    "item_110_generate_concrete_owner_aware_actions_and_deadlines",
-    "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
-    "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
-    "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
-    "item_114_protect_sensitive_mailbox_content_and_govern_application_access",
-    "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout",
-    "task_050_orchestrate_production_digest_actionability_improvements",
-    "task_051_implement_sensitive_content_and_application_access_safeguards",
-    "task_052_run_digest_replay_visual_qa_and_safe_rollout"
+    "req_055_day_captain_production_digest_actionability_improvement"
   ],
   "release": {
     "blocking_reasons": [],

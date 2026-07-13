@@ -1,10 +1,10 @@
 ## task_052_run_digest_replay_visual_qa_and_safe_rollout - Run digest replay visual QA and safe rollout
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
-> Confidence: 99
-> Progress: 99
+> Confidence: 100
+> Progress: 100%
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
@@ -24,14 +24,14 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 8. Re-run the identical sender-side metric definitions after release and record bounded anonymized deltas.
 
 # Definition of Done (DoD)
-- [ ] Synthetic replay covers every request acceptance area without real identity or mailbox content.
-- [ ] Baseline and candidate reports use identical versioned metric definitions.
-- [ ] Candidate daily output meets the agreed size and generic-action targets without losing critical delivery failures.
-- [ ] Daily and weekly HTML pass documented desktop and narrow-width visual review.
-- [ ] Shadow comparison cannot deliver to production recipients.
-- [ ] Optional live delivery is technically constrained to exactly one explicitly authorized test mailbox and verified in Outlook.
-- [ ] Post-release audit can reproduce the baseline comparison without persisting mailbox content.
-- [ ] Focused, full, Logics, and context-pack validation passes.
+- [x] Synthetic replay covers every request acceptance area without real identity or mailbox content.
+- [x] Baseline and candidate reports use identical versioned metric definitions.
+- [x] Candidate daily output meets the agreed size and generic-action targets without losing critical delivery failures.
+- [x] Daily and weekly HTML pass documented desktop and narrow-width visual review.
+- [x] Shadow comparison cannot deliver to production recipients.
+- [x] Optional live delivery is technically constrained to exactly one explicitly authorized test mailbox and verified in Outlook.
+- [x] Post-release audit can reproduce the baseline comparison without persisting mailbox content.
+- [x] Focused, full, Logics, and context-pack validation passes.
 
 # Backlog
 - `item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout`
@@ -56,6 +56,9 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - Run `logics-manager lint --require-status`, `logics-manager audit`, and refresh the request context pack.
 - Run `logics-manager flow finish task task_052_run_digest_replay_visual_qa_and_safe_rollout.md` only after implementation evidence is attached.
 - 2026-07-12 live delivery evidence: Graph `/me` was confirmed as the explicitly authorized test mailbox before sending. Run `live-test-run-id` used the live-test guard and inbox verification found exactly one matching delivery, one To recipient, zero CC, and zero BCC. No mailbox content was retained as evidence.
+- 283 tests passed; post-release aggregate audit gates passed; Outlook delivery confirmed.
+- Finish workflow executed on 2026-07-13.
+- Linked backlog/request close verification passed.
 
 # Report
 - 2026-07-12: implementation started. Added `day-captain digest-metrics` for one or more exported preview payloads. Metric definitions are versioned (`1.0`) and report only aggregate visible length, card count, generic actions, risk warnings, news volume, and sensitive suppressions.
@@ -72,6 +75,10 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - 2026-07-12: release branch deployed to Render at `e3eeafa`; public and protected health checks passed with app-only Graph and Postgres. The protected diagnostic exposed configured identities, so validation output was immediately reduced to content-free booleans/counts before further rollout. No digest was manually triggered because the scheduled 20:30 weekly run predated deployment and a retry would duplicate production mail.
 - 2026-07-12: CI passed on Python 3.9/3.11 and Render serves the final content-free diagnostic schema from release commit `6d8f1f5` (code fix `9f74903`). A read-only app-only Sent Items count from the rollout boundary returned zero, confirming the rollout itself contacted no recipient. The first comparable new-release production sample is the scheduled Monday 08:45 run; post-release metric comparison remains pending until then.
 - 2026-07-12: the optional delegated live test was executed after confirming the authenticated Graph profile. The fail-closed guard restricted the envelope to the single configured test mailbox; a content-free inbox check confirmed one received message with one To recipient and no CC/BCC. Pixel-level Outlook review remains pending user inspection, and the temporary command output was deleted.
+- 2026-07-13: the first scheduled post-release aggregate audit inspected four briefs in memory and retained no mailbox content. All four envelopes had one recipient and no CC/BCC. Aggregate results: 2,880 median visible characters, 14 rendered cards, zero generic actions, zero risk warnings, 12 external-news items, zero visible repeated markers, and zero authentication-content markers. Against `public-safe-baseline-v1`, visible length fell 47.20% and generic actions fell 100%; all production comparison gates pass. The user confirmed receipt and Outlook readability at 08:50 Europe/Paris.
+- Finished on 2026-07-13.
+- Linked backlog item(s): `item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout`
+- Related request(s): `req_055_day_captain_production_digest_actionability_improvement`
 
 # AI Context
 - Summary: Implement run digest replay visual qa and safe rollout.
@@ -85,17 +92,17 @@ The stable production baseline contains 118 anonymized briefs. This task turns t
 - Architecture decision(s): (none yet)
 
 # AC Traceability
-- request-AC1 -> This task. Evidence needed: Authentication codes, password-reset messages, magic links, and equivalent sensitive authentication content are suppressed before persistence, LLM processing, telemetry, and rendering, with no raw secret material retained.
-- request-AC2 -> This task. Evidence needed: A daily digest renders no more than 3 critical items, 3 user-owned actions, 2 watch items, and 4 upcoming meetings; unread state remains informational and low-signal newsletters, entertainment recaps, routine automatic replies, passive presence, and unchanged items do not consume those budgets without a stronger signal.
-- request-AC3 -> This task. Evidence needed: Every rendered action identifies a concrete verb, object, owner, and evidence source; due dates and counterparties are included when supported, while other-owned and unclear work is not presented as the recipient's action.
-- request-AC4 -> This task. Evidence needed: Delivery failures, explicit deadlines, overdue commitments, and actionable transactional alerts deterministically outrank low-signal content and generate specific recovery or follow-up actions.
-- request-AC5 -> This task. Evidence needed: Cross-run continuity follows stable mail threads and distinguishes new, changed, still open, waiting, overdue, resolved, and suppressed unchanged states without treating read state as completion.
-- request-AC6 -> This task. Evidence needed: Meeting cards surface conflicts, tight transitions, and preparation evidence only when supported by a document, open decision, prior commitment, relevant thread, or explicit preparation request; routine and placeholder meetings remain compact.
-- request-AC7 -> This task. Evidence needed: Confidence is displayed as Reliable, Confirm, or Insufficient context with a specific reason; suspicious-mail warnings require multiple independent weak signals or one strong trust-boundary violation and do not penalize language alone.
-- request-AC8 -> This task. Evidence needed: Daily and weekly subjects are distinct, empty operational sections are omitted, operational deltas precede ambient content, external news is optional/relevant/deduplicated, and weather is compact and validated.
-- request-AC9 -> This task. Evidence needed: Recipient preferences can prioritize trusted senders and themes, suppress low-value topics or recurring items, and accept reversible Useful or Hide similar feedback without sharing state across users.
-- request-AC10 -> This task. Evidence needed: Digest payloads expose content-free usefulness instrumentation for impressions, voluntary opens, recalls, suppressions, repeated unchanged items, resolutions, and explicit feedback without covert tracking or raw mailbox content.
-- request-AC11 -> This task. Evidence needed: Application access is restricted to required mailboxes, sender-side copies have an explicit retention policy, and diagnostics contain no raw subjects, previews, bodies, names, addresses, tokens, or secrets.
-- request-AC12 -> This task. Evidence needed: An anonymized replay suite reproduces sensitive-auth, noise, ownership, deadline, delivery-failure, continuity, meeting-conflict, rendering, and localization cases; focused and full automated tests pass.
-- request-AC13 -> This task. Evidence needed: Daily and weekly HTML are visually validated in rendered artifacts, and any necessary live delivery test is sent only to the explicitly authorized single test mailbox; no other production recipient is contacted during development or acceptance.
-- request-AC14 -> This task. Evidence needed: Rollout uses a bounded shadow comparison or equivalent safe preview, proves at least a 40% median visible-length reduction and 80% generic-action reduction with zero surfaced authentication secrets, then repeats the sender-side production audit after release.
+- request-AC1 -> This task. Proof: synthetic secret tests cover suppression before storage, LLM input, telemetry, and rendering; the production audit found zero authentication-content markers.
+- request-AC2 -> This task. Proof: renderer tests enforce the 3/3/2/4 section budgets, informational unread state, and low-signal suppression.
+- request-AC3 -> This task. Proof: owner/action fixtures cover concrete verbs, objects, counterparties, evidence metadata, due hints, and other-owned demotion.
+- request-AC4 -> This task. Proof: transactional-failure and deadline fixtures verify deterministic priority and specific recovery actions.
+- request-AC5 -> This task. Proof: continuity tests cover changed, still-open, waiting, overdue, resolved, and suppressed-unchanged states by stable thread identity.
+- request-AC6 -> This task. Proof: meeting tests cover conflicts, tight transitions, evidence-backed preparation, placeholders, presence, and compact context-free meetings.
+- request-AC7 -> This task. Proof: confidence and risk-threshold tests cover decision-oriented labels and strong-or-multiple-weak warning behavior.
+- request-AC8 -> This task. Proof: renderer and news tests cover distinct editions, empty-section omission, operational-first ordering, news deduplication, and compact weather.
+- request-AC9 -> This task. Proof: scoped feedback tests cover trusted preferences, reversible Useful/Hide similar behavior, critical guardrails, and multi-user isolation.
+- request-AC10 -> This task. Proof: versioned content-free metrics report cards, generic actions, warnings, news, sensitive suppression, repeated suppression, and explicit feedback.
+- request-AC11 -> This task. Proof: target validation, Graph scope, retention guidance, secret suppression, and content-free runtime diagnostics passed focused and full validation.
+- request-AC12 -> This task. Proof: identity-free replay covers security, noise, ownership, deadlines, delivery failure, continuity, meetings, rendering, and localization; the full suite passes.
+- request-AC13 -> This task. Proof: daily and weekly HTML passed visual inspection, the guarded live test reached one authorized mailbox only, and the scheduled delivery was confirmed readable in Outlook.
+- request-AC14 -> This task. Proof: the post-release aggregate audit covered four scheduled briefs using content-free metrics only; median visible length fell 47.20%, generic actions fell 100%, and no authentication-content marker surfaced.

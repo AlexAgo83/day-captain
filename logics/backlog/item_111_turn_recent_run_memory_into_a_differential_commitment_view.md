@@ -1,10 +1,10 @@
 ## item_111_turn_recent_run_memory_into_a_differential_commitment_view - Turn recent-run memory into a differential commitment view
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: In progress
+> Status: Done
 > Understanding: 100
 > Confidence: 98
-> Progress: 100
+> Progress: 100%
 > Complexity: High
 > Theme: Intelligence
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -71,3 +71,9 @@
 # Priority
 - Priority: High
 - Rationale: High because stable thread continuity is required to stop repeated cards and distinguish changed, waiting, overdue, and resolved work.
+
+# Tasks
+- `task_050_orchestrate_production_digest_actionability_improvements`
+
+# Notes
+- Task `task_050_orchestrate_production_digest_actionability_improvements` was finished via `logics-manager flow finish task` on 2026-07-13.
