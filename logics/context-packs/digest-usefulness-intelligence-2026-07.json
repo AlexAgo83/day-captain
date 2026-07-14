@@ -1,0 +1,430 @@
+{
+  "budgets": {
+    "max_docs": 48,
+    "max_docs_per_ref": 8
+  },
+  "changed_paths": [],
+  "command": "logics-manager sync context-pack req_056_day_captain_digest_usefulness_intelligence item_116_add_privacy_safe_digest_usefulness_debug_evidence item_117_add_bounded_rich_context_for_high_potential_candidates item_118_select_llm_and_final_digest_inputs_by_operational_value item_119_make_the_top_summary_decision_oriented task_053_orchestrate_digest_usefulness_intelligence_improvements --mode summary-only --profile deep --handoff",
+  "companion_docs": [
+    {
+      "kind": "product",
+      "linked_refs": {
+        "item": [
+          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/product/prod_002_day_captain_actionable_differential_brief.md",
+      "ref": "prod_002_day_captain_actionable_differential_brief",
+      "status": "Settled",
+      "title": "Day Captain actionable differential brief"
+    },
+    {
+      "kind": "product",
+      "linked_refs": {
+        "item": [
+          "item_116_add_privacy_safe_digest_usefulness_debug_evidence",
+          "item_117_add_bounded_rich_context_for_high_potential_candidates",
+          "item_118_select_llm_and_final_digest_inputs_by_operational_value",
+          "item_119_make_the_top_summary_decision_oriented"
+        ],
+        "prod": [
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ],
+        "task": [
+          "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+        ]
+      },
+      "path": "logics/product/prod_003_day_captain_useful_decision_brief.md",
+      "ref": "prod_003_day_captain_useful_decision_brief",
+      "status": "Proposed",
+      "title": "Day Captain useful decision brief"
+    }
+  ],
+  "docs": [
+    {
+      "ai_context": {
+        "keywords": "request-chain-scaffold, day captain digest usefulness intelligence, development-ready",
+        "skip when": "The change is unrelated to this scaffolded request chain.",
+        "summary": "Day Captain digest usefulness intelligence",
+        "use when": "You need to implement or review the scaffolded workflow for Day Captain digest usefulness intelligence."
+      },
+      "kind": "request",
+      "linked_refs": {
+        "item": [
+          "item_116_add_privacy_safe_digest_usefulness_debug_evidence",
+          "item_117_add_bounded_rich_context_for_high_potential_candidates",
+          "item_118_select_llm_and_final_digest_inputs_by_operational_value",
+          "item_119_make_the_top_summary_decision_oriented"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief",
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement",
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ]
+      },
+      "path": "logics/request/req_056_day_captain_digest_usefulness_intelligence.md",
+      "ref": "req_056_day_captain_digest_usefulness_intelligence",
+      "schema_version": "1.0",
+      "status": "Draft",
+      "title": "Day Captain digest usefulness intelligence"
+    },
+    {
+      "ai_context": {
+        "keywords": "request-chain-scaffold, day captain production digest actionability improvement, development-ready",
+        "skip when": "The change is unrelated to this scaffolded request chain.",
+        "summary": "Day Captain production digest actionability improvement",
+        "use when": "You need to implement or review the scaffolded workflow for Day Captain production digest actionability improvement."
+      },
+      "kind": "request",
+      "linked_refs": {
+        "item": [
+          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets",
+          "item_110_generate_concrete_owner_aware_actions_and_deadlines",
+          "item_111_turn_recent_run_memory_into_a_differential_commitment_view",
+          "item_112_make_upcoming_meetings_preparation_and_conflict_aware",
+          "item_113_improve_digest_presentation_personalization_and_usefulness_telemetry",
+          "item_114_protect_sensitive_mailbox_content_and_govern_application_access",
+          "item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ]
+      },
+      "path": "logics/request/req_055_day_captain_production_digest_actionability_improvement.md",
+      "ref": "req_055_day_captain_production_digest_actionability_improvement",
+      "schema_version": "1.0",
+      "status": "Done",
+      "title": "Day Captain production digest actionability improvement"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, add privacy-safe digest usefulness debug evidence, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Add privacy-safe digest usefulness debug evidence",
+        "use when": "Implementing the scaffolded slice for Add privacy-safe digest usefulness debug evidence."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_116_add_privacy_safe_digest_usefulness_debug_evidence"
+        ],
+        "prod": [
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ],
+        "task": [
+          "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_116_add_privacy_safe_digest_usefulness_debug_evidence.md",
+      "ref": "item_116_add_privacy_safe_digest_usefulness_debug_evidence",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Add privacy-safe digest usefulness debug evidence"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, add bounded rich context for high-potential candidates, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Add bounded rich context for high-potential candidates",
+        "use when": "Implementing the scaffolded slice for Add bounded rich context for high-potential candidates."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_117_add_bounded_rich_context_for_high_potential_candidates"
+        ],
+        "prod": [
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ],
+        "task": [
+          "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_117_add_bounded_rich_context_for_high_potential_candidates.md",
+      "ref": "item_117_add_bounded_rich_context_for_high_potential_candidates",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Add bounded rich context for high-potential candidates"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, select llm and final digest inputs by operational value, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Select LLM and final digest inputs by operational value",
+        "use when": "Implementing the scaffolded slice for Select LLM and final digest inputs by operational value."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_118_select_llm_and_final_digest_inputs_by_operational_value"
+        ],
+        "prod": [
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ],
+        "task": [
+          "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_118_select_llm_and_final_digest_inputs_by_operational_value.md",
+      "ref": "item_118_select_llm_and_final_digest_inputs_by_operational_value",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Select LLM and final digest inputs by operational value"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, make the top summary decision-oriented, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Make the top summary decision-oriented",
+        "use when": "Implementing the scaffolded slice for Make the top summary decision-oriented."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_119_make_the_top_summary_decision_oriented"
+        ],
+        "prod": [
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ],
+        "task": [
+          "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+        ]
+      },
+      "path": "logics/backlog/item_119_make_the_top_summary_decision_oriented.md",
+      "ref": "item_119_make_the_top_summary_decision_oriented",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Make the top summary decision-oriented"
+    },
+    {
+      "ai_context": {},
+      "kind": "product",
+      "linked_refs": {
+        "item": [
+          "item_109_reduce_digest_noise_and_enforce_concise_section_budgets"
+        ],
+        "prod": [
+          "prod_002_day_captain_actionable_differential_brief"
+        ],
+        "req": [
+          "req_055_day_captain_production_digest_actionability_improvement"
+        ],
+        "task": [
+          "task_050_orchestrate_production_digest_actionability_improvements"
+        ]
+      },
+      "path": "logics/product/prod_002_day_captain_actionable_differential_brief.md",
+      "ref": "prod_002_day_captain_actionable_differential_brief",
+      "schema_version": "1.0",
+      "status": "Settled",
+      "title": "Day Captain actionable differential brief"
+    },
+    {
+      "ai_context": {},
+      "kind": "product",
+      "linked_refs": {
+        "item": [
+          "item_116_add_privacy_safe_digest_usefulness_debug_evidence",
+          "item_117_add_bounded_rich_context_for_high_potential_candidates",
+          "item_118_select_llm_and_final_digest_inputs_by_operational_value",
+          "item_119_make_the_top_summary_decision_oriented"
+        ],
+        "prod": [
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ],
+        "task": [
+          "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+        ]
+      },
+      "path": "logics/product/prod_003_day_captain_useful_decision_brief.md",
+      "ref": "prod_003_day_captain_useful_decision_brief",
+      "schema_version": "1.0",
+      "status": "Proposed",
+      "title": "Day Captain useful decision brief"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-task, request-chain-scaffold, orchestration",
+        "skip when": "Working on one isolated sibling slice.",
+        "summary": "Orchestrate digest usefulness intelligence improvements",
+        "use when": "Coordinating implementation of a scaffolded request chain."
+      },
+      "kind": "task",
+      "linked_refs": {
+        "item": [
+          "item_116_add_privacy_safe_digest_usefulness_debug_evidence",
+          "item_117_add_bounded_rich_context_for_high_potential_candidates",
+          "item_118_select_llm_and_final_digest_inputs_by_operational_value",
+          "item_119_make_the_top_summary_decision_oriented"
+        ],
+        "prod": [
+          "prod_003_day_captain_useful_decision_brief"
+        ],
+        "req": [
+          "req_056_day_captain_digest_usefulness_intelligence"
+        ],
+        "task": [
+          "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+        ]
+      },
+      "path": "logics/tasks/task_053_orchestrate_digest_usefulness_intelligence_improvements.md",
+      "ref": "task_053_orchestrate_digest_usefulness_intelligence_improvements",
+      "schema_version": "1.0",
+      "status": "Ready",
+      "title": "Orchestrate digest usefulness intelligence improvements"
+    }
+  ],
+  "estimates": {
+    "char_count": 9799,
+    "companion_doc_count": 2,
+    "doc_count": 9
+  },
+  "generated_at": "2026-07-14T01:01:33Z",
+  "handoff": {
+    "companion_doc_count": 2,
+    "enabled": true,
+    "source_refs": [
+      "req_056_day_captain_digest_usefulness_intelligence",
+      "item_116_add_privacy_safe_digest_usefulness_debug_evidence",
+      "item_117_add_bounded_rich_context_for_high_potential_candidates",
+      "item_118_select_llm_and_final_digest_inputs_by_operational_value",
+      "item_119_make_the_top_summary_decision_oriented",
+      "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+    ],
+    "validation_summary_count": 1
+  },
+  "i18n": {
+    "actions": [
+      "Choose the source locale for app-owned user-facing copy.",
+      "Run logics-manager i18n init --source-locale <locale>.",
+      "Route new UI copy through stable semantic keys."
+    ],
+    "applicable": null,
+    "configured": false,
+    "contract_path": "logics/i18n/contract.json",
+    "findings": [],
+    "next_action": "Run logics-manager i18n init --source-locale <locale> for a project that owns user-facing copy.",
+    "ok": true,
+    "state": "absent"
+  },
+  "mode": "summary-only",
+  "profile": "deep",
+  "ref": "req_056_day_captain_digest_usefulness_intelligence,item_116_add_privacy_safe_digest_usefulness_debug_evidence,item_117_add_bounded_rich_context_for_high_potential_candidates,item_118_select_llm_and_final_digest_inputs_by_operational_value,item_119_make_the_top_summary_decision_oriented,task_053_orchestrate_digest_usefulness_intelligence_improvements",
+  "refs": [
+    "req_056_day_captain_digest_usefulness_intelligence",
+    "item_116_add_privacy_safe_digest_usefulness_debug_evidence",
+    "item_117_add_bounded_rich_context_for_high_potential_candidates",
+    "item_118_select_llm_and_final_digest_inputs_by_operational_value",
+    "item_119_make_the_top_summary_decision_oriented",
+    "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+  ],
+  "release": {
+    "blocking_reasons": [],
+    "configured": true,
+    "contract_path": "logics/release/contract.json",
+    "guidance": [
+      "Release readiness must come from project-owned evidence, not conversational memory.",
+      "Use release status or validate before preparing or claiming release readiness.",
+      "Publication-oriented actions are explicit operator actions and are separate from safe read/validate actions."
+    ],
+    "next_action": "Release evidence is complete.",
+    "publication_actions": [
+      "GitHub release publication",
+      "external publication"
+    ],
+    "required_gates": [
+      {
+        "blocking_reason": null,
+        "id": "version_metadata",
+        "required": true,
+        "state": "preparing",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "changelog",
+        "required": true,
+        "state": "preparing",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "local_validation",
+        "required": true,
+        "state": "local_validation",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "git_push",
+        "required": true,
+        "state": "pushed",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "ci",
+        "required": true,
+        "state": "ci_verification",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "production_deployment",
+        "required": true,
+        "state": "external_publication",
+        "status": "passed"
+      }
+    ],
+    "safe_actions": [
+      "logics-manager release status",
+      "logics-manager release plan <version>",
+      "logics-manager release validate <version>"
+    ],
+    "state": "ready",
+    "target_version": "1.9.5"
+  },
+  "validation_summary": [
+    {
+      "items": [
+        "- Run `python3 -m logics_manager lint --require-status`.",
+        "- Run scaffold command tests."
+      ],
+      "path": "logics/tasks/task_053_orchestrate_digest_usefulness_intelligence_improvements.md",
+      "ref": "task_053_orchestrate_digest_usefulness_intelligence_improvements"
+    }
+  ]
+}

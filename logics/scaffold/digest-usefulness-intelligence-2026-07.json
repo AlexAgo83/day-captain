@@ -1,0 +1,238 @@
+{
+  "title": "Day Captain digest usefulness intelligence",
+  "references": [
+    "src/day_captain/app.py",
+    "src/day_captain/services.py",
+    "src/day_captain/adapters/graph.py",
+    "src/day_captain/adapters/llm.py",
+    "src/day_captain/config.py",
+    "src/day_captain/replay.py",
+    "src/day_captain/digest_metrics.py",
+    "src/day_captain/digest_parsing.py",
+    "src/day_captain/digest_memory.py",
+    "tests/test_scoring.py",
+    "tests/test_llm.py",
+    "tests/test_replay.py",
+    "tests/test_digest_metrics.py",
+    "tests/test_digest_renderer.py",
+    "docs/digest_rendering_validation.md",
+    "logics/request/req_055_day_captain_production_digest_actionability_improvement.md",
+    "logics/product/prod_002_day_captain_actionable_differential_brief.md"
+  ],
+  "request": {
+    "complexity": "High",
+    "theme": "Intelligence",
+    "needs": [
+      "Make delivered digests useful enough to justify opening them; a digest may be short and clean but should not feel shallow or unnecessary.",
+      "Explain why each surfaced card exists so poor digest quality can be debugged from content-free evidence before changing ranking rules.",
+      "Use richer but bounded context only for high-potential candidates, preserving privacy, cost, and existing Graph/storage boundaries.",
+      "Select LLM and overview inputs by operational value instead of raw score order alone.",
+      "Make the top summary answer what changed, what the user should do, and what can be ignored; if there is no meaningful work, say so plainly."
+    ],
+    "context": [
+      "The current production actionability work reduced visible length, generic actions, repeated cards, and sensitive-content exposure, but it mainly proved noise reduction rather than usefulness.",
+      "Message scoring still starts from subject and body_preview; full body or thread context is not collected for normal candidates before scoring and wording.",
+      "When the LLM provider is disabled or unavailable, IdentityDigestWordingEngine and DeterministicDigestOverviewEngine provide shallow deterministic wording.",
+      "When the LLM provider is enabled, LlmDigestWordingEngine rewrites only a bounded shortlist selected from already-prioritized items, and LlmDigestOverviewEngine compacts each rendered section to at most one item.",
+      "The existing replay command is identity-free and can export HTML/text artifacts, but it does not yet expose a per-card inclusion explanation or a usefulness gate.",
+      "All fixtures and docs in this corpus must stay anonymized. Do not persist real subjects, bodies, addresses, client names, supplier names, tokens, or secrets."
+    ],
+    "acceptance_criteria": [
+      "AC1: A debug-safe digest explanation artifact exists for preview/replay runs and shows each rendered card's section, score, reason codes, confidence, owner, continuity state, source kind, and suppression counters without raw mailbox content.",
+      "AC2: The replay corpus includes shallow-but-noisy, truly useful, no-meaningful-work, wrong-shortlist, and rich-thread-context scenarios using only .test identities and synthetic content.",
+      "AC3: A usefulness gate reports aggregate actionable-card quality: concrete next step, owner clarity, due signal, change signal, critical failure, meeting conflict, and unsupported-watch counts.",
+      "AC4: The initial scoring pass remains cheap and preview-based, but a bounded enrichment pass can fetch or assemble richer context only for high-potential candidates before LLM wording or final selection.",
+      "AC5: Rich context never crosses storage, telemetry, docs, replay fixtures, or debug artifacts as raw mailbox content; any persisted or printed evidence is content-free or synthetic.",
+      "AC6: LLM wording shortlist selection uses a balanced operational mix rather than raw score order alone: critical failures, user-owned actions, overdue/changed continuity, meeting conflicts, and highest-confidence watch items each get a bounded slot when present.",
+      "AC7: Deterministic fallback suppresses or labels unsupported generic actions instead of emitting keep-in-view or vague reply/confirm wording when evidence is insufficient.",
+      "AC8: The top summary follows a stable contract: changed since last digest, required user action, blocked/waiting items, and safe-to-ignore/no-meaningful-work statement when applicable.",
+      "AC9: A daily digest with no actionable or changed work can render a concise no-meaningful-work email rather than padded low-signal cards.",
+      "AC10: Focused tests, full unit discovery, replay metrics, Logics validation, lint, and audit pass before implementation closeout."
+    ]
+  },
+  "product": {
+    "title": "Day Captain useful decision brief",
+    "overview": "Upgrade Day Captain from a concise mailbox digest into a decision brief that explains why each item matters, uses enough context for the few candidates that deserve it, and admits when there is nothing worth the user's attention.",
+    "goals": [
+      "Increase perceived usefulness by surfacing fewer unsupported watch items and more evidence-backed decisions, actions, failures, deadlines, and conflicts.",
+      "Create a privacy-safe debugging loop for every rendered card and every suppressed candidate.",
+      "Use richer context surgically after the cheap candidate pass instead of broad mailbox ingestion.",
+      "Improve LLM input selection without adding a new ranking service.",
+      "Make empty or low-signal days honest and concise."
+    ],
+    "non_goals": [
+      "Building a general task manager or autonomous email agent.",
+      "Reading or storing every full email body by default.",
+      "Persisting raw mailbox content in debug artifacts, telemetry, tests, docs, or Logics evidence.",
+      "Replacing Microsoft Graph, current storage adapters, current rendering, or existing delivery contracts.",
+      "Adding a new external analytics or ranking service."
+    ]
+  },
+  "backlog_items": [
+    {
+      "title": "Add privacy-safe digest usefulness debug evidence",
+      "priority": "High",
+      "complexity": "Medium",
+      "theme": "Observability",
+      "request_acs": [
+        "AC1",
+        "AC2",
+        "AC3",
+        "AC5",
+        "AC10"
+      ],
+      "problem": [
+        "When a delivered digest feels useless, the current preview gives rendered HTML/text but not a clear explanation of why each card was included.",
+        "Without per-card and suppression evidence, developers tune scoring from vibes or real mailbox inspection.",
+        "Existing metrics prove shorter output and fewer generic actions, but they do not prove usefulness."
+      ],
+      "scope_in": [
+        "Extend digest replay or preview export with a content-free debug JSON artifact.",
+        "For rendered cards, include section, score bucket, reason codes, owner category, confidence label, continuity state, source kind, action-present flag, due-present flag, and source-open availability.",
+        "For suppressed candidates, report aggregate counters by suppression reason only.",
+        "Add usefulness metrics for concrete next step, owner clarity, due signal, changed/overdue state, critical failure, meeting conflict, unsupported watch, and no-meaningful-work days.",
+        "Extend synthetic replay with cases that intentionally produce useless-looking output before the intelligence fixes.",
+        "Document how to run the debug viewer and inspect the debug JSON without touching real mailbox content."
+      ],
+      "scope_out": [
+        "Exporting raw subjects, bodies, previews, names, addresses, or client identifiers from production mail.",
+        "Adding tracking pixels or covert read/open tracking.",
+        "Changing scoring behavior in this observability slice except where needed to expose existing evidence."
+      ],
+      "acceptance_criteria": [
+        "AC1: `digest-replay` can write a debug JSON artifact next to HTML/text output using only synthetic content.",
+        "AC2: Debug output explains every rendered synthetic card without raw mailbox fields.",
+        "AC3: Usefulness metrics distinguish useful cards from unsupported watch cards and generic actions.",
+        "AC4: Tests prove no real mailbox-derived text is required for the debug artifact.",
+        "AC5: Existing replay metrics still pass and full unit discovery remains green."
+      ]
+    },
+    {
+      "title": "Add bounded rich context for high-potential candidates",
+      "priority": "High",
+      "complexity": "High",
+      "theme": "Intelligence",
+      "request_acs": [
+        "AC4",
+        "AC5",
+        "AC6",
+        "AC10"
+      ],
+      "problem": [
+        "The current scorer and LLM wording mostly see subject and body_preview, so useful details hidden in the email body or recent thread can be missed.",
+        "Fetching full context for every message would increase cost, latency, privacy exposure, and Graph complexity.",
+        "A useful assistant needs enough evidence for the few candidates that matter without turning storage or telemetry into a mailbox archive."
+      ],
+      "scope_in": [
+        "Introduce a bounded enrichment step after initial scoring and before LLM wording/final selection.",
+        "Select enrichment candidates by cheap signals: critical/transactional guardrail, user-owned action candidate, flagged mail, explicit due hint, changed continuity, and meeting conflict context.",
+        "Fetch or assemble at most a configured small number of richer contexts per digest and cap characters per candidate.",
+        "Prefer existing stored thread metadata and Graph fields before adding new storage columns.",
+        "Redact or omit secrets and authentication content before LLM input.",
+        "Keep enriched raw context in memory only unless the data is synthetic test content.",
+        "Expose content-free enrichment counters in debug output."
+      ],
+      "scope_out": [
+        "Persisting full message bodies for production mail.",
+        "Embedding or indexing mailbox content.",
+        "Fetching attachments or document contents.",
+        "Making LLM use mandatory for digest generation."
+      ],
+      "acceptance_criteria": [
+        "AC1: Tests prove only bounded high-potential candidates are enriched.",
+        "AC2: Enrichment improves a synthetic fixture where the preview is vague but the bounded body/thread context contains the actionable detail.",
+        "AC3: Authentication or one-time-code content is suppressed before enrichment output can reach LLM input or debug evidence.",
+        "AC4: Config defaults keep enrichment bounded and disabled or minimal where Graph support is unavailable.",
+        "AC5: No production raw body content is written to storage, telemetry, docs, or replay artifacts."
+      ]
+    },
+    {
+      "title": "Select LLM and final digest inputs by operational value",
+      "priority": "High",
+      "complexity": "Medium",
+      "theme": "Intelligence",
+      "request_acs": [
+        "AC3",
+        "AC6",
+        "AC7",
+        "AC9",
+        "AC10"
+      ],
+      "problem": [
+        "LlmDigestWordingEngine currently shortlists from already-prioritized items in order, so several medium-score items can consume the LLM budget before critical operational categories are represented.",
+        "Keyword scoring can still produce action-looking cards that lack owner, object, deadline, or change evidence.",
+        "A digest with no meaningful work should not be padded with weak watch items simply because they passed a low score threshold."
+      ],
+      "scope_in": [
+        "Replace raw-order LLM shortlist selection with a small balanced selector.",
+        "Reserve bounded slots for transactional failures, user-owned actions, overdue/changed continuity, meeting conflicts, and highest-confidence watch items.",
+        "Add an evidence gate before final render: action cards require owner and concrete next step; critical cards require guardrail or real risk/deadline; watch cards require an explicit why-this-matters reason.",
+        "Suppress or downgrade unsupported generic actions rather than rendering vague fallback wording.",
+        "Allow a concise no-meaningful-work digest when no card passes the evidence gate.",
+        "Keep deterministic ordering stable for tests and replay metrics."
+      ],
+      "scope_out": [
+        "Removing existing guardrails for delivery failures, security risk, flags, or explicit deadlines.",
+        "Adding a model-based ranker separate from the existing optional LLM wording path.",
+        "Changing delivery, recall, or storage contracts."
+      ],
+      "acceptance_criteria": [
+        "AC1: A synthetic wrong-shortlist case sends the critical/action/conflict mix to LLM instead of the first N raw-score items.",
+        "AC2: Unsupported action and watch fixtures are suppressed or downgraded and counted in usefulness metrics.",
+        "AC3: A no-meaningful-work day renders a concise honest message with no padded cards.",
+        "AC4: Critical transactional failures and user-owned explicit actions still outrank low-signal mail.",
+        "AC5: Existing renderer budgets and multi-user isolation tests pass."
+      ]
+    },
+    {
+      "title": "Make the top summary decision-oriented",
+      "priority": "Medium",
+      "complexity": "Medium",
+      "theme": "UX",
+      "request_acs": [
+        "AC8",
+        "AC9",
+        "AC10"
+      ],
+      "problem": [
+        "The current deterministic overview summarizes one or two section fragments, and the LLM overview receives at most one compact item per section.",
+        "Users need to know what changed, what they personally need to do, what is blocked elsewhere, and whether the rest can be ignored.",
+        "A shallow but polished summary can make the whole digest feel useless even when individual cards are correct."
+      ],
+      "scope_in": [
+        "Define a stable summary contract with four optional slots: changed since last digest, required user action, waiting/blocked elsewhere, and safe-to-ignore/no-meaningful-work.",
+        "Pass structured counts and representative evidence to deterministic and LLM overview engines.",
+        "Use no-meaningful-work wording when the evidence gate renders no operational cards.",
+        "Keep summary content short enough for email preview but specific enough to name the operational category, not raw private content.",
+        "Add French and English copy tests for the summary contract."
+      ],
+      "scope_out": [
+        "Generating long executive narratives.",
+        "Listing every card in the top summary.",
+        "Exposing raw mailbox text in summary telemetry or docs."
+      ],
+      "acceptance_criteria": [
+        "AC1: Summary tests cover changed work, user action, waiting elsewhere, and no-meaningful-work outputs.",
+        "AC2: Deterministic fallback follows the same summary slots as the LLM path.",
+        "AC3: The summary does not claim there is action when only unsupported watch content exists.",
+        "AC4: Existing daily/weekly subject and renderer tests pass."
+      ]
+    }
+  ],
+  "orchestration_task": {
+    "title": "Orchestrate digest usefulness intelligence improvements",
+    "plan": [
+      "Add content-free debug evidence and usefulness metrics to replay/preview so bad digests can be diagnosed without real mailbox content.",
+      "Expand synthetic replay with useless, useful, no-work, wrong-shortlist, and rich-context cases.",
+      "Implement bounded rich-context enrichment for high-potential candidates before optional LLM wording.",
+      "Replace raw-order LLM shortlist selection with a balanced operational selector and add final evidence gates.",
+      "Update deterministic and LLM top summary behavior to follow the decision-oriented summary contract.",
+      "Run focused tests, full unit discovery, replay metrics, visual preview, Logics validation, lint, and audit before closeout."
+    ]
+  },
+  "context_pack": {
+    "out": "logics/context-packs/digest-usefulness-intelligence-2026-07.json",
+    "mode": "summary-only",
+    "profile": "deep"
+  }
+}
