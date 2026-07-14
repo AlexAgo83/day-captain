@@ -3098,9 +3098,11 @@ class StructuredDigestRenderer:
         )
         coverage_label = str(localized.get("coverage_label") or "")
         parts = [
-            "<html><head><meta charset=\"utf-8\"></head><body style=\"margin:0;padding:0;background:#f4f7fb;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
-            "<div style=\"max-width:720px;margin:0 auto;padding:20px 18px 30px;background:#ffffff;\">",
-            "<section style=\"margin:0 0 22px;padding:16px 16px 14px;border:1px solid #dbe4ee;border-top:4px solid #2563eb;border-radius:8px;background:#ffffff;\">",
+            "<html><head><meta charset=\"utf-8\"><meta name=\"color-scheme\" content=\"light\"><meta name=\"supported-color-schemes\" content=\"light\">"
+            "<style>:root{color-scheme:light supported-color-schemes:light;}body,.dc-shell{background:#ffffff!important;color:#1f2937!important;}</style></head>"
+            "<body style=\"margin:0;padding:0;background:#ffffff!important;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937!important;line-height:1.5;\">",
+            "<div class=\"dc-shell\" style=\"max-width:720px;margin:0 auto;padding:20px 18px 30px;background:#ffffff!important;color:#1f2937!important;\">",
+            "<section style=\"margin:0 0 22px;padding:16px 16px 14px;border:1px solid #dbe4ee;border-top:4px solid #2563eb;border-radius:8px;background:#ffffff!important;color:#1f2937!important;\">",
             "<h1 style=\"margin:0 0 8px;font-size:26px;line-height:1.2;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
             "<p style=\"margin:0 0 8px;font-size:14px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
             "<table role=\"presentation\" style=\"margin:0;border-collapse:collapse;\"><tr>"
@@ -3175,7 +3177,7 @@ class StructuredDigestRenderer:
         action_html = self._item_action_html(item)
         rendered_title = self._rendered_item_title(item)
         return (
-            "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-left:4px solid {5};border-radius:8px;background:{6};\">"
+            "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-left:4px solid {5};border-radius:8px;background:{6}!important;color:#1f2937!important;\">"
             "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}{1}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{2}</p>"
             "{3}{4}"
@@ -3436,7 +3438,7 @@ class StructuredDigestRenderer:
             return ""
         localized = _language_copy(self.digest_language)["weather"]
         return (
-            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:8px;background:#f0f9ff;\">"
+            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:8px;background:#f0f9ff!important;color:#1f2937!important;\">"
             "<p style=\"margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
             "</section>"
@@ -3488,7 +3490,7 @@ class StructuredDigestRenderer:
             return ""
         localized = _language_copy(self.digest_language)["external_news"]
         parts = [
-            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #dbe4ee;border-left:4px solid #7c3aed;border-radius:8px;background:#ffffff;\">",
+            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #dbe4ee;border-left:4px solid #7c3aed;border-radius:8px;background:#ffffff!important;color:#1f2937!important;\">",
             "<p style=\"margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>".format(
                 self._html_escape(str(localized["label"]))
             ),
