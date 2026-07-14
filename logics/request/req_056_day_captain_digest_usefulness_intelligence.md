@@ -1,7 +1,7 @@
 ## req_056_day_captain_digest_usefulness_intelligence - Day Captain digest usefulness intelligence
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Draft
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
 > Complexity: High

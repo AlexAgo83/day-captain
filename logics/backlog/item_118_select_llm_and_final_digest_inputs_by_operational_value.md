@@ -1,10 +1,10 @@
 ## item_118_select_llm_and_final_digest_inputs_by_operational_value - Select LLM and final digest inputs by operational value
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Intelligence
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -34,6 +34,13 @@
 - AC4: Critical transactional failures and user-owned explicit actions still outrank low-signal mail.
 - AC5: Existing renderer budgets and multi-user isolation tests pass.
 
+# Delivery notes
+- `LlmDigestWordingEngine` now builds a balanced shortlist before filling remaining capacity by original order.
+- Reserved categories cover transactional/guardrail items, user/shared actions, changed/open/overdue continuity, meeting conflicts, and high-confidence watch items.
+- `filter_digest_items_for_usefulness` downgrades generic or empty action cards and suppresses unsupported watch cards while preserving guardrails.
+- Replay includes a no-meaningful-work case and keeps production candidate gates passing.
+- Validation: wrong-shortlist, evidence-gate, replay, app, renderer, and full discovery tests pass.
+
 # AC Traceability
 - request-AC3 -> This backlog slice. Proof: AC1: A synthetic wrong-shortlist case sends the critical/action/conflict mix to LLM instead of the first N raw-score items.
 - request-AC6 -> This backlog slice. Proof: AC2: Unsupported action and watch fixtures are suppressed or downgraded and counted in usefulness metrics.
@@ -60,3 +67,6 @@
 # Priority
 - Priority: High
 - Rationale: Set by scaffold input or defaulted for grooming.
+
+# Notes
+- Task `task_053_orchestrate_digest_usefulness_intelligence_improvements` was finished via `logics-manager flow finish task` on 2026-07-14.

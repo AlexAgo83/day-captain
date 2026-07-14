@@ -1,10 +1,10 @@
 ## item_116_add_privacy_safe_digest_usefulness_debug_evidence - Add privacy-safe digest usefulness debug evidence
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Observability
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -34,6 +34,12 @@
 - AC4: Tests prove no real mailbox-derived text is required for the debug artifact.
 - AC5: Existing replay metrics still pass and full unit discovery remains green.
 
+# Delivery notes
+- Implemented `digest_debug_report` and usefulness metrics version `1.1`.
+- `digest-replay --output-dir` writes `debug.json` next to HTML/text artifacts.
+- Debug evidence reports section, source kind, score bucket, reason codes, owner, confidence, continuity, action/due/source-open booleans, guardrail state, unsupported-watch state, and suppression counters without raw mailbox content.
+- Validation: focused metrics/replay tests pass; full unit discovery passes with 278 tests.
+
 # AC Traceability
 - request-AC1 -> This backlog slice. Proof: AC1: `digest-replay` can write a debug JSON artifact next to HTML/text output using only synthetic content.
 - request-AC2 -> This backlog slice. Proof: AC2: Debug output explains every rendered synthetic card without raw mailbox fields.
@@ -60,3 +66,6 @@
 # Priority
 - Priority: High
 - Rationale: Set by scaffold input or defaulted for grooming.
+
+# Notes
+- Task `task_053_orchestrate_digest_usefulness_intelligence_improvements` was finished via `logics-manager flow finish task` on 2026-07-14.

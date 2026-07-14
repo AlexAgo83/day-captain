@@ -62,6 +62,8 @@ from day_captain.ports import Storage
 from day_captain.ports import WeatherProvider
 from day_captain.services import DeterministicScoringEngine
 from day_captain.services import DeterministicDigestOverviewEngine
+from day_captain.services import enrich_digest_candidates
+from day_captain.services import filter_digest_items_for_usefulness
 from day_captain.services import IdentityDigestWordingEngine
 from day_captain.services import is_sensitive_authentication_message
 from day_captain.services import LlmDigestOverviewEngine
@@ -799,7 +801,12 @@ class DayCaptainApplication:
             reference_time=current_time,
             window_start=window_start,
         )
+        prioritized_items = enrich_digest_candidates(prioritized_items, messages)
         prioritized_items = self.digest_wording_engine.rewrite(prioritized_items)
+        prioritized_items, usefulness_filter_metrics = filter_digest_items_for_usefulness(prioritized_items)
+        usefulness_filter_metrics = {
+            key: value for key, value in dict(usefulness_filter_metrics).items() if value
+        }
         recent_runs = self.storage.list_recent_completed_runs(
             3,
             tenant_id=scoped_tenant_id,
@@ -867,7 +874,7 @@ class DayCaptainApplication:
                 payload,
                 delivery_payload={**dict(payload.delivery_payload), "live_test_recipient": live_test_recipient},
             )
-        if sensitive_suppression_count or repeated_unchanged_suppressions:
+        if sensitive_suppression_count or repeated_unchanged_suppressions or any(usefulness_filter_metrics.values()):
             payload = replace(
                 payload,
                 delivery_payload={
@@ -875,6 +882,7 @@ class DayCaptainApplication:
                     "usefulness_metrics": {
                         "sensitive_suppressions": sensitive_suppression_count,
                         "repeated_unchanged_suppressions": repeated_unchanged_suppressions,
+                        **dict(usefulness_filter_metrics),
                     },
                 },
             )

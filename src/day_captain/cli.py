@@ -29,7 +29,7 @@ from day_captain.hosted_jobs import wait_for_hosted_health
 from day_captain.models import parse_datetime
 from day_captain.models import digest_payload_from_dict
 from day_captain.models import to_jsonable
-from day_captain.digest_metrics import candidate_gate, digest_metrics
+from day_captain.digest_metrics import candidate_gate, digest_debug_report, digest_metrics
 from day_captain.replay import run_synthetic_replay
 from day_captain.web import serve
 
@@ -514,11 +514,22 @@ def main(argv: Optional[list] = None) -> int:
             for name, payload in (("daily", payloads[0]), ("weekly", payloads[-1])):
                 (output_dir / f"{name}.html").write_text(str(payload.delivery_payload.get("html_body") or ""), encoding="utf-8")
                 (output_dir / f"{name}.txt").write_text(payload.delivery_body, encoding="utf-8")
+            (output_dir / "debug.json").write_text(json.dumps(digest_debug_report(payloads), indent=2, sort_keys=True), encoding="utf-8")
             _write_replay_viewer(output_dir)
             if args.view:
                 _serve_viewer(output_dir, int(args.port))
         print(json.dumps({
-            "cases": ["authentication_suppression", "noise", "owned_deadline", "transactional_failure", "continuity", "meeting_conflict"],
+            "cases": [
+                "authentication_suppression",
+                "noise",
+                "owned_deadline",
+                "transactional_failure",
+                "continuity",
+                "meeting_conflict",
+                "no_meaningful_work",
+                "rich_context",
+                "balanced_shortlist",
+            ],
             "gate": candidate_gate(metrics),
             "metrics": metrics,
         }, indent=2, sort_keys=True))

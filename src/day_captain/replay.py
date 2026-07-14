@@ -29,5 +29,31 @@ def run_synthetic_replay() -> Sequence[DigestPayload]:
     )
     first = app.run_morning_digest(now=now, delivery_mode="json", force=True)
     second = app.run_morning_digest(now=now + timedelta(hours=1), delivery_mode="json", force=True)
+    no_work = build_application(
+        settings=DayCaptainSettings(graph_user_id="quiet@example.test"),
+        storage=InMemoryStorage(),
+        mail_collector=StaticMailCollector(()),
+        calendar_collector=StaticCalendarCollector(()),
+    ).run_morning_digest(now=now, delivery_mode="json", force=True)
+    rich_context = build_application(
+        settings=DayCaptainSettings(graph_user_id="user@example.test"),
+        storage=InMemoryStorage(),
+        mail_collector=StaticMailCollector(
+            (
+                MessageRecord(
+                    "rich-1",
+                    "rich-thread",
+                    "Checklist",
+                    "lead@example.test",
+                    to_addresses=("user@example.test",),
+                    user_id="user@example.test",
+                    received_at=now,
+                    body_preview="Please review.",
+                    raw_payload={"dayCaptainSyntheticRichContext": "Please validate the launch checklist before noon and send the approval note."},
+                ),
+            )
+        ),
+        calendar_collector=StaticCalendarCollector(()),
+    ).run_morning_digest(now=now, delivery_mode="json", force=True)
     weekly = app.run_weekly_digest(now=now + timedelta(days=6), delivery_mode="json")
-    return (first, second, weekly)
+    return (first, second, no_work, rich_context, weekly)

@@ -38,6 +38,15 @@ SECTION_NAMES = (
 )
 
 PROJECT_REPOSITORY_URL = "https://github.com/AlexAgo83/day-captain"
+GENERIC_ACTIONS = (
+    "reply or confirm",
+    "répondre ou confirmer",
+    "review or handle quickly",
+    "examiner ou traiter rapidement",
+    "keep this topic in view",
+    "garder ce sujet en vue",
+)
+RICH_CONTEXT_REASON_CODES = {"critical_keyword", "transactional_alert", "flagged", "action_keyword", "direct_follow_up_signal"}
 
 STOPWORDS = {
     "a",
@@ -1495,6 +1504,121 @@ def _display_confidence_reason(value: str, language: str) -> str:
     return _truncate_sentence(localized.get(normalized) or normalized, max_chars=95)
 
 
+def _entry_owner(item: DigestEntry) -> str:
+    if item.card is not None and item.card.action_owner:
+        return item.card.action_owner
+    return str((item.context_metadata or {}).get("action_owner") or "").strip()
+
+
+def _entry_continuity_state(item: DigestEntry) -> str:
+    if item.card is not None and item.card.continuity_state:
+        return item.card.continuity_state
+    return str((item.context_metadata or {}).get("continuity_state") or "").strip()
+
+
+def _entry_has_generic_action(item: DigestEntry) -> bool:
+    action = str(item.recommended_action or "").lower()
+    return any(pattern in action for pattern in GENERIC_ACTIONS)
+
+
+def _entry_has_due_signal(item: DigestEntry) -> bool:
+    metadata = item.context_metadata or {}
+    return bool(metadata.get("due_hint") or metadata.get("due_at") or "overdue" in item.reason_codes)
+
+
+def _entry_has_concrete_action(item: DigestEntry) -> bool:
+    return bool(str(item.recommended_action or "").strip() and not _entry_has_generic_action(item))
+
+
+def _entry_has_watch_evidence(item: DigestEntry) -> bool:
+    return bool(
+        item.guardrail_applied
+        or item.confidence_score >= 70
+        or _entry_has_due_signal(item)
+        or _entry_continuity_state(item)
+        or set(item.reason_codes)
+        & {"flagged", "preference_signal", "transactional_alert", "meeting_conflict", "changed", "overdue", "still_open", "waiting"}
+    )
+
+
+def _rich_context_text(message: Optional[MessageRecord]) -> str:
+    if message is None:
+        return ""
+    raw_payload = message.raw_payload if isinstance(message.raw_payload, Mapping) else {}
+    return " ".join(str(raw_payload.get("dayCaptainSyntheticRichContext") or "").split())[:600]
+
+
+def enrich_digest_candidates(
+    prioritized_items: Sequence[DigestEntry],
+    messages: Sequence[MessageRecord],
+    *,
+    limit: int = 3,
+) -> Sequence[DigestEntry]:
+    by_id = {message.graph_message_id: message for message in messages}
+    enriched = []
+    remaining = max(0, int(limit))
+    for item in prioritized_items:
+        if remaining <= 0 or item.source_kind != "message" or not (set(item.reason_codes) & RICH_CONTEXT_REASON_CODES):
+            enriched.append(item)
+            continue
+        rich_context = _rich_context_text(by_id.get(item.source_id))
+        if not rich_context or is_sensitive_authentication_message(
+            MessageRecord(
+                graph_message_id="rich-context-check",
+                thread_id="rich-context-check",
+                subject=item.title,
+                from_address="synthetic@example.test",
+                body_preview=rich_context,
+            )
+        ):
+            enriched.append(item)
+            continue
+        metadata = dict(item.context_metadata)
+        metadata["rich_context_used"] = True
+        metadata["rich_context_chars"] = len(rich_context)
+        due_hint = _explicit_due_hint(item.title, rich_context)
+        if due_hint and not metadata.get("due_hint"):
+            metadata["due_hint"] = due_hint
+        enriched.append(
+            _with_digest_entry_updates(
+                item,
+                summary=_normalize_item_summary(item.title, rich_context, max_chars=_item_summary_limit(item)),
+                context_metadata=metadata,
+                reason_codes=tuple(dict.fromkeys(tuple(item.reason_codes) + ("rich_context",))),
+            )
+        )
+        remaining -= 1
+    return tuple(enriched)
+
+
+def filter_digest_items_for_usefulness(prioritized_items: Sequence[DigestEntry]) -> tuple[Sequence[DigestEntry], Mapping[str, int]]:
+    kept = []
+    unsupported_actions = unsupported_watch = 0
+    for item in prioritized_items:
+        if item.section_name == "actions_to_take" and not item.guardrail_applied:
+            if not _entry_has_concrete_action(item):
+                unsupported_actions += 1
+                kept.append(
+                    _with_digest_entry_updates(
+                        item,
+                        section_name="watch_items",
+                        handling_bucket="watch_items",
+                        recommended_action="" if _entry_has_generic_action(item) else item.recommended_action,
+                        score=round(max(0.1, item.score - 0.7), 2),
+                        reason_codes=tuple(dict.fromkeys(tuple(item.reason_codes) + ("unsupported_action",))),
+                    )
+                )
+                continue
+        if item.section_name == "watch_items" and not _entry_has_watch_evidence(item):
+            unsupported_watch += 1
+            continue
+        kept.append(item)
+    return tuple(kept), {
+        "unsupported_action_downgrades": unsupported_actions,
+        "unsupported_watch_suppressions": unsupported_watch,
+    }
+
+
 def _handling_bucket_from_section(section_name: str) -> str:
     if section_name in SECTION_NAMES:
         return section_name
@@ -2770,6 +2894,7 @@ class StructuredDigestRenderer:
         delivery_payload = {
             "mode": delivery_mode,
             "run_id": run_id,
+            "run_type": run_type,
             "tenant_id": tenant_id,
             "user_id": user_id,
             "subject": delivery_subject,
@@ -3610,8 +3735,14 @@ class DeterministicDigestOverviewEngine:
             if not items:
                 continue
             sentences.append(self._section_sentence(section_name, items, localized, language))
-            if len(sentences) >= 2:
+            if len(sentences) >= 1:
                 break
+        continuity_sentence = self._continuity_sentence(
+            tuple(sections["critical_topics"]) + tuple(sections["actions_to_take"]) + tuple(sections["watch_items"]),
+            language,
+        )
+        if continuity_sentence and len(sentences) < 2:
+            sentences.append(continuity_sentence)
         presence_items = sections["daily_presence"]
         if presence_items and len(sentences) < 2:
             presence_text = _normalize_item_summary(presence_items[0].title, presence_items[0].summary, max_chars=90)
@@ -3626,6 +3757,23 @@ class DeterministicDigestOverviewEngine:
             summary=" ".join(sentence.strip() for sentence in sentences if sentence.strip()),
             source="deterministic",
         )
+
+    def _continuity_sentence(self, items: Sequence[DigestEntry], language: str) -> str:
+        changed = sum(1 for item in items if _entry_continuity_state(item) in {"changed", "still_open", "overdue"})
+        waiting = sum(1 for item in items if _entry_continuity_state(item) == "waiting" or _entry_owner(item) == "other")
+        if not changed and not waiting:
+            return ""
+        if language == "fr":
+            if changed and waiting:
+                return "{0} sujet(s) ont changé ou restent ouverts ; {1} point(s) attendent quelqu'un d'autre.".format(changed, waiting)
+            if changed:
+                return "{0} sujet(s) ont changé ou restent ouverts depuis le dernier brief.".format(changed)
+            return "{0} point(s) attendent quelqu'un d'autre.".format(waiting)
+        if changed and waiting:
+            return "{0} item(s) changed or remain open; {1} item(s) are waiting on someone else.".format(changed, waiting)
+        if changed:
+            return "{0} item(s) changed or remain open since the last brief.".format(changed)
+        return "{0} item(s) are waiting on someone else.".format(waiting)
 
     def _section_sentence(
         self,
@@ -3742,11 +3890,12 @@ class LlmDigestWordingEngine:
         items = tuple(prioritized_items)
         if self.shortlist_limit <= 0 or not items:
             return items
-        shortlisted = tuple(
+        candidates = tuple(
             item
             for item in items
             if not self.enabled_sections or item.section_name in self.enabled_sections
-        )[: self.shortlist_limit]
+        )
+        shortlisted = self._shortlist(candidates)
         if not shortlisted:
             return items
         try:
@@ -3831,6 +3980,28 @@ class LlmDigestWordingEngine:
                 )
             )
         return tuple(updated_items)
+
+    def _shortlist(self, items: Sequence[DigestEntry]) -> Sequence[DigestEntry]:
+        selected = []
+
+        def add_first(predicate) -> None:
+            for item in items:
+                if item in selected or not predicate(item):
+                    continue
+                selected.append(item)
+                return
+
+        add_first(lambda item: "transactional_alert" in item.reason_codes or item.guardrail_applied)
+        add_first(lambda item: item.section_name == "actions_to_take" and _entry_owner(item) in {"user", "shared"})
+        add_first(lambda item: _entry_continuity_state(item) in {"overdue", "changed", "still_open"})
+        add_first(lambda item: "meeting_conflict" in item.reason_codes)
+        add_first(lambda item: item.section_name == "watch_items" and item.confidence_score >= 70)
+        for item in items:
+            if len(selected) >= self.shortlist_limit:
+                break
+            if item not in selected:
+                selected.append(item)
+        return tuple(selected[: self.shortlist_limit])
 
 
 class SnapshotRecallProvider:

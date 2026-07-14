@@ -337,6 +337,42 @@ class LlmDigestWordingEngineTest(unittest.TestCase):
         self.assertEqual(rewritten[0].summary, "Polished summary one.")
         self.assertEqual(rewritten[1].summary, "Original two")
 
+    def test_rewrite_shortlist_prefers_operational_mix_over_raw_score(self) -> None:
+        captured = {}
+
+        class Provider:
+            def rewrite_summaries(self, items):
+                captured["refs"] = [f"{item.source_kind}:{item.source_id}" for item in items]
+                return {"message:critical": "Critical item polished."}
+
+        engine = LlmDigestWordingEngine(provider=Provider(), shortlist_limit=1)
+        items = (
+            DigestEntry(
+                title="Interesting watch",
+                summary="Watch summary",
+                section_name="watch_items",
+                source_kind="message",
+                source_id="watch",
+                score=9.0,
+                confidence_score=80,
+            ),
+            DigestEntry(
+                title="Delivery failure",
+                summary="Failure summary",
+                section_name="critical_topics",
+                source_kind="message",
+                source_id="critical",
+                score=2.0,
+                reason_codes=("transactional_alert",),
+                guardrail_applied=True,
+            ),
+        )
+
+        rewritten = engine.rewrite(items)
+
+        self.assertEqual(captured["refs"], ["message:critical"])
+        self.assertEqual(rewritten[1].summary, "Critical item polished.")
+
     def test_rewrite_preserves_source_open_links(self) -> None:
         provider = type(
             "Provider",
@@ -594,6 +630,43 @@ class DigestOverviewEngineTest(unittest.TestCase):
 
         self.assertEqual(overview.source, "deterministic")
         self.assertEqual(overview.summary, "Rien d'urgent ne remonte pour l'instant.")
+
+    def test_deterministic_summary_reports_changed_and_waiting_work(self) -> None:
+        payload = DigestPayload(
+            run_id="run-continuity",
+            generated_at=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "en"},
+            actions_to_take=(
+                DigestEntry(
+                    title="Decision",
+                    summary="Need your input before noon.",
+                    section_name="actions_to_take",
+                    source_kind="message",
+                    source_id="msg-action",
+                    score=2.0,
+                    context_metadata={"continuity_state": "changed", "action_owner": "user"},
+                ),
+            ),
+            watch_items=(
+                DigestEntry(
+                    title="Partner reply",
+                    summary="Waiting on Partner.",
+                    section_name="watch_items",
+                    source_kind="message",
+                    source_id="msg-waiting",
+                    score=1.0,
+                    context_metadata={"continuity_state": "waiting", "action_owner": "other"},
+                ),
+            ),
+        )
+
+        overview = DeterministicDigestOverviewEngine().summarize(payload)
+
+        self.assertIn("changed or remain open", overview.summary)
+        self.assertIn("waiting on someone else", overview.summary)
 
     def test_llm_summary_falls_back_to_deterministic_summary(self) -> None:
         payload = DigestPayload(

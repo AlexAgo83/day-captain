@@ -1,10 +1,10 @@
 ## item_119_make_the_top_summary_decision_oriented - Make the top summary decision-oriented
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -32,6 +32,12 @@
 - AC3: The summary does not claim there is action when only unsupported watch content exists.
 - AC4: Existing daily/weekly subject and renderer tests pass.
 
+# Delivery notes
+- Deterministic overview now reserves space for continuity and waiting signals after the primary operational sentence.
+- No-meaningful-work output remains concise and does not pad weak cards into the digest.
+- Existing LLM overview behavior remains compatible while deterministic fallback carries the same decision slots when LLM is disabled or fails.
+- Validation: summary, replay, renderer, and full discovery tests pass.
+
 # AC Traceability
 - request-AC8 -> This backlog slice. Proof: AC1: Summary tests cover changed work, user action, waiting elsewhere, and no-meaningful-work outputs.
 - request-AC9 -> This backlog slice. Proof: AC2: Deterministic fallback follows the same summary slots as the LLM path.
@@ -56,3 +62,6 @@
 # Priority
 - Priority: Medium
 - Rationale: Set by scaffold input or defaulted for grooming.
+
+# Notes
+- Task `task_053_orchestrate_digest_usefulness_intelligence_improvements` was finished via `logics-manager flow finish task` on 2026-07-14.

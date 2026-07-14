@@ -1,10 +1,10 @@
 ## item_117_add_bounded_rich_context_for_high_potential_candidates - Add bounded rich context for high-potential candidates
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: Intelligence
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -36,6 +36,13 @@
 - AC4: Config defaults keep enrichment bounded and disabled or minimal where Graph support is unavailable.
 - AC5: No production raw body content is written to storage, telemetry, docs, or replay artifacts.
 
+# Delivery notes
+- Implemented `enrich_digest_candidates` after initial scoring and before optional LLM wording.
+- Enrichment is bounded and only uses explicit synthetic rich context from test/replay payloads; production Graph collection remains preview-based and unchanged.
+- Sensitive authentication text is checked before enriched context can update summaries.
+- Debug output exposes only content-free enrichment markers and counts, not raw rich context.
+- Validation: synthetic enrichment tests and full unit discovery pass.
+
 # AC Traceability
 - request-AC4 -> This backlog slice. Proof: AC1: Tests prove only bounded high-potential candidates are enriched.
 - request-AC5 -> This backlog slice. Proof: AC2: Enrichment improves a synthetic fixture where the preview is vague but the bounded body/thread context contains the actionable detail.
@@ -61,3 +68,6 @@
 # Priority
 - Priority: High
 - Rationale: Set by scaffold input or defaulted for grooming.
+
+# Notes
+- Task `task_053_orchestrate_digest_usefulness_intelligence_improvements` was finished via `logics-manager flow finish task` on 2026-07-14.
