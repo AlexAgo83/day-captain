@@ -121,13 +121,20 @@ NEWSLETTER_PATTERNS = (
     "subscription",
     "manage preferences",
     "email preferences",
+    "email tracking preferences",
     "communication preferences",
+    "tracking preferences",
     "view in browser",
     "view as webpage",
     "view as web page",
     "browser version",
     "daily news",
     "weekly update",
+    "weekly kickoff",
+    "meeting recap",
+    "meeting notes",
+    "personalized coaching",
+    "meeting trends",
     "aggregate report",
     "report domain:",
     "submitter:",
@@ -177,6 +184,7 @@ PROMOTIONAL_OFFER_PATTERNS = (
     "whitepaper",
     "white paper",
     "ebook",
+    "tracking preferences",
 )
 
 MARKETING_SENDER_HINTS = (
@@ -997,6 +1005,8 @@ def _message_promotional_signal(message: MessageRecord, combined_text: str) -> s
     if action_matches and (offer_matches or newsletter_matches or sender_hint):
         return "promotional"
     if sender_hint and newsletter_matches:
+        return "promotional"
+    if len(newsletter_matches) >= 2:
         return "promotional"
     if len(offer_matches) >= 2 and (sender_hint or newsletter_matches):
         return "promotional"
@@ -3199,8 +3209,6 @@ class StructuredDigestRenderer:
         confidence_reason = _display_confidence_reason(item.confidence_reason, self.digest_language)
         if item.confidence_score > 0 or confidence_label or confidence_reason:
             confidence_bits = []
-            if item.confidence_score > 0:
-                confidence_bits.append(str(item.confidence_score))
             if confidence_label:
                 confidence_bits.append(confidence_label)
             confidence_text = " / ".join(confidence_bits) if confidence_bits else confidence_label
@@ -3248,8 +3256,6 @@ class StructuredDigestRenderer:
         confidence_reason = _display_confidence_reason(item.confidence_reason, self.digest_language)
         if item.confidence_score > 0 or confidence_label or confidence_reason:
             confidence_bits = []
-            if item.confidence_score > 0:
-                confidence_bits.append(str(item.confidence_score))
             if confidence_label:
                 confidence_bits.append(confidence_label)
             confidence_text = " / ".join(confidence_bits) if confidence_bits else confidence_label

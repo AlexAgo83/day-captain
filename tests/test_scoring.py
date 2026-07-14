@@ -361,6 +361,46 @@ class DeterministicScoringEngineTest(unittest.TestCase):
             self.assertIn("promotional", prioritized[0].reason_codes)
             self.assertEqual(prioritized[0].recommended_action, "")
 
+    def test_filters_privacy_tracking_preference_notice_out_of_actions(self) -> None:
+        now = datetime(2026, 7, 14, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-privacy",
+                thread_id="thread-privacy",
+                subject="Update to your email tracking preferences",
+                from_address="privacy@example.test",
+                to_addresses=("user@example.test",),
+                user_id="user@example.test",
+                received_at=now,
+                body_preview="Please find the English version below. Transparency is a fundamental value. Manage preferences.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized, ())
+
+    def test_filters_meeting_assistant_weekly_recap_out_of_actions(self) -> None:
+        now = datetime(2026, 7, 14, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-recap",
+                thread_id="thread-recap",
+                subject="Weekly Kickoff | Mon, July 6th - Sun, July 12th | Meeting AI",
+                from_address="assistant@example.test",
+                to_addresses=("user@example.test",),
+                user_id="user@example.test",
+                received_at=now,
+                body_preview="Need a recap? Review meeting notes, personalized coaching, meeting trends, and more.",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+
+        self.assertEqual(prioritized, ())
+
     def test_promotes_messages_directly_addressed_to_target_user(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
