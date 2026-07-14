@@ -130,8 +130,8 @@
     }
   ],
   "git": {
-    "release_branch_policy": "main_only",
-    "allowed_branches": ["main"],
+    "release_branch_policy": "main_and_release",
+    "allowed_branches": ["main", "release"],
     "tag_policy": {
       "required": false,
       "pattern": "v{version}"
