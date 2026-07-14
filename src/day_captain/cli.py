@@ -3,11 +3,15 @@
 import argparse
 from datetime import date
 from datetime import datetime
+from functools import partial
+from http.server import SimpleHTTPRequestHandler
 import json
 import os
 from pathlib import Path
+from socketserver import TCPServer
 import sys
 from typing import Optional
+import webbrowser
 
 from day_captain.adapters.auth import DeviceCodeAuthenticator
 from day_captain.adapters.auth import EntraAuthError
@@ -113,6 +117,8 @@ def build_parser() -> argparse.ArgumentParser:
     metrics.add_argument("inputs", nargs="+", help="One or more exported DigestPayload JSON files.")
     replay = subparsers.add_parser("digest-replay", help="Run the built-in identity-free replay without delivery.")
     replay.add_argument("--output-dir", help="Optional directory for synthetic daily/weekly HTML and text artifacts.")
+    replay.add_argument("--view", action="store_true", help="Open a local debug viewer for the synthetic replay artifacts.")
+    replay.add_argument("--port", type=int, default=8765, help="Port used by --view.")
 
     health = subparsers.add_parser(
         "check-hosted-health",
@@ -422,6 +428,58 @@ def _export_digest_preview(args: argparse.Namespace, result: object) -> None:
         target.write_text(delivery_body, encoding="utf-8")
 
 
+def _write_replay_viewer(output_dir: Path) -> Path:
+    index = output_dir / "index.html"
+    index.write_text(
+        """<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Day Captain digest replay</title>
+<style>
+body{margin:0;font:14px system-ui,sans-serif;color:#172033;background:#eef2f7}
+header{padding:14px 18px;background:#172033;color:white}
+main{display:grid;grid-template-columns:1fr 380px;gap:16px;padding:16px}
+section{min-width:0}
+h1,h2{margin:0 0 10px}
+iframe{width:100%;height:76vh;border:1px solid #cbd5e1;background:white}
+pre{height:76vh;margin:0;padding:14px;overflow:auto;background:white;border:1px solid #cbd5e1;white-space:pre-wrap}
+nav a{color:white;margin-right:12px}
+@media(max-width:900px){main{grid-template-columns:1fr}iframe,pre{height:70vh}}
+</style>
+<header><h1>Day Captain digest replay</h1><nav><a href="daily.html">daily</a><a href="weekly.html">weekly</a></nav></header>
+<main>
+  <section><h2>HTML</h2><iframe src="daily.html"></iframe></section>
+  <section><h2>Text</h2><pre></pre></section>
+</main>
+<script>
+const pre=document.querySelector('pre');
+async function loadText(name){pre.textContent=await (await fetch(name)).text();}
+loadText('daily.txt');
+document.querySelectorAll('nav a').forEach(a=>a.onclick=e=>{
+  e.preventDefault();
+  document.querySelector('iframe').src=a.getAttribute('href');
+  loadText(a.getAttribute('href').replace('.html','.txt'));
+});
+</script>
+</html>
+""",
+        encoding="utf-8",
+    )
+    return index
+
+
+def _serve_viewer(output_dir: Path, port: int) -> None:
+    handler = partial(SimpleHTTPRequestHandler, directory=str(output_dir))
+    with TCPServer(("127.0.0.1", port), handler) as server:
+        url = "http://127.0.0.1:{0}/".format(port)
+        print("Serving digest replay viewer at {0} (Ctrl-C to stop)".format(url), file=sys.stderr)
+        webbrowser.open(url)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            print("", file=sys.stderr)
+
+
 def _resolved_delivery_mode(
     args: argparse.Namespace,
     *,
@@ -450,12 +508,15 @@ def main(argv: Optional[list] = None) -> int:
     if args.command == "digest-replay":
         payloads = run_synthetic_replay()
         metrics = digest_metrics(payloads)
-        if args.output_dir:
-            output_dir = Path(args.output_dir)
+        if args.output_dir or args.view:
+            output_dir = Path(args.output_dir or "tmp/digest-replay")
             output_dir.mkdir(parents=True, exist_ok=True)
             for name, payload in (("daily", payloads[0]), ("weekly", payloads[-1])):
                 (output_dir / f"{name}.html").write_text(str(payload.delivery_payload.get("html_body") or ""), encoding="utf-8")
                 (output_dir / f"{name}.txt").write_text(payload.delivery_body, encoding="utf-8")
+            _write_replay_viewer(output_dir)
+            if args.view:
+                _serve_viewer(output_dir, int(args.port))
         print(json.dumps({
             "cases": ["authentication_suppression", "noise", "owned_deadline", "transactional_failure", "continuity", "meeting_conflict"],
             "gate": candidate_gate(metrics),

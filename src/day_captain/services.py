@@ -2963,10 +2963,10 @@ class StructuredDigestRenderer:
         )
         coverage_label = str(localized.get("coverage_label") or "")
         parts = [
-            "<html><head><meta charset=\"utf-8\"></head><body style=\"margin:0;padding:0;background:#ffffff;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
-            "<div style=\"max-width:720px;margin:0 auto;padding:18px 18px 28px;background:#ffffff;\">",
-            "<section style=\"margin:0 0 22px;padding:0 0 14px;border-bottom:1px solid #dbe4ee;\">",
-            "<h1 style=\"margin:0 0 8px;font-size:28px;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
+            "<html><head><meta charset=\"utf-8\"></head><body style=\"margin:0;padding:0;background:#f4f7fb;font-family:Segoe UI,Helvetica,Arial,sans-serif;color:#1f2937;line-height:1.5;\">",
+            "<div style=\"max-width:720px;margin:0 auto;padding:20px 18px 30px;background:#ffffff;\">",
+            "<section style=\"margin:0 0 22px;padding:16px 16px 14px;border:1px solid #dbe4ee;border-top:4px solid #2563eb;border-radius:8px;background:#ffffff;\">",
+            "<h1 style=\"margin:0 0 8px;font-size:26px;line-height:1.2;color:#0f172a;\">{0}</h1>".format(self._html_escape(localized["digest_title"])),
             "<p style=\"margin:0 0 8px;font-size:14px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
             "<table role=\"presentation\" style=\"margin:0;border-collapse:collapse;\"><tr>"
             "<td style=\"padding:0 10px 0 0;vertical-align:top;\">"
@@ -2999,8 +2999,10 @@ class StructuredDigestRenderer:
             if not items:
                 continue
             parts.append(
-                "<section style=\"margin:0 0 16px;\"><h2 style=\"margin:0 0 8px;font-size:19px;color:#0f172a;\">{0}</h2>".format(
-                    self._html_escape(labels[name])
+                "<section style=\"margin:0 0 18px;\"><h2 style=\"margin:0 0 8px;padding:0 0 6px;border-bottom:1px solid #e2e8f0;font-size:18px;line-height:1.25;color:#0f172a;\">"
+                "<span style=\"display:inline-block;width:7px;height:18px;margin:0 8px -3px 0;border-radius:4px;background:{0};\"></span>{1}</h2>".format(
+                    self._section_accent_color(name),
+                    self._html_escape(labels[name]),
                 )
             )
             meeting_note = self._meeting_note(name, meeting_horizon)
@@ -3038,7 +3040,7 @@ class StructuredDigestRenderer:
         action_html = self._item_action_html(item)
         rendered_title = self._rendered_item_title(item)
         return (
-            "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-radius:12px;\">"
+            "<div style=\"margin:0 0 10px;padding:12px 14px;border:1px solid #cbd5e1;border-left:4px solid {5};border-radius:8px;background:{6};\">"
             "<p style=\"margin:0 0 4px;font-size:15px;font-weight:600;color:#0f172a;\">{0}{1}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{2}</p>"
             "{3}{4}"
@@ -3049,6 +3051,8 @@ class StructuredDigestRenderer:
             self._html_escape(item.summary),
             self._item_meta_html(item),
             action_html,
+            self._section_accent_color(item.section_name),
+            self._section_tint_color(item.section_name),
         )
 
     def _body_meta_lines(self, item: DigestEntry) -> Sequence[str]:
@@ -3183,7 +3187,7 @@ class StructuredDigestRenderer:
             return ""
         return (
             "<p style=\"margin:8px 0 0;\">"
-            "<a href=\"{0}\" style=\"font-size:12px;font-weight:600;color:#334155;text-decoration:none;\">{1}</a>"
+            "<a href=\"{0}\" style=\"display:inline-block;padding:5px 9px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;font-size:12px;font-weight:600;color:#075985;text-decoration:none;\">{1}</a>"
             "</p>"
         ).format(
             self._html_escape(action_url),
@@ -3269,6 +3273,24 @@ class StructuredDigestRenderer:
         status_label = str(_language_copy(self.digest_language)["badges"][status_reason])
         return "{0} : {1}".format(status_label, item.title)
 
+    def _section_accent_color(self, section_name: str) -> str:
+        return {
+            "critical_topics": "#dc2626",
+            "actions_to_take": "#2563eb",
+            "watch_items": "#64748b",
+            "daily_presence": "#0f766e",
+            "upcoming_meetings": "#16a34a",
+        }.get(section_name, "#64748b")
+
+    def _section_tint_color(self, section_name: str) -> str:
+        return {
+            "critical_topics": "#fffafa",
+            "actions_to_take": "#f8fbff",
+            "watch_items": "#ffffff",
+            "daily_presence": "#f8fffd",
+            "upcoming_meetings": "#fbfffb",
+        }.get(section_name, "#ffffff")
+
     def _weather_body_lines(self, weather: Optional[WeatherSnapshot]) -> Sequence[str]:
         if weather is None:
             return ()
@@ -3283,7 +3305,7 @@ class StructuredDigestRenderer:
             return ""
         localized = _language_copy(self.digest_language)["weather"]
         return (
-            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #dbe4ee;border-radius:12px;\">"
+            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #bae6fd;border-left:4px solid #0284c7;border-radius:8px;background:#f0f9ff;\">"
             "<p style=\"margin:0 0 4px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>"
             "<p style=\"margin:0;font-size:14px;color:#334155;\">{1}</p>"
             "</section>"
@@ -3335,7 +3357,7 @@ class StructuredDigestRenderer:
             return ""
         localized = _language_copy(self.digest_language)["external_news"]
         parts = [
-            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #dbe4ee;border-radius:12px;\">",
+            "<section style=\"margin:0 0 18px;padding:10px 12px;border:1px solid #dbe4ee;border-left:4px solid #7c3aed;border-radius:8px;background:#ffffff;\">",
             "<p style=\"margin:0 0 8px;font-size:12px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</p>".format(
                 self._html_escape(str(localized["label"]))
             ),

@@ -92,6 +92,9 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
         self.assertIn("<html>", payload.delivery_payload["html_body"])
         self.assertIn("In brief", payload.delivery_payload["html_body"])
+        self.assertIn("background:#f4f7fb", payload.delivery_payload["html_body"])
+        self.assertIn("border-left:4px solid #dc2626", payload.delivery_payload["html_body"])
+        self.assertIn("background:#fffafa", payload.delivery_payload["html_body"])
         self.assertNotIn("No meetings are lined up for today.", payload.delivery_body)
         self.assertIn("Quick actions", payload.delivery_body)
         self.assertIn("Use these buttons to ask Day Captain for this brief again, today's brief, or this week's brief.", payload.delivery_body)
@@ -350,6 +353,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Ouvrir dans Outlook", payload.delivery_body)
         self.assertIn("href=\"https://outlook.office.com/calendar/item/mtg-1\"", payload.delivery_payload["html_body"])
         self.assertIn("href=\"https://outlook.office.com/mail/msg-1\"", payload.delivery_payload["html_body"])
+        self.assertIn("display:inline-block;padding:5px 9px;border:1px solid #bfdbfe", payload.delivery_payload["html_body"])
 
     def test_prefers_desktop_open_controls_when_native_link_is_available(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")

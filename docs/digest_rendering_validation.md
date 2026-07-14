@@ -60,6 +60,12 @@ That run produced a stub preview with:
 - empty operational sections omitted
 - the weekend Monday meeting fallback visible in both text and HTML output
 
+For a mailbox-free visual debug viewer, run:
+
+```bash
+PYTHONPATH=src python3 -m day_captain digest-replay --view
+```
+
 ## What to check locally
 
 - header:

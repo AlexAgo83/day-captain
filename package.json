@@ -1,0 +1,6 @@
+{
+  "private": true,
+  "scripts": {
+    "digest:view": "PYTHONPATH=src python3 -m day_captain digest-replay --view"
+  }
+}
