@@ -1,6 +1,6 @@
 ## prod_003_day_captain_useful_decision_brief - Day Captain useful decision brief
 > Date: 2026-07-14
-> Status: Proposed
+> Status: Settled
 > Related request: `req_056_day_captain_digest_usefulness_intelligence`
 > Related backlog: `item_116_add_privacy_safe_digest_usefulness_debug_evidence`, `item_117_add_bounded_rich_context_for_high_potential_candidates`, `item_118_select_llm_and_final_digest_inputs_by_operational_value`, `item_119_make_the_top_summary_decision_oriented`
 > Related task: `task_053_orchestrate_digest_usefulness_intelligence_improvements`
