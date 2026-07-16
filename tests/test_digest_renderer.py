@@ -412,6 +412,30 @@ class StructuredDigestRendererTest(unittest.TestCase):
         )
         self.assertIn("Third note should not appear", payload.delivery_body)
 
+    def test_renders_overview_labels_on_separate_lines(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="run-overview-lines",
+            generated_at=now,
+            window_start=datetime(2026, 3, 8, 8, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(),
+            top_summary=(
+                "Priorité : répondre au prototype. "
+                "À surveiller : homologation. "
+                "Réunion la plus proche aujourd'hui à 11:45."
+            ),
+        )
+
+        self.assertIn(
+            "En bref\nPriorité : répondre au prototype.\nÀ surveiller : homologation.\nRéunion la plus proche",
+            payload.delivery_body,
+        )
+        self.assertIn("<p style=\"margin:0 0 6px;font-size:17px;color:#0f172a;\">À surveiller", payload.delivery_payload["html_body"])
+
     def test_renders_flagged_badge_in_text_and_html(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

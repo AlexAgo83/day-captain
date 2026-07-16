@@ -203,6 +203,8 @@ SELF_DIGEST_PATTERNS = (
     "day captain morning digest",
     "your day captain brief",
     "votre brief day captain",
+    "votre brief quotidien day captain",
+    "votre brief hebdomadaire day captain",
 )
 
 AUTOMATED_SENDERS = (
@@ -1328,6 +1330,13 @@ def _is_self_digest_message(subject: str, preview: str) -> bool:
     return _contains_any(normalized_preview, SELF_DIGEST_PATTERNS)
 
 
+def _is_read_ai_preread_message(subject: str, sender: str, preview: str) -> bool:
+    normalized = _normalize_text(subject, sender, preview)
+    return ("read.ai" in normalized or "read ai" in normalized) and (
+        "pre-read" in normalized or "upcoming meeting" in normalized or "meeting report" in normalized
+    )
+
+
 def _normalize_language(value: str) -> str:
     candidate = (value or "").strip().lower()
     if candidate in LANGUAGE_COPY:
@@ -1385,6 +1394,26 @@ def _normalize_top_summary(value: str) -> str:
         return ""
     cleaned = _polish_top_summary_phrase(cleaned)
     return cleaned
+
+
+def _top_summary_lines(value: str) -> Sequence[str]:
+    cleaned = _normalize_top_summary(value)
+    if not cleaned:
+        return ()
+    markers = (
+        "À surveiller :",
+        "A surveiller :",
+        "Réunion la plus proche",
+        "Priorité :",
+        "Top priority:",
+        "Worth keeping in view:",
+        "Nearest meeting",
+        "Upcoming meeting:",
+    )
+    for marker in markers:
+        cleaned = re.sub(r"\s+({0})".format(re.escape(marker)), r"\n\1", cleaned)
+    lines = tuple(line.strip() for line in cleaned.splitlines() if line.strip())
+    return lines or (cleaned,)
 
 
 def _strip_redundant_title_prefix(title: str, summary: str) -> str:
@@ -2484,6 +2513,7 @@ class DeterministicScoringEngine:
         score = 0.0
         guardrail = False
         is_candidate_profile = _is_candidate_profile_message(subject, cleaned_preview)
+        is_read_ai_preread = _is_read_ai_preread_message(subject, sender, cleaned_preview)
 
         if not (message.subject or "").strip() and not cleaned_preview:
             return None
@@ -2517,7 +2547,7 @@ class DeterministicScoringEngine:
             reason_codes.append("attachment_present")
         target_in_to = _address_list_contains_identity(message.to_addresses, message.user_id)
         target_in_cc = _address_list_contains_identity(message.cc_addresses, message.user_id)
-        direct_follow_up_signal = _contains_any(combined_text, DIRECT_RECIPIENT_ACTION_PATTERNS)
+        direct_follow_up_signal = (not is_read_ai_preread) and _contains_any(combined_text, DIRECT_RECIPIENT_ACTION_PATTERNS)
         if target_in_to:
             score += 1.35
             reason_codes.append("direct_target_recipient")
@@ -2541,7 +2571,10 @@ class DeterministicScoringEngine:
             score += 0.4
             reason_codes.append("same_day")
 
-        if _contains_any(combined_text, ACTION_PATTERNS):
+        if is_read_ai_preread:
+            score += 0.6
+            reason_codes.append("meeting_preread_context")
+        elif _contains_any(combined_text, ACTION_PATTERNS):
             score += 1.5
             reason_codes.append("action_keyword")
         if _contains_any(combined_text, CRITICAL_PATTERNS):
@@ -2610,6 +2643,7 @@ class DeterministicScoringEngine:
                 "preference_signal" in reason_codes
                 or "attachment_present" in reason_codes
                 or "executive_sender" in reason_codes
+                or "meeting_preread_context" in reason_codes
                 or ("direct_recipient" in reason_codes and internal_sender)
                 or is_candidate_profile
             )
@@ -3053,7 +3087,7 @@ class StructuredDigestRenderer:
         ]
         if top_summary.strip():
             lines.append(localized["overview"]["label"])
-            lines.append(top_summary.strip())
+            lines.extend(_top_summary_lines(top_summary))
             lines.append("")
         labels = localized["sections"]
         for name in SECTION_NAMES:
@@ -3129,11 +3163,13 @@ class StructuredDigestRenderer:
                     self._html_escape(localized["overview"]["label"])
                 )
             )
-            parts.append(
-                "<p style=\"margin:0 0 2px;font-size:17px;color:#0f172a;\">{0}</p></section>".format(
-                    self._html_escape(top_summary.strip())
+            for summary_line in _top_summary_lines(top_summary):
+                parts.append(
+                    "<p style=\"margin:0 0 6px;font-size:17px;color:#0f172a;\">{0}</p>".format(
+                        self._html_escape(summary_line)
+                    )
                 )
-            )
+            parts.append("</section>")
         labels = localized["sections"]
         for name in SECTION_NAMES:
             items = sections[name]

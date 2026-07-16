@@ -639,6 +639,55 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         self.assertEqual(prioritized, ())
 
+    def test_filters_french_day_captain_digest_replies(self) -> None:
+        now = datetime(2026, 7, 16, 9, 45, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr")
+
+        prioritized = engine.prioritize(
+            (
+                MessageRecord(
+                    graph_message_id="msg-digest-fr",
+                    thread_id="thread-digest-fr",
+                    subject="Votre brief quotidien Day Captain du jeu. 16 juil.",
+                    from_address="romaric@example.com",
+                    to_addresses=("target@example.com",),
+                    received_at=now,
+                    body_preview="Merci. Mes points :",
+                    user_id="target@example.com",
+                ),
+            ),
+            (),
+            (),
+            reference_time=now,
+        )
+
+        self.assertEqual(prioritized, ())
+
+    def test_read_ai_preread_stays_watch_context_not_user_action(self) -> None:
+        now = datetime(2026, 7, 16, 9, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr")
+
+        prioritized = engine.prioritize(
+            (
+                MessageRecord(
+                    graph_message_id="msg-read-ai",
+                    thread_id="thread-read-ai",
+                    subject="⏪ Pre-Read for your upcoming meeting: Sourcing Topic Update",
+                    from_address="executiveassistant@e.read.ai",
+                    to_addresses=("target@example.com",),
+                    received_at=now,
+                    body_preview="Please review this upcoming meeting report.",
+                    user_id="target@example.com",
+                ),
+            ),
+            (),
+            (),
+            reference_time=now,
+        )
+
+        self.assertEqual(prioritized[0].section_name, "watch_items")
+        self.assertIn("meeting_preread_context", prioritized[0].reason_codes)
+
     def test_localizes_french_meeting_summary(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
