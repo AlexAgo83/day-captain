@@ -483,7 +483,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertTrue(prioritized[0].summary.startswith("Action : Need your input before noon"))
         self.assertEqual(prioritized[0].context_metadata["source_language_hint"], "en")
 
-    def test_demotes_cc_only_action_when_next_step_appears_owned_by_someone_else(self) -> None:
+    def test_routes_cc_only_action_to_team_actions_when_owned_by_someone_else(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
         engine = DeterministicScoringEngine(digest_language="en", display_timezone="Europe/Paris")
         messages = (
@@ -502,7 +502,8 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         prioritized = engine.prioritize(messages, (), (), reference_time=now)
 
-        self.assertEqual(prioritized[0].section_name, "watch_items")
+        self.assertEqual(prioritized[0].section_name, "team_actions")
+        self.assertEqual(prioritized[0].handling_bucket, "team_actions")
         self.assertEqual(prioritized[0].card.action_owner, "other")
         self.assertFalse(prioritized[0].card.action_expected_from_user)
         self.assertIn("belong to Jordan", prioritized[0].recommended_action)

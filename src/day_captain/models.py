@@ -166,6 +166,7 @@ class DigestPayload:
     delivery_payload: Mapping[str, Any] = field(default_factory=dict)
     critical_topics: Sequence[DigestEntry] = field(default_factory=tuple)
     actions_to_take: Sequence[DigestEntry] = field(default_factory=tuple)
+    team_actions: Sequence[DigestEntry] = field(default_factory=tuple)
     watch_items: Sequence[DigestEntry] = field(default_factory=tuple)
     daily_presence: Sequence[DigestEntry] = field(default_factory=tuple)
     upcoming_meetings: Sequence[DigestEntry] = field(default_factory=tuple)
@@ -344,6 +345,9 @@ def digest_payload_from_dict(payload: Mapping[str, Any]) -> DigestPayload:
         ),
         actions_to_take=tuple(
             digest_entry_from_dict(item) for item in payload.get("actions_to_take") or ()
+        ),
+        team_actions=tuple(
+            digest_entry_from_dict(item) for item in payload.get("team_actions") or ()
         ),
         watch_items=tuple(
             digest_entry_from_dict(item) for item in payload.get("watch_items") or ()

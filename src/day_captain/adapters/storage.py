@@ -36,6 +36,7 @@ from day_captain.models import to_jsonable
 SECTION_NAMES = (
     "critical_topics",
     "actions_to_take",
+    "team_actions",
     "watch_items",
     "daily_presence",
     "upcoming_meetings",

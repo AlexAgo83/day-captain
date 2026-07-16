@@ -32,6 +32,7 @@ from day_captain.ports import Storage
 SECTION_NAMES = (
     "critical_topics",
     "actions_to_take",
+    "team_actions",
     "watch_items",
     "daily_presence",
     "upcoming_meetings",
@@ -392,6 +393,7 @@ FRENCH_LANGUAGE_HINTS = (
 SECTION_PRIORITY = {
     "critical_topics": 3,
     "actions_to_take": 2,
+    "team_actions": 2,
     "watch_items": 1,
     "daily_presence": 1,
 }
@@ -399,6 +401,7 @@ SECTION_PRIORITY = {
 SECTION_LIMITS = {
     "critical_topics": 3,
     "actions_to_take": 3,
+    "team_actions": 3,
     "watch_items": 2,
     "daily_presence": 1,
 }
@@ -482,6 +485,7 @@ LANGUAGE_COPY = {
         "sections": {
             "critical_topics": "Critical topics",
             "actions_to_take": "Actions to take",
+            "team_actions": "Team actions",
             "watch_items": "Watch items",
             "daily_presence": "Daily presence",
             "upcoming_meetings": "Upcoming meetings",
@@ -489,6 +493,7 @@ LANGUAGE_COPY = {
         "empty": {
             "critical_topics": "Nothing urgent right now.",
             "actions_to_take": "No follow-up is waiting on you.",
+            "team_actions": "No team follow-up stands out.",
             "watch_items": "Nothing else needs a flag right now.",
             "daily_presence": "No all-day presence signal is set for {day}.",
             "upcoming_meetings": "No meetings are lined up for {day}.",
@@ -543,6 +548,8 @@ LANGUAGE_COPY = {
             "critical_many": "Top priorities: {first}; {second}.",
             "action_one": "Main follow-up: {first}.",
             "action_many": "Main follow-ups: {first}; {second}.",
+            "team_action_one": "Team follow-up: {first}.",
+            "team_action_many": "Team follow-ups: {first}; {second}.",
             "watch_one": "Worth keeping in view: {first}.",
             "watch_many": "Worth keeping in view: {first}; {second}.",
             "presence": "Today's location signal: {text}.",
@@ -629,6 +636,7 @@ LANGUAGE_COPY = {
         "sections": {
             "critical_topics": "Points critiques",
             "actions_to_take": "Actions à mener",
+            "team_actions": "Actions équipe",
             "watch_items": "À surveiller",
             "daily_presence": "Présence du jour",
             "upcoming_meetings": "Réunions à venir",
@@ -636,6 +644,7 @@ LANGUAGE_COPY = {
         "empty": {
             "critical_topics": "Rien d'urgent pour l'instant.",
             "actions_to_take": "Aucun suivi immédiat.",
+            "team_actions": "Aucune action équipe détectée.",
             "watch_items": "Rien d'autre à signaler.",
             "daily_presence": "Aucun événement journalier de présence pour {day}.",
             "upcoming_meetings": "Aucune réunion n'est prévue pour {day}.",
@@ -690,6 +699,8 @@ LANGUAGE_COPY = {
             "critical_many": "Priorités du moment : {first} ; {second}.",
             "action_one": "Suivi principal : {first}.",
             "action_many": "Suivis principaux : {first} ; {second}.",
+            "team_action_one": "Action équipe : {first}.",
+            "team_action_many": "Actions équipe : {first} ; {second}.",
             "watch_one": "À garder en tête : {first}.",
             "watch_many": "À garder en tête : {first} ; {second}.",
             "presence": "Signal de présence du jour : {text}.",
@@ -2417,8 +2428,9 @@ class DeterministicScoringEngine:
         elif thread_input.action_owner == "other" and adjusted_entry.section_name == "actions_to_take" and "critical_keyword" not in adjusted_entry.reason_codes:
             adjusted_entry = _with_digest_entry_updates(
                 adjusted_entry,
-                section_name="watch_items",
-                score=round(max(0.1, adjusted_entry.score - 0.5), 2),
+                section_name="team_actions",
+                handling_bucket="team_actions",
+                score=round(max(0.1, adjusted_entry.score - 0.2), 2),
                 reason_codes=adjusted_reason_codes,
             )
         elif adjusted_reason_codes != tuple(adjusted_entry.reason_codes):
@@ -3012,6 +3024,7 @@ class StructuredDigestRenderer:
             delivery_payload=delivery_payload,
             critical_topics=tuple(sections["critical_topics"]),
             actions_to_take=tuple(sections["actions_to_take"]),
+            team_actions=tuple(sections["team_actions"]),
             watch_items=tuple(sections["watch_items"]),
             daily_presence=tuple(sections["daily_presence"]),
             upcoming_meetings=tuple(sections["upcoming_meetings"]),
@@ -3450,6 +3463,7 @@ class StructuredDigestRenderer:
         return {
             "critical_topics": "#dc2626",
             "actions_to_take": "#2563eb",
+            "team_actions": "#7c3aed",
             "watch_items": "#64748b",
             "daily_presence": "#0f766e",
             "upcoming_meetings": "#16a34a",
@@ -3459,6 +3473,7 @@ class StructuredDigestRenderer:
         return {
             "critical_topics": "#fffafa",
             "actions_to_take": "#f8fbff",
+            "team_actions": "#fbf8ff",
             "watch_items": "#ffffff",
             "daily_presence": "#f8fffd",
             "upcoming_meetings": "#fbfffb",
@@ -3773,12 +3788,13 @@ class DeterministicDigestOverviewEngine:
         sections = {
             "critical_topics": tuple(item for item in payload.critical_topics if not _is_promotional_item(item)),
             "actions_to_take": tuple(item for item in payload.actions_to_take if not _is_promotional_item(item)),
+            "team_actions": tuple(item for item in payload.team_actions if not _is_promotional_item(item)),
             "watch_items": tuple(item for item in payload.watch_items if not _is_promotional_item(item)),
             "daily_presence": tuple(payload.daily_presence),
             "upcoming_meetings": tuple(payload.upcoming_meetings),
         }
         sentences = []
-        for section_name in ("critical_topics", "actions_to_take", "watch_items"):
+        for section_name in ("critical_topics", "actions_to_take", "team_actions", "watch_items"):
             items = sections[section_name]
             if not items:
                 continue
@@ -3786,7 +3802,7 @@ class DeterministicDigestOverviewEngine:
             if len(sentences) >= 1:
                 break
         continuity_sentence = self._continuity_sentence(
-            tuple(sections["critical_topics"]) + tuple(sections["actions_to_take"]) + tuple(sections["watch_items"]),
+            tuple(sections["critical_topics"]) + tuple(sections["actions_to_take"]) + tuple(sections["team_actions"]) + tuple(sections["watch_items"]),
             language,
         )
         if continuity_sentence and len(sentences) < 2:
@@ -3796,7 +3812,7 @@ class DeterministicDigestOverviewEngine:
             presence_text = _normalize_item_summary(presence_items[0].title, presence_items[0].summary, max_chars=90)
             sentences.append(localized["presence"].format(text=_clean_overview_fragment(presence_text)))
         meetings = sections["upcoming_meetings"]
-        if meetings and not any(sections[name] for name in ("critical_topics", "actions_to_take", "watch_items", "daily_presence")):
+        if meetings and not any(sections[name] for name in ("critical_topics", "actions_to_take", "team_actions", "watch_items", "daily_presence")):
             key = "agenda_only_one" if len(meetings) == 1 else "agenda_only_many"
             sentences.append(localized[key].format(count=len(meetings)))
             return DigestOverview(
@@ -3843,6 +3859,8 @@ class DeterministicDigestOverviewEngine:
             key = "critical_many" if second else "critical_one"
         elif section_name == "actions_to_take":
             key = "action_many" if second else "action_one"
+        elif section_name == "team_actions":
+            key = "team_action_many" if second else "team_action_one"
         else:
             key = "watch_many" if second else "watch_one"
         return localized[key].format(first=first, second=second)
@@ -3861,7 +3879,7 @@ class LlmDigestOverviewEngine:
         labels = _language_copy(language)["sections"]
         sections = self._overview_sections(payload)
         if sections["upcoming_meetings"] and not any(
-            sections[name] for name in ("critical_topics", "actions_to_take", "watch_items", "daily_presence")
+            sections[name] for name in ("critical_topics", "actions_to_take", "team_actions", "watch_items", "daily_presence")
         ):
             return self.fallback_engine.summarize(payload)
         if not any(sections[name] for name in SECTION_NAMES):
@@ -3883,6 +3901,7 @@ class LlmDigestOverviewEngine:
         return {
             "critical_topics": self._compact_overview_items(tuple(item for item in payload.critical_topics if not _is_promotional_item(item))[:1]),
             "actions_to_take": self._compact_overview_items(tuple(item for item in payload.actions_to_take if not _is_promotional_item(item))[:1]),
+            "team_actions": self._compact_overview_items(tuple(item for item in payload.team_actions if not _is_promotional_item(item))[:1]),
             "watch_items": self._compact_overview_items(tuple(item for item in payload.watch_items if not _is_promotional_item(item))[:1]),
             "daily_presence": self._compact_overview_items(tuple(payload.daily_presence[:1])),
             "upcoming_meetings": self._compact_overview_items(tuple(payload.upcoming_meetings[:1])),

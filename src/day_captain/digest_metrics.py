@@ -38,6 +38,7 @@ def _entries(payload: DigestPayload) -> Sequence[DigestEntry]:
     return (
         tuple(payload.critical_topics)
         + tuple(payload.actions_to_take)
+        + tuple(payload.team_actions)
         + tuple(payload.watch_items)
         + tuple(payload.daily_presence)
         + tuple(payload.upcoming_meetings)

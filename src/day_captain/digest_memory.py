@@ -35,6 +35,7 @@ def annotate_with_recent_memory(
         for section in (
             run.summary.critical_topics,
             run.summary.actions_to_take,
+            run.summary.team_actions,
             run.summary.watch_items,
             run.summary.daily_presence,
             run.summary.upcoming_meetings,
@@ -55,6 +56,7 @@ def annotate_with_recent_memory(
             for section in (
                 latest_prior.summary.critical_topics,
                 latest_prior.summary.actions_to_take,
+                latest_prior.summary.team_actions,
                 latest_prior.summary.watch_items,
                 latest_prior.summary.daily_presence,
                 latest_prior.summary.upcoming_meetings,
@@ -69,7 +71,7 @@ def annotate_with_recent_memory(
                 if latest_previous.summary != item.summary or latest_previous.recommended_action != item.recommended_action:
                     continuity_state = "changed"
                     continuity_reason = "The item was surfaced recently and its interpretation changed."
-                elif item.section_name in {"critical_topics", "actions_to_take"}:
+                elif item.section_name in {"critical_topics", "actions_to_take", "team_actions"}:
                     continuity_state = "still_open"
                     continuity_reason = "The item was surfaced recently and still looks active."
         card = item.card or DigestCard()
@@ -104,6 +106,7 @@ def annotate_with_recent_memory(
         for section in (
             latest_prior.summary.critical_topics,
             latest_prior.summary.actions_to_take,
+            latest_prior.summary.team_actions,
             latest_prior.summary.watch_items,
             latest_prior.summary.daily_presence,
             latest_prior.summary.upcoming_meetings,

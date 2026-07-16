@@ -114,6 +114,7 @@ class DayCaptainSettings:
     llm_enabled_sections: Tuple[str, ...] = (
         "critical_topics",
         "actions_to_take",
+        "team_actions",
         "watch_items",
         "daily_presence",
         "upcoming_meetings",
@@ -173,7 +174,7 @@ class DayCaptainSettings:
             llm_enabled_sections=_parse_csv(
                 os.getenv(
                     "DAY_CAPTAIN_LLM_ENABLED_SECTIONS",
-                    "critical_topics,actions_to_take,watch_items,daily_presence,upcoming_meetings",
+                    "critical_topics,actions_to_take,team_actions,watch_items,daily_presence,upcoming_meetings",
                 )
             ),
             llm_style_prompt=os.getenv(

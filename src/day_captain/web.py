@@ -202,6 +202,7 @@ class DayCaptainWebApp:
             "section_counts": {
                 "critical_topics": len(payload.critical_topics),
                 "actions_to_take": len(payload.actions_to_take),
+                "team_actions": len(payload.team_actions),
                 "watch_items": len(payload.watch_items),
                 "daily_presence": len(payload.daily_presence),
                 "upcoming_meetings": len(payload.upcoming_meetings),
@@ -223,6 +224,7 @@ class DayCaptainWebApp:
             "section_counts": {
                 "critical_topics": len(payload.critical_topics),
                 "actions_to_take": len(payload.actions_to_take),
+                "team_actions": len(payload.team_actions),
                 "watch_items": len(payload.watch_items),
                 "daily_presence": len(payload.daily_presence),
                 "upcoming_meetings": len(payload.upcoming_meetings),

@@ -25,7 +25,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
                 source_id=f"{section}-{index}",
                 score=float(10 - index),
             )
-            for section in ("critical_topics", "actions_to_take", "watch_items", "upcoming_meetings")
+            for section in ("critical_topics", "actions_to_take", "team_actions", "watch_items", "upcoming_meetings")
             for index in range(6)
         )
 
@@ -40,10 +40,38 @@ class StructuredDigestRendererTest(unittest.TestCase):
 
         self.assertEqual(len(payload.critical_topics), 3)
         self.assertEqual(len(payload.actions_to_take), 3)
+        self.assertEqual(len(payload.team_actions), 3)
         self.assertEqual(len(payload.watch_items), 2)
         self.assertEqual(len(payload.upcoming_meetings), 6)
         self.assertIn('<meta charset="utf-8">', payload.delivery_payload["html_body"])
         self.assertIn("background:#ffffff", payload.delivery_payload["html_body"])
+
+    def test_renders_team_actions_as_dedicated_french_section(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 7, 16, 7, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="team-actions-run",
+            generated_at=now,
+            window_start=datetime(2026, 7, 15, 7, 0, tzinfo=timezone.utc),
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    title="Ticket portail client",
+                    summary="L'action semble surtout attendue de Mathieu : créer le ticket portail client.",
+                    section_name="team_actions",
+                    source_kind="message",
+                    source_id="msg-team",
+                    score=2.8,
+                    recommended_action="Suivre ce fil ; l'action semble surtout attendue de Mathieu.",
+                ),
+            ),
+        )
+
+        self.assertEqual(len(payload.team_actions), 1)
+        self.assertIn("Actions équipe", payload.delivery_body)
+        self.assertIn("Actions équipe", payload.delivery_payload["html_body"])
 
     def test_builds_delivery_body_and_graph_send_payload(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="en")
