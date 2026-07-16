@@ -10,6 +10,7 @@ from time import perf_counter
 import uuid
 from typing import Dict
 from typing import Iterable
+from typing import Mapping
 from typing import Optional
 from typing import Sequence
 from zoneinfo import ZoneInfo
@@ -127,6 +128,18 @@ def _start_of_local_day(target_day: date, zone) -> datetime:
 
 
 SPARSE_MEETING_DAY_THRESHOLD = 1
+ATTACHMENT_MAX_BYTES = 25 * 1024 * 1024
+ATTACHMENT_MAIL_BUDGET_BYTES = 40 * 1024 * 1024
+ATTACHMENT_MAX_ANALYZED_PER_MAIL = 3
+ANALYZABLE_ATTACHMENT_TYPES = {
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "application/vnd.ms-excel",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    "text/csv",
+    "text/plain",
+}
 
 
 def _merge_unique_meetings(*groups: Sequence[MeetingRecord]) -> Sequence[MeetingRecord]:
@@ -138,6 +151,54 @@ def _merge_unique_meetings(*groups: Sequence[MeetingRecord]) -> Sequence[Meeting
             if existing is None or item.start_at < existing.start_at:
                 merged[key] = item
     return tuple(sorted(merged.values(), key=lambda item: item.start_at))
+
+
+def _merge_unique_messages(*groups: Sequence[MessageRecord]) -> Sequence[MessageRecord]:
+    merged: Dict[str, MessageRecord] = {}
+    for messages in groups:
+        for message in messages:
+            key = str(message.graph_message_id or message.internet_message_id or "").strip()
+            if not key:
+                key = "{0}:{1}".format(message.thread_id, message.received_at.isoformat())
+            if key not in merged:
+                merged[key] = message
+    return tuple(merged.values())
+
+
+def _attachment_extension(name: str) -> str:
+    candidate = str(name or "").strip().lower()
+    if "." not in candidate:
+        return ""
+    return candidate.rsplit(".", 1)[1]
+
+
+def _attachment_is_supported(item: Mapping[str, object]) -> bool:
+    content_type = str(item.get("content_type") or "").strip().lower()
+    extension = _attachment_extension(str(item.get("name") or ""))
+    return content_type in ANALYZABLE_ATTACHMENT_TYPES or extension in {"pdf", "doc", "docx", "xls", "xlsx", "csv", "txt"}
+
+
+def _attachment_analysis_summary(items: Sequence[Mapping[str, object]]) -> Mapping[str, object]:
+    selected = []
+    total = 0
+    for item in sorted(items, key=lambda candidate: int(candidate.get("size") or 0)):
+        size = int(item.get("size") or 0)
+        if bool(item.get("is_inline")) or size <= 0 or size > ATTACHMENT_MAX_BYTES:
+            continue
+        if not _attachment_is_supported(item):
+            continue
+        if total + size > ATTACHMENT_MAIL_BUDGET_BYTES:
+            continue
+        selected.append(dict(item))
+        total += size
+        if len(selected) >= ATTACHMENT_MAX_ANALYZED_PER_MAIL:
+            break
+    return {
+        "attachments": [dict(item) for item in items],
+        "analysis_candidates": selected,
+        "analysis_candidate_count": len(selected),
+        "analysis_total_bytes": total,
+    }
 
 
 def _start_of_local_week(value: datetime, zone) -> datetime:
@@ -242,6 +303,32 @@ class StaticMailCollector:
             for message in self._messages
             if window_start <= _coerce_datetime(message.received_at) <= window_end
         )
+
+    def collect_thread_messages(
+        self,
+        auth_context: AuthContext,
+        thread_id: str,
+        before: datetime,
+        limit: int = 8,
+        lookback_days: int = 30,
+    ) -> Sequence[MessageRecord]:
+        window_start = before - timedelta(days=max(1, int(lookback_days)))
+        matches = [
+            message
+            for message in self._messages
+            if message.thread_id == thread_id and window_start <= _coerce_datetime(message.received_at) <= before
+        ]
+        return tuple(sorted(matches, key=lambda item: _coerce_datetime(item.received_at), reverse=True)[: max(1, int(limit))])
+
+    def collect_attachment_metadata(
+        self,
+        auth_context: AuthContext,
+        message_id: str,
+    ) -> Sequence[Mapping[str, object]]:
+        for message in self._messages:
+            if message.graph_message_id == message_id:
+                return tuple(message.raw_payload.get("dayCaptainAttachments") or ())
+        return ()
 
 
 class StaticCalendarCollector:
@@ -752,6 +839,64 @@ class DayCaptainApplication:
             "source_date": local_date.isoformat(),
         }
 
+    def _collect_candidate_thread_context(
+        self,
+        auth_context: AuthContext,
+        messages: Sequence[MessageRecord],
+        prioritized_items: Sequence[DigestEntry],
+        current_time: datetime,
+        *,
+        max_threads: int = 3,
+    ) -> Sequence[MessageRecord]:
+        thread_ids = []
+        messages_by_id = {message.graph_message_id: message for message in messages}
+        for item in prioritized_items:
+            if item.source_kind != "message":
+                continue
+            message = messages_by_id.get(item.source_id)
+            thread_id = str(message.thread_id if message is not None else "").strip()
+            if thread_id and thread_id not in thread_ids:
+                thread_ids.append(thread_id)
+            if len(thread_ids) >= max_threads:
+                break
+        collected = [tuple(messages)]
+        for thread_id in thread_ids:
+            try:
+                thread_messages = self.mail_collector.collect_thread_messages(
+                    auth_context,
+                    thread_id,
+                    current_time,
+                    limit=8,
+                    lookback_days=30,
+                )
+            except Exception as exc:
+                logger.warning("Skipping mail thread enrichment for %s: %s", thread_id, exc)
+                continue
+            collected.append(tuple(message for message in thread_messages if not is_sensitive_authentication_message(message)))
+        return _merge_unique_messages(*collected)
+
+    def _with_attachment_metadata(
+        self,
+        auth_context: AuthContext,
+        messages: Sequence[MessageRecord],
+    ) -> Sequence[MessageRecord]:
+        enriched = []
+        for message in messages:
+            if not message.has_attachments:
+                enriched.append(message)
+                continue
+            try:
+                attachments = self.mail_collector.collect_attachment_metadata(auth_context, message.graph_message_id)
+            except Exception as exc:
+                logger.warning("Skipping attachment metadata for %s: %s", message.graph_message_id, exc)
+                enriched.append(message)
+                continue
+            raw_payload = dict(message.raw_payload)
+            raw_payload["dayCaptainAttachments"] = [dict(item) for item in attachments]
+            raw_payload["dayCaptainAttachmentAnalysis"] = dict(_attachment_analysis_summary(attachments))
+            enriched.append(replace(message, raw_payload=raw_payload))
+        return tuple(enriched)
+
     def _resolve_email_command_target_user(self, sender_address: str) -> str:
         normalized_sender = str(sender_address or "").strip().lower()
         if not normalized_sender:
@@ -790,10 +935,23 @@ class DayCaptainApplication:
         messages = tuple(message for message in messages if not is_sensitive_authentication_message(message))
         sensitive_suppression_count = collected_message_count - len(messages)
         messages = _scoped_messages(messages, scoped_tenant_id, scoped_user_id)
+        preferences = self.storage.load_preferences(tenant_id=scoped_tenant_id, user_id=scoped_user_id)
+        prioritized_items = self.scoring_engine.prioritize(
+            messages,
+            meetings,
+            preferences,
+            reference_time=current_time,
+            window_start=window_start,
+        )
+        messages = _scoped_messages(
+            self._collect_candidate_thread_context(auth_context, messages, prioritized_items, current_time),
+            scoped_tenant_id,
+            scoped_user_id,
+        )
+        messages = self._with_attachment_metadata(auth_context, messages)
         meetings = _scoped_meetings(meetings, scoped_tenant_id, scoped_user_id)
         self.storage.upsert_messages(messages, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
         self.storage.upsert_meetings(meetings, tenant_id=scoped_tenant_id, user_id=scoped_user_id)
-        preferences = self.storage.load_preferences(tenant_id=scoped_tenant_id, user_id=scoped_user_id)
         prioritized_items = self.scoring_engine.prioritize(
             messages,
             meetings,

@@ -190,6 +190,97 @@ class DayCaptainApplicationTest(unittest.TestCase):
         self.assertEqual(len(payload.upcoming_meetings), 1)
         self.assertIsNotNone(storage.get_latest_completed_run())
 
+    def test_morning_digest_enriches_candidate_mail_thread_context(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        storage = InMemoryStorage()
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=storage,
+            mail_collector=StaticMailCollector(
+                [
+                    MessageRecord(
+                        graph_message_id="msg-old",
+                        thread_id="thread-budget",
+                        subject="Budget approval",
+                        from_address="lead@example.com",
+                        to_addresses=("graph-user",),
+                        received_at=datetime(2026, 3, 6, 9, 0, tzinfo=timezone.utc),
+                        body_preview="Please review the budget deck before noon.",
+                    ),
+                    MessageRecord(
+                        graph_message_id="msg-new",
+                        thread_id="thread-budget",
+                        subject="Re: Budget approval",
+                        from_address="lead@example.com",
+                        to_addresses=("graph-user",),
+                        received_at=datetime(2026, 3, 9, 7, 30, tzinfo=timezone.utc),
+                        body_preview="Thanks.",
+                    ),
+                ]
+            ),
+            calendar_collector=StaticCalendarCollector(),
+        )
+
+        payload = app.run_morning_digest(now=now)
+
+        self.assertEqual(len(payload.actions_to_take), 1)
+        self.assertEqual(payload.actions_to_take[0].source_id, "msg-new")
+        self.assertIn("before noon", payload.actions_to_take[0].summary)
+
+    def test_morning_digest_collects_small_supported_attachment_metadata(self) -> None:
+        now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=InMemoryStorage(),
+            mail_collector=StaticMailCollector(
+                [
+                    MessageRecord(
+                        graph_message_id="msg-attach",
+                        thread_id="thread-attach",
+                        subject="Budget files",
+                        from_address="lead@example.com",
+                        to_addresses=("graph-user",),
+                        received_at=datetime(2026, 3, 9, 7, 30, tzinfo=timezone.utc),
+                        body_preview="Please review the attached budget files before noon.",
+                        has_attachments=True,
+                        raw_payload={
+                            "dayCaptainAttachments": (
+                                {
+                                    "id": "pdf",
+                                    "name": "budget.pdf",
+                                    "content_type": "application/pdf",
+                                    "size": 20 * 1024 * 1024,
+                                    "is_inline": False,
+                                },
+                                {
+                                    "id": "big",
+                                    "name": "huge.pdf",
+                                    "content_type": "application/pdf",
+                                    "size": 30 * 1024 * 1024,
+                                    "is_inline": False,
+                                },
+                                {
+                                    "id": "logo",
+                                    "name": "logo.png",
+                                    "content_type": "image/png",
+                                    "size": 10 * 1024,
+                                    "is_inline": True,
+                                },
+                            )
+                        },
+                    ),
+                ]
+            ),
+            calendar_collector=StaticCalendarCollector(),
+        )
+
+        payload = app.run_morning_digest(now=now)
+        analysis = payload.actions_to_take[0].context_metadata["attachment_analysis"]
+
+        self.assertEqual(analysis["analysis_candidate_count"], 1)
+        self.assertEqual(analysis["analysis_candidates"][0]["name"], "budget.pdf")
+        self.assertEqual(analysis["analysis_total_bytes"], 20 * 1024 * 1024)
+
     def test_morning_digest_applies_digest_wording_engine(self) -> None:
         now = datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc)
         storage = InMemoryStorage()

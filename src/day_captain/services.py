@@ -2430,6 +2430,9 @@ class DeterministicScoringEngine:
                 "due_hint": _explicit_due_hint(message.subject, message.body_preview),
             }
         )
+        attachment_analysis = message.raw_payload.get("dayCaptainAttachmentAnalysis") if isinstance(message.raw_payload, Mapping) else None
+        if isinstance(attachment_analysis, Mapping):
+            context_metadata["attachment_analysis"] = dict(attachment_analysis)
         if grouping_kind == "alias" and duplicate_count > 1:
             grouped_aliases = []
             for grouped_message in thread_messages:
