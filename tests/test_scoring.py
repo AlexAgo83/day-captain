@@ -506,7 +506,7 @@ class DeterministicScoringEngineTest(unittest.TestCase):
         self.assertEqual(prioritized[0].handling_bucket, "team_actions")
         self.assertEqual(prioritized[0].card.action_owner, "other")
         self.assertFalse(prioritized[0].card.action_expected_from_user)
-        self.assertIn("belong to Jordan", prioritized[0].recommended_action)
+        self.assertIn("review the contract before noon", prioritized[0].recommended_action)
 
     def test_generates_specific_owned_action_with_explicit_due_hint(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)

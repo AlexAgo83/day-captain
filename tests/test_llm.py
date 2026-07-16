@@ -189,7 +189,8 @@ class OpenAICompatibleDigestWordingProviderTest(unittest.TestCase):
         self.assertEqual(captured["body"]["max_completion_tokens"], 120)
         self.assertEqual(captured["body"]["reasoning_effort"], "minimal")
         self.assertNotIn("temperature", captured["body"])
-        self.assertIn("Use 1 to 2 short factual sentences", captured["body"]["messages"][0]["content"])
+        self.assertIn("Use short factual labelled lines", captured["body"]["messages"][0]["content"])
+        self.assertIn("Top priority:", captured["body"]["messages"][0]["content"])
         self.assertIn("avoid vague phrasing", captured["body"]["messages"][0]["content"])
         self.assertIn("decision-oriented wording", captured["body"]["messages"][0]["content"])
         self.assertIn("Drop greetings, thank-you lead-ins, and sign-offs", captured["body"]["messages"][0]["content"])
@@ -559,7 +560,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
             (),
             {
                 "summarize_digest": (
-                    lambda self, sections, labels, meeting_note="": "Roadmap follow-up is the main action for today."
+                    lambda self, sections, labels, meeting_note="": "Top priority: Roadmap follow-up is the main action for today."
                 )
             },
         )()
@@ -567,7 +568,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
         overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
 
         self.assertEqual(overview.source, "llm")
-        self.assertEqual(overview.summary, "Roadmap follow-up is the main action for today.")
+        self.assertEqual(overview.summary, "Top priority: Roadmap follow-up is the main action for today.")
 
     def test_deterministic_summary_uses_final_sections(self) -> None:
         payload = DigestPayload(
@@ -603,7 +604,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
 
         self.assertEqual(overview.source, "deterministic")
         self.assertIn("Top priority: Please review before noon.", overview.summary)
-        self.assertIn("Upcoming meeting: Today at 10:00 with ceo@example.com.", overview.summary)
+        self.assertIn("Nearest meeting: Today at 10:00 with ceo@example.com.", overview.summary)
 
     def test_deterministic_summary_excludes_promotional_items(self) -> None:
         payload = DigestPayload(
@@ -740,7 +741,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
         overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
 
         self.assertEqual(overview.source, "deterministic")
-        self.assertIn("Suivi principal", overview.summary)
+        self.assertIn("Priorité", overview.summary)
 
     def test_deterministic_french_overview_preserves_english_source_terms(self) -> None:
         payload = DigestPayload(
@@ -765,7 +766,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
         overview = DeterministicDigestOverviewEngine().summarize(payload)
 
         self.assertEqual(overview.source, "deterministic")
-        self.assertIn("Suivi principal : Need your input before noon on the bank account update.", overview.summary)
+        self.assertIn("Priorité : Need your input before noon on the bank account update.", overview.summary)
 
     def test_llm_summary_limits_meeting_input_and_passes_meeting_note(self) -> None:
         payload = DigestPayload(
@@ -811,7 +812,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
                 captured["sections"] = sections
                 captured["labels"] = labels
                 captured["meeting_note"] = meeting_note
-                return "Résumé court."
+                return "Priorité : résumé court."
 
         overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
 
@@ -847,7 +848,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
         class Provider:
             def summarize_digest(self, sections, labels, meeting_note=""):
                 captured["sections"] = sections
-                return "Résumé court."
+                return "Priorité : résumé court."
 
         overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
 
@@ -884,7 +885,7 @@ class DigestOverviewEngineTest(unittest.TestCase):
         class Provider:
             def summarize_digest(self, sections, labels, meeting_note=""):
                 captured["sections"] = sections
-                return "Résumé court."
+                return "Priorité : résumé court."
 
         overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
 

@@ -93,6 +93,7 @@ class OpenAICompatibleDigestWordingProvider:
                         "Preserve supplier names, internal topic names, and important English business terms when translating them would reduce clarity. "
                         "If the output language is French and the source content is in English, prefer intentional FR-English wording over awkward full translation. "
                         "Preserve facts, urgency, and requested actions. "
+                        "For `team_actions`, state the concrete action or decision being tracked, not only who owns it. "
                         "For email items only, also classify whether the item is mainly promotional or commercial marketing rather than a genuine operational follow-up. "
                         "Only mark an item as promotional when the main user-visible intent is commercial promotion, sales outreach, or marketing content. "
                         "Do not mark ordinary vendor coordination, customer support, or real operational follow-up as promotional. "
@@ -195,7 +196,9 @@ class OpenAICompatibleDigestWordingProvider:
                     "content": (
                         "Write a short opening digest summary in {0}. "
                         "{1} "
-                        "Use 1 to 2 short factual sentences. "
+                        "Use short factual labelled lines. "
+                        "In French, start available lines with exactly `Priorité :`, `À surveiller :`, and `Réunion la plus proche :`. "
+                        "In English, start available lines with exactly `Top priority:`, `Worth keeping in view:`, and `Nearest meeting:`. "
                         "Lead with the single most important action or priority. "
                         "If meetings matter, summarize them briefly without listing every meeting or every attendee. "
                         "If you mention meetings, prefer the nearest one with a concrete day or time and avoid vague phrasing. "

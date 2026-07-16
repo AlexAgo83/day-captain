@@ -1372,6 +1372,56 @@ def _overview_item_fragment(item: DigestEntry, language: str, max_chars: int = 9
     return _clean_overview_fragment(_truncate_sentence(item.title, max_chars=max_chars))
 
 
+def _overview_labelled_summary(
+    *,
+    language: str,
+    priority: str = "",
+    watch: str = "",
+    meeting: str = "",
+) -> str:
+    if language == "fr":
+        lines = []
+        if priority:
+            lines.append("Priorité : {0}.".format(_clean_overview_fragment(priority)))
+        if watch:
+            lines.append("À surveiller : {0}.".format(_clean_overview_fragment(watch)))
+        if meeting:
+            lines.append("Réunion la plus proche : {0}.".format(_clean_overview_fragment(meeting)))
+        return " ".join(lines)
+    lines = []
+    if priority:
+        lines.append("Top priority: {0}.".format(_clean_overview_fragment(priority)))
+    if watch:
+        lines.append("Worth keeping in view: {0}.".format(_clean_overview_fragment(watch)))
+    if meeting:
+        lines.append("Nearest meeting: {0}.".format(_clean_overview_fragment(meeting)))
+    return " ".join(lines)
+
+
+def _strip_overview_label_prefix(value: str) -> str:
+    cleaned = " ".join((value or "").split())
+    for prefix in (
+        "Priorité :",
+        "Priorite :",
+        "À surveiller :",
+        "A surveiller :",
+        "Réunion la plus proche :",
+        "Top priority:",
+        "Worth keeping in view:",
+        "Nearest meeting:",
+        "Upcoming meeting:",
+        "Main follow-up:",
+        "Team follow-up:",
+        "Worth keeping in view:",
+        "Suivi principal :",
+        "Action équipe :",
+        "À garder en tête :",
+    ):
+        if cleaned.lower().startswith(prefix.lower()):
+            return cleaned[len(prefix) :].strip()
+    return cleaned
+
+
 def _truncate_sentence(value: str, max_chars: int = 220) -> str:
     cleaned = " ".join((value or "").strip().split())
     if len(cleaned) <= max_chars:
@@ -1405,6 +1455,13 @@ def _normalize_top_summary(value: str) -> str:
         return ""
     cleaned = _polish_top_summary_phrase(cleaned)
     return cleaned
+
+
+def _has_overview_labels(value: str, language: str) -> bool:
+    cleaned = " ".join((value or "").split()).lower()
+    if language == "fr":
+        return "priorité :" in cleaned or "priorite :" in cleaned or "à surveiller :" in cleaned or "a surveiller :" in cleaned
+    return "top priority:" in cleaned or "worth keeping in view:" in cleaned or "nearest meeting:" in cleaned
 
 
 def _top_summary_lines(value: str) -> Sequence[str]:
@@ -1847,7 +1904,8 @@ def _message_summary_for_thread_input(summary: str, thread_input, digest_languag
         owner = thread_input.action_owner_display_name or (
             "someone else" if digest_language == "en" else "quelqu'un d'autre"
         )
-        return _normalize_item_summary("", str(copy["action_other"]).format(owner=owner, text=base), max_chars=220)
+        detail = _thread_action_detail(thread_input, owner, fallback=base)
+        return _normalize_item_summary("", str(copy["action_other"]).format(owner=owner, text=detail or base), max_chars=220)
     if thread_input.action_owner == "shared":
         return _normalize_item_summary("", str(copy["action_shared"]).format(text=base), max_chars=220)
     return summary
@@ -1876,6 +1934,13 @@ def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[s
             owner = thread_input.action_owner_display_name or (
                 "someone else" if digest_language == "en" else "quelqu'un d'autre"
             )
+            detail = _thread_action_detail(thread_input, owner, fallback=message.body_preview)
+            if detail:
+                return (
+                    "Track this action for {0}: {1}.".format(owner, _clean_overview_fragment(detail))
+                    if digest_language == "en"
+                    else "Suivre l'action de {0} : {1}.".format(owner, _clean_overview_fragment(detail))
+                )
             return str(actions["reply_other"]).format(owner=owner)
         if thread_input is not None and thread_input.action_owner == "shared":
             return str(actions["reply_shared"])
@@ -1889,6 +1954,43 @@ def _message_recommended_action(message: MessageRecord, reason_codes: Sequence[s
             else f"Répondre à {sender} au sujet de {title}{suffix}"
         )
     return str(actions["watch"])
+
+
+def _thread_action_detail(thread_input, owner: str, fallback: str = "") -> str:
+    messages = tuple(getattr(thread_input, "messages", ()) or ())
+    action_words = (
+        "please",
+        "need",
+        "needs",
+        "review",
+        "confirm",
+        "feedback",
+        "add",
+        "order",
+        "quotation",
+        "prototype",
+        "drawing",
+        "drawings",
+        "merci de",
+        "besoin",
+        "confirmer",
+        "valider",
+        "retour",
+    )
+    previews = [str(item.get("preview") or "") for item in reversed(messages) if isinstance(item, Mapping)]
+    previews.append(str(fallback or ""))
+    for preview in previews:
+        cleaned = " ".join(preview.split())
+        if not cleaned:
+            continue
+        normalized = cleaned.lower()
+        if not any(word in normalized for word in action_words):
+            continue
+        first_name = str(owner or "").split(" ", 1)[0]
+        if first_name:
+            cleaned = re.sub(r"^\s*{0}(?:\s*&\s*\w+)?\s*[,;:\-]?\s*".format(re.escape(first_name)), "", cleaned, flags=re.IGNORECASE)
+        return _truncate_sentence(cleaned, max_chars=150)
+    return ""
 
 
 def _explicit_due_hint(subject: str, preview: str) -> str:
@@ -3824,8 +3926,17 @@ class DeterministicDigestOverviewEngine:
             sentences.append(localized["meeting"].format(text=_clean_overview_fragment(meeting_text)))
         if not sentences:
             sentences.append(localized["clear"])
+            return DigestOverview(
+                summary=" ".join(sentence.strip() for sentence in sentences if sentence.strip()),
+                source="deterministic",
+            )
+        priority = _strip_overview_label_prefix(sentences[0]) if sentences else ""
+        watch = continuity_sentence if continuity_sentence and continuity_sentence not in sentences[:1] else ""
+        meeting = ""
+        if meetings:
+            meeting = _normalize_item_summary(meetings[0].title, meetings[0].summary, max_chars=110)
         return DigestOverview(
-            summary=" ".join(sentence.strip() for sentence in sentences if sentence.strip()),
+            summary=_overview_labelled_summary(language=language, priority=priority, watch=watch, meeting=meeting),
             source="deterministic",
         )
 
@@ -3895,7 +4006,10 @@ class LlmDigestOverviewEngine:
         summary = str(summary or "").strip()
         if not summary:
             return self.fallback_engine.summarize(payload)
-        return DigestOverview(summary=_normalize_top_summary(summary), source="llm")
+        summary = _normalize_top_summary(summary)
+        if not _has_overview_labels(summary, language):
+            return self.fallback_engine.summarize(payload)
+        return DigestOverview(summary=summary, source="llm")
 
     def _overview_sections(self, payload: DigestPayload) -> Mapping[str, Sequence[DigestEntry]]:
         return {
