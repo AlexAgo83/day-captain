@@ -631,6 +631,46 @@ class DigestOverviewEngineTest(unittest.TestCase):
         self.assertEqual(overview.source, "deterministic")
         self.assertEqual(overview.summary, "Rien d'urgent ne remonte pour l'instant.")
 
+    def test_agenda_only_summary_stays_factual(self) -> None:
+        payload = DigestPayload(
+            run_id="run-agenda",
+            generated_at=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            upcoming_meetings=(
+                DigestEntry("Daily", "Aujourd'hui, 10:00 | Teams", "upcoming_meetings", "meeting", "m1", 2.0),
+                DigestEntry("Budget", "Aujourd'hui, 11:00 | Teams", "upcoming_meetings", "meeting", "m2", 2.0),
+            ),
+        )
+
+        overview = DeterministicDigestOverviewEngine().summarize(payload)
+
+        self.assertEqual(overview.summary, "Journée chargée côté agenda : 2 réunions détectées.")
+
+    def test_llm_overview_uses_factual_fallback_for_agenda_only_payload(self) -> None:
+        class Provider:
+            def summarize_digest(self, sections, labels, meeting_note=""):
+                return "Priorité : assister à la réunion."
+
+        payload = DigestPayload(
+            run_id="run-agenda-llm",
+            generated_at=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            window_start=datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc),
+            window_end=datetime(2026, 3, 11, 8, 0, tzinfo=timezone.utc),
+            delivery_mode="json",
+            delivery_payload={"digest_language": "fr"},
+            upcoming_meetings=(
+                DigestEntry("Daily", "Aujourd'hui, 10:00 | Teams", "upcoming_meetings", "meeting", "m1", 2.0),
+            ),
+        )
+
+        overview = LlmDigestOverviewEngine(provider=Provider()).summarize(payload)
+
+        self.assertEqual(overview.source, "deterministic")
+        self.assertEqual(overview.summary, "Journée chargée côté agenda : 1 réunion détectée.")
+
     def test_deterministic_summary_reports_changed_and_waiting_work(self) -> None:
         payload = DigestPayload(
             run_id="run-continuity",
@@ -887,5 +927,5 @@ class DigestOverviewEngineTest(unittest.TestCase):
 
         overview = LlmDigestOverviewEngine(provider=provider).summarize(payload)
 
-        self.assertEqual(overview.source, "llm")
-        self.assertEqual(overview.summary, "Trois réunions sont prévues, la plus proche est à 11:30.")
+        self.assertEqual(overview.source, "deterministic")
+        self.assertEqual(overview.summary, "Journée chargée côté agenda : 1 réunion détectée.")

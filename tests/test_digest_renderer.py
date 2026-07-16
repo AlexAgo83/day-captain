@@ -41,7 +41,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertEqual(len(payload.critical_topics), 3)
         self.assertEqual(len(payload.actions_to_take), 3)
         self.assertEqual(len(payload.watch_items), 2)
-        self.assertEqual(len(payload.upcoming_meetings), 4)
+        self.assertEqual(len(payload.upcoming_meetings), 6)
         self.assertIn('<meta charset="utf-8">', payload.delivery_payload["html_body"])
         self.assertIn("background:#ffffff", payload.delivery_payload["html_body"])
 

@@ -399,7 +399,6 @@ SECTION_LIMITS = {
     "actions_to_take": 3,
     "watch_items": 2,
     "daily_presence": 1,
-    "upcoming_meetings": 4,
 }
 
 THREAD_CONTEXT_MESSAGE_LIMIT = 12
@@ -536,6 +535,8 @@ LANGUAGE_COPY = {
         "overview": {
             "label": "In brief",
             "clear": "Nothing urgent stands out right now.",
+            "agenda_only_one": "Agenda-heavy day: 1 meeting detected.",
+            "agenda_only_many": "Agenda-heavy day: {count} meetings detected.",
             "critical_one": "Top priority: {first}.",
             "critical_many": "Top priorities: {first}; {second}.",
             "action_one": "Main follow-up: {first}.",
@@ -681,6 +682,8 @@ LANGUAGE_COPY = {
         "overview": {
             "label": "En bref",
             "clear": "Rien d'urgent ne remonte pour l'instant.",
+            "agenda_only_one": "Journée chargée côté agenda : 1 réunion détectée.",
+            "agenda_only_many": "Journée chargée côté agenda : {count} réunions détectées.",
             "critical_one": "Priorité du moment : {first}.",
             "critical_many": "Priorités du moment : {first} ; {second}.",
             "action_one": "Suivi principal : {first}.",
@@ -1603,6 +1606,7 @@ def enrich_digest_candidates(
 
 def filter_digest_items_for_usefulness(prioritized_items: Sequence[DigestEntry]) -> tuple[Sequence[DigestEntry], Mapping[str, int]]:
     kept = []
+    suppressed_watch_messages = []
     unsupported_actions = unsupported_watch = 0
     for item in prioritized_items:
         if item.section_name == "actions_to_take" and not item.guardrail_applied:
@@ -1621,8 +1625,12 @@ def filter_digest_items_for_usefulness(prioritized_items: Sequence[DigestEntry])
                 continue
         if item.section_name == "watch_items" and not _entry_has_watch_evidence(item):
             unsupported_watch += 1
+            if item.source_kind == "message":
+                suppressed_watch_messages.append(item)
             continue
         kept.append(item)
+    if suppressed_watch_messages and not any(item.source_kind == "message" for item in kept):
+        kept.extend(suppressed_watch_messages[:2])
     return tuple(kept), {
         "unsupported_action_downgrades": unsupported_actions,
         "unsupported_watch_suppressions": unsupported_watch,
@@ -2209,17 +2217,10 @@ def _meeting_change_reason_codes(
     reason_codes = []
     boundary = window_start or (now - timedelta(hours=18))
     created_at = _parse_optional_datetime(raw_payload.get("createdDateTime"))
-    modified_at = _parse_optional_datetime(raw_payload.get("lastModifiedDateTime"))
     if bool(raw_payload.get("isCancelled")):
         reason_codes.append("meeting_cancelled")
     if created_at is not None and created_at >= boundary:
         reason_codes.append("meeting_new")
-    elif (
-        modified_at is not None
-        and modified_at >= boundary
-        and (created_at is None or modified_at > created_at + timedelta(minutes=5))
-    ):
-        reason_codes.append("meeting_updated")
     return tuple(reason_codes)
 
 
@@ -2859,7 +2860,7 @@ class StructuredDigestRenderer:
                         -item.score,
                         item.title.lower(),
                     ),
-                )[: SECTION_LIMITS[name]]
+                )
             else:
                 sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[
                     : SECTION_LIMITS[name]
@@ -3756,6 +3757,13 @@ class DeterministicDigestOverviewEngine:
             presence_text = _normalize_item_summary(presence_items[0].title, presence_items[0].summary, max_chars=90)
             sentences.append(localized["presence"].format(text=_clean_overview_fragment(presence_text)))
         meetings = sections["upcoming_meetings"]
+        if meetings and not any(sections[name] for name in ("critical_topics", "actions_to_take", "watch_items", "daily_presence")):
+            key = "agenda_only_one" if len(meetings) == 1 else "agenda_only_many"
+            sentences.append(localized[key].format(count=len(meetings)))
+            return DigestOverview(
+                summary=" ".join(sentence.strip() for sentence in sentences if sentence.strip()),
+                source="deterministic",
+            )
         if meetings and len(sentences) < 2:
             meeting_text = _normalize_item_summary(meetings[0].title, meetings[0].summary, max_chars=110)
             sentences.append(localized["meeting"].format(text=_clean_overview_fragment(meeting_text)))
@@ -3813,6 +3821,10 @@ class LlmDigestOverviewEngine:
         language = _normalize_language(str(payload.delivery_payload.get("digest_language") or "en"))
         labels = _language_copy(language)["sections"]
         sections = self._overview_sections(payload)
+        if sections["upcoming_meetings"] and not any(
+            sections[name] for name in ("critical_topics", "actions_to_take", "watch_items", "daily_presence")
+        ):
+            return self.fallback_engine.summarize(payload)
         if not any(sections[name] for name in SECTION_NAMES):
             return self.fallback_engine.summarize(payload)
         try:

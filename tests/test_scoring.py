@@ -11,6 +11,7 @@ from day_captain.models import MeetingRecord
 from day_captain.models import MessageRecord
 from day_captain.models import UserPreference
 from day_captain.services import DeterministicScoringEngine
+from day_captain.services import filter_digest_items_for_usefulness
 
 
 class DeterministicScoringEngineTest(unittest.TestCase):
@@ -892,8 +893,68 @@ class DeterministicScoringEngineTest(unittest.TestCase):
 
         self.assertEqual(len(prioritized), 1)
         self.assertIn("meeting_cancelled", prioritized[0].reason_codes)
-        self.assertIn("meeting_updated", prioritized[0].reason_codes)
+        self.assertNotIn("meeting_updated", prioritized[0].reason_codes)
         self.assertTrue(prioritized[0].summary.startswith("Annulé :"))
+
+    def test_does_not_mark_recently_modified_meeting_as_moved_without_change_proof(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        window_start = datetime(2026, 3, 9, 22, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine(digest_language="fr", display_timezone="Europe/Paris")
+
+        prioritized = engine.prioritize(
+            (),
+            (
+                MeetingRecord(
+                    graph_event_id="mtg-modified",
+                    subject="Daily CARESOFT",
+                    start_at=datetime(2026, 3, 10, 9, 30, tzinfo=timezone.utc),
+                    end_at=datetime(2026, 3, 10, 9, 45, tzinfo=timezone.utc),
+                    organizer_address="team@example.com",
+                    raw_payload={
+                        "createdDateTime": "2026-03-01T08:00:00Z",
+                        "lastModifiedDateTime": "2026-03-10T06:45:00Z",
+                    },
+                ),
+            ),
+            (),
+            reference_time=now,
+            window_start=window_start,
+        )
+
+        self.assertNotIn("meeting_updated", prioritized[0].reason_codes)
+        self.assertFalse(prioritized[0].summary.startswith("Déplacée :"))
+
+    def test_keeps_best_mail_candidates_when_usefulness_filter_would_drop_every_mail(self) -> None:
+        now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
+        engine = DeterministicScoringEngine()
+        messages = (
+            MessageRecord(
+                graph_message_id="msg-1",
+                thread_id="thread-1",
+                subject="FYI customer update",
+                from_address="lead@example.com",
+                to_addresses=("target@example.com",),
+                received_at=now - timedelta(hours=1),
+                body_preview="Sharing the latest customer update for context.",
+                user_id="target@example.com",
+            ),
+            MessageRecord(
+                graph_message_id="msg-2",
+                thread_id="thread-2",
+                subject="Planning note",
+                from_address="pm@example.com",
+                to_addresses=("target@example.com",),
+                received_at=now - timedelta(hours=2),
+                body_preview="Keeping you in the loop on planning.",
+                user_id="target@example.com",
+            ),
+        )
+
+        prioritized = engine.prioritize(messages, (), (), reference_time=now)
+        filtered, metrics = filter_digest_items_for_usefulness(prioritized)
+
+        self.assertEqual(metrics["unsupported_watch_suppressions"], 1)
+        self.assertEqual([item.source_id for item in filtered], ["msg-1"])
 
     def test_classifies_all_day_presence_events_separately_from_meetings(self) -> None:
         now = datetime(2026, 3, 10, 8, 0, tzinfo=timezone.utc)
