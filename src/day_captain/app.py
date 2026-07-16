@@ -870,7 +870,7 @@ class DayCaptainApplication:
                     lookback_days=30,
                 )
             except Exception as exc:
-                logger.warning("Skipping mail thread enrichment for %s: %s", thread_id, exc)
+                LOGGER.warning("Skipping mail thread enrichment for %s: %s", thread_id, exc)
                 continue
             collected.append(tuple(message for message in thread_messages if not is_sensitive_authentication_message(message)))
         return _merge_unique_messages(*collected)
@@ -888,7 +888,7 @@ class DayCaptainApplication:
             try:
                 attachments = self.mail_collector.collect_attachment_metadata(auth_context, message.graph_message_id)
             except Exception as exc:
-                logger.warning("Skipping attachment metadata for %s: %s", message.graph_message_id, exc)
+                LOGGER.warning("Skipping attachment metadata for %s: %s", message.graph_message_id, exc)
                 enriched.append(message)
                 continue
             raw_payload = dict(message.raw_payload)

@@ -500,11 +500,11 @@ class GraphMailCollector:
             params={
                 "$filter": filter_value,
                 "$select": self._select_value(),
-                "$orderby": "receivedDateTime desc",
                 "$top": max(1, int(limit)),
             },
         )
-        return tuple(normalize_message(item) for item in payloads)
+        messages = tuple(normalize_message(item) for item in payloads)
+        return tuple(sorted(messages, key=lambda item: item.received_at, reverse=True)[: max(1, int(limit))])
 
     def collect_attachment_metadata(
         self,
