@@ -40,6 +40,23 @@ class MailCollector(Protocol):
     ) -> Sequence[MessageRecord]:
         ...
 
+    def collect_thread_messages(
+        self,
+        auth_context: AuthContext,
+        thread_id: str,
+        before: datetime,
+        limit: int = 8,
+        lookback_days: int = 30,
+    ) -> Sequence[MessageRecord]:
+        ...
+
+    def collect_attachment_metadata(
+        self,
+        auth_context: AuthContext,
+        message_id: str,
+    ) -> Sequence[Mapping[str, object]]:
+        ...
+
 
 class CalendarCollector(Protocol):
     def collect_meetings(

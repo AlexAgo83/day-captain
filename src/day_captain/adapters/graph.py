@@ -1,6 +1,7 @@
 """Microsoft Graph adapters for Day Captain."""
 
 from datetime import datetime
+from datetime import timedelta
 from datetime import timezone
 import json
 import socket
@@ -99,6 +100,10 @@ def normalize_message(payload: Mapping[str, Any]) -> MessageRecord:
         has_attachments=bool(payload.get("hasAttachments")),
         raw_payload=dict(payload),
     )
+
+
+def _odata_string_literal(value: str) -> str:
+    return "'{0}'".format(str(value or "").replace("'", "''"))
 
 
 def normalize_meeting(payload: Mapping[str, Any]) -> MeetingRecord:
@@ -434,16 +439,8 @@ class GraphMailCollector:
     def __init__(self, api_client: GraphApiClient) -> None:
         self.api_client = api_client
 
-    def collect_messages(
-        self,
-        auth_context: AuthContext,
-        window_start: datetime,
-        window_end: datetime,
-    ) -> Sequence[MessageRecord]:
-        filter_value = (
-            "receivedDateTime ge {0} and receivedDateTime le {1}"
-        ).format(window_start.isoformat(), window_end.isoformat())
-        select_value = ",".join(
+    def _select_value(self) -> str:
+        return ",".join(
             (
                 "id",
                 "conversationId",
@@ -461,17 +458,79 @@ class GraphMailCollector:
                 "webLink",
             )
         )
+
+    def collect_messages(
+        self,
+        auth_context: AuthContext,
+        window_start: datetime,
+        window_end: datetime,
+    ) -> Sequence[MessageRecord]:
+        filter_value = (
+            "receivedDateTime ge {0} and receivedDateTime le {1}"
+        ).format(window_start.isoformat(), window_end.isoformat())
         payloads = self.api_client.list_collection(
-            "{0}/mailFolders/Inbox/messages".format(auth_context.graph_root_path),
+            "{0}/messages".format(auth_context.graph_root_path),
             access_token=auth_context.access_token,
             params={
                 "$filter": filter_value,
-                "$select": select_value,
+                "$select": self._select_value(),
                 "$orderby": "receivedDateTime desc",
                 "$top": 100,
             },
         )
         return tuple(normalize_message(item) for item in payloads)
+
+    def collect_thread_messages(
+        self,
+        auth_context: AuthContext,
+        thread_id: str,
+        before: datetime,
+        limit: int = 8,
+        lookback_days: int = 30,
+    ) -> Sequence[MessageRecord]:
+        if not str(thread_id or "").strip():
+            return ()
+        window_start = before - timedelta(days=max(1, int(lookback_days)))
+        filter_value = (
+            "conversationId eq {0} and receivedDateTime ge {1} and receivedDateTime le {2}"
+        ).format(_odata_string_literal(thread_id), window_start.isoformat(), before.isoformat())
+        payloads = self.api_client.list_collection(
+            "{0}/messages".format(auth_context.graph_root_path),
+            access_token=auth_context.access_token,
+            params={
+                "$filter": filter_value,
+                "$select": self._select_value(),
+                "$orderby": "receivedDateTime desc",
+                "$top": max(1, int(limit)),
+            },
+        )
+        return tuple(normalize_message(item) for item in payloads)
+
+    def collect_attachment_metadata(
+        self,
+        auth_context: AuthContext,
+        message_id: str,
+    ) -> Sequence[Mapping[str, object]]:
+        if not str(message_id or "").strip():
+            return ()
+        payloads = self.api_client.list_collection(
+            "{0}/messages/{1}/attachments".format(auth_context.graph_root_path, quote(str(message_id), safe="")),
+            access_token=auth_context.access_token,
+            params={
+                "$select": "id,name,contentType,size,isInline",
+                "$top": 20,
+            },
+        )
+        return tuple(
+            {
+                "id": str(item.get("id") or ""),
+                "name": str(item.get("name") or ""),
+                "content_type": str(item.get("contentType") or ""),
+                "size": int(item.get("size") or 0),
+                "is_inline": bool(item.get("isInline")),
+            }
+            for item in payloads
+        )
 
 
 class GraphCalendarCollector:

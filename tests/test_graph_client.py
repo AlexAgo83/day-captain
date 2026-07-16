@@ -293,7 +293,7 @@ class GraphAdapterTest(unittest.TestCase):
 
         sleep_mock.assert_not_called()
 
-    def test_mail_collector_reads_from_inbox_only(self) -> None:
+    def test_mail_collector_reads_messages_across_mail_folders(self) -> None:
         api_client = CollectionRecorderApiClient()
         collector = GraphMailCollector(api_client)
         auth_context = AuthContext(
@@ -310,7 +310,7 @@ class GraphAdapterTest(unittest.TestCase):
 
         self.assertEqual(len(api_client.calls), 1)
         path, access_token, params = api_client.calls[0]
-        self.assertEqual(path, "/me/mailFolders/Inbox/messages")
+        self.assertEqual(path, "/me/messages")
         self.assertEqual(access_token, "delegated-token")
         self.assertEqual(params["$top"], 100)
         self.assertIn("webLink", params["$select"])
@@ -334,9 +334,52 @@ class GraphAdapterTest(unittest.TestCase):
         )
 
         path, access_token, params = api_client.calls[0]
-        self.assertEqual(path, "/users/alex%40example.com/mailFolders/Inbox/messages")
+        self.assertEqual(path, "/users/alex%40example.com/messages")
         self.assertEqual(access_token, "app-only-token")
         self.assertEqual(params["$top"], 100)
+
+    def test_mail_collector_reads_bounded_thread_context(self) -> None:
+        api_client = CollectionRecorderApiClient()
+        collector = GraphMailCollector(api_client)
+        auth_context = AuthContext(
+            access_token="app-only-token",
+            granted_scopes=("Mail.Read",),
+            user_id="alex@example.com",
+            auth_mode="app_only",
+            graph_root_path="/users/alex%40example.com",
+        )
+
+        collector.collect_thread_messages(
+            auth_context,
+            "thread'with-quote",
+            datetime(2026, 3, 7, 8, 0, tzinfo=timezone.utc),
+            limit=5,
+            lookback_days=14,
+        )
+
+        path, access_token, params = api_client.calls[0]
+        self.assertEqual(path, "/users/alex%40example.com/messages")
+        self.assertEqual(access_token, "app-only-token")
+        self.assertEqual(params["$top"], 5)
+        self.assertIn("conversationId eq 'thread''with-quote'", params["$filter"])
+        self.assertIn("receivedDateTime ge", params["$filter"])
+
+    def test_mail_collector_reads_attachment_metadata_only(self) -> None:
+        api_client = CollectionRecorderApiClient()
+        collector = GraphMailCollector(api_client)
+        auth_context = AuthContext(
+            access_token="delegated-token",
+            granted_scopes=("Mail.Read",),
+            user_id="user-123",
+        )
+
+        collector.collect_attachment_metadata(auth_context, "msg/id")
+
+        path, access_token, params = api_client.calls[0]
+        self.assertEqual(path, "/me/messages/msg%2Fid/attachments")
+        self.assertEqual(access_token, "delegated-token")
+        self.assertEqual(params["$select"], "id,name,contentType,size,isInline")
+        self.assertNotIn("contentBytes", params["$select"])
 
     def test_graph_digest_delivery_posts_send_mail_request(self) -> None:
         api_client = DeliveryRecorderApiClient()
