@@ -10,6 +10,15 @@
 # Overview
 Upgrade Day Captain from a concise mailbox digest into a decision brief that explains why each item matters, uses enough context for the few candidates that deserve it, and admits when there is nothing worth the user's attention.
 
+```mermaid
+flowchart LR
+    Signals[Mail and calendar signals] --> CheapPass[Cheap candidate pass]
+    CheapPass --> Context[Bounded rich context]
+    Context --> Selection[Operational value selection]
+    Selection --> Brief[Useful decision brief]
+    Debug[Privacy-safe debug evidence] --> Selection
+```
+
 # Goals
 - Increase perceived usefulness by surfacing fewer unsupported watch items and more evidence-backed decisions, actions, failures, deadlines, and conflicts.
 - Create a privacy-safe debugging loop for every rendered card and every suppressed candidate.
