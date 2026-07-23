@@ -20,13 +20,15 @@ def test_reports_only_versioned_aggregate_metrics() -> None:
     report = digest_metrics((payload,))
 
     assert report == {
-        "metrics_version": "1.1",
+        "metrics_version": "1.2",
         "briefs": 1,
         "median_visible_characters": 23,
         "rendered_cards": 1,
         "generic_actions": 1,
         "risk_warnings": 0,
         "external_news_items": 0,
+        "confidence_label_count": 0,
+        "source_open_control_count": 0,
         "sensitive_suppressions": 2,
         "repeated_unchanged_suppressions": 0,
         "usefulness": {

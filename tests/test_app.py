@@ -458,7 +458,7 @@ class DayCaptainApplicationTest(unittest.TestCase):
         self.assertIsNone(payload.weather)
         self.assertIn("continuing without weather capsule", "\n".join(captured.output))
 
-    def test_morning_digest_includes_external_news_capsule_when_provider_returns_items(self) -> None:
+    def test_morning_digest_omits_unrelated_external_news_by_default(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
         news_provider = StubExternalNewsProvider(
             items=(
@@ -480,10 +480,30 @@ class DayCaptainApplicationTest(unittest.TestCase):
 
         payload = app.run_morning_digest(now=now, force=True)
 
-        self.assertEqual(len(payload.external_news), 1)
+        self.assertEqual(len(payload.external_news), 0)
+        self.assertNotIn("External news", payload.delivery_body)
+
+    def test_weekly_digest_includes_bounded_external_news_capsule(self) -> None:
+        now = datetime(2026, 3, 8, 20, 30, tzinfo=timezone.utc)
+        news_provider = StubExternalNewsProvider(
+            items=(
+                ExternalNewsItem("ECB signals slower cuts", "Markets are recalibrating.", "Financial Times", "https://example.com/ft/ecb"),
+                ExternalNewsItem("Battery policy update", "Policy summary.", "Example News", "https://example.com/policy"),
+            )
+        )
+        app = build_application(
+            settings=DayCaptainSettings(),
+            storage=InMemoryStorage(),
+            mail_collector=StaticMailCollector(()),
+            calendar_collector=StaticCalendarCollector(()),
+            external_news_provider=news_provider,
+        )
+
+        payload = app.run_weekly_digest(now=now)
+
+        self.assertEqual(len(payload.external_news), 2)
         self.assertIn("External news", payload.delivery_body)
         self.assertIn("Financial Times", payload.delivery_body)
-        self.assertEqual(payload.delivery_payload["external_news"][0]["headline"], "ECB signals slower cuts")
 
     def test_morning_digest_captures_generation_duration_for_footer(self) -> None:
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)

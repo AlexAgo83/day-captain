@@ -1,8 +1,8 @@
 ## prod_004_day_captain_strict_decision_brief - Day Captain strict decision brief
 > Date: 2026-07-23
-> Status: Proposed
+> Status: Settled
 > Related request: `req_057_day_captain_digest_friction_hardening`
-> Related backlog: `item_120_close_authentication_message_suppression_gaps`, `item_121_make_daily_output_a_strict_command_brief`, `item_122_polish_outlook_and_text_rendering_ergonomics`, `item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content`
+> Related backlog: `item_120_close_authentication_message_suppression_gaps`
 > Related task: `task_054_orchestrate_digest_friction_hardening`
 > Related architecture: (none yet)
 > Reminder: Update status, linked refs, scope, decisions, success signals, and open questions when you edit this doc.
@@ -53,5 +53,5 @@ flowchart LR
 - Focused tests, full tests, replay, metrics, lint, audit, and visual QA pass before closeout.
 
 # References
-- Product back-reference: `req_057_day_captain_digest_friction_hardening`
+- Product back-reference: `item_120_close_authentication_message_suppression_gaps`
 - Task back-reference: `task_054_orchestrate_digest_friction_hardening`

@@ -1,7 +1,7 @@
 ## req_057_day_captain_digest_friction_hardening - Day Captain digest friction hardening
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Draft
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
 > Complexity: High

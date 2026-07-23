@@ -1,10 +1,10 @@
 ## item_121_make_daily_output_a_strict_command_brief - Make daily output a strict command brief
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: High
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -41,6 +41,12 @@
 - request-AC8 -> This backlog slice. Proof: AC4: The top summary is shorter than the combined card text and includes action/waiting/conflict/ignored counts when present.
 - request-AC11 -> This backlog slice. Proof: AC5: Metrics report visible length, card count, external-news count, confidence-label count, control count, generic-action count, and sensitive suppressions.
 - request-AC13 -> This backlog slice. Proof: AC5: Metrics report visible length, card count, external-news count, confidence-label count, control count, generic-action count, and sensitive suppressions.
+- request-AC6 -> This backlog slice. Evidence needed: HTML and text rendering preserve readable spacing between labels, card badges, metadata, and quick-action links, including plain-text fallback output.
+- request-AC7 -> This backlog slice. Evidence needed: Meeting and Outlook open controls remain available but are visually compact and do not repeat in a way that dominates card content.
+- request-AC9 -> This backlog slice. Evidence needed: Scheduler and content-free delivery audit tooling can report expected target count, sent count, duplicate trigger signals, retry signals, and fan-out shape without reading or storing message bodies.
+- request-AC10 -> This backlog slice. Evidence needed: Delivery-count anomaly checks cover duplicate sends, missing target sends, retry overlap, weekly/daily overlap, and manual recall overlap using synthetic or content-free fixtures.
+- request-AC12 -> This backlog slice. Evidence needed: Representative daily and weekly HTML/text artifacts pass desktop and narrow-width review, and any manual mailbox verification remains single-recipient, content-free, and temporary.
+- request-AC14 -> This backlog slice. Evidence needed: Documentation explains the private-ops evidence boundary: mailbox-derived audits stay temporary, aggregate-only results can be recorded, and real identities or message content never enter Git.
 
 # Decision framing
 - Product framing: Not needed
@@ -61,3 +67,9 @@
 # Priority
 - Priority: High
 - Rationale: Set by scaffold input or defaulted for grooming.
+
+# Tasks
+- `task_054_orchestrate_digest_friction_hardening`
+
+# Notes
+- Task `task_054_orchestrate_digest_friction_hardening` was finished via `logics-manager flow finish task` on 2026-07-23.

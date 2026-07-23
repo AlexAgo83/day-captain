@@ -20,11 +20,14 @@ def test_synthetic_replay_is_safe_and_covers_critical_cases() -> None:
     assert "launch checklist" in rich_context.actions_to_take[0].summary
     assert rich_context.actions_to_take[0].context_metadata["rich_context_used"] is True
     assert "weekly brief" in weekly.delivery_subject
-    assert digest_metrics((first, second, no_work, rich_context, weekly))["sensitive_suppressions"] == 3
+    assert digest_metrics((first, second, no_work, rich_context, weekly))["sensitive_suppressions"] == 9
     debug = digest_debug_report((first, second, no_work, rich_context, weekly))
     assert debug["usefulness"]["critical_failures"] >= 1
     assert debug["usefulness"]["no_meaningful_work_briefs"] >= 1
     assert debug["briefs"][0]["cards"][0]["reason_codes"]
+
+    assert "secure link" not in rendered.lower()
+    assert "sign in" not in rendered.lower()
 
 
 def test_rich_context_enrichment_is_bounded_and_synthetic_only() -> None:

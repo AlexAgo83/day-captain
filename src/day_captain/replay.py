@@ -12,6 +12,8 @@ def run_synthetic_replay() -> Sequence[DigestPayload]:
     now = datetime(2026, 7, 13, 8, 0, tzinfo=timezone.utc)
     messages = (
         MessageRecord("auth-1", "auth-thread", "Your one-time code", "identity@example.test", received_at=now, body_preview="Verification code 123456."),
+        MessageRecord("auth-2", "auth-thread-2", "Secure login link", "identity@example.test", received_at=now, body_preview="Click the button below to finish signing in. This link expires in 10 minutes."),
+        MessageRecord("auth-3", "auth-thread-3", "Account confirmation", "identity@example.test", received_at=now, body_preview="Verify your account using the temporary access link."),
         MessageRecord("noise-1", "noise-thread", "Weekly entertainment newsletter", "news@example.test", received_at=now, body_preview="Manage preferences and unsubscribe."),
         MessageRecord("action-1", "action-thread", "Roadmap decision", "lead@example.test", to_addresses=("user@example.test",), user_id="user@example.test", received_at=now, body_preview="Please confirm the selected option before noon."),
         MessageRecord("alert-1", "alert-thread", "Payment failed", "noreply@example.test", to_addresses=("user@example.test",), user_id="user@example.test", received_at=now, body_preview="Payment failed; service suspension is pending."),

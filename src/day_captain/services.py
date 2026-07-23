@@ -250,19 +250,36 @@ TRANSACTIONAL_ALERT_PATTERNS = (
 
 AUTHENTICATION_MESSAGE_PATTERNS = (
     "authentication code",
+    "account confirmation",
+    "account verification",
+    "bouton ci-dessous pour terminer la connexion",
     "code de connexion",
     "code de sécurité",
     "code de verification",
     "code de vérification",
+    "complete sign in",
+    "complete sign-in",
+    "connectez-vous",
+    "connexion expire",
+    "expires in 10 minutes",
+    "expire dans 10 minutes",
+    "expiring login",
+    "finish signing in",
+    "lien sécurisé",
+    "login link",
     "magic link",
     "one-time code",
     "one time code",
     "password reset",
+    "secure link",
+    "sign in to",
+    "sign-in link",
     "réinitialisation de votre mot de passe",
     "reset your password",
     "sign-in code",
     "temporary access pass",
     "verification code",
+    "verify your account",
 )
 
 DIRECT_RECIPIENT_ACTION_PATTERNS = (
@@ -404,6 +421,10 @@ SECTION_LIMITS = {
     "team_actions": 3,
     "watch_items": 2,
     "daily_presence": 1,
+}
+MEETING_SECTION_LIMITS = {
+    "morning_digest": 4,
+    "weekly_digest": 8,
 }
 
 THREAD_CONTEXT_MESSAGE_LIMIT = 12
@@ -876,7 +897,40 @@ def _contains_any(text: str, patterns: Iterable[str]) -> bool:
 def is_sensitive_authentication_message(message: MessageRecord) -> bool:
     """Return whether a message must be dropped before any downstream processing."""
     text = _normalize_text(message.subject, message.body_preview)
-    return _contains_any(text, AUTHENTICATION_MESSAGE_PATTERNS)
+    if _contains_any(text, AUTHENTICATION_MESSAGE_PATTERNS):
+        return True
+    has_login_intent = _contains_any(
+        text,
+        (
+            "login",
+            "log in",
+            "sign in",
+            "sign-in",
+            "connexion",
+            "connecter",
+            "connectez",
+            "authentification",
+            "verification",
+            "vérification",
+        ),
+    )
+    has_temporary_secret = _contains_any(
+        text,
+        (
+            "button below",
+            "bouton ci-dessous",
+            "cliquez",
+            "click",
+            "expire",
+            "expires",
+            "lien",
+            "link",
+            "temporary",
+            "temporaire",
+            "token",
+        ),
+    )
+    return has_login_intent and has_temporary_secret
 
 
 def _language_hint_for_text(value: str) -> str:
@@ -3011,11 +3065,12 @@ class StructuredDigestRenderer:
                         -item.score,
                         item.title.lower(),
                     ),
-                )
+                )[: MEETING_SECTION_LIMITS.get(run_type, MEETING_SECTION_LIMITS["morning_digest"])]
             else:
                 sections[name] = sorted(sections[name], key=lambda item: (-item.score, item.title.lower()))[
                     : SECTION_LIMITS[name]
                 ]
+        external_news = self._select_external_news(external_news, sections, run_type)
 
         localized = _language_copy(self.digest_language)
         normalized_top_summary = _normalize_top_summary(top_summary)
@@ -3260,7 +3315,7 @@ class StructuredDigestRenderer:
             "<p style=\"margin:0 0 8px;font-size:14px;color:#475569;\">{0}</p>".format(self._html_escape(localized["prepared"].format(date=generated_label))),
             "<table role=\"presentation\" style=\"margin:0;border-collapse:collapse;\"><tr>"
             "<td style=\"padding:0 10px 0 0;vertical-align:top;\">"
-            "<span style=\"display:inline-block;padding:4px 8px;border:1px solid #dbe4ee;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}</span>"
+            "<span style=\"display:inline-block;padding:4px 8px;border:1px solid #dbe4ee;border-radius:999px;font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#64748b;\">{0}:</span>"
             "</td>"
             "<td style=\"padding:2px 0 0;vertical-align:top;font-size:13px;color:#475569;\">{1}</td>"
             "</tr></table>".format(
@@ -3364,7 +3419,7 @@ class StructuredDigestRenderer:
             lines.append("  {0}: {1}".format(localized["next_step"], recommended_action))
         confidence_label = self._entry_confidence_label(item)
         confidence_reason = _display_confidence_reason(item.confidence_reason, self.digest_language)
-        if item.confidence_score > 0 or confidence_label or confidence_reason:
+        if self._should_render_confidence(item, confidence_label, confidence_reason):
             confidence_bits = []
             if confidence_label:
                 confidence_bits.append(confidence_label)
@@ -3411,7 +3466,7 @@ class StructuredDigestRenderer:
             )
         confidence_label = self._entry_confidence_label(item)
         confidence_reason = _display_confidence_reason(item.confidence_reason, self.digest_language)
-        if item.confidence_score > 0 or confidence_label or confidence_reason:
+        if self._should_render_confidence(item, confidence_label, confidence_reason):
             confidence_bits = []
             if confidence_label:
                 confidence_bits.append(confidence_label)
@@ -3455,6 +3510,21 @@ class StructuredDigestRenderer:
     def _entry_confidence_label(self, item: DigestEntry) -> str:
         return _normalized_confidence_label(item.confidence_label, item.confidence_score, self.digest_language)
 
+    def _should_render_confidence(self, item: DigestEntry, label: str, reason: str) -> bool:
+        if item.confidence_score <= 0 and not item.confidence_label and not item.confidence_reason:
+            return False
+        if not (label or reason or item.confidence_score > 0):
+            return False
+        localized = _language_copy(self.digest_language)["item_meta"]
+        if label == str(localized["confidence_high"]) and item.confidence_score >= HIGH_CONFIDENCE_THRESHOLD:
+            return False
+        return bool(
+            item.confidence_score < HIGH_CONFIDENCE_THRESHOLD
+            or item.guardrail_applied
+            or (item.card is not None and item.card.risk_level in {"medium", "high"})
+            or set(item.reason_codes) & {"meeting_conflict", "overdue", "transactional_alert"}
+        )
+
     def _item_action(self, item: DigestEntry) -> tuple[str, str]:
         desktop_source_url = _safe_desktop_source_url(item.desktop_source_url)
         source_url = _safe_source_url(item.source_url)
@@ -3473,13 +3543,19 @@ class StructuredDigestRenderer:
         action_label, action_url = self._item_action(item)
         if not action_url:
             return ""
+        margin = "6px 0 0" if item.source_kind == "meeting" else "8px 0 0"
+        padding = "3px 7px" if item.source_kind == "meeting" else "5px 9px"
+        font_size = "11px" if item.source_kind == "meeting" else "12px"
         return (
-            "<p style=\"margin:8px 0 0;\">"
-            "<a href=\"{0}\" style=\"display:inline-block;padding:5px 9px;border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;font-size:12px;font-weight:600;color:#075985;text-decoration:none;\">{1}</a>"
+            "<p style=\"margin:{2};\">"
+            "<a href=\"{0}\" style=\"display:inline-block;padding:{3};border:1px solid #bfdbfe;border-radius:8px;background:#eff6ff;font-size:{4};font-weight:600;color:#075985;text-decoration:none;\">{1}</a>"
             "</p>"
         ).format(
             self._html_escape(action_url),
             self._html_escape(action_label),
+            margin,
+            padding,
+            font_size,
         )
 
     def _body_badge_prefix(self, item: DigestEntry) -> str:
@@ -3516,7 +3592,7 @@ class StructuredDigestRenderer:
                     self._html_escape(badge),
                 )
             )
-        return "".join(parts)
+        return "{0} ".format("".join(parts))
 
     def _item_badge_labels(self, item: DigestEntry) -> Sequence[tuple[str, str]]:
         localized = _language_copy(self.digest_language)["badges"]
@@ -3642,6 +3718,31 @@ class StructuredDigestRenderer:
             )
         return tuple(lines)
 
+    def _select_external_news(
+        self,
+        external_news: Sequence[ExternalNewsItem],
+        sections: Mapping[str, Sequence[DigestEntry]],
+        run_type: str,
+    ) -> Sequence[ExternalNewsItem]:
+        if not external_news:
+            return ()
+        if run_type == "weekly_digest":
+            return tuple(external_news[:3])
+        context_tokens = set()
+        for name in ("critical_topics", "actions_to_take", "team_actions", "watch_items"):
+            for item in sections.get(name, ()):
+                context_tokens.update(_tokenize_subject("{0} {1}".format(item.title, item.summary)))
+        if not context_tokens:
+            return ()
+        selected = []
+        for item in external_news:
+            news_tokens = set(_tokenize_subject("{0} {1}".format(item.headline, item.summary)))
+            if context_tokens & news_tokens:
+                selected.append(item)
+            if len(selected) >= 1:
+                break
+        return tuple(selected)
+
     def _external_news_html(self, external_news: Sequence[ExternalNewsItem]) -> str:
         if not external_news:
             return ""
@@ -3756,7 +3857,7 @@ class StructuredDigestRenderer:
             href = "mailto:{0}?subject={1}&body={2}".format(mailbox, quote(command), quote(command))
             parts.append(
                 "<td style=\"padding:0 8px 0 0;\">"
-                "<a href=\"{0}\" style=\"display:inline-block;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;color:#0f172a;text-decoration:none;font-size:13px;white-space:nowrap;\">{1}</a>"
+                "<a href=\"{0}\" style=\"display:inline-block;padding:8px 12px;border:1px solid #cbd5e1;border-radius:999px;color:#0f172a;text-decoration:none;font-size:13px;white-space:nowrap;\">{1}</a> "
                 "</td>".format(self._html_escape(href), self._html_escape(label))
             )
         copyright_html = self._html_escape(str(footer["copyright"]).format(year=generated_at.year))

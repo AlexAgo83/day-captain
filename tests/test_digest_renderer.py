@@ -42,7 +42,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertEqual(len(payload.actions_to_take), 3)
         self.assertEqual(len(payload.team_actions), 3)
         self.assertEqual(len(payload.watch_items), 2)
-        self.assertEqual(len(payload.upcoming_meetings), 6)
+        self.assertEqual(len(payload.upcoming_meetings), 4)
         self.assertIn('<meta charset="utf-8">', payload.delivery_payload["html_body"])
         self.assertIn("background:#ffffff", payload.delivery_payload["html_body"])
 
@@ -129,6 +129,8 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Use these buttons to ask Day Captain for this brief again, today's brief, or this week's brief.", payload.delivery_body)
         self.assertIn("subject/body: recall", payload.delivery_body)
         self.assertIn("mailto:daycaptain@example.com?subject=recall&amp;body=recall", payload.delivery_payload["html_body"])
+        self.assertIn("Quick actions", payload.delivery_body)
+        self.assertNotIn("recall) -", payload.delivery_body)
         self.assertIn("Day Captain © 2026: https://github.com/AlexAgo83/day-captain", payload.delivery_body)
         self.assertIn("margin:10px 0 24px;padding:0 0 0 14px;border-left:3px solid #94a3b8;", payload.delivery_payload["html_body"])
         self.assertNotIn("background:#f8fafc", payload.delivery_payload["html_body"])
@@ -168,6 +170,76 @@ class StructuredDigestRendererTest(unittest.TestCase):
 
         self.assertEqual(payload.delivery_subject, "Your Day Captain weekly brief for Sun 12 Jul")
 
+    def test_confidence_renders_only_when_decision_affecting_and_localized(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 7, 23, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="confidence-run",
+            generated_at=now,
+            window_start=now,
+            window_end=now,
+            delivery_mode="json",
+            prioritized_items=(
+                DigestEntry(
+                    "Décision claire",
+                    "Résumé.",
+                    "actions_to_take",
+                    "message",
+                    "high",
+                    3.0,
+                    confidence_score=95,
+                    confidence_label="Reliable",
+                    confidence_reason="Clear request.",
+                ),
+                DigestEntry(
+                    "Décision incertaine",
+                    "Résumé.",
+                    "actions_to_take",
+                    "message",
+                    "medium",
+                    2.0,
+                    confidence_score=60,
+                    confidence_label="Confirm",
+                    confidence_reason="Contexte limité.",
+                ),
+            ),
+        )
+
+        self.assertNotIn("Reliable", payload.delivery_body)
+        self.assertNotIn("Confirm", payload.delivery_body)
+        self.assertIn("À confirmer", payload.delivery_body)
+        self.assertEqual(payload.delivery_body.count("Confiance:"), 1)
+
+    def test_html_contains_visible_separators_for_badges_coverage_and_quick_actions(self) -> None:
+        renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
+        now = datetime(2026, 7, 23, 8, 0, tzinfo=timezone.utc)
+
+        payload = renderer.render(
+            run_id="spacing-run",
+            generated_at=now,
+            window_start=now,
+            window_end=now,
+            delivery_mode="json",
+            command_mailbox="daycaptain@example.com",
+            prioritized_items=(
+                DigestEntry(
+                    "Titre de suivi",
+                    "Résumé.",
+                    "watch_items",
+                    "message",
+                    "watch",
+                    1.0,
+                    card=DigestCard(continuity_state="changed"),
+                ),
+            ),
+        )
+
+        html = payload.delivery_payload["html_body"]
+        self.assertIn("Périmètre:</span>", html)
+        self.assertIn("Évolue</span> ", html)
+        self.assertIn("Rappeler ce brief</a> ", html)
+
     def test_compacts_meeting_entries_in_text_and_html(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")
         now = datetime(2026, 3, 9, 8, 0, tzinfo=timezone.utc)
@@ -192,7 +264,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
 
         self.assertIn("- Point equipe", payload.delivery_body)
         self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_body)
-        self.assertIn("Confiance:", payload.delivery_body)
+        self.assertNotIn("Confiance:", payload.delivery_body)
         self.assertIn("Point equipe", payload.delivery_payload["html_body"])
         self.assertIn("Aujourd'hui, 10:00 | Lead | Teams", payload.delivery_payload["html_body"])
 
@@ -252,7 +324,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("[Non lu] Suivi client", payload.delivery_body)
         self.assertIn("Statut: Non lu", payload.delivery_body)
         self.assertIn("Reçu: mar. 10 mars 2026 à 08:15 CET", payload.delivery_body)
-        self.assertIn(">Non lu</span>Suivi client", payload.delivery_payload["html_body"])
+        self.assertIn(">Non lu</span> Suivi client", payload.delivery_payload["html_body"])
         self.assertIn("<strong>Statut:</strong> Non lu", payload.delivery_payload["html_body"])
         self.assertIn("<strong>Reçu:</strong> mar. 10 mars 2026 à 08:15 CET", payload.delivery_payload["html_body"])
 
@@ -532,6 +604,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             window_end=now,
             delivery_mode="json",
             prioritized_items=(),
+            run_type="weekly_digest",
             top_summary="Review the open priorities first.",
             weather=WeatherSnapshot(
                 forecast_date=datetime(2026, 3, 9, tzinfo=timezone.utc).date(),
@@ -658,6 +731,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             window_end=now,
             delivery_mode="json",
             prioritized_items=(),
+            run_type="weekly_digest",
             top_summary="Review the open priorities first.",
             weather=WeatherSnapshot(
                 forecast_date=datetime(2026, 3, 9, tzinfo=timezone.utc).date(),
@@ -695,6 +769,7 @@ class StructuredDigestRendererTest(unittest.TestCase):
             window_end=now,
             delivery_mode="json",
             prioritized_items=(),
+            run_type="weekly_digest",
             external_news=(
                 ExternalNewsItem(
                     headline="Les marchés attendent la BCE",
@@ -795,11 +870,11 @@ class StructuredDigestRendererTest(unittest.TestCase):
         self.assertIn("Présence du jour", payload.delivery_body)
         self.assertIn("Site Horizon", payload.delivery_body)
         self.assertIn("À faire:", payload.delivery_body)
-        self.assertIn("Confiance: Fiable", payload.delivery_body)
+        self.assertNotIn("Confiance:", payload.delivery_body)
         self.assertNotIn("Confiance: 92 /", payload.delivery_body)
         self.assertIn("Présence du jour", payload.delivery_payload["html_body"])
         self.assertIn("<strong>À faire:</strong>", payload.delivery_payload["html_body"])
-        self.assertIn("<strong>Confiance:</strong>", payload.delivery_payload["html_body"])
+        self.assertNotIn("<strong>Confiance:</strong>", payload.delivery_payload["html_body"])
 
     def test_daily_presence_section_keeps_only_source_day_items(self) -> None:
         renderer = StructuredDigestRenderer(display_timezone="Europe/Paris", digest_language="fr")

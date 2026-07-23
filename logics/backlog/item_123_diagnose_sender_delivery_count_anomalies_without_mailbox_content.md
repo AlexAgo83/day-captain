@@ -1,10 +1,10 @@
 ## item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content - Diagnose sender delivery-count anomalies without mailbox content
 > From version: 1.0.0
 > Schema version: 1.0
-> Status: Ready
+> Status: Done
 > Understanding: 90%
 > Confidence: 85%
-> Progress: 0%
+> Progress: 100%
 > Complexity: Medium
 > Theme: Operations
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
@@ -38,6 +38,11 @@
 - request-AC11 -> This backlog slice. Proof: AC3: A normal one-recipient-per-target fan-out reports pass, while extra or missing observed sends report actionable content-free diagnostics.
 - request-AC13 -> This backlog slice. Proof: AC4: Operator docs explain where private raw evidence may live and what aggregate fields can enter public-safe workflow docs.
 - request-AC14 -> This backlog slice. Proof: AC4: Operator docs explain where private raw evidence may live and what aggregate fields can enter public-safe workflow docs.
+- request-AC5 -> This backlog slice. Evidence needed: Confidence labels render only when uncertainty changes the user's decision, are localized consistently, and never appear as English strings in French output.
+- request-AC6 -> This backlog slice. Evidence needed: HTML and text rendering preserve readable spacing between labels, card badges, metadata, and quick-action links, including plain-text fallback output.
+- request-AC7 -> This backlog slice. Evidence needed: Meeting and Outlook open controls remain available but are visually compact and do not repeat in a way that dominates card content.
+- request-AC8 -> This backlog slice. Evidence needed: The top summary states what changed, what needs action, what is waiting on someone else, and what can be ignored, without restating full card text.
+- request-AC12 -> This backlog slice. Evidence needed: Representative daily and weekly HTML/text artifacts pass desktop and narrow-width review, and any manual mailbox verification remains single-recipient, content-free, and temporary.
 
 # Decision framing
 - Product framing: Not needed
@@ -58,3 +63,9 @@
 # Priority
 - Priority: Medium
 - Rationale: Set by scaffold input or defaulted for grooming.
+
+# Tasks
+- `task_054_orchestrate_digest_friction_hardening`
+
+# Notes
+- Task `task_054_orchestrate_digest_friction_hardening` was finished via `logics-manager flow finish task` on 2026-07-23.

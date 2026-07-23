@@ -6,7 +6,7 @@ from day_captain.models import DigestEntry
 from day_captain.models import DigestPayload
 
 
-METRICS_VERSION = "1.1"
+METRICS_VERSION = "1.2"
 PRODUCTION_BASELINE_V1 = {
     "baseline_version": "public-safe-baseline-v1",
     "briefs": 118,
@@ -115,6 +115,7 @@ def usefulness_metrics(payloads: Sequence[DigestPayload]) -> Mapping[str, object
 def digest_metrics(payloads: Sequence[DigestPayload]) -> Mapping[str, object]:
     visible_lengths = []
     card_count = generic_actions = risk_warnings = news_items = sensitive_suppressions = repeated_suppressions = 0
+    confidence_labels = source_open_controls = 0
     for payload in payloads:
         entries = _entries(payload)
         visible_lengths.append(len(payload.delivery_body))
@@ -122,6 +123,8 @@ def digest_metrics(payloads: Sequence[DigestPayload]) -> Mapping[str, object]:
         generic_actions += sum(1 for item in entries if _is_generic_action(item.recommended_action))
         risk_warnings += sum(1 for item in entries if item.card and item.card.risk_level in {"medium", "high"})
         news_items += len(payload.external_news)
+        confidence_labels += sum(1 for item in entries if item.confidence_label and item.confidence_score < 90)
+        source_open_controls += sum(1 for item in entries if item.source_url or item.desktop_source_url)
         metrics = payload.delivery_payload.get("usefulness_metrics") or {}
         sensitive_suppressions += int(metrics.get("sensitive_suppressions") or 0)
         repeated_suppressions += int(metrics.get("repeated_unchanged_suppressions") or 0)
@@ -135,6 +138,8 @@ def digest_metrics(payloads: Sequence[DigestPayload]) -> Mapping[str, object]:
         "generic_actions": generic_actions,
         "risk_warnings": risk_warnings,
         "external_news_items": news_items,
+        "confidence_label_count": confidence_labels,
+        "source_open_control_count": source_open_controls,
         "sensitive_suppressions": sensitive_suppressions,
         "repeated_unchanged_suppressions": repeated_suppressions,
         "usefulness": usefulness_metrics(payloads),

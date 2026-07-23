@@ -29,6 +29,7 @@ from day_captain.hosted_jobs import wait_for_hosted_health
 from day_captain.models import parse_datetime
 from day_captain.models import digest_payload_from_dict
 from day_captain.models import to_jsonable
+from day_captain.delivery_audit import delivery_count_audit
 from day_captain.digest_metrics import candidate_gate, digest_debug_report, digest_metrics
 from day_captain.replay import run_synthetic_replay
 from day_captain.web import serve
@@ -115,6 +116,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     metrics = subparsers.add_parser("digest-metrics", help="Report content-free metrics from exported digest JSON.")
     metrics.add_argument("inputs", nargs="+", help="One or more exported DigestPayload JSON files.")
+    delivery_audit = subparsers.add_parser("delivery-audit", help="Report content-free delivery count diagnostics from JSON records.")
+    delivery_audit.add_argument("input", help="JSON file containing content-free delivery records.")
+    delivery_audit.add_argument("--expected-targets", type=int, required=True)
     replay = subparsers.add_parser("digest-replay", help="Run the built-in identity-free replay without delivery.")
     replay.add_argument("--output-dir", help="Optional directory for synthetic daily/weekly HTML and text artifacts.")
     replay.add_argument("--view", action="store_true", help="Open a local debug viewer for the synthetic replay artifacts.")
@@ -504,6 +508,13 @@ def main(argv: Optional[list] = None) -> int:
             raw = json.loads(Path(input_path).read_text(encoding="utf-8"))
             payloads.append(digest_payload_from_dict(raw.get("payload", raw)))
         print(json.dumps(digest_metrics(payloads), indent=2, sort_keys=True))
+        return 0
+    if args.command == "delivery-audit":
+        raw = json.loads(Path(args.input).read_text(encoding="utf-8"))
+        records = raw.get("records", raw) if isinstance(raw, dict) else raw
+        if not isinstance(records, list):
+            raise SystemExit("delivery-audit input must be a JSON array or an object with records[].")
+        print(json.dumps(delivery_count_audit(records, expected_targets=args.expected_targets), indent=2, sort_keys=True))
         return 0
     if args.command == "digest-replay":
         payloads = run_synthetic_replay()
