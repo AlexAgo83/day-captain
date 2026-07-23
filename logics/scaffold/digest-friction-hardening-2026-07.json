@@ -1,0 +1,238 @@
+{
+  "title": "Day Captain digest friction hardening",
+  "references": [
+    "src/day_captain/app.py",
+    "src/day_captain/services.py",
+    "src/day_captain/digest_metrics.py",
+    "src/day_captain/replay.py",
+    "src/day_captain/scheduler.py",
+    "src/day_captain/models.py",
+    "tests/test_app.py",
+    "tests/test_digest_renderer.py",
+    "tests/test_replay.py",
+    "tests/test_scheduler.py",
+    "docs/digest_rendering_validation.md",
+    "docs/power_automate_scheduler_setup.md"
+  ],
+  "request": {
+    "complexity": "High",
+    "theme": "UX",
+    "needs": [
+      "Turn the current digest from a still-noisy operational summary into a strict daily command brief that surfaces only what the recipient can act on or must watch.",
+      "Close the remaining sensitive-authentication gap so login codes, magic links, and equivalent authentication messages cannot appear in critical cards, summaries, metrics, recall output, or rendered emails.",
+      "Reduce visible fatigue from repeated external-news, confidence, meeting-open, and quick-action controls while preserving real delivery failures, explicit deadlines, and meeting conflicts.",
+      "Fix plain-text and HTML rendering seams that make the delivered email look machine-generated, including concatenated labels, crowded buttons, and mixed-language confidence labels.",
+      "Investigate recent sender-mailbox delivery-count anomalies without persisting mailbox content or exposing recipient identities."
+    ],
+    "context": [
+      "A recent content-free review of sent Day Captain briefs found that daily output remains long enough to feel like a mailbox digest rather than a decision brief.",
+      "The same review found a temporary authentication message surfacing as a critical item, which means the existing sensitive-authentication suppression is too narrow or is not applied at every ingestion and replay boundary.",
+      "External news appeared in every sampled brief, including dense operational briefs, creating filler-like reading cost when it is not connected to the recipient's active work.",
+      "Confidence labels appear frequently and can mix languages, making the digest feel uncertain even when the user needs a concrete next step.",
+      "Rendered text contains spacing and grouping issues such as adjacent labels/buttons without separators, which harms trust in the email even when the underlying ranking is useful.",
+      "Meeting and Outlook open controls are useful but repeated heavily enough to dominate visual weight in long briefs.",
+      "Recent content-free delivery counts show the normal one-message-per-recipient shape, but some runs produced fewer or more messages than the expected target count. This must be diagnosed from content-free delivery metadata only.",
+      "All evidence in this corpus is anonymized and aggregate-only. No real mailbox addresses, personal names, client names, supplier names, message subjects, previews, bodies, run IDs, tenant names, or hosted URLs are included."
+    ],
+    "acceptance_criteria": [
+      "AC1: Authentication codes, password resets, magic links, login prompts, and equivalent temporary access messages are suppressed before storage, scoring, LLM input, metrics, memory, recall, diagnostics, and rendering.",
+      "AC2: The built-in replay contains at least two synthetic authentication-message variants that previously bypassed suppression, and both are absent from every downstream artifact.",
+      "AC3: Daily briefs follow a strict decision-brief budget: at most one top priority summary, 3 user-owned actions, 2 watch items, 4 meetings, and optional ambient content only when relevant.",
+      "AC4: External news is omitted by default from daily briefs unless it matches configured work themes or explicit user preference; weekly briefs may include a small bounded digest.",
+      "AC5: Confidence labels render only when uncertainty changes the user's decision, are localized consistently, and never appear as English strings in French output.",
+      "AC6: HTML and text rendering preserve readable spacing between labels, card badges, metadata, and quick-action links, including plain-text fallback output.",
+      "AC7: Meeting and Outlook open controls remain available but are visually compact and do not repeat in a way that dominates card content.",
+      "AC8: The top summary states what changed, what needs action, what is waiting on someone else, and what can be ignored, without restating full card text.",
+      "AC9: Scheduler and content-free delivery audit tooling can report expected target count, sent count, duplicate trigger signals, retry signals, and fan-out shape without reading or storing message bodies.",
+      "AC10: Delivery-count anomaly checks cover duplicate sends, missing target sends, retry overlap, weekly/daily overlap, and manual recall overlap using synthetic or content-free fixtures.",
+      "AC11: Existing multi-user isolation, recall, feedback, Graph delivery guardrails, and content-free diagnostics remain covered by focused and full tests.",
+      "AC12: Representative daily and weekly HTML/text artifacts pass desktop and narrow-width review, and any manual mailbox verification remains single-recipient, content-free, and temporary.",
+      "AC13: A public-safe aggregate report compares before/after visible length, section count, external-news inclusion, confidence-label count, control repetition, sensitive suppressions, and delivery-count anomalies.",
+      "AC14: Documentation explains the private-ops evidence boundary: mailbox-derived audits stay temporary, aggregate-only results can be recorded, and real identities or message content never enter Git."
+    ]
+  },
+  "product": {
+    "title": "Day Captain strict decision brief",
+    "overview": "Make each delivered email feel like a concise command brief: no temporary secrets, no filler, no repeated controls, and no operational ambiguity.",
+    "goals": [
+      "Make sensitive-authentication suppression comprehensive and regression-tested with synthetic bypass cases.",
+      "Cut routine daily reading cost by hiding ambient content and generic uncertainty unless it changes the user's action.",
+      "Make the first screen of the email answer the user's next actions, waiting items, conflicts, and ignored noise.",
+      "Improve delivered-email craft so text spacing, button grouping, language, and metadata look intentional in Outlook and plain text.",
+      "Give operators content-free delivery-count diagnostics that explain duplicate or missing sends without mailbox exports."
+    ],
+    "non_goals": [
+      "Persisting real mailbox-derived audit artifacts in the repository.",
+      "Adding tracking pixels or covert read tracking.",
+      "Automatically replying to mail or modifying calendar events.",
+      "Replacing Microsoft Graph, the existing scheduler model, or the existing storage abstraction.",
+      "Building a full external-news personalization engine."
+    ]
+  },
+  "backlog_items": [
+    {
+      "title": "Close authentication-message suppression gaps",
+      "priority": "High",
+      "complexity": "High",
+      "theme": "Security",
+      "request_acs": [
+        "AC1",
+        "AC2",
+        "AC11",
+        "AC13",
+        "AC14"
+      ],
+      "problem": [
+        "A temporary authentication message can still reach a rendered critical card, so the current detector misses at least one real-world login-link pattern.",
+        "Suppression must be enforced once at the earliest shared boundary and verified across storage, metrics, recall, LLM input, memory, diagnostics, and rendering.",
+        "Regression proof must use synthetic fixtures only, not copied mailbox content."
+      ],
+      "scope_in": [
+        "Expand the deterministic sensitive-authentication classifier to cover login links, verification buttons, expiring access links, device confirmation prompts, one-time passcodes, password reset notices, and vendor-neutral authentication phrasing.",
+        "Apply the classifier at every collection path that can feed digest generation, recall, replay, metrics, and persisted run state.",
+        "Add synthetic replay fixtures for two bypass classes: expiring login-link email and button-based account-confirmation email.",
+        "Expose only aggregate sensitive_suppressions counts in payloads and metrics.",
+        "Add focused tests proving sensitive text is absent from stored runs, rendered HTML/text, LLM shortlist payloads, digest metrics, recall output, and replay exports."
+      ],
+      "scope_out": [
+        "Storing redacted copies of sensitive messages for debugging.",
+        "Calling an external classifier for authentication detection.",
+        "Blocking ordinary operational security alerts that require user action but contain no temporary secret or login link."
+      ],
+      "acceptance_criteria": [
+        "AC1: Synthetic login-link and account-confirmation fixtures are suppressed before scoring and never produce DigestCard objects.",
+        "AC2: Tests prove no fixture secret phrase reaches storage, LLM input, metrics JSON, recall output, rendered HTML, rendered text, or replay export.",
+        "AC3: A non-secret operational security alert remains eligible when it contains no temporary credential, code, or login-link intent.",
+        "AC4: sensitive_suppressions increments as an integer count only, with no retained subject, preview, body, address, or vendor name.",
+        "AC5: Existing authentication suppression tests still pass."
+      ]
+    },
+    {
+      "title": "Make daily output a strict command brief",
+      "priority": "High",
+      "complexity": "High",
+      "theme": "UX",
+      "request_acs": [
+        "AC3",
+        "AC4",
+        "AC5",
+        "AC8",
+        "AC11",
+        "AC13"
+      ],
+      "problem": [
+        "Daily briefs still feel long and summary-like instead of acting as a short operational command surface.",
+        "External news and repeated confidence labels add reading cost when they are not tied to active work.",
+        "The overview can restate card content instead of telling the user what changed and what to do."
+      ],
+      "scope_in": [
+        "Enforce the daily decision-brief budget at render selection: one top priority summary, 3 user-owned actions, 2 watch items, 4 meetings, and no daily external news unless relevant by configured theme or explicit preference.",
+        "Keep weekly briefs allowed to include a small bounded external-news section, after operational sections.",
+        "Change confidence rendering so labels appear only for low-confidence or decision-affecting uncertainty; localize labels consistently through the existing language table.",
+        "Rewrite the top summary as a delta: new actions, changed waiting items, conflicts, ignored/noise count, and cleared/resolved count when available.",
+        "Suppress generic recommended actions when the system cannot identify a concrete verb/object/owner.",
+        "Update digest metrics to count external-news inclusion, confidence-label render count, and visible control count."
+      ],
+      "scope_out": [
+        "Removing confidence from internal scoring.",
+        "Removing weekly external news entirely.",
+        "Adding a new personalization database."
+      ],
+      "acceptance_criteria": [
+        "AC1: Daily renderer tests enforce section budgets and fail if unrelated external news appears without theme or preference support.",
+        "AC2: French output contains only French confidence labels when confidence is rendered.",
+        "AC3: A high-confidence ordinary card omits the confidence badge, while a decision-affecting uncertain card keeps one short localized reason.",
+        "AC4: The top summary is shorter than the combined card text and includes action/waiting/conflict/ignored counts when present.",
+        "AC5: Metrics report visible length, card count, external-news count, confidence-label count, control count, generic-action count, and sensitive suppressions."
+      ]
+    },
+    {
+      "title": "Polish Outlook and text rendering ergonomics",
+      "priority": "High",
+      "complexity": "Medium",
+      "theme": "Email rendering",
+      "request_acs": [
+        "AC6",
+        "AC7",
+        "AC8",
+        "AC12"
+      ],
+      "problem": [
+        "Delivered output can concatenate labels, metadata, recurring badges, and quick-action links without visible separators.",
+        "Meeting and Outlook open controls repeat enough to compete with the actual card content.",
+        "Plain-text fallback has the same spacing problems, which makes quick scanning harder."
+      ],
+      "scope_in": [
+        "Normalize spacing around section labels, badges, metadata labels, recurring/evolving markers, quick-action links, and footer controls.",
+        "Group quick actions into separated links in text and visually separated buttons in HTML.",
+        "Render meeting open controls as compact secondary actions, with at most one primary open action per meeting card.",
+        "Add renderer snapshot or structural assertions for French daily output, weekly output, meeting-heavy output, and empty/compact output.",
+        "Update the rendering validation doc with the exact spacing/control checks a human reviewer should perform."
+      ],
+      "scope_out": [
+        "Changing the email transport.",
+        "Adding a CSS framework.",
+        "Removing the recall actions."
+      ],
+      "acceptance_criteria": [
+        "AC1: Tests fail on concatenated text patterns for scope labels, badge-title joins, and quick-action joins.",
+        "AC2: HTML quick actions render as distinct controls and text quick actions render with readable separators.",
+        "AC3: Meeting cards expose open controls without repeating both generic and desktop variants as equally weighted card text.",
+        "AC4: Desktop and narrow-width validation instructions cover section rhythm, wrapping, buttons, metadata, and footer spacing."
+      ]
+    },
+    {
+      "title": "Diagnose sender delivery-count anomalies without mailbox content",
+      "priority": "Medium",
+      "complexity": "Medium",
+      "theme": "Operations",
+      "request_acs": [
+        "AC9",
+        "AC10",
+        "AC11",
+        "AC13",
+        "AC14"
+      ],
+      "problem": [
+        "Recent content-free delivery counts show some runs with fewer or more messages than the expected target count.",
+        "Operators need to distinguish normal fan-out, duplicate trigger, retry overlap, weekly/daily overlap, recall/manual run overlap, and missing-target delivery without reading message bodies.",
+        "The existing private-ops boundary needs a reusable diagnostic command that records only aggregate metadata."
+      ],
+      "scope_in": [
+        "Add or extend a content-free delivery audit command that reads only sent timestamp, normalized digest edition, recipient-count shape, attachment flag, and message identifier hash.",
+        "Compare observed sends against configured target count by edition and expected schedule window.",
+        "Flag duplicate sends when the same edition and schedule bucket exceeds target count, and missing sends when it falls below target count after the allowed delay.",
+        "Detect possible retry overlap from tightly clustered sends and possible manual/recall overlap from non-scheduled windows without storing subjects or recipient addresses.",
+        "Document that audit output is temporary, aggregate-only, and safe to summarize in Logics without mailbox identities or message content."
+      ],
+      "scope_out": [
+        "Persisting mailbox audit exports in Git.",
+        "Reading message bodies for delivery-count diagnostics.",
+        "Automatically deleting sent messages or suppressing delivery based on audit results."
+      ],
+      "acceptance_criteria": [
+        "AC1: Synthetic audit fixtures classify expected, missing-target, duplicate-target, retry-overlap, weekly-overlap, and manual-window cases.",
+        "AC2: The command output contains no recipient address, subject, preview, body, client name, supplier name, token, secret, or hosted URL.",
+        "AC3: A normal one-recipient-per-target fan-out reports pass, while extra or missing observed sends report actionable content-free diagnostics.",
+        "AC4: Operator docs explain where private raw evidence may live and what aggregate fields can enter public-safe workflow docs."
+      ]
+    }
+  ],
+  "orchestration_task": {
+    "title": "Orchestrate digest friction hardening",
+    "plan": [
+      "Start with the authentication suppression gap because it is the only security-sensitive defect and should be fixed at the earliest shared boundary.",
+      "Add synthetic replay and focused regression fixtures before changing renderer behavior so sensitive and UX gates are measurable.",
+      "Tighten daily selection, external-news inclusion, confidence rendering, and top-summary wording using existing scoring and rendering primitives before adding fields.",
+      "Polish HTML and text rendering spacing/control grouping with small renderer assertions instead of broad visual infrastructure.",
+      "Add content-free sender delivery-count diagnostics for duplicate/missing send investigation without mailbox content.",
+      "Run focused tests for sensitive suppression, renderer output, replay, metrics, scheduler/audit diagnostics, then run the full suite.",
+      "Run Logics flow validation, lint, audit, index/context-pack refresh, and record only public-safe aggregate validation evidence."
+    ]
+  },
+  "context_pack": {
+    "out": "logics/context-packs/digest-friction-hardening-2026-07.json",
+    "mode": "diff-first",
+    "profile": "normal"
+  }
+}

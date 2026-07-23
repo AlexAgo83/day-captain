@@ -1,0 +1,463 @@
+{
+  "budgets": {
+    "max_docs": 24,
+    "max_docs_per_ref": 4
+  },
+  "changed_paths": [
+    "logics/backlog/item_120_close_authentication_message_suppression_gaps.md",
+    "logics/backlog/item_121_make_daily_output_a_strict_command_brief.md",
+    "logics/backlog/item_122_polish_outlook_and_text_rendering_ergonomics.md",
+    "logics/backlog/item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content.md",
+    "logics/product/prod_004_day_captain_strict_decision_brief.md",
+    "logics/request/req_057_day_captain_digest_friction_hardening.md",
+    "logics/scaffold/digest-friction-hardening-2026-07.json",
+    "logics/tasks/task_054_orchestrate_digest_friction_hardening.md"
+  ],
+  "command": "logics-manager sync context-pack req_057_day_captain_digest_friction_hardening item_120_close_authentication_message_suppression_gaps item_121_make_daily_output_a_strict_command_brief item_122_polish_outlook_and_text_rendering_ergonomics item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content task_054_orchestrate_digest_friction_hardening --mode diff-first --profile normal --handoff",
+  "companion_docs": [
+    {
+      "kind": "product",
+      "linked_refs": {
+        "item": [
+          "item_120_close_authentication_message_suppression_gaps",
+          "item_121_make_daily_output_a_strict_command_brief",
+          "item_122_polish_outlook_and_text_rendering_ergonomics",
+          "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ],
+        "task": [
+          "task_054_orchestrate_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/product/prod_004_day_captain_strict_decision_brief.md",
+      "ref": "prod_004_day_captain_strict_decision_brief",
+      "sections": {
+        "Goals": [
+          "- Make sensitive-authentication suppression comprehensive and regression-tested with synthetic bypass cases.",
+          "- Cut routine daily reading cost by hiding ambient content and generic uncertainty unless it changes the user's action.",
+          "- Make the first screen of the email answer the user's next actions, waiting items, conflicts, and ignored noise.",
+          "- Improve delivered-email craft so text spacing, button grouping, language, and metadata look intentional in Outlook and plain text.",
+          "- Give operators content-free delivery-count diagnostics that explain duplicate or missing sends without mailbox exports."
+        ],
+        "Key product decisions": [
+          "- Use structured input as the source of truth for generated docs.",
+          "- Keep generated write paths local and repo-bounded."
+        ],
+        "Overview": [
+          "Make each delivered email feel like a concise command brief: no temporary secrets, no filler, no repeated controls, and no operational ambiguity."
+        ],
+        "References": [
+          "- Product back-reference: `req_057_day_captain_digest_friction_hardening`",
+          "- Task back-reference: `task_054_orchestrate_digest_friction_hardening`"
+        ]
+      },
+      "status": "Proposed",
+      "title": "Day Captain strict decision brief"
+    }
+  ],
+  "docs": [
+    {
+      "ai_context": {
+        "keywords": "request-chain-scaffold, day captain digest friction hardening, development-ready",
+        "skip when": "The change is unrelated to this scaffolded request chain.",
+        "summary": "Day Captain digest friction hardening",
+        "use when": "You need to implement or review the scaffolded workflow for Day Captain digest friction hardening."
+      },
+      "kind": "request",
+      "linked_refs": {
+        "item": [
+          "item_120_close_authentication_message_suppression_gaps",
+          "item_121_make_daily_output_a_strict_command_brief",
+          "item_122_polish_outlook_and_text_rendering_ergonomics",
+          "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/request/req_057_day_captain_digest_friction_hardening.md",
+      "ref": "req_057_day_captain_digest_friction_hardening",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Authentication codes, password resets, magic links, login prompts, and equivalent temporary access messages are suppressed before storage, scoring, LLM input, metrics, memory, recall, diagnostics, and rendering.",
+          "- AC2: The built-in replay contains at least two synthetic authentication-message variants that previously bypassed suppression, and both are absent from every downstream artifact.",
+          "- AC3: Daily briefs follow a strict decision-brief budget: at most one top priority summary, 3 user-owned actions, 2 watch items, 4 meetings, and optional ambient content only when relevant.",
+          "- AC4: External news is omitted by default from daily briefs unless it matches configured work themes or explicit user preference; weekly briefs may include a small bounded digest.",
+          "- AC5: Confidence labels render only when uncertainty changes the user's decision, are localized consistently, and never appear as English strings in French output.",
+          "- AC6: HTML and text rendering preserve readable spacing between labels, card badges, metadata, and quick-action links, including plain-text fallback output."
+        ],
+        "Needs": [
+          "- Turn the current digest from a still-noisy operational summary into a strict daily command brief that surfaces only what the recipient can act on or must watch.",
+          "- Close the remaining sensitive-authentication gap so login codes, magic links, and equivalent authentication messages cannot appear in critical cards, summaries, metrics, recall output, or rendered emails.",
+          "- Reduce visible fatigue from repeated external-news, confidence, meeting-open, and quick-action controls while preserving real delivery failures, explicit deadlines, and meeting conflicts.",
+          "- Fix plain-text and HTML rendering seams that make the delivered email look machine-generated, including concatenated labels, crowded buttons, and mixed-language confidence labels.",
+          "- Investigate recent sender-mailbox delivery-count anomalies without persisting mailbox content or exposing recipient identities."
+        ]
+      },
+      "status": "Draft",
+      "title": "Day Captain digest friction hardening"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, close authentication-message suppression gaps, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Close authentication-message suppression gaps",
+        "use when": "Implementing the scaffolded slice for Close authentication-message suppression gaps."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_120_close_authentication_message_suppression_gaps"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ],
+        "task": [
+          "task_054_orchestrate_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/backlog/item_120_close_authentication_message_suppression_gaps.md",
+      "ref": "item_120_close_authentication_message_suppression_gaps",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Synthetic login-link and account-confirmation fixtures are suppressed before scoring and never produce DigestCard objects.",
+          "- AC2: Tests prove no fixture secret phrase reaches storage, LLM input, metrics JSON, recall output, rendered HTML, rendered text, or replay export.",
+          "- AC3: A non-secret operational security alert remains eligible when it contains no temporary credential, code, or login-link intent.",
+          "- AC4: sensitive_suppressions increments as an integer count only, with no retained subject, preview, body, address, or vendor name.",
+          "- AC5: Existing authentication suppression tests still pass."
+        ],
+        "Problem": [
+          "- A temporary authentication message can still reach a rendered critical card, so the current detector misses at least one real-world login-link pattern.",
+          "- Suppression must be enforced once at the earliest shared boundary and verified across storage, metrics, recall, LLM input, memory, diagnostics, and rendering.",
+          "- Regression proof must use synthetic fixtures only, not copied mailbox content."
+        ]
+      },
+      "status": "Ready",
+      "title": "Close authentication-message suppression gaps"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, make daily output a strict command brief, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Make daily output a strict command brief",
+        "use when": "Implementing the scaffolded slice for Make daily output a strict command brief."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_121_make_daily_output_a_strict_command_brief"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ],
+        "task": [
+          "task_054_orchestrate_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/backlog/item_121_make_daily_output_a_strict_command_brief.md",
+      "ref": "item_121_make_daily_output_a_strict_command_brief",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Daily renderer tests enforce section budgets and fail if unrelated external news appears without theme or preference support.",
+          "- AC2: French output contains only French confidence labels when confidence is rendered.",
+          "- AC3: A high-confidence ordinary card omits the confidence badge, while a decision-affecting uncertain card keeps one short localized reason.",
+          "- AC4: The top summary is shorter than the combined card text and includes action/waiting/conflict/ignored counts when present.",
+          "- AC5: Metrics report visible length, card count, external-news count, confidence-label count, control count, generic-action count, and sensitive suppressions."
+        ],
+        "Problem": [
+          "- Daily briefs still feel long and summary-like instead of acting as a short operational command surface.",
+          "- External news and repeated confidence labels add reading cost when they are not tied to active work.",
+          "- The overview can restate card content instead of telling the user what changed and what to do."
+        ]
+      },
+      "status": "Ready",
+      "title": "Make daily output a strict command brief"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, polish outlook and text rendering ergonomics, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Polish Outlook and text rendering ergonomics",
+        "use when": "Implementing the scaffolded slice for Polish Outlook and text rendering ergonomics."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_122_polish_outlook_and_text_rendering_ergonomics"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ],
+        "task": [
+          "task_054_orchestrate_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/backlog/item_122_polish_outlook_and_text_rendering_ergonomics.md",
+      "ref": "item_122_polish_outlook_and_text_rendering_ergonomics",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Tests fail on concatenated text patterns for scope labels, badge-title joins, and quick-action joins.",
+          "- AC2: HTML quick actions render as distinct controls and text quick actions render with readable separators.",
+          "- AC3: Meeting cards expose open controls without repeating both generic and desktop variants as equally weighted card text.",
+          "- AC4: Desktop and narrow-width validation instructions cover section rhythm, wrapping, buttons, metadata, and footer spacing."
+        ],
+        "Problem": [
+          "- Delivered output can concatenate labels, metadata, recurring badges, and quick-action links without visible separators.",
+          "- Meeting and Outlook open controls repeat enough to compete with the actual card content.",
+          "- Plain-text fallback has the same spacing problems, which makes quick scanning harder."
+        ]
+      },
+      "status": "Ready",
+      "title": "Polish Outlook and text rendering ergonomics"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-task, request-chain-scaffold, orchestration",
+        "skip when": "Working on one isolated sibling slice.",
+        "summary": "Orchestrate digest friction hardening",
+        "use when": "Coordinating implementation of a scaffolded request chain."
+      },
+      "kind": "task",
+      "linked_refs": {
+        "item": [
+          "item_120_close_authentication_message_suppression_gaps",
+          "item_121_make_daily_output_a_strict_command_brief",
+          "item_122_polish_outlook_and_text_rendering_ergonomics",
+          "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ],
+        "task": [
+          "task_054_orchestrate_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/tasks/task_054_orchestrate_digest_friction_hardening.md",
+      "ref": "task_054_orchestrate_digest_friction_hardening",
+      "schema_version": "1.0",
+      "sections": {
+        "Context": [
+          "- Orchestrate the scaffolded request chain and keep sibling implementation slices linked."
+        ],
+        "Validation": [
+          "- Run `python3 -m logics_manager lint --require-status`.",
+          "- Run scaffold command tests."
+        ]
+      },
+      "status": "Ready",
+      "title": "Orchestrate digest friction hardening"
+    },
+    {
+      "ai_context": {},
+      "kind": "product",
+      "linked_refs": {
+        "item": [
+          "item_120_close_authentication_message_suppression_gaps",
+          "item_121_make_daily_output_a_strict_command_brief",
+          "item_122_polish_outlook_and_text_rendering_ergonomics",
+          "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ],
+        "task": [
+          "task_054_orchestrate_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/product/prod_004_day_captain_strict_decision_brief.md",
+      "ref": "prod_004_day_captain_strict_decision_brief",
+      "schema_version": "1.0",
+      "sections": {},
+      "status": "Proposed",
+      "title": "Day Captain strict decision brief"
+    },
+    {
+      "ai_context": {
+        "keywords": "scaffolded-backlog, diagnose sender delivery-count anomalies without mailbox content, implementation-ready",
+        "skip when": "The change belongs to another backlog slice.",
+        "summary": "Diagnose sender delivery-count anomalies without mailbox content",
+        "use when": "Implementing the scaffolded slice for Diagnose sender delivery-count anomalies without mailbox content."
+      },
+      "kind": "backlog",
+      "linked_refs": {
+        "item": [
+          "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content"
+        ],
+        "prod": [
+          "prod_004_day_captain_strict_decision_brief"
+        ],
+        "req": [
+          "req_057_day_captain_digest_friction_hardening"
+        ],
+        "task": [
+          "task_054_orchestrate_digest_friction_hardening"
+        ]
+      },
+      "path": "logics/backlog/item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content.md",
+      "ref": "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content",
+      "schema_version": "1.0",
+      "sections": {
+        "Acceptance criteria": [
+          "- AC1: Synthetic audit fixtures classify expected, missing-target, duplicate-target, retry-overlap, weekly-overlap, and manual-window cases.",
+          "- AC2: The command output contains no recipient address, subject, preview, body, client name, supplier name, token, secret, or hosted URL.",
+          "- AC3: A normal one-recipient-per-target fan-out reports pass, while extra or missing observed sends report actionable content-free diagnostics.",
+          "- AC4: Operator docs explain where private raw evidence may live and what aggregate fields can enter public-safe workflow docs."
+        ],
+        "Problem": [
+          "- Recent content-free delivery counts show some runs with fewer or more messages than the expected target count.",
+          "- Operators need to distinguish normal fan-out, duplicate trigger, retry overlap, weekly/daily overlap, recall/manual run overlap, and missing-target delivery without reading message bodies.",
+          "- The existing private-ops boundary needs a reusable diagnostic command that records only aggregate metadata."
+        ]
+      },
+      "status": "Ready",
+      "title": "Diagnose sender delivery-count anomalies without mailbox content"
+    }
+  ],
+  "estimates": {
+    "char_count": 14267,
+    "companion_doc_count": 1,
+    "doc_count": 7
+  },
+  "generated_at": "2026-07-23T21:10:12Z",
+  "handoff": {
+    "companion_doc_count": 1,
+    "enabled": true,
+    "source_refs": [
+      "req_057_day_captain_digest_friction_hardening",
+      "item_120_close_authentication_message_suppression_gaps",
+      "item_121_make_daily_output_a_strict_command_brief",
+      "item_122_polish_outlook_and_text_rendering_ergonomics",
+      "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content",
+      "task_054_orchestrate_digest_friction_hardening"
+    ],
+    "validation_summary_count": 1
+  },
+  "i18n": {
+    "actions": [
+      "Choose the source locale for app-owned user-facing copy.",
+      "Run logics-manager i18n init --source-locale <locale>.",
+      "Route new UI copy through stable semantic keys."
+    ],
+    "applicable": null,
+    "configured": false,
+    "contract_path": "logics/i18n/contract.json",
+    "findings": [],
+    "next_action": "Run logics-manager i18n init --source-locale <locale> for a project that owns user-facing copy.",
+    "ok": true,
+    "state": "absent"
+  },
+  "mode": "diff-first",
+  "profile": "normal",
+  "ref": "req_057_day_captain_digest_friction_hardening,item_120_close_authentication_message_suppression_gaps,item_121_make_daily_output_a_strict_command_brief,item_122_polish_outlook_and_text_rendering_ergonomics,item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content,task_054_orchestrate_digest_friction_hardening",
+  "refs": [
+    "req_057_day_captain_digest_friction_hardening",
+    "item_120_close_authentication_message_suppression_gaps",
+    "item_121_make_daily_output_a_strict_command_brief",
+    "item_122_polish_outlook_and_text_rendering_ergonomics",
+    "item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content",
+    "task_054_orchestrate_digest_friction_hardening"
+  ],
+  "release": {
+    "blocking_reasons": [],
+    "configured": true,
+    "contract_path": "logics/release/contract.json",
+    "guidance": [
+      "Release readiness must come from project-owned evidence, not conversational memory.",
+      "Use release status or validate before preparing or claiming release readiness.",
+      "Publication-oriented actions are explicit operator actions and are separate from safe read/validate actions."
+    ],
+    "next_action": "Release evidence is complete.",
+    "publication_actions": [
+      "GitHub release publication",
+      "external publication"
+    ],
+    "required_gates": [
+      {
+        "blocking_reason": null,
+        "id": "version_metadata",
+        "required": true,
+        "state": "preparing",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "changelog",
+        "required": true,
+        "state": "preparing",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "local_validation",
+        "required": true,
+        "state": "local_validation",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "git_push",
+        "required": true,
+        "state": "pushed",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "ci",
+        "required": true,
+        "state": "ci_verification",
+        "status": "passed"
+      },
+      {
+        "blocking_reason": null,
+        "id": "production_deployment",
+        "required": true,
+        "state": "external_publication",
+        "status": "passed"
+      }
+    ],
+    "safe_actions": [
+      "logics-manager release status",
+      "logics-manager release plan <version>",
+      "logics-manager release validate <version>"
+    ],
+    "state": "ready",
+    "target_version": "1.11.0"
+  },
+  "validation_summary": [
+    {
+      "items": [
+        "- Run `python3 -m logics_manager lint --require-status`.",
+        "- Run scaffold command tests."
+      ],
+      "path": "logics/tasks/task_054_orchestrate_digest_friction_hardening.md",
+      "ref": "task_054_orchestrate_digest_friction_hardening"
+    }
+  ]
+}

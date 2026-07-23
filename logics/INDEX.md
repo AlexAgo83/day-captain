@@ -10,7 +10,8 @@ _None_
 |---|---|---|---|---|---|
 | [prod_001_day_captain_operations_scheduler_reliability](product/prod_001_day_captain_operations_scheduler_reliability.md) | Day Captain operations scheduler reliability | Settled |  |  | product/prod_001_day_captain_operations_scheduler_reliability.md |
 | [prod_002_day_captain_actionable_differential_brief](product/prod_002_day_captain_actionable_differential_brief.md) | Day Captain actionable differential brief | Settled |  |  | product/prod_002_day_captain_actionable_differential_brief.md |
-| [prod_003_day_captain_useful_decision_brief](product/prod_003_day_captain_useful_decision_brief.md) | Day Captain useful decision brief | Proposed |  |  | product/prod_003_day_captain_useful_decision_brief.md |
+| [prod_003_day_captain_useful_decision_brief](product/prod_003_day_captain_useful_decision_brief.md) | Day Captain useful decision brief | Settled |  |  | product/prod_003_day_captain_useful_decision_brief.md |
+| [prod_004_day_captain_strict_decision_brief](product/prod_004_day_captain_strict_decision_brief.md) | Day Captain strict decision brief | Proposed |  |  | product/prod_004_day_captain_strict_decision_brief.md |
 
 ## Roadmaps
 
@@ -75,7 +76,8 @@ _None_
 | [req_053_day_captain_technical_debt_and_runtime_hardening](request/req_053_day_captain_technical_debt_and_runtime_hardening.md) | Day Captain technical debt and runtime hardening | Done |  |  | request/req_053_day_captain_technical_debt_and_runtime_hardening.md |
 | [req_054_day_captain_power_automate_scheduler_migration](request/req_054_day_captain_power_automate_scheduler_migration.md) | Day Captain Power Automate scheduler migration | Done |  |  | request/req_054_day_captain_power_automate_scheduler_migration.md |
 | [req_055_day_captain_production_digest_actionability_improvement](request/req_055_day_captain_production_digest_actionability_improvement.md) | Day Captain production digest actionability improvement | Done |  |  | request/req_055_day_captain_production_digest_actionability_improvement.md |
-| [req_056_day_captain_digest_usefulness_intelligence](request/req_056_day_captain_digest_usefulness_intelligence.md) | Day Captain digest usefulness intelligence | Draft |  |  | request/req_056_day_captain_digest_usefulness_intelligence.md |
+| [req_056_day_captain_digest_usefulness_intelligence](request/req_056_day_captain_digest_usefulness_intelligence.md) | Day Captain digest usefulness intelligence | Done |  |  | request/req_056_day_captain_digest_usefulness_intelligence.md |
+| [req_057_day_captain_digest_friction_hardening](request/req_057_day_captain_digest_friction_hardening.md) | Day Captain digest friction hardening | Draft |  |  | request/req_057_day_captain_digest_friction_hardening.md |
 
 ## Backlog
 
@@ -197,10 +199,14 @@ _None_
 | [item_113_improve_digest_presentation_personalization_and_usefulness_telemetry](backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md) | Improve digest presentation personalization and usefulness telemetry | Done |  | 100% | backlog/item_113_improve_digest_presentation_personalization_and_usefulness_telemetry.md |
 | [item_114_protect_sensitive_mailbox_content_and_govern_application_access](backlog/item_114_protect_sensitive_mailbox_content_and_govern_application_access.md) | Protect sensitive mailbox content and govern application access | Done |  | 100% | backlog/item_114_protect_sensitive_mailbox_content_and_govern_application_access.md |
 | [item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout](backlog/item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout.md) | Validate digest usefulness with replay visual QA and safe rollout | Done |  | 100% | backlog/item_115_validate_digest_usefulness_with_replay_visual_qa_and_safe_rollout.md |
-| [item_116_add_privacy_safe_digest_usefulness_debug_evidence](backlog/item_116_add_privacy_safe_digest_usefulness_debug_evidence.md) | Add privacy-safe digest usefulness debug evidence | Ready |  | 0% | backlog/item_116_add_privacy_safe_digest_usefulness_debug_evidence.md |
-| [item_117_add_bounded_rich_context_for_high_potential_candidates](backlog/item_117_add_bounded_rich_context_for_high_potential_candidates.md) | Add bounded rich context for high-potential candidates | Ready |  | 0% | backlog/item_117_add_bounded_rich_context_for_high_potential_candidates.md |
-| [item_118_select_llm_and_final_digest_inputs_by_operational_value](backlog/item_118_select_llm_and_final_digest_inputs_by_operational_value.md) | Select LLM and final digest inputs by operational value | Ready |  | 0% | backlog/item_118_select_llm_and_final_digest_inputs_by_operational_value.md |
-| [item_119_make_the_top_summary_decision_oriented](backlog/item_119_make_the_top_summary_decision_oriented.md) | Make the top summary decision-oriented | Ready |  | 0% | backlog/item_119_make_the_top_summary_decision_oriented.md |
+| [item_116_add_privacy_safe_digest_usefulness_debug_evidence](backlog/item_116_add_privacy_safe_digest_usefulness_debug_evidence.md) | Add privacy-safe digest usefulness debug evidence | Done |  | 100% | backlog/item_116_add_privacy_safe_digest_usefulness_debug_evidence.md |
+| [item_117_add_bounded_rich_context_for_high_potential_candidates](backlog/item_117_add_bounded_rich_context_for_high_potential_candidates.md) | Add bounded rich context for high-potential candidates | Done |  | 100% | backlog/item_117_add_bounded_rich_context_for_high_potential_candidates.md |
+| [item_118_select_llm_and_final_digest_inputs_by_operational_value](backlog/item_118_select_llm_and_final_digest_inputs_by_operational_value.md) | Select LLM and final digest inputs by operational value | Done |  | 100% | backlog/item_118_select_llm_and_final_digest_inputs_by_operational_value.md |
+| [item_119_make_the_top_summary_decision_oriented](backlog/item_119_make_the_top_summary_decision_oriented.md) | Make the top summary decision-oriented | Done |  | 100% | backlog/item_119_make_the_top_summary_decision_oriented.md |
+| [item_120_close_authentication_message_suppression_gaps](backlog/item_120_close_authentication_message_suppression_gaps.md) | Close authentication-message suppression gaps | Ready |  | 0% | backlog/item_120_close_authentication_message_suppression_gaps.md |
+| [item_121_make_daily_output_a_strict_command_brief](backlog/item_121_make_daily_output_a_strict_command_brief.md) | Make daily output a strict command brief | Ready |  | 0% | backlog/item_121_make_daily_output_a_strict_command_brief.md |
+| [item_122_polish_outlook_and_text_rendering_ergonomics](backlog/item_122_polish_outlook_and_text_rendering_ergonomics.md) | Polish Outlook and text rendering ergonomics | Ready |  | 0% | backlog/item_122_polish_outlook_and_text_rendering_ergonomics.md |
+| [item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content](backlog/item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content.md) | Diagnose sender delivery-count anomalies without mailbox content | Ready |  | 0% | backlog/item_123_diagnose_sender_delivery_count_anomalies_without_mailbox_content.md |
 
 ## Tasks
 
@@ -259,4 +265,5 @@ _None_
 | [task_050_orchestrate_production_digest_actionability_improvements](tasks/task_050_orchestrate_production_digest_actionability_improvements.md) | Orchestrate production digest actionability improvements | Done | codex-work6 | 100% | tasks/task_050_orchestrate_production_digest_actionability_improvements.md |
 | [task_051_implement_sensitive_content_and_application_access_safeguards](tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md) | Implement sensitive-content and application-access safeguards | Done | codex-work6 | 100% | tasks/task_051_implement_sensitive_content_and_application_access_safeguards.md |
 | [task_052_run_digest_replay_visual_qa_and_safe_rollout](tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md) | Run digest replay visual QA and safe rollout | Done | codex-work6 | 100% | tasks/task_052_run_digest_replay_visual_qa_and_safe_rollout.md |
-| [task_053_orchestrate_digest_usefulness_intelligence_improvements](tasks/task_053_orchestrate_digest_usefulness_intelligence_improvements.md) | Orchestrate digest usefulness intelligence improvements | Ready |  | 0% | tasks/task_053_orchestrate_digest_usefulness_intelligence_improvements.md |
+| [task_053_orchestrate_digest_usefulness_intelligence_improvements](tasks/task_053_orchestrate_digest_usefulness_intelligence_improvements.md) | Orchestrate digest usefulness intelligence improvements | Done |  | 100% | tasks/task_053_orchestrate_digest_usefulness_intelligence_improvements.md |
+| [task_054_orchestrate_digest_friction_hardening](tasks/task_054_orchestrate_digest_friction_hardening.md) | Orchestrate digest friction hardening | Ready |  | 0% | tasks/task_054_orchestrate_digest_friction_hardening.md |
