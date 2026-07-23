@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Problem
 - Day Captain already supports recall by CLI and hosted HTTP trigger, but not from the user’s natural working surface: email itself.
@@ -71,4 +72,4 @@ flowchart LR
 - Derived from request `req_014_day_captain_email_command_triggered_recall`.
 - This slice should stay bounded: explicit commands first, not an open-ended conversational mail assistant.
 - The first shipped version can still choose between webhook, polling, or an external inbound trigger bridge as long as the user-facing contract remains stable.
-- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with hosted `email-command-recall` validation passing for `recall-week` on `https://your-day-captain-service.example.com`.
+- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with hosted `email-command-recall` validation passing for the recall command on the configured service endpoint.

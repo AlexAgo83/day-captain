@@ -125,11 +125,6 @@ If Power Automate recurrence, entitlement, connection, or HTTP execution fails:
 
 The rollback must not change Day Captain app code; both schedulers call the same hosted job endpoints.
 
-## Live Validation
+## Deployment Evidence
 
-- 2026-07-12: created and started `Day Captain - Morning Digest` in the tenant Power Platform environment. Initial run succeeded. Next scheduled execution: `2026-07-13T06:45:29Z` (`08:45 Europe/Paris`).
-- 2026-07-12: created and started `Day Captain - Weekly Digest` in the tenant Power Platform environment. Initial run succeeded. The recurrence was adjusted after the initial run so it does not run again on 2026-07-12; next scheduled execution: `2026-07-19T18:30:00Z` (`20:30 Europe/Paris`).
-- 2026-07-12: removed GitHub Actions `schedule:` blocks from the private ops fallback workflows after the successful Power Automate runs; `workflow_dispatch` remains available.
-- 2026-07-12: hardened both live flows for Render cold starts by setting the `Warm_hosted_service` and `Trigger_Day_Captain_job` HTTP actions to retry policy `fixed`, interval `PT10S`, count `6`.
-- 2026-07-12: secured both HTTP inputs and outputs on the live `Warm_hosted_service` and `Trigger_Day_Captain_job` actions. Verified native Power Automate owner failure alerts are subscribed on both flows.
-- 2026-07-12: remaining hardening before cloning this model into another tenant such as `another tenant`: move `DAY_CAPTAIN_JOB_SECRET` out of literal flow definitions into solution-aware Power Platform environment configuration or another tenant-managed secret store, then rotate the job secret.
+Keep tenant-specific flow names, run IDs, next-run timestamps, service URLs, target-user lists, and secret-rotation notes in the private ops repository. Public docs should record only the reusable setup pattern and the content-free validation checklist above.

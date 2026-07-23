@@ -7,6 +7,7 @@
 > Complexity: High
 > Theme: Product
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Context
 - Derived from backlog items `item_012_day_captain_recall_and_auth_reliability_hardening`, `item_013_day_captain_dedicated_sender_mailbox_for_digest_delivery`, and `item_014_day_captain_email_command_triggered_recall`.
@@ -110,10 +111,10 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- Real hosted proof is now complete on Sunday, March 8, 2026 against `https://your-day-captain-service.example.com`:
-  - `GET /healthz` reported `graph_auth_mode=app_only`, `storage_backend=postgres`, `configured_sender_user=daycaptain@example.com`, and `email_command_allowed_senders=[user@example.com]`
+- Hosted proof is now complete against the configured service endpoint:
+  - `GET /healthz` reported the expected app-only auth, storage backend, sender mailbox, and email-command sender configuration without exposing real identities
   - `validate-hosted-service --target-user user@example.com --check-email-command --email-command-sender user@example.com --email-command-text recall-week` completed successfully
   - hosted `morning-digest` returned run `405852e67cf3420ea4dd5dede615088a`
   - hosted `recall-digest` returned the same run id `405852e67cf3420ea4dd5dede615088a`
-  - hosted `email-command-recall` returned run `email-command-run-id` with `command_name=recall-week`, `target_user_id=user@example.com`, and `delivery_mode=graph_send`
+  - hosted `email-command-recall` returned a successful run with `command_name=recall-week`, the expected target user, and `delivery_mode=graph_send`
 - The linked recall hardening, dedicated sender mailbox, and inbound email-command slices are therefore closed together by this orchestration task.

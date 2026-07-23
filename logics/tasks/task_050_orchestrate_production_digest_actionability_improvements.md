@@ -8,13 +8,14 @@
 > Complexity: High
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 > Owner: codex-work6
 
 # Context
 - Orchestrate the production-audit-driven request chain, coordinate the security and rollout sibling tasks, and preserve a single measurable baseline across all implementation slices.
 
 # Plan
-- [x] 1. Capture anonymized baseline fixtures and metrics for the baseline stable production audit without copying real mailbox content or identities.
+- [x] 1. Capture anonymized baseline fixtures and metrics for the stable aggregate audit without copying real mailbox content or identities.
 - [x] 2. Deliver the concise section budgets, unread-score removal, noise filters, transactional failure priority, empty-section omission, and ambient-content ordering as the first low-risk slice.
 - [x] 3. Implement owner-aware concrete actions, automatic-reply handling, deadline extraction, confidence categories, and stricter suspicious-mail evidence rules.
 - [x] 4. Change recent memory to use stable thread identity, suppress unchanged cards, render delta counts, and expose cleared items as compact resolved signals.
@@ -66,7 +67,7 @@
 - request-AC11 -> This task. Proof: target validation, Graph scope, retention guidance, secret suppression, and content-free runtime diagnostics are covered by focused and full tests.
 - request-AC12 -> This task. Proof: identity-free replay covers sensitive auth, noise, ownership, deadline, delivery failure, continuity, meeting conflict, rendering, and localization; 279 tests pass.
 - request-AC13 -> This task. Proof: daily/weekly HTML artifacts passed native visual inspection; UTF-8/background defects were fixed, and live delivery is fail-closed to one configured recipient with no CC/BCC.
-- request-AC14 -> This task. Proof: deterministic shadow replay passes the versioned gates, and the first scheduled post-release sender audit confirms 47.20% shorter median visible output, 100% fewer generic actions, and zero surfaced authentication-content markers across four briefs.
+- request-AC14 -> This task. Proof: deterministic shadow replay passes the versioned gates, and the first scheduled post-release aggregate audit confirms shorter median visible output, fewer generic actions, and zero surfaced authentication-content markers.
 
 # Validation
 - Run focused tests for each backlog slice.
@@ -76,13 +77,13 @@
 - Run `logics-manager flow validate req_055_day_captain_production_digest_actionability_improvement --explain`.
 - Run `logics-manager lint --require-status`.
 - Run `logics-manager audit --group-by-doc`.
-- 2026-07-13: PASS - 283 tests, deterministic replay, post-release aggregate audit, Flow validation, lint, and workflow audit completed successfully.
+- PASS - 283 tests, deterministic replay, post-release aggregate audit, Flow validation, lint, and workflow audit completed successfully.
 - 283 tests passed; deterministic replay, post-release aggregate audit, Flow validation, lint, and workflow audit passed.
 - Finish workflow executed on 2026-07-13.
 - Linked backlog/request close verification passed.
 
 # Report
-- 2026-07-12: development-ready corpus expanded from an anonymized aggregate audit of stable production briefs across four recipient profiles. Implementation has not started; progress remains 0%.
+- 2026-07-12: development-ready corpus expanded from an anonymized aggregate audit of stable production briefs across anonymized recipient profiles. Implementation has not started; progress remains 0%.
 - 2026-07-12: orchestration and security sibling task started. First checkpoint suppresses deterministic authentication messages at the earliest shared application boundary; 121 focused tests pass. Remaining implementation is tracked in tasks 050 through 052.
 - 2026-07-12: security sibling task 051 completed with 265 passing tests. The first actionability slice now enforces renderer budgets of 3 critical, 3 user-action, 2 watch, 1 presence, and 4 meeting cards, and unread state no longer adds ranking score. Focused scoring/renderer suite: 67 passed.
 - 2026-07-12: daily and weekly runs now pass their explicit run type into rendering and use distinct localized subjects. Full suite: 267 passed.
@@ -96,8 +97,8 @@
 - 2026-07-12: the identity-free replay now exercises the core task-050 ranking, action, continuity, security, and meeting-conflict paths without Graph delivery. Full suite: 276 passed.
 - 2026-07-12: continuity now emits explicit `waiting` for other-owned work and `overdue` when a supported explicit noon deadline has elapsed; cleared items already provide resolved signals and unchanged low-signal items are suppressed. Full suite: 278 passed.
 - 2026-07-12: local implementation is complete and full suite passes at 279 tests. Task remains open only because its DoD depends on sibling task 052 post-release audit evidence; no production deployment or mailbox delivery was performed in this session.
-- 2026-07-12: production rollout is live on Render with green CI and content-free health diagnostics. The deployment sent zero messages; completion remains gated only on auditing the first scheduled new-release digest after Monday 08:45.
-- 2026-07-13: the content-free audit of the first scheduled post-release run covered four briefs and passed every production gate: 47.20% shorter median visible output, 100% fewer generic actions, and zero authentication-content markers. Each envelope had one recipient and no CC/BCC; no mailbox content was persisted.
+- 2026-07-12: rollout is live on the hosted service with green CI and content-free health diagnostics. The deployment sent zero messages; completion remains gated only on auditing the first scheduled new-release digest.
+- 2026-07-13: the content-free audit of the first scheduled post-release run passed every aggregate production gate: shorter median visible output, fewer generic actions, and zero authentication-content markers. Each envelope had one recipient and no CC/BCC; no mailbox content was persisted.
 - Finished on 2026-07-13.
 - Linked backlog item(s): `item_109_reduce_digest_noise_and_enforce_concise_section_budgets`, `item_110_generate_concrete_owner_aware_actions_and_deadlines`, `item_111_turn_recent_run_memory_into_a_differential_commitment_view`, `item_112_make_upcoming_meetings_preparation_and_conflict_aware`, `item_113_improve_digest_presentation_personalization_and_usefulness_telemetry`
 - Related request(s): `req_055_day_captain_production_digest_actionability_improvement`

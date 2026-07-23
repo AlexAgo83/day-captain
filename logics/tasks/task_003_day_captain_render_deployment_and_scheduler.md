@@ -7,6 +7,7 @@
 > Complexity: High
 > Theme: Productivity
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Context
 - Derived from backlog item `item_000_day_captain_daily_assistant_for_microsoft_365`.
@@ -71,9 +72,9 @@ flowchart LR
 - Validation results:
   - `python3 -m unittest tests.test_settings tests.test_app tests.test_web` -> `OK` (`8` tests)
   - `python3 -m unittest discover -s tests` -> `OK` (`95` tests at latest full run)
-  - live Render proof -> `GET /healthz` returned `200`, protected runtime validation reported `graph_auth_mode=app_only` and `storage_backend=postgres`, and `validate-hosted-service` completed successfully for `user@example.com`
+  - hosted proof -> `GET /healthz` returned `200`, protected runtime validation reported `graph_auth_mode=app_only` and `storage_backend=postgres`, and `validate-hosted-service` completed successfully for an authorized test mailbox
 - Validation results:
   - private `day-captain-ops` GitHub Actions workflow on the real private repo -> `warm-hosted-service` plus per-user `trigger-morning-digest` succeeded against `release`
-  - mailbox delivery confirmed for `user@example.com`
+  - mailbox delivery confirmed for the authorized test mailbox
   - live cold-start bug found and fixed in `src/day_captain/hosted_jobs.py` (`6309af3`) before the successful scheduler rerun
 - The deployment slice is functionally complete and now proven on the real hosted path, including Render/Postgres runtime proof, private-ops scheduling, and mailbox delivery.

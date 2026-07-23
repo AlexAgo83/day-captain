@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Problem
 - Day Captain currently uses one mailbox identity for both reading source data and sending the final digest.
@@ -65,4 +66,4 @@ flowchart LR
 - Derived from request `req_013_day_captain_dedicated_sender_mailbox_for_digest_delivery`.
 - This slice is primarily a delivery-routing evolution for hosted app-only operation.
 - The likely implementation will touch config, auth context or delivery routing, Graph send behavior, and hosted validation docs.
-- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with real hosted validation showing `configured_sender_user=daycaptain@example.com` on Render.
+- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with hosted validation showing the configured sender mailbox behavior.

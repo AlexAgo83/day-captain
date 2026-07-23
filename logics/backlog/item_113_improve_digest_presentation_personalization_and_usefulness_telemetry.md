@@ -8,6 +8,7 @@
 > Complexity: Medium
 > Theme: UX
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Problem
 - Daily and weekly emails can have identical subjects and visually similar cards despite very different operational impact.
@@ -53,7 +54,7 @@
 - request-AC11 -> This backlog slice. Proof: Graph scope and retention guidance, secret suppression, and content-free runtime diagnostics passed focused and full validation.
 - request-AC12 -> This backlog slice. Proof: identity-free replay covers security, noise, ownership, deadlines, delivery failure, continuity, meetings, rendering, and localization; 283 tests pass.
 - request-AC13 -> This backlog slice. Proof: daily and weekly HTML passed visual inspection, the guarded live test reached one authorized mailbox only, and the scheduled delivery was confirmed readable in Outlook.
-- request-AC14 -> This backlog slice. Proof: shadow replay passed its gates and the four-brief post-release audit measured 47.20% shorter output, 100% fewer generic actions, and zero authentication-content markers.
+- request-AC14 -> This backlog slice. Proof: shadow replay passed its gates and the post-release aggregate audit passed visible-length, generic-action, and authentication-content gates.
 
 # Decision framing
 - Product framing: Not needed

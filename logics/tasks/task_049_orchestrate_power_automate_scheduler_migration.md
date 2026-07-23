@@ -8,6 +8,7 @@
 > Complexity: Medium
 > Theme: Implementation delivery
 > Reminder: Update status/understanding/confidence/progress and linked request/backlog references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 > Owner: codex
 
 # Context
@@ -35,7 +36,7 @@
 - [x] Lint, audit, and flow validation have been run and any remaining findings are documented.
 
 # AC Traceability
-- request-AC1 -> Plan steps 2 and 4. Proof: the task explicitly creates the Power Automate runbook and live flows.
+- request-AC1 -> Plan steps 2 and 4. Proof: the task explicitly creates the Power Automate runbook and hosted scheduler flows.
 - request-AC2 -> Plan step 3. Proof: the task explicitly updates docs so Power Automate is primary and GitHub is fallback-only.
 - request-AC3 -> Plan steps 2 and 4. Proof: the task keeps the existing health and hosted job endpoint contract.
 - request-AC4 -> Plan step 5. Proof: the task disables active GitHub schedule triggers only after Power Automate evidence.
@@ -54,9 +55,9 @@
 # Report
 - 2026-07-12 codex: confirmed the active production scheduler still lives in the private ops GitHub Actions workflows, added `docs/power_automate_scheduler_setup.md`, updated app operator docs and README to name Power Automate as the primary scheduler, and updated the private ops README to describe GitHub Actions as fallback. Live Power Automate flow creation/testing and disabling GitHub `schedule:` blocks remain blocked until tenant Power Automate access and successful run evidence are available.
 - 2026-07-12 codex: validation after docs work: `logics-manager flow validate req_054_day_captain_power_automate_scheduler_migration --fixable --explain` passed. `logics-manager lint --require-status` and `logics-manager audit --group-by-doc` still fail only on pre-existing unrelated issues: missing `Status` in `logics/specs/spec_000_day_captain_v1_digest_contract.md` and stale draft docs from req_053/item_100-105/task_048.
-- 2026-07-12 codex: created and started Power Automate flows `Day Captain - Morning Digest` and `Day Captain - Weekly Digest` in the tenant Power Platform environment. Initial morning and weekly runs succeeded. Corrected weekly recurrence after the initial run to avoid a duplicate same-day Sunday execution; next morning run is `2026-07-13T06:45:29Z`, next weekly run is `2026-07-19T18:30:00Z`. Removed GitHub Actions `schedule:` blocks from the private ops workflows while preserving `workflow_dispatch`.
-- 2026-07-12 codex: preserved the old GitHub cold-start posture in Power Automate by hardening both live flows with explicit HTTP retry policy on `Warm_hosted_service` and `Trigger_Day_Captain_job`: fixed interval `PT10S`, count `6`. Verified the next scheduled executions remained unchanged.
-- 2026-07-12 codex: reviewed the live Power Automate hardening findings. The retry finding was stale after the cold-start fix: both HTTP actions in both flows now have explicit fixed retry policy `PT10S` count `6`. Secured HTTP outputs as well as inputs on both live flows. Verified native Power Automate owner failure alerts are subscribed on both flows. Remaining hardening before copying this pattern into `another tenant`: move the job secret from literal flow definition data into tenant-managed Power Platform configuration, then rotate the job secret.
+- 2026-07-12 codex: created and started Power Automate morning and weekly flows in the tenant Power Platform environment. Initial runs succeeded, recurrence was adjusted to avoid duplicate same-day execution, and GitHub Actions `schedule:` blocks were removed from the private ops workflows while preserving `workflow_dispatch`.
+- 2026-07-12 codex: preserved the old GitHub cold-start posture in Power Automate by hardening both hosted HTTP actions with explicit fixed retry policy. Verified the next scheduled executions remained unchanged.
+- 2026-07-12 codex: reviewed the Power Automate hardening findings. Both HTTP actions now have explicit fixed retry policy, secure HTTP inputs/outputs, and owner failure alerts. Remaining hardening before copying this pattern into another tenant: move the job secret from literal flow definition data into tenant-managed Power Platform configuration, then rotate the job secret.
 - Finished on 2026-07-12.
 - Linked backlog item(s): `item_106_document_the_power_automate_scheduler_flows`, `item_107_align_day_captain_app_and_ops_docs_with_power_automate_scheduling`, `item_108_cut_over_production_scheduling_and_capture_live_evidence`
 - Related request(s): `req_054_day_captain_power_automate_scheduler_migration`

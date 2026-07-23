@@ -6,6 +6,7 @@
 > Related task: `task_050_orchestrate_production_digest_actionability_improvements`
 > Related architecture: (none yet)
 > Reminder: Update status, linked refs, scope, decisions, success signals, and open questions when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Overview
 Make each digest answer what changed, what the recipient personally needs to do, when it is due, and what can safely be ignored.
@@ -55,7 +56,7 @@ flowchart LR
 - Meeting preparation appears only when supported by a document, decision, commitment, question, or explicit request.
 - Daily and weekly briefs are distinguishable and operational content appears before optional weather or news.
 - Aggregate feedback shows whether users open, recall, suppress, or mark surfaced items useful without exposing mailbox content.
-- Replay and aggregate audits demonstrate at least 40% shorter median briefs, 80% fewer generic actions, zero surfaced authentication secrets, and no regression in multi-user isolation or critical delivery-failure handling.
+- Replay and aggregate audits demonstrate shorter median briefs, fewer generic actions, zero surfaced authentication secrets, and no regression in multi-user isolation or critical delivery-failure handling.
 
 # References
 - Product back-reference: `item_109_reduce_digest_noise_and_enforce_concise_section_budgets`

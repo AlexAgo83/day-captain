@@ -6,6 +6,7 @@
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Needs
 - Harden Day Captain after the project review uncovered correctness bugs in recall, auth scope reporting, and collection boundary handling.
@@ -66,7 +67,7 @@ flowchart LR
 # Backlog
 - `item_012_day_captain_recall_and_auth_reliability_hardening` - Harden recall correctness, auth scope truthfulness, and window boundaries. Status: `Done`.
 - `task_022_day_captain_recall_and_delivery_evolution_orchestration` - Orchestrate recall hardening, dedicated sender delivery, and email-command recall, with README/docs closure required before `Done`. Status: `Done`.
-- Closed on Sunday, March 8, 2026 after automated regression coverage and hosted validation on `https://your-day-captain-service.example.com`.
+- Closed on Sunday, March 8, 2026 after automated regression coverage and hosted validation on the configured service endpoint.
 - Suggested split:
   - one implementation task for recall scope/day-boundary correctness
   - one implementation task for delegated scope truthfulness and ingestion boundary hardening

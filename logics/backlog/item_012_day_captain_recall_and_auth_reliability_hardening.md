@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Problem
 - The project review uncovered several correctness bugs in areas that should be operationally trustworthy: digest recall, delegated auth scope validation, and message collection boundaries.
@@ -63,4 +64,4 @@ flowchart LR
 - Derived from request `req_012_day_captain_recall_and_auth_reliability_hardening`.
 - This slice comes directly from the project review and should be treated as corrective work, not roadmap expansion.
 - The most immediate risks are user-facing recall failures and misleading `Mail.Send` readiness validation when a delegated token cache is stale relative to current config.
-- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with automated regression coverage plus hosted validation on `https://your-day-captain-service.example.com`.
+- Closed on Sunday, March 8, 2026 through `task_022_day_captain_recall_and_delivery_evolution_orchestration`, with automated regression coverage plus hosted validation on the configured service endpoint.

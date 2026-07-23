@@ -8,6 +8,7 @@
 > Complexity: High
 > Theme: Operator workflow and runtime integration
 > Reminder: Update status/understanding/confidence/progress and linked request/task references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Problem
 - The production audit provides a measurable baseline, but the repository does not yet have a single anonymized replay suite that reproduces the observed noise, security, ownership, continuity, calendar, and rendering failures.
@@ -22,7 +23,7 @@
   - Run shadow comparison or equivalent non-delivery preview before enabling the new format for production recipients.
   - If a live Graph delivery test is necessary, send only to the explicitly authorized single test mailbox and assert the final recipient before sending; never fan out a test to configured production users.
   - Verify the delivered Outlook rendering, subject distinction, links, and absence of prohibited content in the authorized test mailbox.
-  - Repeat the aggregate audit after release and compare it with the anonymized baseline baseline.
+  - Repeat the aggregate audit after release and compare it with the anonymized baseline.
 - Out:
   - Copying production mailbox content into fixtures, snapshots, reports, or commits.
   - Sending development or acceptance messages to any non-test recipient.
@@ -53,7 +54,7 @@
 - request-AC11 -> This backlog slice. Proof: target validation, Graph scope, retention guidance, secret suppression, and content-free runtime diagnostics passed focused and full validation.
 - request-AC12 -> This backlog slice. Proof: identity-free replay covers security, noise, ownership, deadlines, delivery failure, continuity, meetings, rendering, and localization; the full suite passes.
 - request-AC13 -> This backlog slice. Proof: daily and weekly HTML passed visual inspection, the guarded live test reached one authorized mailbox only, and the scheduled delivery was confirmed readable in Outlook.
-- request-AC14 -> This backlog slice. Proof: shadow replay passed its gates and the four-brief post-release audit measured 47.20% shorter output, 100% fewer generic actions, and zero authentication-content markers.
+- request-AC14 -> This backlog slice. Proof: shadow replay passed its gates and the post-release aggregate audit passed visible-length, generic-action, and authentication-content gates.
 
 # Decision framing
 - Product framing: Not needed

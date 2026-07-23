@@ -7,6 +7,7 @@
 > Complexity: High
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and linked task references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Problem
 - The current hosted deployment path boots on Render, but real digest execution fails because the service depends on delegated Graph refresh-token renewal.
@@ -65,4 +66,4 @@ flowchart LR
 - Derived from request `req_009_day_captain_hosted_graph_app_only_authentication`.
 - This slice intentionally keeps local delegated auth because it still provides the best developer ergonomics for local mailbox testing.
 - `task_016_day_captain_hosted_graph_app_only_authentication_implementation` is complete: hosted app-only auth, explicit `/users/{id}` routing, and supporting tests/docs are in place.
-- `task_017_day_captain_hosted_graph_app_only_authentication_validation` is complete: the Render-hosted service now proves `app_only` auth, Postgres-backed storage, and successful `morning-digest` plus `recall-digest` execution against the real mailbox target after Entra `Application` permissions and tenant consent were corrected.
+- `task_017_day_captain_hosted_graph_app_only_authentication_validation` is complete: the hosted service now proves `app_only` auth, Postgres-backed storage, and successful `morning-digest` plus `recall-digest` execution against an authorized test mailbox after tenant permissions were corrected.

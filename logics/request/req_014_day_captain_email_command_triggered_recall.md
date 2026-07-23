@@ -6,6 +6,7 @@
 > Complexity: Medium
 > Theme: Product
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Needs
 - Let a user trigger Day Captain recall by sending a simple email command to the dedicated `daycaptain` mailbox.
@@ -87,7 +88,7 @@ flowchart LR
 # Backlog
 - `item_014_day_captain_email_command_triggered_recall` - Add recall triggered by inbound email commands. Status: `Done`.
 - `task_022_day_captain_recall_and_delivery_evolution_orchestration` - Orchestrate recall hardening, dedicated sender delivery, and email-command recall, with README/docs closure required before `Done`. Status: `Done`.
-- Closed on Sunday, March 8, 2026 after hosted `email-command-recall` validation succeeded for `recall-week` on `https://your-day-captain-service.example.com`.
+- Closed on Sunday, March 8, 2026 after hosted `email-command-recall` validation succeeded for the recall command on the configured service endpoint.
 - Suggested split:
   - one implementation task for inbound command trigger ingestion and bounded parsing
   - one implementation task for recall window generation, sender mapping, and duplicate suppression

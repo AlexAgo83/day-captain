@@ -7,6 +7,7 @@
 > Complexity: High
 > Theme: UX
 > Reminder: Update status/understanding/confidence and linked backlog/task references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Needs
 - Turn production digests from long mailbox summaries into concise, differential, user-owned action briefs.
@@ -15,12 +16,12 @@
 - Make digest usefulness measurable so future tuning is based on user behavior rather than fixed heuristic scores.
 
 # Context
-- A read-only aggregate audit found historical briefs and selected stable production briefs sent to four anonymized recipients between baseline-start and 2026-07-12.
-- The stable baseline averaged about 5,455 visible characters and 9 rendered cards per brief, with 869 generic recommended actions, 46 sender-verification warnings, 354 external-news articles, and no material June-to-July improvement.
+- A read-only mailbox-derived audit selected a stable anonymized baseline without retaining mailbox content, addresses, personal names, client names, supplier names, subjects, previews, or bodies.
+- The stable baseline showed long visible output, repeated generic recommended actions, sender-verification noise, repeated external-news content, and no material usefulness improvement over the comparison window.
 - The audit found authentication-code messages eligible for surfacing, repeated entertainment recaps, recurring meetings and presence events repeated across runs, false suspicious-mail warnings on established conversations, and delivery failures that did not always dominate low-signal content.
 - Every recipient received both daily and weekly briefs with the same subject on the same Sunday, a few seconds apart, while optional news was repeated in both editions.
 - The codebase already stores action ownership, confidence metadata, continuity state, recent completed runs, cleared items, user preferences, and related meeting context, but the final selection and rendering do not fully exploit them.
-- All production evidence in this corpus is anonymized. No mailbox addresses, personal names, client names, suppliers, or message contents are included.
+- Public corpus evidence is anonymized and aggregate-only. Deployment-specific counts, windows, recipients, and delivery proof stay in the private ops record.
 
 # Acceptance criteria
 - AC1: Authentication codes, password-reset messages, magic links, and equivalent sensitive authentication content are suppressed before persistence, LLM processing, telemetry, and rendering, with no raw secret material retained.

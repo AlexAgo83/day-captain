@@ -22,7 +22,7 @@
       "Make digest usefulness measurable so future tuning is based on user behavior rather than fixed heuristic scores."
     ],
     "context": [
-      "A read-only audit of stable production briefs found a median of about 5,455 visible characters and 9 rendered cards per brief.",
+      "A read-only audit of a stable anonymized baseline found long visible output and repeated low-signal cards.",
       "The audit found 869 generic actions, 46 sender-verification warnings, 354 external-news articles, repeated low-signal content, and no material month-over-month improvement.",
       "The audit also found that temporary authentication content can surface, requiring suppression before persistence, model processing, telemetry, diagnostics, and rendering.",
       "Daily and weekly briefs can currently share the same subject, empty sections consume space, external news can dominate the brief, and operational delivery failures do not always outrank low-signal content.",
@@ -265,7 +265,7 @@
       "theme": "Quality",
       "request_acs": ["AC1", "AC2", "AC3", "AC4", "AC5", "AC6", "AC7", "AC8", "AC9", "AC10", "AC11", "AC12", "AC13", "AC14"],
       "problem": [
-        "Usefulness improvements need a repeatable comparison against the baseline anonymized baseline.",
+        "Usefulness improvements need a repeatable comparison against the anonymized baseline.",
         "Automated tests do not prove that daily and weekly HTML remains readable across viewport widths.",
         "Live delivery validation needs a technical guard against disturbing any production recipient."
       ],

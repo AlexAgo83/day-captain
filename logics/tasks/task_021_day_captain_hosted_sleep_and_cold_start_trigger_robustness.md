@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Reliability
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Context
 - Derived from backlog item `item_011_day_captain_hosted_sleep_and_cold_start_trigger_robustness`.
@@ -63,7 +64,7 @@ flowchart LR
   - `python3 -m unittest discover -s tests`
   - `python3 logics/skills/logics-doc-linter/scripts/logics_lint.py --require-status`
   - `python3 logics/skills/logics-flow-manager/scripts/workflow_audit.py --group-by-doc`
-- Real hosted proof is now complete: the private `day-captain-ops` GitHub Actions workflow now checks out `release`, warms the Render service, and triggers the real hosted digest path successfully for `user@example.com`, with mailbox delivery confirmed.
+- Hosted proof is now complete: the private ops GitHub Actions workflow checks out `release`, warms the hosted service, and triggers the hosted digest path successfully for an authorized test mailbox, with delivery confirmed.
 - The first cold-start validation from `day-captain-ops` exposed a real gap: `check-hosted-health` timed out on a sleeping Render instance because `TimeoutError` was not being folded into the retry loop. Commit `6309af3` fixed that by converting read timeouts into `HostedJobError`, preserving bounded retry behavior, and adding focused regression coverage.
 - Validation executed:
   - `python3 -m unittest tests.test_hosted_jobs`

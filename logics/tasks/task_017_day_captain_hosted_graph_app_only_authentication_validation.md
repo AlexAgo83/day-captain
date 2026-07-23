@@ -7,6 +7,7 @@
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence/progress and dependencies/references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Context
 - Derived from backlog item `item_009_day_captain_hosted_graph_app_only_authentication`.
@@ -57,9 +58,9 @@ flowchart LR
 - Added hosted-validation support in the repo before Render proof: a `day-captain validate-config` preflight command, explicit hosted target-user checks at the HTTP boundary, scheduler support for explicit `target_user_id` fan-out, and a reusable `day-captain validate-hosted-service` path that checks `/healthz`, validates protected runtime config summary, validates job acknowledgement shape, triggers the morning digest, and validates recall coherence.
 - Added operator-facing docs plus reusable hosted trigger tooling so Render and private `day-captain-ops` scheduling setup can be validated locally before the deployed proof step.
 - Added sleeping-service fallback support around the hosted path: bounded warm-up checks, standalone readiness probing, and an example scheduler split that warms the service once before routine trigger-only fan-out.
-- Real Render-hosted proof is now complete on `https://your-day-captain-service.example.com`: the service booted with app-only Graph auth and Postgres-backed storage, `GET /healthz` returned the protected runtime summary with `graph_auth_mode=app_only` and `storage_backend=postgres`, and `validate-hosted-service` completed successfully for `user@example.com`.
-- The first live validation failed with `Graph request failed with 403: ErrorAccessDenied`; diagnosis showed the Entra client-credentials token had `missing expected roles`. After adding Microsoft Graph `Application` permissions (`Calendars.Read`, `Mail.Read`, `Mail.Send`, `User.Read.All`) and granting tenant consent, the issued token exposed the expected roles and the hosted digest flow succeeded end to end.
+- Hosted proof is complete against the configured service endpoint: the service booted with app-only Graph auth and Postgres-backed storage, `GET /healthz` returned the protected runtime summary, and `validate-hosted-service` completed successfully for an authorized test mailbox.
+- The first live validation exposed a tenant permission mismatch. After correcting the tenant app permissions and consent, the hosted digest flow succeeded end to end.
 - Validation executed:
   - `PYTHONPATH=src python3 -m day_captain check-hosted-health --wake-service --wake-timeout-seconds 90 --wake-max-attempts 6 --wake-delay-seconds 10 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
   - `PYTHONPATH=src python3 -m day_captain validate-hosted-service --target-user user@example.com --timeout-seconds 120 --expect-graph-auth-mode app_only --expect-storage-backend postgres`
-  - hosted result: `morning-digest` and `recall-digest` both returned `200`, with coherent `run_id` `hosted-validation-run-id`
+  - hosted result: `morning-digest` and `recall-digest` both returned `200` with coherent run IDs

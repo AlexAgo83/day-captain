@@ -6,6 +6,7 @@
 > Complexity: Medium
 > Theme: Delivery
 > Reminder: Update status/understanding/confidence and references when you edit this doc.
+> Non-semantic edit: Anonymized public-facing operational evidence without changing workflow meaning.
 
 # Needs
 - Allow Day Captain to send digest emails from a dedicated mailbox identity such as `daycaptain@company.com`, instead of always sending from the same mailbox that was read to build the digest.
@@ -69,7 +70,7 @@ flowchart LR
 # Backlog
 - `item_013_day_captain_dedicated_sender_mailbox_for_digest_delivery` - Decouple digest sender mailbox from the source mailbox. Status: `Done`.
 - `task_022_day_captain_recall_and_delivery_evolution_orchestration` - Orchestrate recall hardening, dedicated sender delivery, and email-command recall, with README/docs closure required before `Done`. Status: `Done`.
-- Closed on Sunday, March 8, 2026 after hosted validation on `https://your-day-captain-service.example.com` confirmed `configured_sender_user=daycaptain@example.com`.
+- Closed on Sunday, March 8, 2026 after hosted validation confirmed the configured sender mailbox behavior.
 - Suggested split:
   - one implementation task for sender/source mailbox identity separation in config, auth context, and delivery routing
   - one validation task for real mailbox delivery from the dedicated sender identity
